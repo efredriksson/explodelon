@@ -1,3 +1,5 @@
+require("const")
+
 global WIDTH = 32
 global HEIGHT = 32
 global LEN = 5
@@ -44,10 +46,6 @@ function lutro.load()
 	init()
 end
 
-local RETRO_DEVICE_ID_JOYPAD_UP       = 5
-local RETRO_DEVICE_ID_JOYPAD_DOWN     = 6
-local RETRO_DEVICE_ID_JOYPAD_LEFT     = 7
-local RETRO_DEVICE_ID_JOYPAD_RIGHT    = 8
 
 function lutro.update(_: number)
 	t = t + 1
@@ -55,10 +53,10 @@ function lutro.update(_: number)
 	lum = math.sin(t/300) * 8 + 40
 	lutro.graphics.setBackgroundColor(HSL(t/100, 128, lum))
 
-	local JOY_UP = lutro.joystick.isDown(1, RETRO_DEVICE_ID_JOYPAD_UP)
-	local JOY_DOWN = lutro.joystick.isDown(1, RETRO_DEVICE_ID_JOYPAD_DOWN)
-	local JOY_LEFT = lutro.joystick.isDown(1, RETRO_DEVICE_ID_JOYPAD_LEFT)
-	local JOY_RIGHT = lutro.joystick.isDown(1, RETRO_DEVICE_ID_JOYPAD_RIGHT)
+	local JOY_UP = lutro.joystick.isDown(1, JOYPAD_UP)
+	local JOY_DOWN = lutro.joystick.isDown(1, JOYPAD_DOWN)
+	local JOY_LEFT = lutro.joystick.isDown(1, JOYPAD_LEFT)
+	local JOY_RIGHT = lutro.joystick.isDown(1, JOYPAD_RIGHT)
 
 	if JOY_UP    then dir = 1 end
 	if JOY_DOWN  then dir = 2 end

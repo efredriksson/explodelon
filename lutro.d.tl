@@ -4,6 +4,11 @@ global type Configuration = interface
 end
 
 
+local enum DrawMode
+   "fill"
+   "line"
+end
+
 global record lutro
    conf: function(t: Configuration)
    load: function()
@@ -17,7 +22,7 @@ global record lutro
       setColor: function(r: number, g: number, b: number, lum?: number)
       setBackgroundColor: function(r: number, g: number, b: number, lum?: number)
    
-      rectangle: function(mode: string, x: number, y: number, width: number, height: number)
+      rectangle: function(mode: DrawMode, x: number, y: number, width: number, height: number)
    end
 
    record joystick
