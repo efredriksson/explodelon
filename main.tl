@@ -94,14 +94,27 @@ local function setup_players(): {Player}
 		[2] = "assets/honey.png",
 		[3] = "assets/kinu.png",
 		[4] = "assets/milon.png",
+		[5] = "assets/black.png",
+		[6] = "assets/white.png",
+		[7] = "assets/manjimaru.png",
+		[8] = "assets/bonks.png",
+		[9] = "assets/kabuki.png",
+		[10] = "assets/master_higins.png",
 	}
 	local start_by_id: {number:Point} = {
 		[1] = {x=24, y=32},
 		[2] = {x=280, y=32},
 		[3] = {x=24, y=192},
 		[4] = {x=280, y=192},
+		[5] = {x=152, y=112},
+		[6] = {x=56, y=112},
+		[7] = {x=248, y=112},
+		[8] = {x=152, y=192},
+		[9] = {x=152, y=32},
+		[10] = {x=216, y=160},
 	}
-	for i=1, 4 do
+	local num_joysticks = lutro.joystick.getJoystickCount()
+	for i=1, math.min(num_joysticks, 10) do
 		table.insert(players, {id=i, position=start_by_id[i], asset_file=asset_by_id[i]})
 	end
 

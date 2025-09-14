@@ -52,6 +52,7 @@ global record lutro
 
    record joystick
       isDown: function(joystick: integer, button: integer): boolean
+      getJoystickCount: function(): integer
    end
 
 end
