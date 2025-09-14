@@ -1,114 +1,132 @@
 require("const")
 
-global WIDTH = 32
-global HEIGHT = 32
-global LEN = 5
+local WIDTH = 320
+local HEIGHT = 224
+local BLOCK_SIZE = 16
+local PLAYER_SPEED = 40
 
-function lutro.conf(t: Configuration)
-	t.width  = WIDTH*12
-	t.height = HEIGHT*12
+local record Point
+   x: number
+   y: number
 end
 
-local function HSL(h: number, s: number, l: number, a?: number): number, number, number, number
-    if s<=0 then return l,l,l,a end
-    h, s, l = h/256*6, s/255, l/255
-    local c = (1-math.abs(2*l-1))*s
-    local x = (1-math.abs(h%2-1))*c
-    local m = l-.5*c
-	local r: number = 0
-	local g: number = 0
-	local b: number = 0
-    if h < 1     then r,g,b = c,x,0
-    elseif h < 2 then r,g,b = x,c,0
-    elseif h < 3 then r,g,b = 0,c,x
-    elseif h < 4 then r,g,b = 0,x,c
-    elseif h < 5 then r,g,b = x,0,c
-    else              r,g,b = c,0,x
-    end return (r+m)*255,(g+m)*255,(b+m)*255,a
+local record Rectangle
+	x: number
+	y: number
+	width: number
+	height: number
 end
 
-local function init()
-	global S = {}
-	for _ = 1,LEN do
-		table.insert(S, {WIDTH/2, HEIGHT/2})
+local function get_hard_blocks(): {Rectangle}
+	local blocks: {Rectangle} = {}
+
+	local function hard_block(i: number, j: number): Rectangle
+		return {
+			x=24 + BLOCK_SIZE + i * 2 * BLOCK_SIZE,
+			y=32 + BLOCK_SIZE + j * 2 * BLOCK_SIZE,
+			width=BLOCK_SIZE,
+			height=BLOCK_SIZE
+		}
 	end
 
-	global dir = 0
-	global t = 0
+	for i=0, 7 do
+		for j=0, 4 do
+			table.insert(blocks, hard_block(i, j))
+		end
+	end
+	return blocks
+end
 
-	global lum: number = 0
+local record Player
+   position: Point
+   dir: integer
+end
 
-	math.randomseed(os.time())
-	global T = {math.random(WIDTH-2), math.random(HEIGHT-2)}
+local PLAYER_AREA: Rectangle = {x=24, y=32, width=272, height=176}
+local HARD_BLOCKS = get_hard_blocks()
+global START_POS: Point = {x=24, y=32}
+global P: Player = {position=START_POS, dir=0}
+
+local function interval_overlap(xmin1: number, xmax1: number, xmin2: number, xmax2: number): boolean
+	return xmax1 >= xmin2 and xmax2 >= xmin1
+end
+
+local function box_overlap(b1: Rectangle, b2: Rectangle): boolean
+	return interval_overlap(b1.x, b1.x + b1.width, b2.x, b2.x + b2.width) and
+		interval_overlap(b1.y, b1.y + b1.height, b2.y, b2.y + b2.height)
+end
+
+local function interval_contained(xmin1: number, xmax1: number, xmin2: number, xmax2: number): boolean
+	return xmin1 >= xmin2 and xmax1 <= xmax2
+end
+
+local function box_contains(small: Rectangle, large: Rectangle): boolean
+	return interval_contained(small.x, small.x + small.width, large.x, large.x + large.width) and
+		interval_contained(small.y, small.y + small.height, large.y, large.y + large.height)
+end
+
+local function valid_player_move(new_position: Point): boolean
+	local new_hitbox: Rectangle = {x = new_position.x, y=new_position.y, height=BLOCK_SIZE-1, width=BLOCK_SIZE-1}
+	for i=1, #HARD_BLOCKS do
+		local hard_block = HARD_BLOCKS[i]
+		if box_overlap(new_hitbox, hard_block) then
+			return false
+		end
+	end
+
+	return box_contains(new_hitbox, PLAYER_AREA)
+end
+
+function lutro.conf(t: Configuration)
+	t.width  = WIDTH
+	t.height = HEIGHT
+end
+
+local function convert_pos_for_character_draw(image: Image, pos: Point): Point
+	local h = image:getHeight()
+	-- x: -1 and y: +1 is because of the sprite, look over when doing animations
+	return {x=pos.x - 1, y=pos.y - h + BLOCK_SIZE + 1}
 end
 
 function lutro.load()
-	init()
+	global background = lutro.graphics.newImage("assets/footboll-map.png")
 end
 
+local function get_new_position_from_input(player: Player, dt: number): Point
+	-- Create copy of player position that we mutate before returning as 'new'
+	local cur_pos: Point = {x = player.position.x, y = player.position.y}
 
-function lutro.update(_: number)
-	t = t + 1
-
-	lum = math.sin(t/300) * 8 + 40
-	lutro.graphics.setBackgroundColor(HSL(t/100, 128, lum))
-
-	local JOY_UP = lutro.joystick.isDown(1, JOYPAD_UP)
-	local JOY_DOWN = lutro.joystick.isDown(1, JOYPAD_DOWN)
-	local JOY_LEFT = lutro.joystick.isDown(1, JOYPAD_LEFT)
-	local JOY_RIGHT = lutro.joystick.isDown(1, JOYPAD_RIGHT)
-
-	if JOY_UP    then dir = 1 end
-	if JOY_DOWN  then dir = 2 end
-	if JOY_LEFT  then dir = 3 end
-	if JOY_RIGHT then dir = 4 end
-
-	if t % 5 ~= 0 then return end
-
-	local head = S[#S]
-
-	if dir == 1 then table.insert(S, {head[1]+0, head[2]-1}) end
-	if dir == 2 then table.insert(S, {head[1]+0, head[2]+1}) end
-	if dir == 3 then table.insert(S, {head[1]-1, head[2]+0}) end
-	if dir == 4 then table.insert(S, {head[1]+1, head[2]+0}) end
-
-	head = S[#S]
-
-	if head[1] == 0 or head[1] == WIDTH
-	or head[2] == 0 or head[2] == HEIGHT then
-		init()
-	end
-
-	for i=1,#S-1 do
-		if head[1] == S[i][1] and head[2] == S[i][2] and dir > 0 then
-			init()
+	local function try_update_to(new_potential: Point)
+		if valid_player_move(new_potential) then
+			cur_pos = new_potential
 		end
 	end
 
-	if head[1] == T[1] and head[2] == T[2] then
-		math.randomseed(os.time())
-		T = {math.random(WIDTH-2), math.random(HEIGHT-2)}
-	elseif dir > 0 then
-		table.remove(S, 1)
+	if lutro.joystick.isDown(1, JOYPAD_DOWN) then
+		try_update_to({x=cur_pos.x, y=cur_pos.y + dt * PLAYER_SPEED})
 	end
+	if lutro.joystick.isDown(1, JOYPAD_UP) then
+		try_update_to({x=cur_pos.x, y=cur_pos.y - dt * PLAYER_SPEED})
+	end
+	if lutro.joystick.isDown(1, JOYPAD_RIGHT) then
+		try_update_to({x=cur_pos.x + dt * PLAYER_SPEED, y=cur_pos.y})
+	end
+	if lutro.joystick.isDown(1, JOYPAD_LEFT) then
+		try_update_to({x=cur_pos.x - dt * PLAYER_SPEED, y=cur_pos.y})
+	end
+
+	return cur_pos
+end
+
+function lutro.update(dt: number)
+	local new_position = get_new_position_from_input(P, dt)
+	P.position = new_position
 end
 
 function lutro.draw()
-	lutro.graphics.clear()
-	
-	lutro.graphics.setColor(HSL(t/100, 128, lum + 10))
+	lutro.graphics.draw(background)
 
-	for y=0,HEIGHT do
-		for x=0,WIDTH do
-			lutro.graphics.rectangle("fill", x*12, y*12, 11, 11)
-		end
-	end
-
-	lutro.graphics.setColor(255, 255, 255)
-
-	for i=1,#S do
-		lutro.graphics.rectangle("fill", S[i][1]*12, S[i][2]*12, 11, 11)
-	end
-	lutro.graphics.setColor(255, 255, 255)
-	lutro.graphics.rectangle("fill", T[1]*12, T[2]*12, 11, 11)
+	local player = lutro.graphics.newImage("assets/kotetsu.png")
+	local adj_pos = convert_pos_for_character_draw(player, P.position)
+	lutro.graphics.draw(player, adj_pos.x, adj_pos.y)
 end
