@@ -14,3 +14,8 @@ global JOYPAD_L2       = 13
 global JOYPAD_R2       = 14
 global JOYPAD_L3       = 15
 global JOYPAD_R3       = 16
+
+global MAP_WIDTH = 320
+global MAP_HEIGHT = 224
+global BLOCK_SIZE = 16
+global PLAYER_SPEED = 40

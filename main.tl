@@ -1,32 +1,17 @@
 require("const")
-
-local WIDTH = 320
-local HEIGHT = 224
-local BLOCK_SIZE = 16
-local PLAYER_SPEED = 40
-
-local record Point
-   x: number
-   y: number
-end
-
-local record Rectangle
-	x: number
-	y: number
-	width: number
-	height: number
-end
+require("geometry")
+require("player")
 
 local function get_hard_blocks(): {Rectangle}
 	local blocks: {Rectangle} = {}
 
 	local function hard_block(i: number, j: number): Rectangle
-		return {
-			x=24 + BLOCK_SIZE + i * 2 * BLOCK_SIZE,
-			y=32 + BLOCK_SIZE + j * 2 * BLOCK_SIZE,
-			width=BLOCK_SIZE,
-			height=BLOCK_SIZE
-		}
+		return Rectangle.new(
+			24 + BLOCK_SIZE + i * 2 * BLOCK_SIZE,
+			32 + BLOCK_SIZE + j * 2 * BLOCK_SIZE,
+			BLOCK_SIZE,
+			BLOCK_SIZE
+		)
 	end
 
 	for i=0, 7 do
@@ -37,54 +22,29 @@ local function get_hard_blocks(): {Rectangle}
 	return blocks
 end
 
-local record Player
-	id: integer
-   	position: Point
-	asset_file: string
-end
-
-local PLAYER_AREA: Rectangle = {x=24, y=32, width=272, height=176}
+local PLAYER_AREA = Rectangle.new(24, 32, 272, 176)
 local HARD_BLOCKS = get_hard_blocks()
 
-local function interval_overlap(xmin1: number, xmax1: number, xmin2: number, xmax2: number): boolean
-	return xmax1 >= xmin2 and xmax2 >= xmin1
-end
-
-local function box_overlap(b1: Rectangle, b2: Rectangle): boolean
-	return interval_overlap(b1.x, b1.x + b1.width, b2.x, b2.x + b2.width) and
-		interval_overlap(b1.y, b1.y + b1.height, b2.y, b2.y + b2.height)
-end
-
-local function interval_contained(xmin1: number, xmax1: number, xmin2: number, xmax2: number): boolean
-	return xmin1 >= xmin2 and xmax1 <= xmax2
-end
-
-local function box_contains(small: Rectangle, large: Rectangle): boolean
-	return interval_contained(small.x, small.x + small.width, large.x, large.x + large.width) and
-		interval_contained(small.y, small.y + small.height, large.y, large.y + large.height)
-end
-
 local function valid_player_move(new_position: Point): boolean
-	local new_hitbox: Rectangle = {x = new_position.x, y=new_position.y, height=BLOCK_SIZE-1, width=BLOCK_SIZE-1}
+	local new_hitbox = new_hit_box(new_position)
 	for i=1, #HARD_BLOCKS do
-		local hard_block = HARD_BLOCKS[i]
-		if box_overlap(new_hitbox, hard_block) then
+		if new_hitbox:overlap(HARD_BLOCKS[i]) then
 			return false
 		end
 	end
 
-	return box_contains(new_hitbox, PLAYER_AREA)
+	return PLAYER_AREA:contains(new_hitbox)
 end
 
 function lutro.conf(t: Configuration)
-	t.width  = WIDTH
-	t.height = HEIGHT
+	t.width  = MAP_WIDTH
+	t.height = MAP_HEIGHT
 end
 
 local function convert_pos_for_character_draw(image: Image, pos: Point): Point
 	local h = image:getHeight()
 	-- x: -1 and y: +1 is because of the sprite, look over when doing animations
-	return {x=pos.x - 1, y=pos.y - h + BLOCK_SIZE + 1}
+	return Point.new(pos.x - 1, pos.y - h + BLOCK_SIZE + 1)
 end
 
 local function setup_players(): {Player}
@@ -102,19 +62,19 @@ local function setup_players(): {Player}
 		[10] = "assets/master_higins.png",
 	}
 	local start_by_id: {number:Point} = {
-		[1] = {x=24, y=32},
-		[2] = {x=280, y=32},
-		[3] = {x=24, y=192},
-		[4] = {x=280, y=192},
-		[5] = {x=152, y=112},
-		[6] = {x=56, y=112},
-		[7] = {x=248, y=112},
-		[8] = {x=152, y=192},
-		[9] = {x=152, y=32},
-		[10] = {x=216, y=160},
+		[1] = Point.new(24, 32),
+		[2] = Point.new(280, 32),
+		[3] = Point.new(24, 192),
+		[4] = Point.new(280, 192),
+		[5] = Point.new(152, 112),
+		[6] = Point.new(56, 112),
+		[7] = Point.new(248, 112),
+		[8] = Point.new(152, 192),
+		[9] = Point.new(152, 32),
+		[10] = Point.new(216, 160),
 	}
 	local num_joysticks = lutro.joystick.getJoystickCount()
-	for i=1, math.min(num_joysticks, 10) do
+	for i=1, num_joysticks do
 		table.insert(players, {id=i, position=start_by_id[i], asset_file=asset_by_id[i]})
 	end
 
@@ -128,7 +88,7 @@ end
 
 local function get_new_position_from_input(player: Player, dt: number): Point
 	-- Create copy of player position that we mutate before returning as 'new'
-	local cur_pos: Point = {x = player.position.x, y = player.position.y}
+	local cur_pos = Point.new(player.position.x, player.position.y)
 
 	local function try_update_to(new_potential: Point)
 		if valid_player_move(new_potential) then
@@ -137,16 +97,16 @@ local function get_new_position_from_input(player: Player, dt: number): Point
 	end
 
 	if lutro.joystick.isDown(player.id, JOYPAD_DOWN) then
-		try_update_to({x=cur_pos.x, y=cur_pos.y + dt * PLAYER_SPEED})
+		try_update_to(Point.new(cur_pos.x, cur_pos.y + dt * PLAYER_SPEED))
 	end
 	if lutro.joystick.isDown(player.id, JOYPAD_UP) then
-		try_update_to({x=cur_pos.x, y=cur_pos.y - dt * PLAYER_SPEED})
+		try_update_to(Point.new(cur_pos.x, cur_pos.y - dt * PLAYER_SPEED))
 	end
 	if lutro.joystick.isDown(player.id, JOYPAD_RIGHT) then
-		try_update_to({x=cur_pos.x + dt * PLAYER_SPEED, y=cur_pos.y})
+		try_update_to(Point.new(cur_pos.x + dt * PLAYER_SPEED, cur_pos.y))
 	end
 	if lutro.joystick.isDown(player.id, JOYPAD_LEFT) then
-		try_update_to({x=cur_pos.x - dt * PLAYER_SPEED, y=cur_pos.y})
+		try_update_to(Point.new(cur_pos.x - dt * PLAYER_SPEED, cur_pos.y))
 	end
 
 	return cur_pos
