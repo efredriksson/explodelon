@@ -34,6 +34,13 @@ global type Font = interface
    getWidth: function(self: Font, text: string): number
 end
 
+global type Quad = interface
+   is Object
+   getTextureDimensions: function(self: Quad): number, number
+   getViewport: function(self: Quad): number, number, number, number
+   setViewport: function(self: Quad, x: number, y: number, w: number, h: number, sw?: number, sh?: number)
+end
+
 global record lutro
    conf: function(t: Configuration)
    load: function()
@@ -51,8 +58,10 @@ global record lutro
       setFont: function(font: Font)
 
       newImage: function(filename: string): Image
+      newQuad: function(x: number, y: number, width: number, height: number, sw: number, sh: number): Quad
 
       draw: function(drawable: Drawable, x?: number, y?: number, r?: number, sx?: number, sy?: number, ox?: number, oy?: number, kx?: number, ky?: number)
+      draw: function(drawable: Drawable, quad: Quad, x: number, y: number, r?: number, sx?: number, sy?: number, ox?: number, oy?: number, kx?: number, ky?: number)
 		
       rectangle: function(mode: DrawMode, x: number, y: number, width: number, height: number)
    end

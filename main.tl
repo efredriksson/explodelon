@@ -1,6 +1,7 @@
 require("const")
 require("geometry")
 require("player")
+require("animation")
 
 local function get_hard_blocks(): {Rectangle}
 	local blocks: {Rectangle} = {}
@@ -41,26 +42,14 @@ function lutro.conf(t: Configuration)
 	t.height = MAP_HEIGHT
 end
 
-local function convert_pos_for_character_draw(image: Image, pos: Point): Point
-	local h = image:getHeight()
+local function convert_pos_for_character_draw(animation: Animation, pos: Point): Point
+	local h = animation.image:getHeight()
 	-- x: -1 and y: +1 is because of the sprite, look over when doing animations
 	return Point.new(pos.x - 1, pos.y - h + BLOCK_SIZE + 1)
 end
 
 local function setup_players(): {Player}
 	local players: {Player} = {}
-	local asset_by_id: {number:string} = {
-		[1] = "assets/kotetsu.png",
-		[2] = "assets/honey.png",
-		[3] = "assets/kinu.png",
-		[4] = "assets/milon.png",
-		[5] = "assets/black.png",
-		[6] = "assets/white.png",
-		[7] = "assets/manjimaru.png",
-		[8] = "assets/bonks.png",
-		[9] = "assets/kabuki.png",
-		[10] = "assets/master_higins.png",
-	}
 	local start_by_id: {number:Point} = {
 		[1] = Point.new(24, 32),
 		[2] = Point.new(280, 32),
@@ -75,15 +64,31 @@ local function setup_players(): {Player}
 	}
 	local num_joysticks = lutro.joystick.getJoystickCount()
 	for i=1, num_joysticks do
-		table.insert(players, {id=i, position=start_by_id[i], asset_file=asset_by_id[i]})
+		table.insert(players, {id=i, position=start_by_id[i]})
 	end
 
 	return players
 end
 
+local function character_animation(asset_file: string): Animation
+	return Animation.new(lutro.graphics.newImage(asset_file), 18, 34, 3, 18)
+end
+
 function lutro.load()
 	global background = lutro.graphics.newImage("assets/footboll-map.png")
 	global players = setup_players()
+	global animations: {number: Animation} = {
+		[1] = character_animation("assets/kotetsu_walk_down.png"),
+		[2] = character_animation("assets/honey_walk_down.png"),
+		[3] = character_animation("assets/kinu_walk_down.png"),
+		[4] = character_animation("assets/milon_walk_down.png"),
+		[5] = character_animation("assets/black_walk_down.png"),
+		[6] = character_animation("assets/white_walk_down.png"),
+		[7] = character_animation("assets/kabuki_walk_down.png"),
+		[8] = character_animation("assets/master_higins_walk_down.png"),
+		[9] = character_animation("assets/manjimaru_walk_down.png"),
+		[10] = character_animation("assets/bonks_walk_down.png"),
+	}
 end
 
 local function get_new_position_from_input(player: Player, dt: number): Point
@@ -117,6 +122,8 @@ function lutro.update(dt: number)
 		local player = players[i]
 		local new_position = get_new_position_from_input(player, dt)
 		player.position = new_position
+
+		animations[player.id]:update(dt)
 	end
 end
 
@@ -124,8 +131,8 @@ function lutro.draw()
 	lutro.graphics.draw(background)
 	for i=1, #players do
 		local player = players[i]
-		local player_img = lutro.graphics.newImage(player.asset_file)
-		local adj_pos = convert_pos_for_character_draw(player_img, player.position)
-		lutro.graphics.draw(player_img, adj_pos.x, adj_pos.y)
+		local player_animation = animations[player.id]
+		local adj_pos = convert_pos_for_character_draw(player_animation, player.position)
+		player_animation:draw(adj_pos.x, adj_pos.y)
 	end
 end

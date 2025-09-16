@@ -18,4 +18,4 @@ global JOYPAD_R3       = 16
 global MAP_WIDTH = 320
 global MAP_HEIGHT = 224
 global BLOCK_SIZE = 16
-global PLAYER_SPEED = 40
+global PLAYER_SPEED = 60

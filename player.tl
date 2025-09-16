@@ -4,7 +4,6 @@ require("geometry")
 global record Player
 	id: integer
    	position: Point
-	asset_file: string
 end
 
 global function new_hit_box(new_position: Point): Rectangle
