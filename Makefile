@@ -5,7 +5,7 @@ TRANSPILED := $(patsubst %.tl, dist/%.lua, $(SRCS))
 ASSETS := $(wildcard assets/*)
 DIST_ASSETS := $(patsubst %, dist/%, $(ASSETS))
 LUTRO_DIST_DIR?=$(CURDIR)/dist
-LUTRO_DIST_PATH?=${LUTRO_DIST_DIR}/impact-man.lutro
+LUTRO_DIST_PATH?=${LUTRO_DIST_DIR}/explodelon.lutro
 
 dist/%.lua : %.tl | dist
 	tl gen $< -o $@
