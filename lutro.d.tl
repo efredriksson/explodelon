@@ -1,3 +1,10 @@
+-- This file contains the interface and type definitions for 'lutro'.
+--
+-- Similar work have been done for LÖVE :https://github.com/MikuAuahDark/love2d-tl/blob/master/love.d.tl.
+-- As Lutro is a subset of LÖVE, the Teal code there can be used as inspiration. For details on what
+-- exists in Lutro see https://github.com/libretro/lutro-status?tab=readme-ov-file#status. Otherwise,
+-- add to the interface here as needed when using new Lutro functionality. 
+
 global type Configuration = interface
    width: integer
    height: integer
