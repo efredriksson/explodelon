@@ -127,7 +127,7 @@ local function set_position_and_dir_from_input(player: Player, dt: number)
 		-- Set direction for any input direction as default
 		player.direction = directions[i][2]
 	end
-	
+
 	for i=1, #directions do
 		local new_position = player.position:move(directions[i][1])
 		if valid_player_move(new_position) then
@@ -136,6 +136,8 @@ local function set_position_and_dir_from_input(player: Player, dt: number)
 			player.direction = directions[i][2]
 		end
 	end
+
+	player.idle = #directions == 0
 end
 
 function lutro.update(dt: number)
@@ -143,6 +145,13 @@ function lutro.update(dt: number)
 		local player = players[i]
 		set_position_and_dir_from_input(player, dt)
 
+		local animation = animations[player.id][player.direction]
+		if player.idle then
+			animation.playing = false
+			animation.timer = 8 -- hack, this forces final animation fram, which is 'idle'
+		else
+			animation.playing = true
+		end
 		animations[player.id][player.direction]:update(dt)
 	end
 end

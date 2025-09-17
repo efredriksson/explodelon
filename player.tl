@@ -12,14 +12,16 @@ global record Player
 	id: integer
    	position: Point
 	direction: Direction
+	idle: boolean
 end
 
 function Player.new(id: integer, position: Point): Player
-   local self: Player = setmetatable({}, { __index = Player })
-   self.id = id
-   self.position = position
-   self.direction = "down"
-   return self
+	local self: Player = setmetatable({}, { __index = Player })
+	self.id = id
+	self.position = position
+	self.direction = "down"
+	self.idle = true
+	return self
 end
 
 global function new_hit_box(new_position: Point): Rectangle
