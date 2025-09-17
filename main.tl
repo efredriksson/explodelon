@@ -64,7 +64,7 @@ local function setup_players(): {Player}
 	}
 	local num_joysticks = lutro.joystick.getJoystickCount()
 	for i=1, num_joysticks do
-		table.insert(players, {id=i, position=start_by_id[i], direction="down"})
+		table.insert(players, Player.new(i, start_by_id[i]))
 	end
 
 	return players
