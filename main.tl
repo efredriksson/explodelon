@@ -64,7 +64,7 @@ local function setup_players(): {Player}
 	}
 	local num_joysticks = lutro.joystick.getJoystickCount()
 	for i=1, num_joysticks do
-		table.insert(players, {id=i, position=start_by_id[i]})
+		table.insert(players, {id=i, position=start_by_id[i], direction="down"})
 	end
 
 	return players
@@ -74,56 +74,70 @@ local function character_animation(asset_file: string): Animation
 	return Animation.new(lutro.graphics.newImage(asset_file), 18, 34, 3, 18)
 end
 
-function lutro.load()
-	global background = lutro.graphics.newImage("assets/footboll-map.png")
-	global players = setup_players()
-	global animations: {number: Animation} = {
-		[1] = character_animation("assets/kotetsu_walk_down.png"),
-		[2] = character_animation("assets/honey_walk_down.png"),
-		[3] = character_animation("assets/kinu_walk_down.png"),
-		[4] = character_animation("assets/milon_walk_down.png"),
-		[5] = character_animation("assets/black_walk_down.png"),
-		[6] = character_animation("assets/white_walk_down.png"),
-		[7] = character_animation("assets/kabuki_walk_down.png"),
-		[8] = character_animation("assets/master_higins_walk_down.png"),
-		[9] = character_animation("assets/manjimaru_walk_down.png"),
-		[10] = character_animation("assets/bonks_walk_down.png"),
+local function character_animations(character_asset: string): {Direction: Animation}
+	return {
+		["up"] = character_animation("assets/" .. character_asset .. "_walk_up.png"),
+		["down"] = character_animation("assets/" .. character_asset .. "_walk_down.png"),
+		["right"] = character_animation("assets/" .. character_asset .. "_walk_right.png"),
+		["left"] = character_animation("assets/" .. character_asset .. "_walk_left.png"),
 	}
 end
 
-local function get_new_position_from_input(player: Player, dt: number): Point
-	-- Create copy of player position that we mutate before returning as 'new'
-	local cur_pos = Point.new(player.position.x, player.position.y)
 
-	local function try_update_to(new_potential: Point)
-		if valid_player_move(new_potential) then
-			cur_pos = new_potential
+
+function lutro.load()
+	global background = lutro.graphics.newImage("assets/footboll-map.png")
+	global players = setup_players()
+	global animations: {number: {Direction: Animation}} = {
+		[1] = character_animations("kotetsu"),
+		[2] = character_animations("honey"),
+		[3] = character_animations("kinu"),
+		[4] = character_animations("milon"),
+		[5] = character_animations("black"),
+		[6] = character_animations("white"),
+		[7] = character_animations("kabuki"),
+		[8] = character_animations("master_higins"),
+		[9] = character_animations("manjimaru"),
+		[10] = character_animations("bonks"),
+	}
+end
+
+local function get_directions_from_input(id: integer, dt: number): {{Vector, Direction}}
+	local result: {{Vector, Direction}} = {}
+
+	if lutro.joystick.isDown(id, JOYPAD_DOWN) then
+		table.insert(result, {Vector.new(0, dt * PLAYER_SPEED), "down"})
+	end
+	if lutro.joystick.isDown(id, JOYPAD_UP) then
+		table.insert(result, {Vector.new(0, -dt * PLAYER_SPEED), "up"})
+	end
+	if lutro.joystick.isDown(id, JOYPAD_RIGHT) then
+		table.insert(result, {Vector.new(dt * PLAYER_SPEED, 0), "right"})
+	end
+	if lutro.joystick.isDown(id, JOYPAD_LEFT) then
+		table.insert(result, {Vector.new(-dt * PLAYER_SPEED, 0), "left"})
+	end
+
+	return result
+end
+
+local function set_position_and_dir_from_input(player: Player, dt: number)
+	local directions = get_directions_from_input(player.id, dt)
+	for i=1, #directions do
+		local new_position = player.position:move(directions[i][1])
+		if valid_player_move(new_position) then
+			player.position = new_position
+			player.direction = directions[i][2]
 		end
 	end
-
-	if lutro.joystick.isDown(player.id, JOYPAD_DOWN) then
-		try_update_to(Point.new(cur_pos.x, cur_pos.y + dt * PLAYER_SPEED))
-	end
-	if lutro.joystick.isDown(player.id, JOYPAD_UP) then
-		try_update_to(Point.new(cur_pos.x, cur_pos.y - dt * PLAYER_SPEED))
-	end
-	if lutro.joystick.isDown(player.id, JOYPAD_RIGHT) then
-		try_update_to(Point.new(cur_pos.x + dt * PLAYER_SPEED, cur_pos.y))
-	end
-	if lutro.joystick.isDown(player.id, JOYPAD_LEFT) then
-		try_update_to(Point.new(cur_pos.x - dt * PLAYER_SPEED, cur_pos.y))
-	end
-
-	return cur_pos
 end
 
 function lutro.update(dt: number)
 	for i=1, #players do
 		local player = players[i]
-		local new_position = get_new_position_from_input(player, dt)
-		player.position = new_position
+		set_position_and_dir_from_input(player, dt)
 
-		animations[player.id]:update(dt)
+		animations[player.id][player.direction]:update(dt)
 	end
 end
 
@@ -131,7 +145,7 @@ function lutro.draw()
 	lutro.graphics.draw(background)
 	for i=1, #players do
 		local player = players[i]
-		local player_animation = animations[player.id]
+		local player_animation = animations[player.id][player.direction]
 		local adj_pos = convert_pos_for_character_draw(player_animation, player.position)
 		player_animation:draw(adj_pos.x, adj_pos.y)
 	end

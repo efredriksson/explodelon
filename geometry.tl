@@ -3,6 +3,11 @@ global record Point
    y: number
 end
 
+global record Vector
+   x: number
+   y: number
+end
+
 global record Rectangle
 	x: number
 	y: number
@@ -12,6 +17,17 @@ end
 
 function Point.new(x: number, y: number): Point
    local self: Point = setmetatable({}, { __index = Point })
+   self.x = x or 0
+   self.y = y or 0
+   return self
+end
+
+function Point:move(delta: Vector): Point
+   return Point.new(self.x + delta.x, self.y + delta.y)
+end
+
+function Vector.new(x: number, y: number): Vector
+   local self: Vector = setmetatable({}, { __index = Vector })
    self.x = x or 0
    self.y = y or 0
    return self
