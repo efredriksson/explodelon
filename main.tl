@@ -156,12 +156,21 @@ function lutro.update(dt: number)
 	end
 end
 
+local function sort_players_by_y_cord(players_to_sort: {Player})
+	local function compare_player_y_pose(p1: Player, p2: Player): boolean
+		return p1.position.y < p2.position.y
+	end
+	table.sort(players_to_sort, compare_player_y_pose)
+end
+
 function lutro.draw()
 	lutro.graphics.draw(background)
-	for i=1, #players do
-		local player = players[i]
+
+	 -- Need to render characters in the front last so they are on top of any other entity
+	sort_players_by_y_cord(players)
+	for _, player in ipairs(players) do
 		local player_animation = animations[player.id][player.direction]
-		local adj_pos = convert_pos_for_character_draw(player_animation, player.position)
-		player_animation:draw(adj_pos.x, adj_pos.y)
+		local draw_pos = convert_pos_for_character_draw(player_animation, player.position)
+		player_animation:draw(draw_pos.x, draw_pos.y)
 	end
 end
