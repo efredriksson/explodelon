@@ -124,9 +124,15 @@ end
 local function set_position_and_dir_from_input(player: Player, dt: number)
 	local directions = get_directions_from_input(player.id, dt)
 	for i=1, #directions do
+		-- Set direction for any input direction as default
+		player.direction = directions[i][2]
+	end
+	
+	for i=1, #directions do
 		local new_position = player.position:move(directions[i][1])
 		if valid_player_move(new_position) then
 			player.position = new_position
+			-- Direction for valid moves takes precedence however!
 			player.direction = directions[i][2]
 		end
 	end
