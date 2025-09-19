@@ -44,8 +44,8 @@ local function convert_pos_for_character_draw(animation: Animation, pos: Point):
 	return Point.new(pos.x - 1, pos.y - h + BLOCK_SIZE + 1)
 end
 
-local function setup_players(): {Player}
-	local players: {Player} = {}
+local function setup_players(number_players: integer): {Player}
+	global players: {Player} = {}
 	local start_by_id: {number:Point} = {
 		[1] = Point.new(24, 32),
 		[2] = Point.new(280, 32),
@@ -58,8 +58,7 @@ local function setup_players(): {Player}
 		[9] = Point.new(152, 32),
 		[10] = Point.new(216, 160),
 	}
-	local num_joysticks = lutro.joystick.getJoystickCount()
-	for i=1, num_joysticks do
+	for i=1, number_players do
 		table.insert(players, Player.new(i, start_by_id[i]))
 	end
 
@@ -83,7 +82,6 @@ end
 
 local function game_load()
 	global background = lutro.graphics.newImage("assets/footboll-map.png")
-	global players = setup_players()
 	global animations: {number: {Direction: Animation}} = {
 		[1] = character_animations("kotetsu"),
 		[2] = character_animations("honey"),
@@ -171,8 +169,14 @@ local function game_draw()
 	end
 end
 
-local module = Scene.new()
-module.load = game_load
-module.update = game_update
-module.draw = game_draw
-return module
+local function setup(number_players: integer): Scene
+	setup_players(number_players)
+
+	local module = Scene.new()
+	module.load = game_load
+	module.update = game_update
+	module.draw = game_draw
+	return module
+end
+
+return setup

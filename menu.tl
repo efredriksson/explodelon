@@ -2,9 +2,9 @@ require("const")
 require("scene")
 
 local record MenuSelection
-   value: number
-   min: number
-   max: number
+   value: integer
+   min: integer
+   max: integer
 end
 
 local record MenuButton
@@ -62,6 +62,13 @@ global function menu_gamepadpressed(button: GamepadButton)
             ok_action = player_selection:increment()
         elseif button == "left" then
             ok_action = player_selection:decrement()
+        end
+    end
+
+    if menu_selection.value == 2 then
+        if button == "b" then
+            set_scene(require("game")(player_selection.value))
+            ok_action = true
         end
     end
     

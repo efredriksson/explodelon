@@ -1,23 +1,21 @@
 require("const")
 require("scene")
 
-global scene: Scene = require("game")
-
 function lutro.conf(t: Configuration)
 	t.width  = MAP_WIDTH
 	t.height = MAP_HEIGHT
 end
 
 function lutro.load()
-	scene.load()
+	set_scene(require("menu"))
 end
 
 function lutro.update(dt: number)
-	scene.update(dt)
+	get_scene().update(dt)
 end
 
 function lutro.gamepadpressed(_: integer, button: GamepadButton)
-	scene.gamepadpressed(button)
+	get_scene().gamepadpressed(button)
 end
 
 function lutro.gamepadreleased(_: integer, _: GamepadButton)
@@ -25,5 +23,5 @@ function lutro.gamepadreleased(_: integer, _: GamepadButton)
 end
 
 function lutro.draw()
-	scene.draw()
+	get_scene().draw()
 end

@@ -25,3 +25,14 @@ function Scene.new(): Scene
     self.draw = default_draw
     return self
 end
+
+local current_scene: Scene
+
+global function get_scene(): Scene
+    return current_scene
+end
+
+global function set_scene(scene: Scene)
+    current_scene = scene
+    current_scene.load()
+end
