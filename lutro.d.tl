@@ -41,6 +41,35 @@ global type Quad = interface
    setViewport: function(self: Quad, x: number, y: number, w: number, h: number, sw?: number, sh?: number)
 end
 
+local type Source = interface
+   is Object
+end
+
+global type GamepadButton = enum
+   "a"
+   "b"
+   "x"
+   "y"
+   "up"
+   "down"
+   "right"
+   "left"
+   "r1"
+   "r2"
+   "r3"
+   "l1"
+   "l2"
+   "l3"
+   "start"
+   "select"
+end
+
+global type SourceType = enum
+   "static"
+   "stream"
+   "queue"
+end
+
 global record lutro
    conf: function(t: Configuration)
    load: function()
@@ -56,6 +85,8 @@ global record lutro
 
       newImageFont: function(filename: string, glyphs: string): Font
       setFont: function(font: Font)
+      print: function(text: string, x: number, y: number)
+      printf: function(text: string, x: number, y: number, limit: number, align: string)
 
       newImage: function(filename: string): Image
       newQuad: function(x: number, y: number, width: number, height: number, sw: number, sh: number): Quad
@@ -71,4 +102,11 @@ global record lutro
       getJoystickCount: function(): integer
    end
 
+   record audio
+      newSource: function(filename: string, type: SourceType): Source
+      play: function(source: Source)
+   end
+
+   gamepadpressed: function(button_nbr: integer, button: GamepadButton)
+   gamepadreleased: function(button_nbr: integer, button: GamepadButton)
 end
