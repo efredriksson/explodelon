@@ -3,6 +3,7 @@ require("geometry")
 require("player")
 require("animation")
 require("scene")
+require("game_timer")
 
 local function get_hard_blocks(): {Rectangle}
 	local blocks: {Rectangle} = {}
@@ -94,6 +95,9 @@ local function game_load()
 		[9] = character_animations("manjimaru"),
 		[10] = character_animations("bonks"),
 	}
+
+	global game_timer = GameTimer.new(180)
+	game_timer:load_assets()
 end
 
 local function get_directions_from_input(id: integer, dt: number): {{Vector, Direction}}
@@ -148,6 +152,8 @@ local function game_update(dt: number)
 		end
 		animations[player.id][player.direction]:update(dt)
 	end
+
+	game_timer:increment(dt)
 end
 
 local function sort_players_by_y_cord(players_to_sort: {Player})
@@ -167,6 +173,8 @@ local function game_draw()
 		local draw_pos = convert_pos_for_character_draw(player_animation, player.position)
 		player_animation:draw(draw_pos.x, draw_pos.y)
 	end
+
+	game_timer:draw()
 end
 
 local function setup(number_players: integer): Scene
