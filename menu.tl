@@ -49,8 +49,8 @@ end
 
 global function menu_load_resources()
     local font_symbols = " abcdefghijklmnopqrstuvwxyz0123456789.!'-:*"
-    global black_font = lutro.graphics.newImageFont("assets/black_imgfont.png", font_symbols)
-    global white_font = lutro.graphics.newImageFont("assets/white_imgfont.png", font_symbols)
+    global black_font = lutro.graphics.newImageFont("assets/imgfont/black.png", font_symbols)
+    global white_font = lutro.graphics.newImageFont("assets/imgfont/white.png", font_symbols)
 
     global ok_sound = lutro.audio.newSource("assets/menu_good.wav", "static")
 end
