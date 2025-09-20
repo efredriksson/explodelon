@@ -23,7 +23,7 @@ clean:
 	rm -rf ./dist || true
 
 ${LUTRO_DIST_PATH}: $(TRANSPILED) $(DIST_ASSETS)
-	cd dist && zip $@ $(patsubst dist/%, %, $^)
+	cd dist && zip -r $@ .
 
 package: ${LUTRO_DIST_PATH}
 
