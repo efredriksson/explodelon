@@ -15,8 +15,8 @@ end
 
 function GameTimer:load_assets()
 	local font_symbols = " 0123456789:\""
-    global clock_font = lutro.graphics.newImageFont("assets/clock_imgfont.png", font_symbols)
-	global clock_shade_font = lutro.graphics.newImageFont("assets/clock_shade_imgfont.png", font_symbols)
+    global clock_font = lutro.graphics.newImageFont("assets/imgfont/clock.png", font_symbols)
+	global clock_shade_font = lutro.graphics.newImageFont("assets/imgfont/clock_shade.png", font_symbols)
 end
 
 function GameTimer:decrement(dt: number)

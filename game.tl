@@ -72,10 +72,10 @@ end
 
 local function character_animations(character_asset: string): {Direction: Animation}
 	return {
-		["up"] = character_animation("assets/" .. character_asset .. "_walk_up.png"),
-		["down"] = character_animation("assets/" .. character_asset .. "_walk_down.png"),
-		["right"] = character_animation("assets/" .. character_asset .. "_walk_right.png"),
-		["left"] = character_animation("assets/" .. character_asset .. "_walk_left.png"),
+		["up"] = character_animation("assets/" .. character_asset .. "/walk_up.png"),
+		["down"] = character_animation("assets/" .. character_asset .. "/walk_down.png"),
+		["right"] = character_animation("assets/" .. character_asset .. "/walk_right.png"),
+		["left"] = character_animation("assets/" .. character_asset .. "/walk_left.png"),
 	}
 end
 
