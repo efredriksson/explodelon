@@ -153,7 +153,7 @@ local function game_update(dt: number)
 		animations[player.id][player.direction]:update(dt)
 	end
 
-	game_timer:increment(dt)
+	game_timer:decrement(dt)
 end
 
 local function sort_players_by_y_cord(players_to_sort: {Player})

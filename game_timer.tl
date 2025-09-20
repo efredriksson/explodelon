@@ -19,7 +19,7 @@ function GameTimer:load_assets()
 	global clock_shade_font = lutro.graphics.newImageFont("assets/clock_shade_imgfont.png", font_symbols)
 end
 
-function GameTimer:increment(dt: number)
+function GameTimer:decrement(dt: number)
 	self.time_left = self.time_left - dt
 end
 
