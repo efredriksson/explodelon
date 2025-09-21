@@ -61,7 +61,7 @@ end
 local NON_HARD_POSITIONS = get_non_hard_block_positions()
 
 
-local function restrict_player_movement(new_position: Point, movement: Vector): Point, boolean, boolean
+local function restrict_player_movement(new_position: Point, movement: Vector): Point, boolean, boolean, boolean
 	local new_hitbox = new_hit_box(new_position)
 	local corner_fix = 8
 	for _, hard_block in ipairs(HARD_BLOCKS) do
@@ -71,31 +71,31 @@ local function restrict_player_movement(new_position: Point, movement: Vector): 
 				if movement.y < 0 then
 					print("Restricted (block): x = 0, y < 0", new_position.x, new_position.y)
 					if x_dist > corner_fix then
-						return Point.new(new_position.x, hard_block.y + BLOCK_SIZE), true, false
+						return Point.new(new_position.x, hard_block.y + BLOCK_SIZE), true, false, false
 					else
 						local dy = math.abs(movement.y)
 						local dx = math.min(x_dist, dy)
 						dy = (movement.y / dy) * (dy - dx)
 						print("DX ", dx)
 						if math.abs(new_position.x + BLOCK_SIZE - hard_block.x) < corner_fix * 2 then
-							return Point.new(new_position.x - dx, new_position.y + dy), true, true
+							return Point.new(new_position.x - dx, new_position.y + dy), true, true, true
 						else
-							return Point.new(new_position.x + dx, new_position.y + dy), true, true
+							return Point.new(new_position.x + dx, new_position.y + dy), true, true, true
 						end
 					end
 				else
 					print("Restricted (block): x = 0, y > 0", new_position.x, new_position.y)
 					if x_dist > corner_fix then
-						return Point.new(new_position.x, hard_block.y - BLOCK_SIZE), true, false
+						return Point.new(new_position.x, hard_block.y - BLOCK_SIZE), true, false, false
 					else
 						local dy = math.abs(movement.y)
 						local dx = math.min(x_dist, dy)
 						dy = (movement.y / dy) * (dy - dx)
 						print("DX ", dx)
 						if math.abs(new_position.x + BLOCK_SIZE - hard_block.x) < corner_fix * 2 then
-							return Point.new(new_position.x - dx, new_position.y + dy), true, true
+							return Point.new(new_position.x - dx, new_position.y + dy), true, true, true
 						else
-							return Point.new(new_position.x + dx, new_position.y + dy), true, true
+							return Point.new(new_position.x + dx, new_position.y + dy), true, true, true
 						end
 					end
 				end
@@ -104,29 +104,29 @@ local function restrict_player_movement(new_position: Point, movement: Vector): 
 				if movement.x < 0 then
 					print("Restricted (block): y = 0, x < 0", new_position.x, new_position.y)
 					if y_dist > corner_fix then
-						return Point.new(hard_block.x + BLOCK_SIZE, new_position.y), true, false
+						return Point.new(hard_block.x + BLOCK_SIZE, new_position.y), true, false, false
 					else
 						local dx = math.abs(movement.x)
 						local dy = math.min(y_dist, dx)
 						dx = (movement.x / dx) * (dx - dy)
 						if math.abs(new_position.y + BLOCK_SIZE - hard_block.y) < corner_fix * 2 then
-							return Point.new(new_position.x + dx, new_position.y - dy), true, true
+							return Point.new(new_position.x + dx, new_position.y - dy), true, true, true
 						else
-							return Point.new(new_position.x + dx, new_position.y + dy), true, true
+							return Point.new(new_position.x + dx, new_position.y + dy), true, true, true
 						end
 					end
 				else
 					print("Restricted (block): y = 0, x > 0", new_position.x, new_position.y)
 					if y_dist > corner_fix then
-						return Point.new(hard_block.x - BLOCK_SIZE, new_position.y), true, false
+						return Point.new(hard_block.x - BLOCK_SIZE, new_position.y), true, false, false
 					else
 						local dx = math.abs(movement.x)
 						local dy = math.min(y_dist, dx)
 						dx = (movement.x / dx) * (dx - dy)
 						if math.abs(new_position.y + BLOCK_SIZE - hard_block.y) < corner_fix * 2 then
-							return Point.new(new_position.x + dx, new_position.y - dy), true, true
+							return Point.new(new_position.x + dx, new_position.y - dy), true, true, true
 						else
-							return Point.new(new_position.x + dx, new_position.y + dy), true, true
+							return Point.new(new_position.x + dx, new_position.y + dy), true, true, true
 						end
 					end
 				end
@@ -139,18 +139,18 @@ local function restrict_player_movement(new_position: Point, movement: Vector): 
 		if movement.x == 0 then
 			if movement.y < 0 then
 				print("Restricted (area): x = 0, y < 0", new_position.x, new_position.y)
-				return Point.new(new_position.x, PLAYER_AREA.y), true, false
+				return Point.new(new_position.x, PLAYER_AREA.y), true, false, false
 			else
 				print("Restricted (area): x = 0, y > 0", new_position.x, new_position.y)
-				return Point.new(new_position.x, PLAYER_AREA.y + PLAYER_AREA.height - BLOCK_SIZE), true, false
+				return Point.new(new_position.x, PLAYER_AREA.y + PLAYER_AREA.height - BLOCK_SIZE), true, false, false
 			end
 		elseif movement.y == 0 then
 			if movement.x < 0 then
 				print("Restricted (area): y = 0, x < 0", new_position.x, new_position.y)
-				return Point.new(PLAYER_AREA.x, new_position.y), true, false
+				return Point.new(PLAYER_AREA.x, new_position.y), true, false, false
 			else
 				print("Restricted (area): y = 0, x > 0", new_position.x, new_position.y)
-				return Point.new(PLAYER_AREA.x + PLAYER_AREA.width - BLOCK_SIZE, new_position.y), true, false
+				return Point.new(PLAYER_AREA.x + PLAYER_AREA.width - BLOCK_SIZE, new_position.y), true, false, false
 			end
 		else
 			assert(false, "Unknown movement vector")
@@ -158,7 +158,7 @@ local function restrict_player_movement(new_position: Point, movement: Vector): 
 	end
 
 	print("Unrestricted new position ", new_position.x, new_position.y)
-	return new_position, false, true
+	return new_position, false, true, false
 end
 
 local function setup_players(number_players: integer): {Player}
@@ -277,20 +277,57 @@ end
 
 local function set_position_and_dir_from_input(player: Player, dt: number)
 	local directions = get_directions_from_input(player, dt)
-	for i=1, #directions do
-		-- Set direction for any input direction as default
-		player.direction = directions[i][2]
+	local cuts_corners = false
+	local _1: Point
+	local _2: boolean
+	local _3: boolean
+
+	local function sort_directions_by_prio(directions_to_sort: {{Vector, Direction}})
+		local function direction_val(d: {Vector, Direction}): integer
+			-- TODO: Need to make sure that we take directions that would cause
+			-- corner cutting while we have just entered a corridor absolutely last!
+			-- This makes sense because having entered something you probably want to
+			-- stay in it and have the game help with this
+			if d[2] == player.direction then
+				return 3
+			end
+			local movement = d[1]
+			local new_position = player.position:move(movement)
+			_1, _2, _3, cuts_corners = restrict_player_movement(new_position, movement)
+			if cuts_corners then
+				return 2
+			end
+
+			return 1
+		end
+
+		local function compare_player_y_pose(e1: {Vector, Direction}, e2: {Vector, Direction}): boolean
+			return direction_val(e1) < direction_val(e2)
+		end
+		table.sort(directions_to_sort, compare_player_y_pose)
 	end
 
-	for i=1, #directions do
-		local movement = directions[i][1]
+	-- Prioritize directions that are different from current first
+	local directions_reorder: {{Vector, Direction}} = {}
+	for _, direction in ipairs(directions) do
+		table.insert(directions_reorder, direction)
+	end
+	sort_directions_by_prio(directions_reorder)
+	
+	for _, direction in ipairs(directions) do
+		-- Set direction for any input direction as default
+		player.direction = direction[2]
+	end
+
+	for _, direction in ipairs(directions_reorder) do
+		local movement = direction[1]
 		local new_position = player.position:move(movement)
 		local restricted = false
 		local full_movement = false
-		player.position, restricted, full_movement = restrict_player_movement(new_position, movement)
+		player.position, restricted, full_movement, cuts_corners = restrict_player_movement(new_position, movement)
 		if not restricted then
 			-- Direction for valid moves takes precedence however!
-			player.direction = directions[i][2]
+			player.direction = direction[2]
 		end
 		if full_movement then
 			break -- All speed have been used up!
