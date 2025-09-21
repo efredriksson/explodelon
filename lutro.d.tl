@@ -10,7 +10,7 @@ global type Configuration = interface
    height: integer
 end
 
-local enum DrawMode
+global enum DrawMode
    "fill"
    "line"
 end
