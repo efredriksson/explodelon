@@ -5,6 +5,7 @@ require("animation")
 require("scene")
 require("game_timer")
 require("shade_font")
+require("items")
 
 local function get_hard_blocks(): {Rectangle}
 	local blocks: {Rectangle} = {}
@@ -29,6 +30,36 @@ end
 local PLAYER_AREA = Rectangle.new(24, 32, 272, 176)
 local HARD_BLOCKS = get_hard_blocks()
 
+local function get_non_hard_block_positions(): {Point}
+	local positions: {Point} = {}
+
+	local function get_block(i: number, j: number): Point
+		return Point.new(
+			24 + i * BLOCK_SIZE,
+			32 + j * BLOCK_SIZE
+		)
+	end
+
+	for i=0, 16 do
+		for j=0, 10 do
+			local block = get_block(i, j)
+			local is_hard_block = false
+			for _, hard_block in ipairs(HARD_BLOCKS) do
+				if hard_block.x == block.x and hard_block.y == block.y then
+					is_hard_block = true
+				end
+			end
+			
+			if not is_hard_block then
+				table.insert(positions, block)
+			end
+		end
+	end
+	return positions
+end
+
+local NON_HARD_POSITIONS = get_non_hard_block_positions()
+
 local function valid_player_move(new_position: Point): boolean
 	local new_hitbox = new_hit_box(new_position)
 	for i=1, #HARD_BLOCKS do
@@ -38,12 +69,6 @@ local function valid_player_move(new_position: Point): boolean
 	end
 
 	return PLAYER_AREA:contains(new_hitbox)
-end
-
-local function convert_pos_for_character_draw(animation: Animation, pos: Point): Point
-	local h = animation.image:getHeight()
-	-- x: -1 and y: +1 is because of the sprite, look over when doing animations
-	return Point.new(pos.x - 1, pos.y - h + BLOCK_SIZE + 1)
 end
 
 local function setup_players(number_players: integer): {Player}
@@ -84,7 +109,26 @@ local function character_animations(character_asset: string): {Direction: Animat
 	}
 end
 
+local function get_available_item_spots(): {Point}
+	-- Return places an item can drop, non-hard positions
+	-- and also let's not drop items too close to players
+	local available_spots: {Point} = {}
 
+	for _, pos in ipairs(NON_HARD_POSITIONS) do
+		local to_close_to_player = false
+		for _, player in ipairs(players) do
+			if math.abs(player.position.x - pos.x) + math.abs(player.position.y - pos.y) < 32 then
+				to_close_to_player = true
+			end
+		end
+
+		if not to_close_to_player then
+			table.insert(available_spots, pos)
+		end
+	end
+
+	return available_spots
+end
 
 local function game_load()
 	global background = lutro.graphics.newImage("assets/footboll-map.png")
@@ -112,6 +156,9 @@ local function game_load()
 		[9] = character_avatar("manjimaru"),
 		[10] = character_avatar("bonks"),
 	}
+
+	load_item_assets()
+	global items = Items.new()
 
 	global game_timer = GameTimer.new(180)
 	game_timer:load_assets()
@@ -172,12 +219,14 @@ local function game_update(dt: number)
 		animations[player.id][player.direction]:update(dt)
 	end
 
+	items:update(dt)
+	items:dropNew(get_available_item_spots())
 	game_timer:decrement(dt)
 end
 
-local function sort_players_by_y_cord(players_to_sort: {Player})
-	local function compare_player_y_pose(p1: Player, p2: Player): boolean
-		return p1.position.y < p2.position.y
+local function sort_entities_by_y_cord(players_to_sort: {Entity})
+	local function compare_player_y_pose(e1: Entity, e2: Entity): boolean
+		return e1.position.y < e2.position.y
 	end
 	table.sort(players_to_sort, compare_player_y_pose)
 end
@@ -197,17 +246,25 @@ end
 local function game_draw()
 	lutro.graphics.draw(background)
 
-	 -- Need to render characters in the front last so they are on top of any other entity
-	sort_players_by_y_cord(players)
+	local entities_to_draw: {Entity} = {}
 	for _, player in ipairs(players) do
 		local player_animation = animations[player.id][player.direction]
-		local draw_pos = convert_pos_for_character_draw(player_animation, player.position)
-		player_animation:draw(draw_pos.x, draw_pos.y)
+		table.insert(entities_to_draw, PlayerAnimation.new(player_animation, player.position))
 	
 		local avatar_pos = get_avatar_position(player.id, #players)
 		local score_pos = avatar_pos:move(Vector.new(18, 5))
 		lutro.graphics.draw(avatars[player.id], avatar_pos.x, avatar_pos.y)
 		score_font:draw(tostring(player.score), score_pos)
+	end
+
+	for _, item in ipairs(items.on_ground) do
+		table.insert(entities_to_draw, item)
+	end
+
+	-- Need to render entities in the front last so they are on top of any other entity
+	sort_entities_by_y_cord(entities_to_draw)
+	for _, entity in ipairs(entities_to_draw) do
+		entity:draw()
 	end
 
 	game_timer:draw()
