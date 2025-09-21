@@ -157,6 +157,7 @@ local function restrict_player_movement(new_position: Point, movement: Vector): 
 		end
 	end
 
+	print("Unrestricted new position ", new_position.x, new_position.y)
 	return new_position, false, true
 end
 
