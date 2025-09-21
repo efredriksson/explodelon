@@ -5,6 +5,9 @@ require("entity")
 
 global enum ItemType
    "speed"
+   "bomb"
+   "kick"
+   "fire"
 end
 
 global function load_item_assets()
@@ -14,7 +17,10 @@ global function load_item_assets()
     global frame_animation = Animation.new(lutro.graphics.newImage("assets/items/frame.png"), 18, 18, 1, 30)
 	global item_shadow = lutro.graphics.newImage("assets/items/shadow.png")
 	global item_icons: {ItemType: Image} = {
-        ["speed"] = lutro.graphics.newImage("assets/items/speed.png")
+        ["speed"] = lutro.graphics.newImage("assets/items/speed.png"),
+        ["bomb"] = lutro.graphics.newImage("assets/items/bomb.png"),
+        ["kick"] = lutro.graphics.newImage("assets/items/kick.png"),
+        ["fire"] = lutro.graphics.newImage("assets/items/fire.png"),
     }
 end
 
@@ -72,7 +78,9 @@ function Items:dropNew(available_spots: {Point})
     end
 
     local spot_to_drop = available_spots[math.random( #available_spots)]
-    table.insert(self.on_ground, Item.new("speed", spot_to_drop))
+    local items_that_can_drop: {ItemType} = {"speed", "bomb", "kick", "fire"}
+    local item_to_drop = items_that_can_drop[math.random(#items_that_can_drop)]
+    table.insert(self.on_ground, Item.new(item_to_drop, spot_to_drop))
 end
 
 function Items:update(dt: number)
@@ -89,6 +97,12 @@ function Items:consumed_by_player(player: Player, index: integer)
     table.insert(self.by_players[player.id], item)
     if item.type == "speed" then
         player.speed = player.speed + 5
+    elseif item.type == "bomb" then
+        player.bombs = player.bombs + 1
+    elseif item.type == "kick" then
+        player.has_kick = true
+    elseif item.type == "fire" then
+        player.fire = player.fire + 1
     else
         assert(false, "Unhandled item type!")
     end

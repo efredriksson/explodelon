@@ -17,6 +17,9 @@ global record Player
 	idle: boolean
 	score: integer
 	speed: integer
+	bombs: integer
+	fire: integer
+	has_kick: boolean
 end
 
 function Player.new(id: integer, position: Point): Player
@@ -27,6 +30,9 @@ function Player.new(id: integer, position: Point): Player
 	self.idle = true
 	self.score = 0
 	self.speed = PLAYER_SPEED
+	self.bombs = 1
+	self.fire = 2
+	self.has_kick = false
 	return self
 end
 
