@@ -2,6 +2,7 @@ require("const")
 require("geometry")
 require("level_map")
 require("player")
+require("bombs")
 
 local record Movement
 	dxdy: Vector
@@ -112,10 +113,10 @@ local function in_end_of_corridor_and_walking_out(
 end
 
 local function restrict_player_movement(
-	player_pos: Point, movement: Vector, pressure_blocks: {Rectangle}
+	player: Player, movement: Vector, pressure_blocks: {Rectangle}, bombs: Bombs
 ): CheckedMovement
 	local margin_for_corner_assist = 8
-	local new_position = player_pos:move(movement)
+	local new_position = player.position:move(movement)
 	local new_hitbox = new_hit_box(new_position)
 
 	local function move_against_block(
@@ -126,7 +127,7 @@ local function restrict_player_movement(
 		local dist_to_corner = BLOCK_SIZE - math.abs(pos_and_block_lateral_diff)
 
 		if dist_to_corner > margin_for_corner_assist then
-			return CheckedMovement.new(player_pos, false, false)
+			return CheckedMovement.new(player.position, false, false)
 		end
 
 		local along_wall = around_corner_move(
@@ -139,14 +140,21 @@ local function restrict_player_movement(
 		return CheckedMovement.new(new_position:move(along_wall), true, true)
 	end
 
+	for _, bomb in ipairs(bombs.on_ground) do
+		local bomb_hitbox = new_hit_box(bomb.position)
+		if new_hitbox:overlap(bomb_hitbox) and bomb ~= player.bomb_beneath then
+			return CheckedMovement.new(player.position, false, false)
+		end
+	end
+
 	for _, pressure_block in ipairs(pressure_blocks) do
 		if new_hitbox:overlap(pressure_block) then
-			local old_hitbox = new_hit_box(player_pos)
+			local old_hitbox = new_hit_box(player.position)
 			local new_dist_to_1_ton_block = pressure_block:center_distance(new_hitbox)
 			local old_dist_to_1_ton_block = pressure_block:center_distance(old_hitbox)
 			if new_dist_to_1_ton_block < old_dist_to_1_ton_block then
 				-- Not allowed to walk further into 1 ton block
-				return CheckedMovement.new(player_pos, false, false)
+				return CheckedMovement.new(player.position, false, false)
 			end
 		end
 	end
@@ -155,14 +163,14 @@ local function restrict_player_movement(
 		if new_hitbox:overlap(hard_block) then
 			if movement.x == 0 then
 				local movement_len = movement.y
-				local pos_and_block_lateral_diff = player_pos.x - hard_block.x
+				local pos_and_block_lateral_diff = player.position.x - hard_block.x
 				local walk_along_y_axis = false
 				return move_against_block(
 					movement_len, pos_and_block_lateral_diff, walk_along_y_axis
 				)
 			elseif movement.y == 0 then
 				local movement_len = movement.x
-				local pos_and_block_lateral_diff = player_pos.y - hard_block.y
+				local pos_and_block_lateral_diff = player.position.y - hard_block.y
 				local walk_along_y_axis = true
 				return move_against_block(
 					movement_len, pos_and_block_lateral_diff, walk_along_y_axis
@@ -184,9 +192,10 @@ end
 
 local function get_new_player_orientation(
 	player_dir: Direction,
-	player_pos: Point,
 	directions: {Movement},
-	pressure_blocks: {Rectangle}
+	pressure_blocks: {Rectangle},
+	bombs: Bombs,
+	player: Player
 ): Direction, Point
 
 	--- Get movment priority, lower number is higher priority.
@@ -196,14 +205,14 @@ local function get_new_player_orientation(
 	-- directions in a deterministic and expected way.
 	local function movement_prio(movement: Movement): integer
 		local move_if_done = restrict_player_movement(
-			player_pos, movement.dxdy, pressure_blocks
+			player, movement.dxdy, pressure_blocks, bombs
 		)
 
-		if in_end_of_corridor_and_walking_out(movement, player_pos) then
+		if in_end_of_corridor_and_walking_out(movement, player.position) then
 			return 4
 		elseif move_if_done.cuts_corner then
 			return 3
-		elseif in_corridor_and_walking_against_wall(player_pos, movement.dir) then
+		elseif in_corridor_and_walking_against_wall(player.position, movement.dir) then
 			return 2
 		else
 			return 1
@@ -217,12 +226,12 @@ local function get_new_player_orientation(
 		table.sort(to_sort, compare)
 	end
 
-	local cur_position = player_pos
+	local cur_position = player.position
 	local cur_direction = player_dir
 
 	sort_directions_by_prio(directions)
 	for _, direction in ipairs(directions) do
-		local movement = restrict_player_movement(cur_position, direction.dxdy, pressure_blocks)
+		local movement = restrict_player_movement(player, direction.dxdy, pressure_blocks, bombs)
 		cur_position = movement.position
 		cur_direction = direction.dir
 
@@ -233,15 +242,26 @@ local function get_new_player_orientation(
 	return cur_direction, cur_position
 end
 
-global function set_position_and_dir_from_input(player: Player, dt: number, pressure_blocks: {Rectangle})
+global function set_position_and_dir_from_input(player: Player, dt: number, pressure_blocks: {Rectangle}, bombs: Bombs)
 	local directions = get_directions_from_input(player, dt)
 	local new_dir, new_pos = get_new_player_orientation(
-		player.direction, player.position, directions, pressure_blocks
+		player.direction, directions, pressure_blocks, bombs, player
 	)
 	player:set_movement(new_pos, new_dir)
 	if #directions == 0 then
 		player:set_action("idle")
 	else
 		player:set_action("walk")
+	end
+
+	-- Check if player has moved off bomb they were standing on
+	if player.bomb_beneath then
+		local bomb = player.bomb_beneath as Bomb
+		local player_hitbox = new_hit_box(player.position)
+		local bomb_hitbox = new_hit_box(bomb.position):shrink(1)
+
+		if not player_hitbox:overlap(bomb_hitbox) then
+			player.bomb_beneath = nil
+		end
 	end
 end

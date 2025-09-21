@@ -35,6 +35,9 @@ global record Player
 	jump_g: Vector
 	jump_target: Point
 	jump_visual_target: Point
+	-- Using any due to circular dependency: bombs.tl requires player.tl
+	-- Teal doesn't seem to support type-only imports
+	bomb_beneath: any
 end
 
 function Player.new(id: integer, position: Point): Player

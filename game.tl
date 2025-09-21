@@ -11,6 +11,10 @@ require("movement")
 require("pressure_block")
 require("eggs")
 require("dino_animations")
+require("bombs")
+require("input")
+
+local bombs: Bombs
 
 local function setup_players(number_players: integer): {Player}
 	global players: {Player} = {}
@@ -155,8 +159,10 @@ local function game_load()
 
 	local time_left = 180
 	global game_timer = GameTimer.new(time_left)
+	Bombs:load()
+	Explosions:load()
+	bombs = Bombs.new()
 	game_timer:load_assets()
-
 	load_pressure_block_assets()
 	global pressure_blocks = PressureBlocks.new(time_left)
 
@@ -213,6 +219,28 @@ local function clear_items(hitting_ground: {PressureBlock})
 	end
 end
 
+local function find_closest_non_hard_position(pos: Point): Point
+	-- Snap to nearest grid tile
+	local x = math.floor((pos.x - PLAYER_AREA.x) / BLOCK_SIZE + 0.5) * BLOCK_SIZE + PLAYER_AREA.x
+	local y = math.floor((pos.y - PLAYER_AREA.y) / BLOCK_SIZE + 0.5) * BLOCK_SIZE + PLAYER_AREA.y
+	return {x = x, y = y}
+end
+
+local function handle_bomb_drop_input(player: Player)
+	if joystick_is_pressed(player.id, JOYPAD_R) then
+		if (player.bomb_beneath or player.bombs <= 0) then
+			return
+		end
+
+		local closest_non_hard_position = find_closest_non_hard_position(player.position)
+		local bomb = bombs:place_bomb(closest_non_hard_position, player)
+
+		player.bombs = player.bombs - 1
+		player.bomb_beneath = bomb
+	end
+end
+
+
 local function game_update(dt: number)
 	local hitting_ground = pressure_blocks:update(dt)
 	local alive_players: {Player} = {}
@@ -220,7 +248,8 @@ local function game_update(dt: number)
 	for _, player in ipairs(players) do
 		player:update(dt)
 		if player:accepts_input() then
-			set_position_and_dir_from_input(player, dt, pressure_blocks:hitboxes())
+			handle_bomb_drop_input(player)
+			set_position_and_dir_from_input(player, dt, pressure_blocks:hitboxes(), bombs)
 		end
 
 		animations[player.id][player.state][player.action][player.direction]:update(dt)
@@ -250,11 +279,11 @@ local function game_update(dt: number)
 			table.insert(alive_players, player)
 		end
 	end
-
+	
 	items:update(dt)
 	items:dropNew(get_available_item_spots())
 	clear_items(hitting_ground)
-
+	
 	local out_of_time = game_timer:decrement(dt)
 	if #alive_players == 1 then
 		alive_players[1]:won_game()
@@ -263,9 +292,12 @@ local function game_update(dt: number)
 	if #alive_players == 0 or out_of_time then
 		next_game()
 	end
-
+	
 	eggs:update(dt)
 	animated_dinos:update(dt)
+	bombs:update(dt, players)
+
+	input_update(players)
 end
 
 local function sort_entities_by_y_cord(players_to_sort: {Entity})
@@ -322,6 +354,7 @@ local function game_draw()
 		lutro.graphics.draw(avatars[player.id], avatar_pos.x, avatar_pos.y)
 		score_font:draw(tostring(player.score), score_pos)
 	end
+
 	for _, item in ipairs(items.on_ground) do
 		table.insert(entities_to_draw, item)
 	end
@@ -337,6 +370,11 @@ local function game_draw()
 
 	-- Need to render entities in the front last so they are on top of any other entity
 	sort_entities_by_y_cord(entities_to_draw)
+
+	-- Drawing this outside "entities_to_draw" so that bombs are always drawn
+	-- underneath players
+	bombs:draw()
+
 	for _, entity in ipairs(entities_to_draw) do
 		entity:draw()
 	end

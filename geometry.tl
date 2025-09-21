@@ -124,3 +124,12 @@ end
 function Rectangle:top_left(): Point
    return Point.new(self.x, self.y)
 end
+
+function Rectangle:shrink(shrink: number): Rectangle
+   return Rectangle.new(
+      self.x + shrink,
+      self.y + shrink,
+      self.width - 2 * shrink,
+      self.height - 2 * shrink
+   )
+end
