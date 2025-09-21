@@ -166,27 +166,27 @@ local function game_load()
 	global score_font = get_shaded_number_font()
 end
 
-local function get_directions_from_input(id: integer, dt: number): {{Vector, Direction}}
+local function get_directions_from_input(player: Player, dt: number): {{Vector, Direction}}
 	local result: {{Vector, Direction}} = {}
 
-	if lutro.joystick.isDown(id, JOYPAD_DOWN) then
-		table.insert(result, {Vector.new(0, dt * PLAYER_SPEED), "down"})
+	if lutro.joystick.isDown(player.id, JOYPAD_DOWN) then
+		table.insert(result, {Vector.new(0, dt * player.speed), "down"})
 	end
-	if lutro.joystick.isDown(id, JOYPAD_UP) then
-		table.insert(result, {Vector.new(0, -dt * PLAYER_SPEED), "up"})
+	if lutro.joystick.isDown(player.id, JOYPAD_UP) then
+		table.insert(result, {Vector.new(0, -dt * player.speed), "up"})
 	end
-	if lutro.joystick.isDown(id, JOYPAD_RIGHT) then
-		table.insert(result, {Vector.new(dt * PLAYER_SPEED, 0), "right"})
+	if lutro.joystick.isDown(player.id, JOYPAD_RIGHT) then
+		table.insert(result, {Vector.new(dt * player.speed, 0), "right"})
 	end
-	if lutro.joystick.isDown(id, JOYPAD_LEFT) then
-		table.insert(result, {Vector.new(-dt * PLAYER_SPEED, 0), "left"})
+	if lutro.joystick.isDown(player.id, JOYPAD_LEFT) then
+		table.insert(result, {Vector.new(-dt * player.speed, 0), "left"})
 	end
 
 	return result
 end
 
 local function set_position_and_dir_from_input(player: Player, dt: number)
-	local directions = get_directions_from_input(player.id, dt)
+	local directions = get_directions_from_input(player, dt)
 	for i=1, #directions do
 		-- Set direction for any input direction as default
 		player.direction = directions[i][2]
@@ -217,6 +217,12 @@ local function game_update(dt: number)
 			animation.playing = true
 		end
 		animations[player.id][player.direction]:update(dt)
+
+		for j, item in ipairs(items.on_ground) do
+			if item.position:in_radius_of(player.position, BLOCK_SIZE / 2) then
+				items:consumed_by_player(player, j)
+			end
+		end
 	end
 
 	items:update(dt)

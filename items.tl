@@ -1,5 +1,6 @@
 require("animation")
 require("geometry")
+require("player")
 require("entity")
 
 global enum ItemType
@@ -7,6 +8,8 @@ global enum ItemType
 end
 
 global function load_item_assets()
+    global take_item_sound = lutro.audio.newSource("assets/take_item.wav", "static")
+    take_item_sound:setVolume(0.25)
     global tic_counter = 0
     global frame_animation = Animation.new(lutro.graphics.newImage("assets/items/frame.png"), 18, 18, 1, 30)
 	global item_shadow = lutro.graphics.newImage("assets/items/shadow.png")
@@ -38,17 +41,18 @@ end
 
 global record Items
     on_ground: {Item}
+    by_players: {integer: {Item}}
 end
 
 function Items.new(): Items
    local self: Items = setmetatable({}, { __index = Items })
    self.on_ground = {}
+   self.by_players = {}
    return self
 end
 
 function Items:dropNew(available_spots: {Point})
     tic_counter = tic_counter + 1
-    print(tic_counter)
     if tic_counter % 120 ~= 0 then
         -- Only consider drop a new item every 120 tic (2 seconds)
         return
@@ -73,4 +77,19 @@ end
 
 function Items:update(dt: number)
     frame_animation:update(dt)
+end
+
+function Items:consumed_by_player(player: Player, index: integer)
+    lutro.audio.play(take_item_sound)
+
+    local item = table.remove(self.on_ground, index)
+    if self.by_players[player.id] == nil then
+        self.by_players[player.id] = {}
+    end
+    table.insert(self.by_players[player.id], item)
+    if item.type == "speed" then
+        player.speed = player.speed + 5
+    else
+        assert(false, "Unhandled item type!")
+    end
 end

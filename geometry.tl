@@ -26,6 +26,10 @@ function Point:move(delta: Vector): Point
    return Point.new(self.x + delta.x, self.y + delta.y)
 end
 
+function Point:in_radius_of(other: Point, radius: number): boolean
+   return math.sqrt((other.x - self.x) ^ 2 + (other.y - self.y) ^ 2) < radius 
+end
+
 function Vector.new(x: number, y: number): Vector
    local self: Vector = setmetatable({}, { __index = Vector })
    self.x = x or 0

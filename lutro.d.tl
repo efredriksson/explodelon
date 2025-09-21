@@ -43,6 +43,7 @@ end
 
 local type Source = interface
    is Object
+   setVolume: function(self: Source, volume: number)
 end
 
 global type GamepadButton = enum
