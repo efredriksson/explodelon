@@ -13,6 +13,7 @@ global record Player
    	position: Point
 	direction: Direction
 	idle: boolean
+	score: integer
 end
 
 function Player.new(id: integer, position: Point): Player
@@ -21,6 +22,7 @@ function Player.new(id: integer, position: Point): Player
 	self.position = position
 	self.direction = "down"
 	self.idle = true
+	self.score = 0
 	return self
 end
 

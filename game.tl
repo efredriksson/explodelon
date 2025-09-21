@@ -4,6 +4,7 @@ require("player")
 require("animation")
 require("scene")
 require("game_timer")
+require("shade_font")
 
 local function get_hard_blocks(): {Rectangle}
 	local blocks: {Rectangle} = {}
@@ -70,6 +71,10 @@ local function character_animation(asset_file: string): Animation
 	return Animation.new(lutro.graphics.newImage(asset_file), 18, 34, 3, 18)
 end
 
+local function character_avatar(character_asset: string): Image
+	return lutro.graphics.newImage("assets/" .. character_asset .. "/avatar_neutral.png")
+end
+
 local function character_animations(character_asset: string): {Direction: Animation}
 	return {
 		["up"] = character_animation("assets/" .. character_asset .. "/walk_up.png"),
@@ -95,9 +100,23 @@ local function game_load()
 		[9] = character_animations("manjimaru"),
 		[10] = character_animations("bonks"),
 	}
+	global avatars: {number: Image} = {
+		[1] = character_avatar("kotetsu"),
+		[2] = character_avatar("honey"),
+		[3] = character_avatar("kinu"),
+		[4] = character_avatar("milon"),
+		[5] = character_avatar("black"),
+		[6] = character_avatar("white"),
+		[7] = character_avatar("kabuki"),
+		[8] = character_avatar("master_higins"),
+		[9] = character_avatar("manjimaru"),
+		[10] = character_avatar("bonks"),
+	}
 
 	global game_timer = GameTimer.new(180)
 	game_timer:load_assets()
+
+	global score_font = get_shaded_number_font()
 end
 
 local function get_directions_from_input(id: integer, dt: number): {{Vector, Direction}}
@@ -163,6 +182,18 @@ local function sort_players_by_y_cord(players_to_sort: {Player})
 	table.sort(players_to_sort, compare_player_y_pose)
 end
 
+local function get_avatar_position(avatar_num: number, num_avatars: number): Point
+	local space_for_avatar = 35
+	local x_start = 75
+	local y_start = 3
+	local avatar_space_padding = 10
+
+	local total_space = MAP_WIDTH - x_start - avatar_space_padding
+	local padding = (total_space - space_for_avatar * num_avatars) / (num_avatars + 1)
+	local x_pos = x_start + padding * avatar_num + space_for_avatar * (avatar_num - 1)
+	return Point.new(x_pos, y_start)
+end
+
 local function game_draw()
 	lutro.graphics.draw(background)
 
@@ -172,6 +203,11 @@ local function game_draw()
 		local player_animation = animations[player.id][player.direction]
 		local draw_pos = convert_pos_for_character_draw(player_animation, player.position)
 		player_animation:draw(draw_pos.x, draw_pos.y)
+	
+		local avatar_pos = get_avatar_position(player.id, #players)
+		local score_pos = avatar_pos:move(Vector.new(18, 5))
+		lutro.graphics.draw(avatars[player.id], avatar_pos.x, avatar_pos.y)
+		score_font:draw(tostring(player.score), score_pos)
 	end
 
 	game_timer:draw()
