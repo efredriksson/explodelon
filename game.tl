@@ -60,15 +60,104 @@ end
 
 local NON_HARD_POSITIONS = get_non_hard_block_positions()
 
-local function valid_player_move(new_position: Point): boolean
+
+local function restrict_player_movement(new_position: Point, movement: Vector): Point, boolean, boolean
 	local new_hitbox = new_hit_box(new_position)
-	for i=1, #HARD_BLOCKS do
-		if new_hitbox:overlap(HARD_BLOCKS[i]) then
-			return false
+	local corner_fix = 8
+	for _, hard_block in ipairs(HARD_BLOCKS) do
+		if new_hitbox:overlap(hard_block) then
+			if movement.x == 0 then
+				local x_dist = BLOCK_SIZE - math.abs(new_position.x - hard_block.x)
+				if movement.y < 0 then
+					print("Restricted (block): x = 0, y < 0", new_position.x, new_position.y)
+					if x_dist > corner_fix then
+						return Point.new(new_position.x, hard_block.y + BLOCK_SIZE), true, false
+					else
+						local dy = math.abs(movement.y)
+						local dx = math.min(x_dist, dy)
+						dy = (movement.y / dy) * (dy - dx)
+						print("DX ", dx)
+						if math.abs(new_position.x + BLOCK_SIZE - hard_block.x) < corner_fix * 2 then
+							return Point.new(new_position.x - dx, new_position.y + dy), true, true
+						else
+							return Point.new(new_position.x + dx, new_position.y + dy), true, true
+						end
+					end
+				else
+					print("Restricted (block): x = 0, y > 0", new_position.x, new_position.y)
+					if x_dist > corner_fix then
+						return Point.new(new_position.x, hard_block.y - BLOCK_SIZE), true, false
+					else
+						local dy = math.abs(movement.y)
+						local dx = math.min(x_dist, dy)
+						dy = (movement.y / dy) * (dy - dx)
+						print("DX ", dx)
+						if math.abs(new_position.x + BLOCK_SIZE - hard_block.x) < corner_fix * 2 then
+							return Point.new(new_position.x - dx, new_position.y + dy), true, true
+						else
+							return Point.new(new_position.x + dx, new_position.y + dy), true, true
+						end
+					end
+				end
+			elseif movement.y == 0 then
+				local y_dist = BLOCK_SIZE - math.abs(new_position.y - hard_block.y)
+				if movement.x < 0 then
+					print("Restricted (block): y = 0, x < 0", new_position.x, new_position.y)
+					if y_dist > corner_fix then
+						return Point.new(hard_block.x + BLOCK_SIZE, new_position.y), true, false
+					else
+						local dx = math.abs(movement.x)
+						local dy = math.min(y_dist, dx)
+						dx = (movement.x / dx) * (dx - dy)
+						if math.abs(new_position.y + BLOCK_SIZE - hard_block.y) < corner_fix * 2 then
+							return Point.new(new_position.x + dx, new_position.y - dy), true, true
+						else
+							return Point.new(new_position.x + dx, new_position.y + dy), true, true
+						end
+					end
+				else
+					print("Restricted (block): y = 0, x > 0", new_position.x, new_position.y)
+					if y_dist > corner_fix then
+						return Point.new(hard_block.x - BLOCK_SIZE, new_position.y), true, false
+					else
+						local dx = math.abs(movement.x)
+						local dy = math.min(y_dist, dx)
+						dx = (movement.x / dx) * (dx - dy)
+						if math.abs(new_position.y + BLOCK_SIZE - hard_block.y) < corner_fix * 2 then
+							return Point.new(new_position.x + dx, new_position.y - dy), true, true
+						else
+							return Point.new(new_position.x + dx, new_position.y + dy), true, true
+						end
+					end
+				end
+			else
+				assert(false, "Unknown movement vector")
+			end
+		end
+	end
+	if not PLAYER_AREA:contains(new_hitbox) then
+		if movement.x == 0 then
+			if movement.y < 0 then
+				print("Restricted (area): x = 0, y < 0", new_position.x, new_position.y)
+				return Point.new(new_position.x, PLAYER_AREA.y), true, false
+			else
+				print("Restricted (area): x = 0, y > 0", new_position.x, new_position.y)
+				return Point.new(new_position.x, PLAYER_AREA.y + PLAYER_AREA.height - BLOCK_SIZE), true, false
+			end
+		elseif movement.y == 0 then
+			if movement.x < 0 then
+				print("Restricted (area): y = 0, x < 0", new_position.x, new_position.y)
+				return Point.new(PLAYER_AREA.x, new_position.y), true, false
+			else
+				print("Restricted (area): y = 0, x > 0", new_position.x, new_position.y)
+				return Point.new(PLAYER_AREA.x + PLAYER_AREA.width - BLOCK_SIZE, new_position.y), true, false
+			end
+		else
+			assert(false, "Unknown movement vector")
 		end
 	end
 
-	return PLAYER_AREA:contains(new_hitbox)
+	return new_position, false, true
 end
 
 local function setup_players(number_players: integer): {Player}
@@ -193,11 +282,17 @@ local function set_position_and_dir_from_input(player: Player, dt: number)
 	end
 
 	for i=1, #directions do
-		local new_position = player.position:move(directions[i][1])
-		if valid_player_move(new_position) then
-			player.position = new_position
+		local movement = directions[i][1]
+		local new_position = player.position:move(movement)
+		local restricted = false
+		local full_movement = false
+		player.position, restricted, full_movement = restrict_player_movement(new_position, movement)
+		if not restricted then
 			-- Direction for valid moves takes precedence however!
 			player.direction = directions[i][2]
+		end
+		if full_movement then
+			break -- All speed have been used up!
 		end
 	end
 

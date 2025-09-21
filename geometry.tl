@@ -47,7 +47,7 @@ function Rectangle.new(x: number, y: number, width: number, height: number): Rec
 end
 
 local function interval_overlap(xmin1: number, xmax1: number, xmin2: number, xmax2: number): boolean
-	return xmax1 >= xmin2 and xmax2 >= xmin1
+	return xmax1 > xmin2 and xmax2 > xmin1
 end
 
 function Rectangle:overlap(other: Rectangle): boolean
