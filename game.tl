@@ -69,14 +69,14 @@ local function restrict_player_movement(new_position: Point, movement: Vector): 
 			if movement.x == 0 then
 				local x_dist = BLOCK_SIZE - math.abs(new_position.x - hard_block.x)
 				if movement.y < 0 then
-					print("Restricted (block): x = 0, y < 0", new_position.x, new_position.y)
+					--print("Restricted (block): x = 0, y < 0", new_position.x, new_position.y)
 					if x_dist > corner_fix then
 						return Point.new(new_position.x, hard_block.y + BLOCK_SIZE), true, false, false
 					else
 						local dy = math.abs(movement.y)
 						local dx = math.min(x_dist, dy)
 						dy = (movement.y / dy) * (dy - dx)
-						print("DX ", dx)
+						--print("DX ", dx)
 						if math.abs(new_position.x + BLOCK_SIZE - hard_block.x) < corner_fix * 2 then
 							return Point.new(new_position.x - dx, new_position.y + dy), true, true, true
 						else
@@ -84,14 +84,14 @@ local function restrict_player_movement(new_position: Point, movement: Vector): 
 						end
 					end
 				else
-					print("Restricted (block): x = 0, y > 0", new_position.x, new_position.y)
+					--print("Restricted (block): x = 0, y > 0", new_position.x, new_position.y)
 					if x_dist > corner_fix then
 						return Point.new(new_position.x, hard_block.y - BLOCK_SIZE), true, false, false
 					else
 						local dy = math.abs(movement.y)
 						local dx = math.min(x_dist, dy)
 						dy = (movement.y / dy) * (dy - dx)
-						print("DX ", dx)
+						--print("DX ", dx)
 						if math.abs(new_position.x + BLOCK_SIZE - hard_block.x) < corner_fix * 2 then
 							return Point.new(new_position.x - dx, new_position.y + dy), true, true, true
 						else
@@ -102,7 +102,7 @@ local function restrict_player_movement(new_position: Point, movement: Vector): 
 			elseif movement.y == 0 then
 				local y_dist = BLOCK_SIZE - math.abs(new_position.y - hard_block.y)
 				if movement.x < 0 then
-					print("Restricted (block): y = 0, x < 0", new_position.x, new_position.y)
+					--print("Restricted (block): y = 0, x < 0", new_position.x, new_position.y)
 					if y_dist > corner_fix then
 						return Point.new(hard_block.x + BLOCK_SIZE, new_position.y), true, false, false
 					else
@@ -116,7 +116,7 @@ local function restrict_player_movement(new_position: Point, movement: Vector): 
 						end
 					end
 				else
-					print("Restricted (block): y = 0, x > 0", new_position.x, new_position.y)
+					--print("Restricted (block): y = 0, x > 0", new_position.x, new_position.y)
 					if y_dist > corner_fix then
 						return Point.new(hard_block.x - BLOCK_SIZE, new_position.y), true, false, false
 					else
@@ -138,18 +138,18 @@ local function restrict_player_movement(new_position: Point, movement: Vector): 
 	if not PLAYER_AREA:contains(new_hitbox) then
 		if movement.x == 0 then
 			if movement.y < 0 then
-				print("Restricted (area): x = 0, y < 0", new_position.x, new_position.y)
+				--print("Restricted (area): x = 0, y < 0", new_position.x, new_position.y)
 				return Point.new(new_position.x, PLAYER_AREA.y), true, false, false
 			else
-				print("Restricted (area): x = 0, y > 0", new_position.x, new_position.y)
+				--print("Restricted (area): x = 0, y > 0", new_position.x, new_position.y)
 				return Point.new(new_position.x, PLAYER_AREA.y + PLAYER_AREA.height - BLOCK_SIZE), true, false, false
 			end
 		elseif movement.y == 0 then
 			if movement.x < 0 then
-				print("Restricted (area): y = 0, x < 0", new_position.x, new_position.y)
+				--print("Restricted (area): y = 0, x < 0", new_position.x, new_position.y)
 				return Point.new(PLAYER_AREA.x, new_position.y), true, false, false
 			else
-				print("Restricted (area): y = 0, x > 0", new_position.x, new_position.y)
+				--print("Restricted (area): y = 0, x > 0", new_position.x, new_position.y)
 				return Point.new(PLAYER_AREA.x + PLAYER_AREA.width - BLOCK_SIZE, new_position.y), true, false, false
 			end
 		else
@@ -157,7 +157,7 @@ local function restrict_player_movement(new_position: Point, movement: Vector): 
 		end
 	end
 
-	print("Unrestricted new position ", new_position.x, new_position.y)
+	--print("Unrestricted new position ", new_position.x, new_position.y)
 	return new_position, false, true, false
 end
 
@@ -282,25 +282,96 @@ local function set_position_and_dir_from_input(player: Player, dt: number)
 	local _2: boolean
 	local _3: boolean
 
-	local function sort_directions_by_prio(directions_to_sort: {{Vector, Direction}})
-		local function direction_val(d: {Vector, Direction}): integer
-			-- TODO: Need to make sure that we take directions that would cause
-			-- corner cutting while we have just entered a corridor absolutely last!
-			-- This makes sense because having entered something you probably want to
-			-- stay in it and have the game help with this
-			if d[2] == player.direction then
-				return 3
-			end
-			local movement = d[1]
-			local new_position = player.position:move(movement)
-			_1, _2, _3, cuts_corners = restrict_player_movement(new_position, movement)
-			if cuts_corners then
-				return 2
-			end
+	if #directions > 0 then
+		print("start of direction logic:")
+		local local_x_pos = math.fmod(player.position.x  - PLAYER_AREA.x, BLOCK_SIZE)
+		local local_y_pos = math.fmod(player.position.y  - PLAYER_AREA.y, BLOCK_SIZE)
+		local x_peek_in = local_x_pos <= BLOCK_SIZE / 2 and local_x_pos > 0
+		local y_peek_in = local_y_pos <= BLOCK_SIZE / 2 and local_y_pos > 0
+		print("Displacement", local_x_pos, y_peek_in, local_y_pos, x_peek_in)
+	end
 
-			return 1
+	-- TODO: Rename method, at entrance and trying to exit it?
+	local function at_corridor_entrance_trying_to_exit(pos: Point, press_dir: Direction): boolean
+		local local_x_pos = math.fmod(pos.x  - PLAYER_AREA.x, BLOCK_SIZE)
+		local local_y_pos = math.fmod(pos.y  - PLAYER_AREA.y, BLOCK_SIZE)
+		
+		
+		if local_x_pos == 0 and local_y_pos > 0 then
+			return press_dir == "left" or press_dir == "right"
+		end 
+
+		if local_y_pos == 0 and local_x_pos > 0 then
+			return press_dir == "up" or press_dir == "down"
 		end
 
+		return false
+
+		--local x_dir_displasement = math.abs(local_x_pos - BLOCK_SIZE / 2) > 2 and local_x_pos > 0
+		--local y_dir_displasement = math.abs(local_y_pos - BLOCK_SIZE / 2) > 2 and local_y_pos > 0
+		--local x_dir_displasement = local_x_pos < BLOCK_SIZE - 1e-10 and local_x_pos > 1e-10
+		--local y_dir_displasement = local_y_pos < BLOCK_SIZE - 1e-10 and local_y_pos > 1e-10
+		--if press_dir == "down" and x_dir_displasement then
+		--	return true
+		--elseif press_dir == "up" and x_dir_displasement then
+		--	return true
+		--elseif press_dir == "right" and y_dir_displasement then
+		--	return true
+		--elseif press_dir == "left" and y_dir_displasement then
+		--	return true
+		--else
+		--	return false
+		--end
+	end
+
+	local function direction_val(d: {Vector, Direction}): integer
+		-- TODO: Need to make sure that we take directions that would cause
+		-- corner cutting while we have just entered a corridor absolutely last!
+		-- This makes sense because having entered something you probably want to
+		-- stay in it and have the game help with this
+
+		local movement = d[1]
+		local trying_to_exit_corridor = at_corridor_entrance_trying_to_exit(player.position, d[2])
+		local new_position = player.position:move(movement)
+		_1, _2, _3, cuts_corners = restrict_player_movement(new_position, movement)
+
+		local keep_cur_dir = d[2] == player.direction
+
+		local local_x_pos = math.fmod(player.position.x  - PLAYER_AREA.x, BLOCK_SIZE)
+		local local_y_pos = math.fmod(player.position.y  - PLAYER_AREA.y, BLOCK_SIZE)
+		if d[2] == "down" and local_y_pos > BLOCK_SIZE / 2 then
+			return 5
+		end
+		if d[2] == "up" and local_y_pos < BLOCK_SIZE / 2 and local_y_pos > 0 then
+			return 5
+		end
+		if d[2] == "right" and local_x_pos > BLOCK_SIZE / 2 then
+			return 5
+		end
+		if d[2] == "left" and local_x_pos < BLOCK_SIZE / 2 and local_x_pos > 0 then
+			return 5
+		end
+
+		-- Lowest priority, try cut corner when at entrance last!
+		if trying_to_exit_corridor then
+			return 4
+		end
+
+		-- priority for going another direction than currently in
+		if keep_cur_dir then
+			return 3
+		end
+
+		-- Highest prioriy direction!
+		if cuts_corners then
+			return 2
+		end
+
+		-- Highest prioriy direction!
+		return 1
+	end
+
+	local function sort_directions_by_prio(directions_to_sort: {{Vector, Direction}})
 		local function compare_player_y_pose(e1: {Vector, Direction}, e2: {Vector, Direction}): boolean
 			return direction_val(e1) < direction_val(e2)
 		end
@@ -313,13 +384,15 @@ local function set_position_and_dir_from_input(player: Player, dt: number)
 		table.insert(directions_reorder, direction)
 	end
 	sort_directions_by_prio(directions_reorder)
-	
-	for _, direction in ipairs(directions) do
-		-- Set direction for any input direction as default
-		player.direction = direction[2]
+
+	local has_set_player_direction = false
+
+	for _, direction in ipairs(directions_reorder) do
+		print("Direction value found: " .. direction_val(direction))
 	end
 
 	for _, direction in ipairs(directions_reorder) do
+		print("Using direction value: " .. direction_val(direction))
 		local movement = direction[1]
 		local new_position = player.position:move(movement)
 		local restricted = false
@@ -327,6 +400,9 @@ local function set_position_and_dir_from_input(player: Player, dt: number)
 		player.position, restricted, full_movement, cuts_corners = restrict_player_movement(new_position, movement)
 		if not restricted then
 			-- Direction for valid moves takes precedence however!
+			player.direction = direction[2]
+			has_set_player_direction = true
+		elseif not has_set_player_direction then
 			player.direction = direction[2]
 		end
 		if full_movement then
