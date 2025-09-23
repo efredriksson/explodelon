@@ -61,9 +61,12 @@ end
 local NON_HARD_POSITIONS = get_non_hard_block_positions()
 
 
-local function restrict_player_movement(new_position: Point, movement: Vector): Point, boolean, boolean, boolean
+local function restrict_player_movement(orthogonal_dir: boolean, new_position: Point, movement: Vector): Point, boolean, boolean, boolean
 	local new_hitbox = new_hit_box(new_position)
 	local corner_fix = 8
+	if orthogonal_dir then
+		corner_fix = 15
+	end
 	for _, hard_block in ipairs(HARD_BLOCKS) do
 		if new_hitbox:overlap(hard_block) then
 			if movement.x == 0 then
@@ -324,6 +327,14 @@ local function set_position_and_dir_from_input(player: Player, dt: number)
 		--end
 	end
 
+	local function orthogonal_dirs(d1: Direction, d2: Direction): boolean
+		if d1 == "up" or d1 == "down" then
+			return d2 == "right" or d2 == "left"
+		else
+			return d2 == "up" or d2 == "down"
+		end
+	end
+
 	local function direction_val(d: {Vector, Direction}): integer
 		-- TODO: Need to make sure that we take directions that would cause
 		-- corner cutting while we have just entered a corridor absolutely last!
@@ -333,7 +344,7 @@ local function set_position_and_dir_from_input(player: Player, dt: number)
 		local movement = d[1]
 		local trying_to_exit_corridor = at_corridor_entrance_trying_to_exit(player.position, d[2])
 		local new_position = player.position:move(movement)
-		_1, _2, _3, cuts_corners = restrict_player_movement(new_position, movement)
+		_1, _2, _3, cuts_corners = restrict_player_movement(orthogonal_dirs(player.direction, d[2]), new_position, movement)
 
 		local keep_cur_dir = d[2] == player.direction
 
@@ -397,7 +408,10 @@ local function set_position_and_dir_from_input(player: Player, dt: number)
 		local new_position = player.position:move(movement)
 		local restricted = false
 		local full_movement = false
-		player.position, restricted, full_movement, cuts_corners = restrict_player_movement(new_position, movement)
+		player.position, restricted, full_movement, cuts_corners = restrict_player_movement(orthogonal_dirs(player.direction, direction[2]), new_position, movement)
+		-- TODO: the restrict player movement should return if direction changes!
+		-- We should be able to set player direction also when being restricted!
+		-- This could interfere with trying to allow more corner cutting depending on player direction!
 		if not restricted then
 			-- Direction for valid moves takes precedence however!
 			player.direction = direction[2]
