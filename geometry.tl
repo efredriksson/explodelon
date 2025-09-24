@@ -37,6 +37,18 @@ function Vector.new(x: number, y: number): Vector
    return self
 end
 
+function Vector:permutate_if(condition: boolean): Vector
+   if condition then
+      return Vector.new(self.y, self.x)
+   end
+
+   return self
+end
+
+function Vector:scale(val: number): Vector
+   return Vector.new(self.x * val, self.y * val)
+end
+
 function Rectangle.new(x: number, y: number, width: number, height: number): Rectangle
    local self: Rectangle = setmetatable({}, { __index = Rectangle })
    self.x = x or 0
@@ -47,7 +59,7 @@ function Rectangle.new(x: number, y: number, width: number, height: number): Rec
 end
 
 local function interval_overlap(xmin1: number, xmax1: number, xmin2: number, xmax2: number): boolean
-	return xmax1 >= xmin2 and xmax2 >= xmin1
+	return xmax1 > xmin2 and xmax2 > xmin1
 end
 
 function Rectangle:overlap(other: Rectangle): boolean
@@ -62,4 +74,22 @@ end
 function Rectangle:contains(other: Rectangle): boolean
    return interval_contained(other.x, other.x + other.width, self.x, self.x + self.width) and
 		interval_contained(other.y, other.y + other.height, self.y, self.y + self.height)
+end
+
+--- Clamp a number in interval [min, max]
+local function clamp(val: number, min: number, max: number): number
+	return math.min(math.max(val, min), max)
+end
+
+function Rectangle:clamp(rec: Rectangle): Rectangle
+   return Rectangle.new(
+      clamp(rec.x, self.x, self.x + self.width - rec.width),
+      clamp(rec.y, self.y, self.y + self.height - rec.height),
+      rec.width,
+      rec.height
+   )
+end
+
+function Rectangle:top_left(): Point
+   return Point.new(self.x, self.y)
 end
