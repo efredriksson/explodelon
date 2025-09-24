@@ -37,7 +37,7 @@ function Player.new(id: integer, position: Point): Player
 end
 
 global function new_hit_box(new_position: Point): Rectangle
-    return Rectangle.new(new_position.x, new_position.y, BLOCK_SIZE-1, BLOCK_SIZE-1)
+    return Rectangle.new(new_position.x, new_position.y, BLOCK_SIZE, BLOCK_SIZE)
 end
 
 global record PlayerAnimation is Entity

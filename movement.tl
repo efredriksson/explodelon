@@ -15,6 +15,22 @@ function Movement.new(dxdy: Vector, dir: Direction): Movement
    return self
 end
 
+local record CheckedMovement
+	position: Point
+	spent: boolean
+	cuts_corner: boolean
+end
+
+function CheckedMovement.new(
+	position: Point, spent: boolean, cuts_corner: boolean
+): CheckedMovement
+   local self: CheckedMovement = setmetatable({}, { __index = CheckedMovement })
+   self.position = position
+   self.spent = spent
+   self.cuts_corner = cuts_corner
+   return self
+end
+
 local function get_directions_from_input(player: Player, dt: number): {Movement}
 	local result: {Movement} = {}
 
@@ -34,33 +50,170 @@ local function get_directions_from_input(player: Player, dt: number): {Movement}
 	return result
 end
 
-local function valid_player_move(new_position: Point): boolean
-	local new_hitbox = new_hit_box(new_position)
-	for i=1, #HARD_BLOCKS do
-		if new_hitbox:overlap(HARD_BLOCKS[i]) then
-			return false
-		end
-	end
-
-	return PLAYER_AREA:contains(new_hitbox)
+--- Sign of a number represented as 1 or -1
+local function sign_of(number: number): integer
+	return number > 0 and 1 or (number == 0 and 0 or -1)
 end
 
-local function get_new_player_orientation(player_dir: Direction, player_pos: Point, directions: {Movement}): Direction, Point
-	for _, direction in ipairs(directions) do
-		-- Set direction for any input direction as default
-		player_dir = direction.dir
+--- Get local position for point in block, so {x, y} ∈ [0, BLOCK_SIZE).
+local function get_local_position(global_position: Point): Point
+	return Point.new(
+		math.fmod(global_position.x - PLAYER_AREA.x, BLOCK_SIZE),
+		math.fmod(global_position.y - PLAYER_AREA.y, BLOCK_SIZE)
+	)
+end
+
+--- Split movement that goes against block into parts for walking corner.
+-- If at just the corner the movement length will be split so the returned
+-- vector represents moving up to the corner and then down the corner with
+-- what is left. Signs of movement are handled but it is always assumed that
+-- we are walking against the wall on the y-axis. If this is not the case
+-- the vector returned have to be permutated.
+local function around_corner_move(
+	movement_len: number, dist_to_corner: number, pos_and_block_lateral_diff: number
+): Vector
+	local movement_dist = math.abs(movement_len)
+	local movement_towards_corner = math.min(dist_to_corner, movement_dist)
+	local movement_down_corner = movement_dist - movement_towards_corner
+
+	return Vector.new(
+		sign_of(pos_and_block_lateral_diff) * movement_towards_corner,
+		sign_of(movement_len) * movement_down_corner
+	)
+end
+
+local function in_corridor_and_walking_against_wall(
+	position: Point, walk_dir: Direction
+): boolean
+	local local_pos = get_local_position(position)
+	local in_vertical_corridor = local_pos.x == 0 and local_pos.y > 0
+	local in_horizontal_corridor = local_pos.y == 0 and local_pos.x > 0
+
+	return (in_vertical_corridor and (walk_dir == "left" or walk_dir == "right")) or
+		(in_horizontal_corridor and (walk_dir == "up" or walk_dir == "down"))
+end
+
+local function in_end_of_corridor_and_walking_out(
+	movement: Movement, player_pos: Point
+): boolean
+	local local_pos = get_local_position(player_pos)
+
+	local function first_half_of_block(val: number): boolean
+		return val < BLOCK_SIZE / 2 and val > 0
+	end
+	local function second_half_of_block(val: number): boolean
+		return val > BLOCK_SIZE / 2
 	end
 
-	for _, direction in ipairs(directions) do
-		local new_position = player_pos:move(direction.dxdy)
-		if valid_player_move(new_position) then
-			player_pos = new_position
-			-- Direction for valid moves takes precedence however!
-			player_dir = direction.dir
+	return (movement.dir == "down" and second_half_of_block(local_pos.y)) or
+		(movement.dir == "up" and first_half_of_block(local_pos.y)) or
+		(movement.dir == "right" and second_half_of_block(local_pos.x)) or
+		(movement.dir == "left" and first_half_of_block(local_pos.x))
+end
+
+local function restrict_player_movement(
+	player_pos: Point, movement: Vector
+): CheckedMovement
+	local margin_for_corner_assist = 8
+	local new_position = player_pos:move(movement)
+	local new_hitbox = new_hit_box(new_position)
+
+	local function move_against_block(
+		movement_len: number,
+		pos_and_block_lateral_diff: number,
+		walk_along_y_axis: boolean
+	): CheckedMovement
+		local dist_to_corner = BLOCK_SIZE - math.abs(pos_and_block_lateral_diff)
+
+		if dist_to_corner > margin_for_corner_assist then
+			return CheckedMovement.new(player_pos, false, false)
+		end
+
+		local along_wall = around_corner_move(
+			movement_len, dist_to_corner, pos_and_block_lateral_diff
+		):permutate_if(walk_along_y_axis)
+
+		-- Using 'new_position' instead of 'player_pos' here is not a bug, this
+		-- actuall makes corner movement smoother and feel much better.
+		-- It also makes so you move over the corner, i.e 'cutting the corner'
+		return CheckedMovement.new(new_position:move(along_wall), true, true)
+	end
+
+	for _, hard_block in ipairs(HARD_BLOCKS) do
+		if new_hitbox:overlap(hard_block) then
+			if movement.x == 0 then
+				local movement_len = movement.y
+				local pos_and_block_lateral_diff = player_pos.x - hard_block.x
+				local walk_along_y_axis = false
+				return move_against_block(
+					movement_len, pos_and_block_lateral_diff, walk_along_y_axis
+				)
+			elseif movement.y == 0 then
+				local movement_len = movement.x
+				local pos_and_block_lateral_diff = player_pos.y - hard_block.y
+				local walk_along_y_axis = true
+				return move_against_block(
+					movement_len, pos_and_block_lateral_diff, walk_along_y_axis
+				)
+			else
+				assert(false, "Bad movement vector")
+			end
 		end
 	end
 
-	return player_dir, player_pos
+	if not PLAYER_AREA:contains(new_hitbox) then
+		local clamped_position = PLAYER_AREA:clamp(new_hitbox):top_left()
+		return CheckedMovement.new(clamped_position, false, false)
+	end
+
+	return CheckedMovement.new(new_position, true, false)
+end
+
+
+local function get_new_player_orientation(
+	player_dir: Direction, player_pos: Point, directions: {Movement}
+): Direction, Point
+
+	--- Get movment priority, lower number is higher priority.
+	-- For example walking out of corridor and cutting corner
+	-- have a low priority and should be tried last. This is
+	-- mainly to sort and handle all cases when the user press multiple
+	-- directions in a deterministic and expected way.
+	local function movement_prio(movement: Movement): integer
+		local move_if_done = restrict_player_movement(player_pos, movement.dxdy)
+
+		if in_end_of_corridor_and_walking_out(movement, player_pos) then
+			return 4
+		elseif move_if_done.cuts_corner then
+			return 3
+		elseif in_corridor_and_walking_against_wall(player_pos, movement.dir) then
+			return 2
+		else
+			return 1
+		end
+	end
+
+	local function sort_directions_by_prio(to_sort: {Movement})
+		local function compare(m1: Movement, m2: Movement): boolean
+			return movement_prio(m1) < movement_prio(m2)
+		end
+		table.sort(to_sort, compare)
+	end
+
+	local cur_position = player_pos
+	local cur_direction = player_dir
+
+	sort_directions_by_prio(directions)
+	for _, direction in ipairs(directions) do
+		local movement = restrict_player_movement(cur_position, direction.dxdy)
+		cur_position = movement.position
+		cur_direction = direction.dir
+
+		if movement.spent then
+			break -- All speed have been used up!
+		end
+	end
+	return cur_direction, cur_position
 end
 
 global function set_position_and_dir_from_input(player: Player, dt: number)
