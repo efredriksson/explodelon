@@ -18,8 +18,9 @@ function GameTimer:load_assets()
 	global clock_font = get_shaded_number_font()
 end
 
-function GameTimer:decrement(dt: number)
+function GameTimer:decrement(dt: number): boolean
 	self.time_left = self.time_left - dt
+	return self.time_left < 0
 end
 
 local function time_to_clock_text(time_in_sec: number): string
