@@ -92,23 +92,27 @@ function PressureBlocks:set_next_left_falling_block()
     end
 end
 
-function PressureBlocks:update(dt: number)
-    self.time_left = self.time_left - dt
-    if self:no_updates() then
-        return
-    end
-
-    self.left_falling:update(dt)
-    self.right_falling:update(dt)
-    if self.right_falling:is_on_ground() and self.left_falling:is_on_ground() then
-        self:set_next_right_falling_block()
-        self:set_next_left_falling_block()
-    end
-end
-
 function PressureBlocks:falling(): {PressureBlock}
     if self:no_updates() then
         return {}
     end
     return {self.left_falling, self.right_falling}
+end
+
+function PressureBlocks:update(dt: number): {PressureBlock}
+    self.time_left = self.time_left - dt
+    if self:no_updates() then
+        return {}
+    end
+
+    self.left_falling:update(dt)
+    self.right_falling:update(dt)
+    if self.right_falling:is_on_ground() and self.left_falling:is_on_ground() then
+        local hitting_ground = self:falling()
+        self:set_next_right_falling_block()
+        self:set_next_left_falling_block()
+        return hitting_ground
+    end
+
+    return {}
 end

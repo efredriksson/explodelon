@@ -20,6 +20,7 @@ global record Player
 	bombs: integer
 	fire: integer
 	has_kick: boolean
+	is_alive: boolean
 end
 
 function Player.new(id: integer, position: Point): Player
@@ -33,6 +34,7 @@ function Player.new(id: integer, position: Point): Player
 	self.bombs = 1
 	self.fire = 2
 	self.has_kick = false
+	self.is_alive = true
 	return self
 end
 
@@ -41,14 +43,16 @@ global function new_hit_box(new_position: Point): Rectangle
 end
 
 global record PlayerAnimation is Entity
+	player: Player
 	position: Point
 	animation: Animation
 end
 
-function PlayerAnimation.new(animation: Animation, position: Point): PlayerAnimation
+function PlayerAnimation.new(animation: Animation, player: Player): PlayerAnimation
 	local self: PlayerAnimation = setmetatable({}, { __index = PlayerAnimation })
 	self.animation = animation
-	self.position = position
+	self.player = player
+	self.position = player.position
 	return self
 end
 
@@ -59,6 +63,10 @@ local function convert_pos_for_character_draw(animation: Animation, pos: Point):
 end
 
 function PlayerAnimation:draw()
+	if not self.player.is_alive then
+		return
+	end
+
 	local draw_pos = convert_pos_for_character_draw(self.animation, self.position)
 	self.animation:draw(draw_pos.x, draw_pos.y)
 end
