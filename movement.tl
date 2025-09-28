@@ -112,7 +112,7 @@ local function in_end_of_corridor_and_walking_out(
 end
 
 local function restrict_player_movement(
-	player_pos: Point, movement: Vector
+	player_pos: Point, movement: Vector, pressure_blocks: {Rectangle}
 ): CheckedMovement
 	local margin_for_corner_assist = 8
 	local new_position = player_pos:move(movement)
@@ -161,6 +161,18 @@ local function restrict_player_movement(
 		end
 	end
 
+	for _, pressure_block in ipairs(pressure_blocks) do
+		if new_hitbox:overlap(pressure_block) then
+			local old_hitbox = new_hit_box(player_pos)
+			local new_dist_to_1_ton_block = pressure_block:center_distance(new_hitbox)
+			local old_dist_to_1_ton_block = pressure_block:center_distance(old_hitbox)
+			if new_dist_to_1_ton_block < old_dist_to_1_ton_block then
+				-- Not allowed to walk further into 1 ton block
+				return CheckedMovement.new(player_pos, false, false)
+			end
+		end
+	end
+
 	if not PLAYER_AREA:contains(new_hitbox) then
 		local clamped_position = PLAYER_AREA:clamp(new_hitbox):top_left()
 		return CheckedMovement.new(clamped_position, false, false)
@@ -171,7 +183,10 @@ end
 
 
 local function get_new_player_orientation(
-	player_dir: Direction, player_pos: Point, directions: {Movement}
+	player_dir: Direction,
+	player_pos: Point,
+	directions: {Movement},
+	pressure_blocks: {Rectangle}
 ): Direction, Point
 
 	--- Get movment priority, lower number is higher priority.
@@ -180,7 +195,9 @@ local function get_new_player_orientation(
 	-- mainly to sort and handle all cases when the user press multiple
 	-- directions in a deterministic and expected way.
 	local function movement_prio(movement: Movement): integer
-		local move_if_done = restrict_player_movement(player_pos, movement.dxdy)
+		local move_if_done = restrict_player_movement(
+			player_pos, movement.dxdy, pressure_blocks
+		)
 
 		if in_end_of_corridor_and_walking_out(movement, player_pos) then
 			return 4
@@ -205,7 +222,7 @@ local function get_new_player_orientation(
 
 	sort_directions_by_prio(directions)
 	for _, direction in ipairs(directions) do
-		local movement = restrict_player_movement(cur_position, direction.dxdy)
+		local movement = restrict_player_movement(cur_position, direction.dxdy, pressure_blocks)
 		cur_position = movement.position
 		cur_direction = direction.dir
 
@@ -216,10 +233,10 @@ local function get_new_player_orientation(
 	return cur_direction, cur_position
 end
 
-global function set_position_and_dir_from_input(player: Player, dt: number)
+global function set_position_and_dir_from_input(player: Player, dt: number, pressure_blocks: {Rectangle})
 	local directions = get_directions_from_input(player, dt)
 	player.direction, player.position = get_new_player_orientation(
-		player.direction, player.position, directions
+		player.direction, player.position, directions, pressure_blocks
 	)
 	player.idle = #directions == 0
 end

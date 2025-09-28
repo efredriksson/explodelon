@@ -26,8 +26,12 @@ function Point:move(delta: Vector): Point
    return Point.new(self.x + delta.x, self.y + delta.y)
 end
 
+function Point:distance_to(other: Point): number
+   return math.sqrt((other.x - self.x) ^ 2 + (other.y - self.y) ^ 2) 
+end
+
 function Point:in_radius_of(other: Point, radius: number): boolean
-   return math.sqrt((other.x - self.x) ^ 2 + (other.y - self.y) ^ 2) < radius 
+   return self:distance_to(other) < radius 
 end
 
 function Vector.new(x: number, y: number): Vector
@@ -88,6 +92,18 @@ function Rectangle:clamp(rec: Rectangle): Rectangle
       rec.width,
       rec.height
    )
+end
+
+function Rectangle:center(): Point
+   return Point.new(
+      self.x + self.width / 2,
+      self.y + self.height / 2
+   )
+end
+
+--- Distance between rectangles from their centers
+function Rectangle:center_distance(other: Rectangle): number
+   return self:center():distance_to(other:center())
 end
 
 function Rectangle:top_left(): Point
