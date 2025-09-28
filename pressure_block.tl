@@ -47,6 +47,8 @@ global record PressureBlocks is Entity
     right_positions: {Point}
     left_falling: PressureBlock
     right_falling: PressureBlock
+    right_fall_finished: boolean
+    left_fall_finished: boolean
     on_ground: {PressureBlock}
     no_more_falling_blocks: boolean
     time_left: number
@@ -61,6 +63,8 @@ function PressureBlocks.new(time_left: number): PressureBlocks
     self.right_falling = PressureBlock.new(self.right_positions[1])
     self.next_left_index = 2
     self.next_right_index = 2
+    self.right_fall_finished = false
+    self.left_fall_finished = false
     self.time_left = time_left
     self.no_more_falling_blocks = false
 	return self
@@ -73,7 +77,7 @@ function PressureBlocks:no_updates(): boolean
 end
 
 function PressureBlocks:set_next_right_falling_block()
-    table.insert(self.on_ground, self.right_falling)
+    self.right_fall_finished = false
     if self.next_right_index <= #self.right_positions then
         self.right_falling = PressureBlock.new(self.right_positions[self.next_right_index])
         self.next_right_index = self.next_right_index + 1
@@ -83,7 +87,7 @@ function PressureBlocks:set_next_right_falling_block()
 end
 
 function PressureBlocks:set_next_left_falling_block()
-    table.insert(self.on_ground, self.left_falling)
+    self.left_fall_finished = false
     if self.next_left_index <= #self.left_positions then
         self.left_falling = PressureBlock.new(self.left_positions[self.next_left_index])
         self.next_left_index = self.next_left_index + 1
@@ -93,36 +97,48 @@ function PressureBlocks:set_next_left_falling_block()
 end
 
 function PressureBlocks:falling(): {PressureBlock}
+    local falling_blocks = {}
+    
     if self:no_updates() then
-        return {}
+        return falling_blocks
     end
-    return {self.left_falling, self.right_falling}
+    
+    for _, block in ipairs({self.left_falling, self.right_falling}) do
+        if not block:is_on_ground() then
+            table.insert(falling_blocks, block)
+        end
+    end
+
+    return falling_blocks
 end
 
 function PressureBlocks:update(dt: number): {PressureBlock}
     self.time_left = self.time_left - dt
+    local blocks_hitting_ground: {PressureBlock} = {}
     if self:no_updates() then
-        return {}
+        return blocks_hitting_ground
     end
 
     self.left_falling:update(dt)
     self.right_falling:update(dt)
-    if self.right_falling:is_on_ground() and self.left_falling:is_on_ground() then
-        local hitting_ground = self:falling()
+
+    if self.right_falling:is_on_ground() and not self.right_fall_finished then
+        self.right_fall_finished = true
+        table.insert(self.on_ground, self.right_falling)
+        table.insert(blocks_hitting_ground, self.right_falling)
+    end
+    if self.left_falling:is_on_ground() and not self.left_fall_finished then
+        self.left_fall_finished = true
+        table.insert(self.on_ground, self.left_falling)
+        table.insert(blocks_hitting_ground, self.left_falling)
+    end
+
+    if self.left_fall_finished and self.right_fall_finished then
         self:set_next_right_falling_block()
         self:set_next_left_falling_block()
-        return hitting_ground
     end
 
-    -- Left and right do not neccessarly hit the ground at same time:
-    if self.right_falling:is_on_ground() then
-        return {self.right_falling}
-    end
-    if self.left_falling:is_on_ground() then
-        return {self.left_falling}
-    end
-
-    return {}
+    return blocks_hitting_ground
 end
 
 function PressureBlocks:hitboxes(): {Rectangle}
