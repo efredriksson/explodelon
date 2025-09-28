@@ -8,6 +8,7 @@ require("shade_font")
 require("items")
 require("level_map")
 require("movement")
+require("pressure_block")
 
 local function setup_players(number_players: integer): {Player}
 	global players: {Player} = {}
@@ -98,8 +99,12 @@ local function game_load()
 	load_item_assets()
 	global items = Items.new()
 
-	global game_timer = GameTimer.new(180)
+	local time_left = 180
+	global game_timer = GameTimer.new(time_left)
 	game_timer:load_assets()
+
+	load_pressure_block_assets()
+	global pressure_blocks = PressureBlocks.new(time_left)
 
 	global score_font = get_shaded_number_font()
 end
@@ -128,6 +133,7 @@ local function game_update(dt: number)
 	items:update(dt)
 	items:dropNew(get_available_item_spots())
 	game_timer:decrement(dt)
+	pressure_blocks:update(dt)
 end
 
 local function sort_entities_by_y_cord(players_to_sort: {Entity})
@@ -151,6 +157,17 @@ end
 
 local function game_draw()
 	lutro.graphics.draw(background)
+	game_timer:draw()
+
+	for _, block in ipairs(pressure_blocks:falling()) do
+		-- falling blocks are rendered last on top of everything,
+		-- but their shadows have to be behind anything
+		block:draw_shadow()
+	end
+
+	for _, block in ipairs(pressure_blocks.on_ground) do
+		block:draw()
+	end
 
 	local entities_to_draw: {Entity} = {}
 	for _, player in ipairs(players) do
@@ -162,9 +179,11 @@ local function game_draw()
 		lutro.graphics.draw(avatars[player.id], avatar_pos.x, avatar_pos.y)
 		score_font:draw(tostring(player.score), score_pos)
 	end
-
 	for _, item in ipairs(items.on_ground) do
 		table.insert(entities_to_draw, item)
+	end
+	for _, block in ipairs(pressure_blocks:falling()) do
+		table.insert(entities_to_draw, block)
 	end
 
 	-- Need to render entities in the front last so they are on top of any other entity
@@ -172,8 +191,6 @@ local function game_draw()
 	for _, entity in ipairs(entities_to_draw) do
 		entity:draw()
 	end
-
-	game_timer:draw()
 end
 
 local function setup(number_players: integer): Scene
