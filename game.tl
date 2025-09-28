@@ -109,8 +109,26 @@ local function game_load()
 	global score_font = get_shaded_number_font()
 end
 
+local function transfere_player_data(old_player_datas: {Player}, player_winner?: integer)
+	for i=1, #players do
+		local player = players[i]
+		player.score = old_player_datas[i].score
+		if player_winner == i then
+			player.score = player.score + 1
+		end
+	end
+end
+
+local function next_game(player_winner?: integer)
+	local old_player_datas = players
+	setup_players(#old_player_datas)
+	transfere_player_data(old_player_datas, player_winner)
+	game_load()
+end
+
 local function game_update(dt: number)
 	local hitting_ground = pressure_blocks:update(dt)
+	local alive_players: {integer} = {}
 
 	for i=1, #players do
 		local player = players[i]
@@ -137,12 +155,22 @@ local function game_update(dt: number)
 				player.is_alive = false
 			end
 		end
+
+		if player.is_alive then
+			table.insert(alive_players, i)
+		end
 	end
 
 	items:update(dt)
 	items:dropNew(get_available_item_spots())
-	game_timer:decrement(dt)
-	pressure_blocks:update(dt)
+
+	local out_of_time = game_timer:decrement(dt)
+	if #alive_players == 1 then
+		next_game(alive_players[1])
+	end
+	if #alive_players == 0 or out_of_time then
+		next_game()
+	end
 end
 
 local function sort_entities_by_y_cord(players_to_sort: {Entity})
