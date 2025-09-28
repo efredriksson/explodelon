@@ -139,6 +139,18 @@ local function restrict_player_movement(
 		return CheckedMovement.new(new_position:move(along_wall), true, true)
 	end
 
+	for _, pressure_block in ipairs(pressure_blocks) do
+		if new_hitbox:overlap(pressure_block) then
+			local old_hitbox = new_hit_box(player_pos)
+			local new_dist_to_1_ton_block = pressure_block:center_distance(new_hitbox)
+			local old_dist_to_1_ton_block = pressure_block:center_distance(old_hitbox)
+			if new_dist_to_1_ton_block < old_dist_to_1_ton_block then
+				-- Not allowed to walk further into 1 ton block
+				return CheckedMovement.new(player_pos, false, false)
+			end
+		end
+	end
+
 	for _, hard_block in ipairs(HARD_BLOCKS) do
 		if new_hitbox:overlap(hard_block) then
 			if movement.x == 0 then
@@ -157,18 +169,6 @@ local function restrict_player_movement(
 				)
 			else
 				assert(false, "Bad movement vector")
-			end
-		end
-	end
-
-	for _, pressure_block in ipairs(pressure_blocks) do
-		if new_hitbox:overlap(pressure_block) then
-			local old_hitbox = new_hit_box(player_pos)
-			local new_dist_to_1_ton_block = pressure_block:center_distance(new_hitbox)
-			local old_dist_to_1_ton_block = pressure_block:center_distance(old_hitbox)
-			if new_dist_to_1_ton_block < old_dist_to_1_ton_block then
-				-- Not allowed to walk further into 1 ton block
-				return CheckedMovement.new(player_pos, false, false)
 			end
 		end
 	end
