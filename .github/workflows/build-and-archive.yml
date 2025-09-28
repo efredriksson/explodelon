@@ -1,0 +1,17 @@
+on: push
+jobs:
+  build-and-archive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup
+        run: sudo apt install luarocks make zip && sudo luarocks install tl
+      - name: Lint
+        run: make lint
+      - name: Create dist
+        run: make package
+      - name: Archive dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: game
+          path: dist/explodelon.lutro
