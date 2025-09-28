@@ -114,5 +114,13 @@ function PressureBlocks:update(dt: number): {PressureBlock}
         return hitting_ground
     end
 
+    -- Left and right do not neccessarly hit the ground at same time:
+    if self.right_falling:is_on_ground() then
+        return {self.right_falling}
+    end
+    if self.left_falling:is_on_ground() then
+        return {self.left_falling}
+    end
+
     return {}
 end
