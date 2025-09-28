@@ -110,6 +110,8 @@ local function game_load()
 end
 
 local function game_update(dt: number)
+	local hitting_ground = pressure_blocks:update(dt)
+
 	for i=1, #players do
 		local player = players[i]
 		set_position_and_dir_from_input(player, dt)
@@ -126,6 +128,13 @@ local function game_update(dt: number)
 		for j, item in ipairs(items.on_ground) do
 			if item.position:in_radius_of(player.position, BLOCK_SIZE / 2) then
 				items:consumed_by_player(player, j)
+			end
+		end
+
+		local player_hitbox = new_hit_box(player.position)
+		for _, block in ipairs(hitting_ground) do
+			if player_hitbox:overlap(new_hit_box(block.position)) then
+				player.is_alive = false
 			end
 		end
 	end
@@ -172,7 +181,7 @@ local function game_draw()
 	local entities_to_draw: {Entity} = {}
 	for _, player in ipairs(players) do
 		local player_animation = animations[player.id][player.direction]
-		table.insert(entities_to_draw, PlayerAnimation.new(player_animation, player.position))
+		table.insert(entities_to_draw, PlayerAnimation.new(player_animation, player))
 	
 		local avatar_pos = get_avatar_position(player.id, #players)
 		local score_pos = avatar_pos:move(Vector.new(18, 5))
