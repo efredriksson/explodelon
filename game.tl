@@ -132,7 +132,7 @@ local function game_update(dt: number)
 
 	for i=1, #players do
 		local player = players[i]
-		set_position_and_dir_from_input(player, dt)
+		set_position_and_dir_from_input(player, dt, pressure_blocks:hitboxes())
 
 		local animation = animations[player.id][player.direction]
 		if player.idle then
@@ -151,7 +151,8 @@ local function game_update(dt: number)
 
 		local player_hitbox = new_hit_box(player.position)
 		for _, block in ipairs(hitting_ground) do
-			if player_hitbox:overlap(new_hit_box(block.position)) then
+			local block_hitbox = new_hit_box(block.position)
+			if player_hitbox:center_distance(block_hitbox) < BLOCK_SIZE / 2 then
 				player.is_alive = false
 			end
 		end

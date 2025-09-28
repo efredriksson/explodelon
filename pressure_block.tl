@@ -124,3 +124,15 @@ function PressureBlocks:update(dt: number): {PressureBlock}
 
     return {}
 end
+
+function PressureBlocks:hitboxes(): {Rectangle}
+    local hitboxes: {Rectangle} = {} 
+    for _, block in ipairs(self.on_ground) do
+        local hitbox = Rectangle.new(
+            block.position.x, block.position.y, BLOCK_SIZE, BLOCK_SIZE
+        )
+        table.insert(hitboxes, hitbox)
+    end
+
+    return hitboxes
+end
