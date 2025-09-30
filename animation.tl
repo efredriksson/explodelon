@@ -10,9 +10,11 @@ global record Animation
     period: number
     speed: number
     steps: number
+    idle_time: number
+    idle_timer: number
 end
 
-function Animation.new(image: Image, width: number, height: number, period: number, speed: number): Animation
+function Animation.new(image: Image, width: number, height: number, period: number, speed: number, idle_time?: number): Animation
     local self: Animation = setmetatable({}, { __index = Animation })
     self.image = image
     self.timer = 0
@@ -22,6 +24,8 @@ function Animation.new(image: Image, width: number, height: number, period: numb
     self.speed = speed
     self.period = period
     self.steps = self.image:getWidth() / self.width
+    self.idle_time = idle_time or 0
+    self.idle_timer = self.idle_time
     return self
 end
 
@@ -30,10 +34,16 @@ function Animation:update(dt: number)
         return
     end
 
+    if self.idle_timer >= 0 then
+        self.idle_timer = self.idle_timer - dt
+        return
+    end
+
     self.timer = self.timer + dt * self.speed
 
     if self.timer > self.steps * self.period then
         self.timer = 0
+        self.idle_timer = self.idle_time
     end
 end
 
