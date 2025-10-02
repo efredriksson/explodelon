@@ -122,20 +122,16 @@ local function get_available_item_spots(): {Point}
 	return available_spots
 end
 
-local function transfere_player_data(old_player_datas: {Player}, player_winner?: integer)
+local function transfere_player_data(old_player_datas: {Player})
 	for i=1, #players do
-		local player = players[i]
-		player.score = old_player_datas[i].score
-		if player_winner == i then
-			player.score = player.score + 1
-		end
+		players[i].score = old_player_datas[i].score
 	end
 end
 
-local function next_game(player_winner?: integer)
+local function next_game()
 	local old_player_datas = players
 	setup_players(#old_player_datas)
-	transfere_player_data(old_player_datas, player_winner)
+	transfere_player_data(old_player_datas)
 	game_load()
 end
 
@@ -151,10 +147,9 @@ end
 
 local function game_update(dt: number)
 	local hitting_ground = pressure_blocks:update(dt)
-	local alive_players: {integer} = {}
+	local alive_players: {Player} = {}
 
-	for i=1, #players do
-		local player = players[i]
+	for _, player in ipairs(players) do
 		set_position_and_dir_from_input(player, dt, pressure_blocks:hitboxes())
 		animations[player.id][player.action][player.direction]:update(dt)
 
@@ -173,7 +168,7 @@ local function game_update(dt: number)
 		end
 
 		if player.is_alive then
-			table.insert(alive_players, i)
+			table.insert(alive_players, player)
 		end
 	end
 
@@ -183,7 +178,8 @@ local function game_update(dt: number)
 
 	local out_of_time = game_timer:decrement(dt)
 	if #alive_players == 1 then
-		next_game(alive_players[1])
+		alive_players[1]:won_game()
+		next_game()
 	end
 	if #alive_players == 0 or out_of_time then
 		next_game()
