@@ -34,6 +34,10 @@ function Point:in_radius_of(other: Point, radius: number): boolean
    return self:distance_to(other) < radius 
 end
 
+function Point:equal(other: Point): boolean
+   return self.x == other.x and self.y == other.y 
+end
+
 function Vector.new(x: number, y: number): Vector
    local self: Vector = setmetatable({}, { __index = Vector })
    self.x = x or 0

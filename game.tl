@@ -55,27 +55,6 @@ local function character_animations(character_asset: string): {Action: {Directio
 	}
 end
 
-local function get_available_item_spots(): {Point}
-	-- Return places an item can drop, non-hard positions
-	-- and also let's not drop items too close to players
-	local available_spots: {Point} = {}
-
-	for _, pos in ipairs(NON_HARD_POSITIONS) do
-		local to_close_to_player = false
-		for _, player in ipairs(players) do
-			if math.abs(player.position.x - pos.x) + math.abs(player.position.y - pos.y) < 32 then
-				to_close_to_player = true
-			end
-		end
-
-		if not to_close_to_player then
-			table.insert(available_spots, pos)
-		end
-	end
-
-	return available_spots
-end
-
 local function game_load()
 	global background = lutro.graphics.newImage("assets/footboll-map.png")
 	global animations: {number: {Action: {Direction: Animation}}} = {
@@ -114,6 +93,33 @@ local function game_load()
 	global pressure_blocks = PressureBlocks.new(time_left)
 
 	global score_font = get_shaded_number_font()
+end
+
+local function get_available_item_spots(): {Point}
+	-- Return places an item can drop, non-hard positions
+	-- and also let's not drop items too close to players
+	local available_spots: {Point} = {}
+
+	for _, pos in ipairs(NON_HARD_POSITIONS) do
+		local invalid_position = false
+		for _, player in ipairs(players) do
+			if player.position:distance_to(pos) < BLOCK_SIZE * 2 then
+				invalid_position = true
+			end
+		end
+
+		for _, pressure_block in ipairs(pressure_blocks.on_ground) do
+			if pressure_block.position:equal(pos) then
+				invalid_position = true
+			end
+		end
+
+		if not invalid_position then
+			table.insert(available_spots, pos)
+		end
+	end
+
+	return available_spots
 end
 
 local function transfere_player_data(old_player_datas: {Player}, player_winner?: integer)
