@@ -44,6 +44,10 @@ function Player.new(id: integer, position: Point): Player
 	return self
 end
 
+function Player:won_game()
+	self.score = self.score + 1
+end
+
 global function new_hit_box(new_position: Point): Rectangle
     return Rectangle.new(new_position.x, new_position.y, BLOCK_SIZE, BLOCK_SIZE)
 end
