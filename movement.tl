@@ -238,5 +238,9 @@ global function set_position_and_dir_from_input(player: Player, dt: number, pres
 	player.direction, player.position = get_new_player_orientation(
 		player.direction, player.position, directions, pressure_blocks
 	)
-	player.idle = #directions == 0
+	if #directions == 0 then
+		player.action = "idle"
+	else
+		player.action = "walk"
+	end
 end
