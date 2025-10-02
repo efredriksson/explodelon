@@ -139,6 +139,16 @@ local function next_game(player_winner?: integer)
 	game_load()
 end
 
+local function clear_items(hitting_ground: {PressureBlock})
+	for _, block in ipairs(hitting_ground) do
+		for j, item in ipairs(items.on_ground) do
+			if item.position:equal(block.position) then
+				table.remove(items.on_ground, j)
+			end
+		end
+	end
+end
+
 local function game_update(dt: number)
 	local hitting_ground = pressure_blocks:update(dt)
 	local alive_players: {integer} = {}
@@ -169,6 +179,7 @@ local function game_update(dt: number)
 
 	items:update(dt)
 	items:dropNew(get_available_item_spots())
+	clear_items(hitting_ground)
 
 	local out_of_time = game_timer:decrement(dt)
 	if #alive_players == 1 then
