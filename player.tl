@@ -55,6 +55,10 @@ function Player:won_game()
 	self.score = self.score + 1
 end
 
+function Player:get_draw_position(): Point
+	return self.position
+end
+
 global function new_hit_box(new_position: Point): Rectangle
     return Rectangle.new(new_position.x, new_position.y, BLOCK_SIZE, BLOCK_SIZE)
 end
@@ -62,6 +66,7 @@ end
 global record PlayerAnimation is Entity
 	player: Player
 	position: Point
+	draw_position: Point
 	animation: Animation
 end
 
@@ -70,13 +75,15 @@ function PlayerAnimation.new(animation: Animation, player: Player): PlayerAnimat
 	self.animation = animation
 	self.player = player
 	self.position = player.position
+	self.draw_position = player:get_draw_position()
 	return self
 end
 
-local function convert_pos_for_character_draw(animation: Animation, pos: Point): Point
-	local h = animation.image:getHeight()
-	-- x: -1 and y: +1 is because of the sprite, look over when doing animations
-	return Point.new(pos.x - 1, pos.y - h + BLOCK_SIZE + 1)
+local function block_to_anim_draw_pos(animation: Animation, pos: Point): Point
+	-- y: +1 is because of the sprite, look over when doing animations
+	return Point.new(
+		pos.x + (BLOCK_SIZE - animation.width) / 2,
+		pos.y - animation.height + BLOCK_SIZE + 1)
 end
 
 function PlayerAnimation:draw()
@@ -84,6 +91,6 @@ function PlayerAnimation:draw()
 		return
 	end
 
-	local draw_pos = convert_pos_for_character_draw(self.animation, self.position)
+	local draw_pos = block_to_anim_draw_pos(self.animation, self.draw_position)
 	self.animation:draw(draw_pos.x, draw_pos.y)
 end
