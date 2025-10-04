@@ -36,11 +36,19 @@ local function character_animation(asset_file: string): Animation
 	return Animation.new(lutro.graphics.newImage(asset_file), 18, 34, 3, 18)
 end
 
+local function dino_animation(asset_file: string): Animation
+	return Animation.new(lutro.graphics.newImage(asset_file), 22, 26, 3, 18)
+end
+
 local function character_avatar(character_asset: string): Image
 	return lutro.graphics.newImage("assets/" .. character_asset .. "/avatar_neutral.png")
 end
 
 local function character_animation_for_action(character_asset: string, state: PlayerState, action: Action): {Direction: Animation}
+	if state == "mounted" and action == "jump" then
+		return {}
+	end
+
 	return {
 		["up"] = character_animation("assets/" .. character_asset .. "/" .. state .. "/" .. action.. "_up.png"),
 		["down"] = character_animation("assets/" .. character_asset .. "/" .. state .. "/" .. action.. "_down.png"),
@@ -59,6 +67,16 @@ end
 local function character_animations(character_asset: string): {PlayerState: {Action: {Direction: Animation}}}
 	return {
 		["foot"] = character_animations_for_state(character_asset, "foot"),
+		["mounted"] = character_animations_for_state(character_asset, "mounted"),
+	}
+end
+
+local function dino_animation_for_action(action: Action): {Direction: Animation}
+	return {
+		["up"] = dino_animation("assets/tirras/" .. action.. "_up.png"),
+		["down"] = dino_animation("assets/tirras/" ..  action.. "_down.png"),
+		["right"] = dino_animation("assets/tirras/" ..  action.. "_right.png"),
+		["left"] = dino_animation("assets/tirras/" .. action.. "_left.png"),
 	}
 end
 
@@ -75,6 +93,10 @@ local function game_load()
 		[8] = character_animations("master_higins"),
 		[9] = character_animations("manjimaru"),
 		[10] = character_animations("bonks"),
+	}
+	global dino_animations: {Action: {Direction: Animation}} = {
+		["walk"] = dino_animation_for_action("walk"),
+		["idle"] = dino_animation_for_action("idle"),
 	}
 	global avatars: {number: Image} = {
 		[1] = character_avatar("kotetsu"),
@@ -163,6 +185,9 @@ local function game_update(dt: number)
 	for _, player in ipairs(players) do
 		set_position_and_dir_from_input(player, dt, pressure_blocks:hitboxes())
 		animations[player.id][player.state][player.action][player.direction]:update(dt)
+		if player.state == "mounted" then
+			dino_animations[player.action][player.direction]:update(dt)
+		end
 
 		for j, item in ipairs(items.on_ground) do
 			if item.position:in_radius_of(player.position, BLOCK_SIZE / 2) then
@@ -235,8 +260,14 @@ local function game_draw()
 	local entities_to_draw: {Entity} = {}
 	for _, player in ipairs(players) do
 		local player_animation = animations[player.id][player.state][player.action][player.direction]
-		table.insert(entities_to_draw, PlayerAnimation.new(player_animation, player))
 	
+		if player.state == "mounted" then
+			local dion_anim = dino_animations[player.action][player.direction]
+			table.insert(entities_to_draw, MountedPlayerAnimation.new(player_animation, dion_anim, player))
+		else
+			table.insert(entities_to_draw, PlayerAnimation.new(player_animation, player))
+		end
+
 		local avatar_pos = get_avatar_position(player.id, #players)
 		local score_pos = avatar_pos:move(Vector.new(18, 5))
 		lutro.graphics.draw(avatars[player.id], avatar_pos.x, avatar_pos.y)

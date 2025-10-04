@@ -56,7 +56,21 @@ function Player:won_game()
 end
 
 function Player:get_draw_position(): Point
-	return self.position
+	local position = self.position
+	
+	if self.state == "mounted" then
+		-- Adjust player sprite for being on top of its mount
+		local horizonal_displacements: {Direction: integer} = {
+			right = -5, left = 5, up = 0, down = 0,
+		}
+		local horizonal_displacement = horizonal_displacements[self.direction]
+		local vertical_displacement = -8
+		position = position:move(
+			Vector.new(horizonal_displacement, vertical_displacement)
+		)
+	end
+
+	return position
 end
 
 global function new_hit_box(new_position: Point): Rectangle
@@ -93,4 +107,45 @@ function PlayerAnimation:draw()
 
 	local draw_pos = block_to_anim_draw_pos(self.animation, self.draw_position)
 	self.animation:draw(draw_pos.x, draw_pos.y)
+end
+
+global record MountedPlayerAnimation is Entity
+	player: Player
+	position: Point
+	draw_position: Point
+	player_animation: Animation
+	dino_animation: Animation
+end
+
+function MountedPlayerAnimation.new(
+	player_animation: Animation, dino_animation: Animation, player: Player
+): MountedPlayerAnimation
+	local self: MountedPlayerAnimation = setmetatable({}, { __index = MountedPlayerAnimation })
+	self.player_animation = player_animation
+	self.dino_animation = dino_animation
+	self.player = player
+	self.position = player.position
+	self.draw_position = player:get_draw_position()
+	return self
+end
+
+function MountedPlayerAnimation:draw()
+	if not self.player.is_alive then
+		return
+	end
+
+	local function draw(animation: Animation, pos: Point)
+		local draw_pos = block_to_anim_draw_pos(animation, pos)
+		animation:draw(draw_pos.x, draw_pos.y)
+	end
+
+	if self.player.direction == "down" then
+		-- Need to draw dino in front of player walking towards screen
+		draw(self.player_animation, self.draw_position)
+		draw(self.dino_animation, self.player.position)
+	else
+		-- And player in front of dino in all other cases
+		draw(self.dino_animation, self.player.position)
+		draw(self.player_animation, self.draw_position)
+	end
 end
