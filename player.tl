@@ -16,11 +16,17 @@ global type Action = enum
    "idle"
 end
 
+global type PlayerState = enum
+	"foot"
+	"mounted"
+end
+
 global record Player
 	id: integer
    	position: Point
 	direction: Direction
 	action: Action
+	state: PlayerState
 	score: integer
 	speed: integer
 	bombs: integer
@@ -35,6 +41,7 @@ function Player.new(id: integer, position: Point): Player
 	self.position = position
 	self.direction = "down"
 	self.action = "idle"
+	self.state = "foot"
 	self.score = 0
 	self.speed = PLAYER_SPEED
 	self.bombs = 1
