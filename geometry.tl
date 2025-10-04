@@ -57,6 +57,10 @@ function Vector:scale(val: number): Vector
    return Vector.new(self.x * val, self.y * val)
 end
 
+function Vector:minus(other: Vector): Vector
+   return Vector.new(self.x - other.x, self.y - other.y)
+end
+
 function Rectangle.new(x: number, y: number, width: number, height: number): Rectangle
    local self: Rectangle = setmetatable({}, { __index = Rectangle })
    self.x = x or 0

@@ -61,6 +61,7 @@ local function character_animations_for_state(character_asset: string, state: Pl
 	return {
 		["walk"] = character_animation_for_action(character_asset, state, "walk"),
 		["idle"] = character_animation_for_action(character_asset, state, "idle"),
+		["jump"] = character_animation_for_action(character_asset, state, "jump"),
 	}
 end
 
@@ -183,7 +184,11 @@ local function game_update(dt: number)
 	local alive_players: {Player} = {}
 
 	for _, player in ipairs(players) do
-		set_position_and_dir_from_input(player, dt, pressure_blocks:hitboxes())
+		player:update(dt)
+		if player.action ~= "jump" then
+			set_position_and_dir_from_input(player, dt, pressure_blocks:hitboxes())
+		end
+
 		animations[player.id][player.state][player.action][player.direction]:update(dt)
 		if player.state == "mounted" then
 			dino_animations[player.action][player.direction]:update(dt)
@@ -193,6 +198,11 @@ local function game_update(dt: number)
 			if item.position:in_radius_of(player.position, BLOCK_SIZE / 2) then
 				items:consumed_by_player(player, j)
 			end
+		end
+
+		local egg_position = eggs:possible_hatcher_at(player.position)
+		if egg_position then
+			player:jumps_to(egg_position)
 		end
 
 		local player_hitbox = new_hit_box(player.position)
