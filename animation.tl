@@ -12,6 +12,7 @@ global record Animation
     steps: number
     idle_time: number
     idle_timer: number
+    loops: number
 end
 
 function Animation.new(image: Image, width: number, height: number, period: number, speed: number, idle_time?: number): Animation
@@ -26,6 +27,7 @@ function Animation.new(image: Image, width: number, height: number, period: numb
     self.steps = self.image:getWidth() / self.width
     self.idle_time = idle_time or 0
     self.idle_timer = self.idle_time
+    self.loops = 0
     return self
 end
 
@@ -44,6 +46,7 @@ function Animation:update(dt: number)
     if self.timer > self.steps * self.period then
         self.timer = 0
         self.idle_timer = self.idle_time
+        self.loops = self.loops + 1
     end
 end
 
