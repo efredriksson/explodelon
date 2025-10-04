@@ -39,25 +39,31 @@ local function character_avatar(character_asset: string): Image
 	return lutro.graphics.newImage("assets/" .. character_asset .. "/avatar_neutral.png")
 end
 
-local function character_animation_for_action(character_asset: string, action: Action): {Direction: Animation}
+local function character_animation_for_action(character_asset: string, state: PlayerState, action: Action): {Direction: Animation}
 	return {
-		["up"] = character_animation("assets/" .. character_asset .. "/" .. action.. "_up.png"),
-		["down"] = character_animation("assets/" .. character_asset .. "/" .. action.. "_down.png"),
-		["right"] = character_animation("assets/" .. character_asset .. "/" .. action.. "_right.png"),
-		["left"] = character_animation("assets/" .. character_asset .. "/" .. action.. "_left.png"),
+		["up"] = character_animation("assets/" .. character_asset .. "/" .. state .. "/" .. action.. "_up.png"),
+		["down"] = character_animation("assets/" .. character_asset .. "/" .. state .. "/" .. action.. "_down.png"),
+		["right"] = character_animation("assets/" .. character_asset .. "/" .. state .. "/" .. action.. "_right.png"),
+		["left"] = character_animation("assets/" .. character_asset .. "/" .. state .. "/" .. action.. "_left.png"),
 	}
 end
 
-local function character_animations(character_asset: string): {Action: {Direction: Animation}}
+local function character_animations_for_state(character_asset: string, state: PlayerState): {Action: {Direction: Animation}}
 	return {
-		["walk"] = character_animation_for_action(character_asset, "walk"),
-		["idle"] = character_animation_for_action(character_asset, "idle"),
+		["walk"] = character_animation_for_action(character_asset, state, "walk"),
+		["idle"] = character_animation_for_action(character_asset, state, "idle"),
+	}
+end
+
+local function character_animations(character_asset: string): {PlayerState: {Action: {Direction: Animation}}}
+	return {
+		["foot"] = character_animations_for_state(character_asset, "foot"),
 	}
 end
 
 local function game_load()
 	global background = lutro.graphics.newImage("assets/footboll-map.png")
-	global animations: {number: {Action: {Direction: Animation}}} = {
+	global animations: {number: {PlayerState: {Action: {Direction: Animation}}}} = {
 		[1] = character_animations("kotetsu"),
 		[2] = character_animations("honey"),
 		[3] = character_animations("kinu"),
@@ -151,7 +157,7 @@ local function game_update(dt: number)
 
 	for _, player in ipairs(players) do
 		set_position_and_dir_from_input(player, dt, pressure_blocks:hitboxes())
-		animations[player.id][player.action][player.direction]:update(dt)
+		animations[player.id][player.state][player.action][player.direction]:update(dt)
 
 		for j, item in ipairs(items.on_ground) do
 			if item.position:in_radius_of(player.position, BLOCK_SIZE / 2) then
@@ -221,7 +227,7 @@ local function game_draw()
 
 	local entities_to_draw: {Entity} = {}
 	for _, player in ipairs(players) do
-		local player_animation = animations[player.id][player.action][player.direction]
+		local player_animation = animations[player.id][player.state][player.action][player.direction]
 		table.insert(entities_to_draw, PlayerAnimation.new(player_animation, player))
 	
 		local avatar_pos = get_avatar_position(player.id, #players)
