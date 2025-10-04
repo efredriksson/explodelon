@@ -9,6 +9,7 @@ require("items")
 require("level_map")
 require("movement")
 require("pressure_block")
+require("eggs")
 
 local function setup_players(number_players: integer): {Player}
 	global players: {Player} = {}
@@ -87,6 +88,9 @@ local function game_load()
 		[9] = character_avatar("manjimaru"),
 		[10] = character_avatar("bonks"),
 	}
+
+	load_egg_assets()
+	global eggs = Eggs.new()
 
 	load_item_assets()
 	global items = Items.new()
@@ -190,6 +194,8 @@ local function game_update(dt: number)
 	if #alive_players == 0 or out_of_time then
 		next_game()
 	end
+
+	eggs:update(dt)
 end
 
 local function sort_entities_by_y_cord(players_to_sort: {Entity})
@@ -240,6 +246,9 @@ local function game_draw()
 	end
 	for _, block in ipairs(pressure_blocks:falling()) do
 		table.insert(entities_to_draw, block)
+	end
+	for _, egg in ipairs(eggs.on_ground) do
+		table.insert(entities_to_draw, egg)
 	end
 
 	-- Need to render entities in the front last so they are on top of any other entity
