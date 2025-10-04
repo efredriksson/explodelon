@@ -91,6 +91,7 @@ local function game_load()
 
 	load_egg_assets()
 	global eggs = Eggs.new()
+	eggs:spawn(Point.new(56, 64))
 
 	load_item_assets()
 	global items = Items.new()
