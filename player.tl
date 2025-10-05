@@ -102,7 +102,7 @@ function Player:jumps_to(egg_position: Point)
 		else
 			self.jump_target = egg_position
 		end
-		self.dino_level = self.dino_level + 1
+		self.dino_level = math.min(self.dino_level + 1, 3)
 
 		local dino_target = get_player_position_on_mount(self.jump_target, self.direction)
 		local v_0 = get_init_jump_velocity(math.abs(dino_target.y - self.position.y))
