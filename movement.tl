@@ -235,12 +235,13 @@ end
 
 global function set_position_and_dir_from_input(player: Player, dt: number, pressure_blocks: {Rectangle})
 	local directions = get_directions_from_input(player, dt)
-	player.direction, player.position = get_new_player_orientation(
+	local new_dir, new_pos = get_new_player_orientation(
 		player.direction, player.position, directions, pressure_blocks
 	)
+	player:set_movement(new_pos, new_dir)
 	if #directions == 0 then
-		player.action = "idle"
+		player:set_action("idle")
 	else
-		player.action = "walk"
+		player:set_action("walk")
 	end
 end

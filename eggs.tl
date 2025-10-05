@@ -2,6 +2,7 @@ require("const")
 require("geometry")
 require("entity")
 require("animation")
+require("dinos")
 
 global function load_egg_assets()
     global egg_anim = Animation.new(lutro.graphics.newImage("assets/tirras/egg.png"), 20, 26, 3, 18, 2)
@@ -69,12 +70,12 @@ function Eggs:spawn(position: Point)
     table.insert(self.on_ground, Egg.new(position))
 end
 
-function Eggs:possible_hatcher_at(player_position: Point): Point
+function Eggs:possible_hatcher_at(player_position: Point, player_dir: Direction): Dino
     for _, egg in ipairs(self.on_ground) do
         if egg.position:in_radius_of(player_position, BLOCK_SIZE / 2) then
 			if not egg.breaking then
 				egg:open()
-                return egg.position
+                return Dino.new(egg.position, player_dir)
 			end
         end
     end
