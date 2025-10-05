@@ -10,6 +10,7 @@ require("level_map")
 require("movement")
 require("pressure_block")
 require("eggs")
+require("dino_animations")
 
 local function setup_players(number_players: integer): {Player}
 	global players: {Player} = {}
@@ -34,10 +35,6 @@ end
 
 local function character_animation(asset_file: string): Animation
 	return Animation.new(lutro.graphics.newImage(asset_file), 18, 34, 3, 18)
-end
-
-local function dino_animation(asset_file: string): Animation
-	return Animation.new(lutro.graphics.newImage(asset_file), 34, 34, 3, 18)
 end
 
 local function character_avatar(character_asset: string): Image
@@ -77,23 +74,6 @@ local function character_animations(character_asset: string): {PlayerState: {Act
 	}
 end
 
-local function dino_animation_for_action(action: Action, level: integer): {Direction: Animation}
-	return {
-		["up"] = dino_animation("assets/tirras/level_" .. level .. "/" .. action.. "_up.png"),
-		["down"] = dino_animation("assets/tirras/level_" .. level .. "/" ..  action.. "_down.png"),
-		["right"] = dino_animation("assets/tirras/level_" .. level .. "/" ..  action.. "_right.png"),
-		["left"] = dino_animation("assets/tirras/level_" .. level .. "/" .. action.. "_left.png"),
-	}
-end
-
-local function dino_animations_for_level(level: integer): {Action: {Direction: Animation}}
-	return {
-		["walk"] = dino_animation_for_action("walk", level),
-		["idle"] = dino_animation_for_action("idle", level),
-		["jump"] = dino_animation_for_action("idle", level),
-	}
-end
-
 local function game_load()
 	global background = lutro.graphics.newImage("assets/footboll-map.png")
 	global animations: {integer: {PlayerState: {Action: {Direction: Animation}}}} = {
@@ -108,12 +88,6 @@ local function game_load()
 		[9] = character_animations("manjimaru"),
 		[10] = character_animations("bonks"),
 	}
-	global dino_animations: {integer: {Action: {Direction: Animation}}} = 
-	{
-		[1] = dino_animations_for_level(1),
-		[2] = dino_animations_for_level(2),
-		[3] = dino_animations_for_level(3),
-	}
 	global avatars: {integer: Image} = {
 		[1] = character_avatar("kotetsu"),
 		[2] = character_avatar("honey"),
@@ -127,6 +101,7 @@ local function game_load()
 		[10] = character_avatar("bonks"),
 	}
 
+	load_dino_assets()
 	load_egg_assets()
 	global eggs = Eggs.new()
 	eggs:spawn(Point.new(56, 64))
@@ -206,7 +181,7 @@ local function game_update(dt: number)
 
 		animations[player.id][player.state][player.action][player.direction]:update(dt)
 		if player.state == "mounted" then
-			dino_animations[player.dino_level][player.action][player.direction]:update(dt)
+			get_dino_animation(player.dino):update(dt)
 		end
 
 		for j, item in ipairs(items.on_ground) do
@@ -215,9 +190,9 @@ local function game_update(dt: number)
 			end
 		end
 
-		local egg_position = eggs:possible_hatcher_at(player.position)
-		if egg_position then
-			player:jumps_to(egg_position)
+		local hatching_dino = eggs:possible_hatcher_at(player.position, player.direction)
+		if hatching_dino then
+			player:jumps_onto(hatching_dino)
 		end
 
 		local player_hitbox = new_hit_box(player.position)
@@ -287,7 +262,7 @@ local function game_draw()
 		local player_animation = animations[player.id][player.state][player.action][player.direction]
 	
 		if player.state == "mounted" then
-			local dion_anim = dino_animations[player.dino_level][player.action][player.direction]
+			local dion_anim = get_dino_animation(player.dino)
 			table.insert(entities_to_draw, MountedPlayerAnimation.new(player_animation, dion_anim, player))
 		else
 			table.insert(entities_to_draw, PlayerAnimation.new(player_animation, player))

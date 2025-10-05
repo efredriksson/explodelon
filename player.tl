@@ -2,13 +2,7 @@ require("const")
 require("geometry")
 require("animation")
 require("entity")
-
-global type Direction = enum
-   "up"
-   "down"
-   "right"
-   "left"
-end
+require("dinos")
 
 global type Action = enum
    "walk"
@@ -33,7 +27,7 @@ global record Player
 	fire: integer
 	has_kick: boolean
 	is_alive: boolean
-	dino_level: integer
+	dino: Dino
 	jump_p: Point
 	jump_v: Vector
 	jump_target: Point
@@ -53,7 +47,7 @@ function Player.new(id: integer, position: Point): Player
 	self.fire = 2
 	self.has_kick = false
 	self.is_alive = true
-	self.dino_level = 0
+	self.dino = nil
 	return self
 end
 
@@ -92,17 +86,19 @@ local function get_gravity(init_velocity: number): number
 	return init_velocity * init_velocity / (2 * h_max)
 end
 
-function Player:jumps_to(egg_position: Point)
+function Player:jumps_onto(dino: Dino)
 	if self.action ~= "jump" then
 		self.action = "jump"
 		self.jump_p = self.position
-		if self.dino_level > 0 then
-			-- Jump in place when upgrading dino
+
+		if self.dino then
+			-- Jump in place when upgrading existing dino
 			self.jump_target = self.position
+			self.dino:level_up()
 		else
-			self.jump_target = egg_position
+			self.jump_target = dino.position
+			self.dino = dino
 		end
-		self.dino_level = math.min(self.dino_level + 1, 3)
 
 		local dino_target = get_player_position_on_mount(self.jump_target, self.direction)
 		local v_0 = get_init_jump_velocity(math.abs(dino_target.y - self.position.y))
@@ -124,6 +120,26 @@ function Player:update(dt: number)
 			self.state = "mounted"
 			self.action = "idle"
 			self.position = self.jump_target
+		end
+	end
+end
+
+function Player:set_movement(position: Point, direction: Direction)
+	self.position = position
+	self.direction = direction
+	if self.dino then
+		self.dino.position = position
+		self.dino.direction = direction
+	end
+end
+
+function Player:set_action(action: Action)
+	self.action = action
+	if self.dino then
+		if action == "walk" then
+			self.dino.action = "walk"
+		elseif action == "idle" then
+			self.dino.action = "idle"
 		end
 	end
 end

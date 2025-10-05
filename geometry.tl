@@ -15,6 +15,13 @@ global record Rectangle
 	height: number
 end
 
+global type Direction = enum
+   "up"
+   "down"
+   "right"
+   "left"
+end
+
 function Point.new(x: number, y: number): Point
    local self: Point = setmetatable({}, { __index = Point })
    self.x = x or 0
