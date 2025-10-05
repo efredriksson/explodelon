@@ -101,7 +101,8 @@ local function game_load()
 		[10] = character_avatar("bonks"),
 	}
 
-	load_dino_assets()
+	global animated_dinos = AnimatedDinos.new()
+
 	load_egg_assets()
 	global eggs = Eggs.new()
 	eggs:spawn(Point.new(56, 64))
@@ -180,9 +181,6 @@ local function game_update(dt: number)
 		end
 
 		animations[player.id][player.state][player.action][player.direction]:update(dt)
-		if player.state == "mounted" then
-			get_dino_animation(player.dino):update(dt)
-		end
 
 		for j, item in ipairs(items.on_ground) do
 			if item.position:in_radius_of(player.position, BLOCK_SIZE / 2) then
@@ -192,6 +190,7 @@ local function game_update(dt: number)
 
 		local hatching_dino = eggs:possible_hatcher_at(player.position, player.direction)
 		if hatching_dino then
+			animated_dinos:add(hatching_dino)
 			player:jumps_onto(hatching_dino)
 		end
 
@@ -222,6 +221,7 @@ local function game_update(dt: number)
 	end
 
 	eggs:update(dt)
+	animated_dinos:update(dt)
 end
 
 local function sort_entities_by_y_cord(players_to_sort: {Entity})
@@ -262,7 +262,7 @@ local function game_draw()
 		local player_animation = animations[player.id][player.state][player.action][player.direction]
 	
 		if player.state == "mounted" then
-			local dion_anim = get_dino_animation(player.dino)
+			local dion_anim = animated_dinos:get_from(player.dino)
 			table.insert(entities_to_draw, MountedPlayerAnimation.new(player_animation, dion_anim, player))
 		else
 			table.insert(entities_to_draw, PlayerAnimation.new(player_animation, player))
