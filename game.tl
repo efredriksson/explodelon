@@ -78,11 +78,12 @@ local function character_animations(character_asset: string): {PlayerState: {Act
 end
 
 local function dino_animation_for_action(action: Action): {Direction: Animation}
+	local level = 1
 	return {
-		["up"] = dino_animation("assets/tirras/" .. action.. "_up.png"),
-		["down"] = dino_animation("assets/tirras/" ..  action.. "_down.png"),
-		["right"] = dino_animation("assets/tirras/" ..  action.. "_right.png"),
-		["left"] = dino_animation("assets/tirras/" .. action.. "_left.png"),
+		["up"] = dino_animation("assets/tirras/level_" .. level .. "/" .. action.. "_up.png"),
+		["down"] = dino_animation("assets/tirras/level_" .. level .. "/" ..  action.. "_down.png"),
+		["right"] = dino_animation("assets/tirras/level_" .. level .. "/" ..  action.. "_right.png"),
+		["left"] = dino_animation("assets/tirras/level_" .. level .. "/" .. action.. "_left.png"),
 	}
 end
 
