@@ -45,10 +45,15 @@ local function character_avatar(character_asset: string): Image
 end
 
 local function character_animation_for_action(character_asset: string, state: PlayerState, action: Action): {Direction: Animation}
-	if state == "mounted" and action == "jump" then
-		return {}
+	if state == "mounted" then
+		if action == "jump" then
+			-- Same sprite for 'jump' when on foot as when mounted
+			state = "foot"
+		elseif action == "idle" then
+			-- Same sprite for 'idle' as 'walk' when mounted
+			action = "walk"
+		end
 	end
-
 	return {
 		["up"] = character_animation("assets/" .. character_asset .. "/" .. state .. "/" .. action.. "_up.png"),
 		["down"] = character_animation("assets/" .. character_asset .. "/" .. state .. "/" .. action.. "_down.png"),
