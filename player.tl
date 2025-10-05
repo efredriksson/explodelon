@@ -33,6 +33,7 @@ global record Player
 	fire: integer
 	has_kick: boolean
 	is_alive: boolean
+	dino_level: integer
 	jump_p: Point
 	jump_v: Vector
 	jump_target: Point
@@ -52,6 +53,7 @@ function Player.new(id: integer, position: Point): Player
 	self.fire = 2
 	self.has_kick = false
 	self.is_alive = true
+	self.dino_level = 0
 	return self
 end
 
@@ -90,13 +92,19 @@ local function get_gravity(init_velocity: number): number
 	return init_velocity * init_velocity / (2 * h_max)
 end
 
-function Player:jumps_to(position: Point)
+function Player:jumps_to(egg_position: Point)
 	if self.action ~= "jump" then
 		self.action = "jump"
 		self.jump_p = self.position
-		self.jump_target = position
+		if self.dino_level > 0 then
+			-- Jump in place when upgrading dino
+			self.jump_target = self.position
+		else
+			self.jump_target = egg_position
+		end
+		self.dino_level = self.dino_level + 1
 
-		local dino_target = get_player_position_on_mount(position, self.direction)
+		local dino_target = get_player_position_on_mount(self.jump_target, self.direction)
 		local v_0 = get_init_jump_velocity(math.abs(dino_target.y - self.position.y))
 		local g = get_gravity(v_0)
 		local side_vel = (dino_target.x - self.position.x) / JUMP_TIME

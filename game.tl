@@ -103,6 +103,7 @@ local function game_load()
 	global dino_animations: {Action: {Direction: Animation}} = {
 		["walk"] = dino_animation_for_action("walk"),
 		["idle"] = dino_animation_for_action("idle"),
+		["jump"] = dino_animation_for_action("idle"),
 	}
 	global avatars: {number: Image} = {
 		[1] = character_avatar("kotetsu"),
