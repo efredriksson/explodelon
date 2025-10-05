@@ -37,7 +37,7 @@ local function character_animation(asset_file: string): Animation
 end
 
 local function dino_animation(asset_file: string): Animation
-	return Animation.new(lutro.graphics.newImage(asset_file), 22, 26, 3, 18)
+	return Animation.new(lutro.graphics.newImage(asset_file), 34, 34, 3, 18)
 end
 
 local function character_avatar(character_asset: string): Image
