@@ -2,38 +2,92 @@ require("animation")
 require("dinos")
 
 local IMAGE_CACHE: {string: Image} = {}
+local type Color = {number, number, number}
 
-local function get_cached_lutro_image(asset_file: string): Image
-	local cached_image = IMAGE_CACHE[asset_file]
+local function color_equal(c1: Color, c2: Color): boolean
+	return c1[1] == c2[1] and c1[2] == c2[2] and c1[3] == c2[3]
+end
+
+local pixel_maps: {DinoColor: {Color: Color}} = {
+	blue = {}, -- No mapping, default dino
+	pink = {
+		[{176, 224, 248}] = {248, 192, 248},
+		[{72, 176, 248}] = {248, 112, 192},
+		[{64, 120, 216}] = {208, 80, 136},
+		[{0, 56, 200}] = {168, 32, 72},
+	},
+	purple = {
+		[{176, 224, 248}] = {216, 216, 248},
+		[{72, 176, 248}] = {176, 144, 248},
+		[{64, 120, 216}] = {128, 96, 176},
+		[{0, 56, 200}] = {80, 64, 128},
+	},
+    green = {
+		[{176, 224, 248}] = {112, 248, 168},
+		[{72, 176, 248}] = {24, 208, 40},
+		[{64, 120, 216}] = {24, 152, 24},
+		[{0, 56, 200}] = {0, 104, 16},
+	},
+    yellow = {
+		[{176, 224, 248}] = {248, 248, 200},
+		[{72, 176, 248}] = {232, 232, 104},
+		[{64, 120, 216}] = {224, 184, 80},
+		[{0, 56, 200}] = {192, 136, 8},
+	},
+}
+
+local function set_dino_colors(image: Image, color: DinoColor)
+	local pixel_map = pixel_maps[color]
+	local image_data = image:getData()
+	for i = 0, image:getWidth() - 1 do
+		for j = 0, image:getHeight() - 1 do
+			local r, g, b, alpha = image_data:getPixel(i, j)
+			if alpha ~= 0 then
+				for from_color, to_color in pairs(pixel_map) do
+					if color_equal({r, g, b}, from_color) then
+						r, g, b = table.unpack(to_color)
+					end
+				end
+				image_data:setPixel(i, j, r, g, b, alpha)
+			end
+		end
+	end
+end
+
+local function get_cached_lutro_image(asset_file: string, color: DinoColor): Image
+	local cache_key = asset_file .. "~" .. color
+	local cached_image = IMAGE_CACHE[cache_key]
 	if not cached_image then
-		IMAGE_CACHE[asset_file] = lutro.graphics.newImage(asset_file)
+		local image = lutro.graphics.newImage(asset_file)
+		set_dino_colors(image, color)
+		IMAGE_CACHE[cache_key] = image
 	end
 
-	return IMAGE_CACHE[asset_file]
+	return IMAGE_CACHE[cache_key]
 end
 
-local function dino_animation(asset_file: string): Animation
-	return Animation.new(get_cached_lutro_image(asset_file), 34, 34, 3, 18)
+local function dino_animation(asset_file: string, color: DinoColor): Animation
+	return Animation.new(get_cached_lutro_image(asset_file, color), 34, 34, 3, 18)
 end
 
-local function dino_animation_for_level(action: DinoAction, direction: Direction): {integer: Animation}
+local function dino_animation_for_level(action: DinoAction, direction: Direction, color: DinoColor): {integer: Animation}
 	local png_name = action .. "_" .. direction
 	if action == "dying" then
 		png_name = action
 	end
 
 	return {
-		[1] = dino_animation("assets/tirras/level_1/" .. png_name .. ".png"),
-		[2] = dino_animation("assets/tirras/level_2/" .. png_name .. ".png"),
-		[3] = dino_animation("assets/tirras/level_3/" .. png_name .. ".png"),
+		[1] = dino_animation("assets/tirras/level_1/" .. png_name .. ".png", color),
+		[2] = dino_animation("assets/tirras/level_2/" .. png_name .. ".png", color),
+		[3] = dino_animation("assets/tirras/level_3/" .. png_name .. ".png", color),
 	}
 end
 
-local function dino_animation_for_dir(direction: Direction): {DinoAction: {integer: Animation}}
+local function dino_animation_for_dir(direction: Direction, color: DinoColor): {DinoAction: {integer: Animation}}
 	return {
-		["walk"] = dino_animation_for_level("walk", direction),
-		["idle"] = dino_animation_for_level("idle", direction),
-		["dying"] = dino_animation_for_level("dying", direction),
+		["walk"] = dino_animation_for_level("walk", direction, color),
+		["idle"] = dino_animation_for_level("idle", direction, color),
+		["dying"] = dino_animation_for_level("dying", direction, color),
 	}
 end
 
@@ -49,12 +103,12 @@ function AnimatedDino.new(dino: Dino): AnimatedDino
    	self.dino = dino
 	self.finished = false
    	self.animations = {
-		["up"] = dino_animation_for_dir("up"),
-		["down"] = dino_animation_for_dir("down"),
-		["right"] = dino_animation_for_dir("right"),
-		["left"] = dino_animation_for_dir("left"),
+		["up"] = dino_animation_for_dir("up", dino.color),
+		["down"] = dino_animation_for_dir("down", dino.color),
+		["right"] = dino_animation_for_dir("right", dino.color),
+		["left"] = dino_animation_for_dir("left", dino.color),
 	}
-	self.death_animation = dino_animation_for_level("dying", "down")
+	self.death_animation = dino_animation_for_level("dying", "down", dino.color)
    	return self
 end
 
