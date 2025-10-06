@@ -109,3 +109,22 @@ function AnimatedDinos:get_from(dino: Dino): Animation
 		end
 	end
 end
+
+function AnimatedDinos:get_all_except(exclude: {Dino}): {Dino: Animation}
+	local to_return: {Dino: Animation} = {}
+	for _, animated in ipairs(self.existing) do
+		local is_excluded = false
+		for _, excluded_dino in ipairs(exclude) do
+			if excluded_dino == animated.dino then
+				is_excluded = true
+			end
+		end
+
+		if not is_excluded and not animated.dino.hatching then
+			to_return[animated.dino] = animated:get_animation()
+		end
+	end
+
+	return to_return
+end
+

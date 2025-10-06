@@ -27,6 +27,13 @@ global type Image = interface
 
    getWidth: function(self: Image): number
    getHeight: function(self: Image): number
+   getData: function(self: Image): ImageData
+end
+
+global type ImageData = interface
+   is Object
+   getPixel: function(self: ImageData, x: number, y: number): number, number, number, number
+   setPixel: function(self: ImageData, x: number, y: number, r: number, g: number, b: number, a: number)
 end
 
 global type Font = interface
