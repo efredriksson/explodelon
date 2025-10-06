@@ -16,6 +16,7 @@ global record Dino
     action: DinoAction
     color: DinoType
     level: integer
+    hatching: boolean
 end
 
 function Dino.new(position: Point, direction: Direction): Dino
@@ -25,6 +26,7 @@ function Dino.new(position: Point, direction: Direction): Dino
    self.action = "idle"
    self.color = "blue"
    self.level = 1
+   self.hatching = true
    return self
 end
 
