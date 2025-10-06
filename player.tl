@@ -95,6 +95,7 @@ function Player:jumps_onto(dino: Dino)
 			-- Jump in place when upgrading existing dino
 			self.jump_target = self.position
 			self.dino:level_up()
+			dino.level = 0 -- Dino is consumed into existing dino
 		else
 			self.jump_target = dino.position
 			self.dino = dino
