@@ -18,6 +18,10 @@ end
 
 local function dino_animation_for_level(action: DinoAction, direction: Direction): {integer: Animation}
 	local png_name = action .. "_" .. direction
+	if action == "dying" then
+		png_name = action
+	end
+
 	return {
 		[1] = dino_animation("assets/tirras/level_1/" .. png_name .. ".png"),
 		[2] = dino_animation("assets/tirras/level_2/" .. png_name .. ".png"),
@@ -29,32 +33,45 @@ local function dino_animation_for_dir(direction: Direction): {DinoAction: {integ
 	return {
 		["walk"] = dino_animation_for_level("walk", direction),
 		["idle"] = dino_animation_for_level("idle", direction),
+		["dying"] = dino_animation_for_level("dying", direction),
 	}
 end
 
 global record AnimatedDino
     dino: Dino
+	finished: boolean
 	animations: {Direction: {DinoAction: {integer: Animation}}}
+	death_animation: {integer: Animation}
 end
 
 function AnimatedDino.new(dino: Dino): AnimatedDino
    	local self: AnimatedDino = setmetatable({}, { __index = AnimatedDino })
    	self.dino = dino
+	self.finished = false
    	self.animations = {
 		["up"] = dino_animation_for_dir("up"),
 		["down"] = dino_animation_for_dir("down"),
 		["right"] = dino_animation_for_dir("right"),
 		["left"] = dino_animation_for_dir("left"),
 	}
+	self.death_animation = dino_animation_for_level("dying", "down")
    	return self
 end
 
 function AnimatedDino:get_animation(): Animation
+	if self.dino.action == "dying" then
+		return self.death_animation[self.dino.level]
+	end
 	return self.animations[self.dino.direction][self.dino.action][self.dino.level]
 end
 
 function AnimatedDino:update(dt: number)
-	self:get_animation():update(dt)
+	local animation = self:get_animation()
+	animation:update(dt)
+
+	if self.dino.action == "dying" and animation.loops > 0 then
+		self.finished = true
+	end
 end
 
 global record AnimatedDinos
@@ -68,14 +85,20 @@ function AnimatedDinos.new(): AnimatedDinos
 end
 
 function AnimatedDinos:update(dt: number)
-	for _, animated in ipairs(self.existing) do
+	for i, animated in ipairs(self.existing) do
 		animated:update(dt)
 
-		-- TODO: Remove dinos that are dead
+		if animated.finished then
+			table.remove(self.existing, i)
+		end
 	end
 end
 
-function AnimatedDinos:add(dino: Dino)
+function AnimatedDinos:add_for(dino: Dino)
+	if dino.level == 0 then
+		return -- Dino was consumed into existing dino
+	end
+
 	table.insert(self.existing, AnimatedDino.new(dino))
 end
 
