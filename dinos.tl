@@ -30,7 +30,7 @@ function Dino.new(position: Point, direction: Direction): Dino
    self.position = position
    self.direction = direction
    self.action = "idle"
-   self.color = DINO_COLORS[math.random(#DINO_COLORS)]
+   self.color = DINO_COLORS[lutro.math.random(#DINO_COLORS)]
    self.level = 1
    self.hatching = true
    return self

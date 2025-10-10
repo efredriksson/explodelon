@@ -65,7 +65,7 @@ function Items:dropNew(available_spots: {Point})
     end
 
     local item_drop_probability = 0.1
-    if math.random() > item_drop_probability then
+    if lutro.math.random() > item_drop_probability then
         return
     end
 
@@ -77,9 +77,9 @@ function Items:dropNew(available_spots: {Point})
         end
     end
 
-    local spot_to_drop = available_spots[math.random( #available_spots)]
+    local spot_to_drop = available_spots[lutro.math.random(#available_spots)]
     local items_that_can_drop: {ItemType} = {"speed", "bomb", "kick", "fire"}
-    local item_to_drop = items_that_can_drop[math.random(#items_that_can_drop)]
+    local item_to_drop = items_that_can_drop[lutro.math.random(#items_that_can_drop)]
     table.insert(self.on_ground, Item.new(item_to_drop, spot_to_drop))
 end
 
