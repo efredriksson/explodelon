@@ -115,6 +115,11 @@ global record lutro
       play: function(source: Source)
    end
 
+   record math
+      random: function(): number
+      random: function(max: integer): integer
+   end
+
    gamepadpressed: function(button_nbr: integer, button: GamepadButton)
    gamepadreleased: function(button_nbr: integer, button: GamepadButton)
 end
