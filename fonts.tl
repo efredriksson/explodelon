@@ -30,3 +30,32 @@ global function get_shaded_number_font(): ShadedFont
 	local clock_shade = lutro.graphics.newImageFont("assets/imgfont/numbers_blue_tint.png", font_symbols)
 	return ShadedFont.new(clock_main, clock_shade)
 end
+
+global record MenuFont
+   image_font: Font
+   box_width: number
+end
+
+function MenuFont.new(image_font: Font, box_width: number): MenuFont
+   local self: MenuFont = setmetatable({}, { __index = MenuFont })
+   self.image_font = image_font
+   self.box_width = box_width
+   return self
+end
+
+local FONT_SYMBOLS = " abcdefghijklmnopqrstuvwxyz0123456789.!'-:*"
+
+global function get_menu_white_font(box_width: number): MenuFont
+    local white_font = lutro.graphics.newImageFont("assets/imgfont/white.png", FONT_SYMBOLS)
+    return MenuFont.new(white_font, box_width)
+end
+
+global function get_menu_black_font(box_width: number): MenuFont
+    local black_font = lutro.graphics.newImageFont("assets/imgfont/black.png", FONT_SYMBOLS)
+    return MenuFont.new(black_font, box_width)
+end
+
+function MenuFont:print_centered(text: string, position: Point)
+	lutro.graphics.setFont(self.image_font)
+	lutro.graphics.printf(text, position.x, position.y, self.box_width, "center")
+end

@@ -1,22 +1,17 @@
 require("const")
 require("scene")
+require("fonts")
 require("menu_items")
 
 local player_selection = MenuSelection.new(4, 2, 8)
 local menu_selection = MenuSelection.new(1, 1, 2)
-local black_font: Font
-local white_font: Font
+local black_font: MenuFont
+local white_font: MenuFont
 local ok_sound: Source
 
-local function print_centered(text: string, font: Font, y: number)
-	lutro.graphics.setFont(font)
-	lutro.graphics.printf(text, 0, y, MAP_WIDTH, "center")
-end
-
 local function menu_load_resources()
-    local font_symbols = " abcdefghijklmnopqrstuvwxyz0123456789.!'-:*"
-    black_font = lutro.graphics.newImageFont("assets/imgfont/black.png", font_symbols)
-    white_font = lutro.graphics.newImageFont("assets/imgfont/white.png", font_symbols)
+    white_font = get_menu_white_font(MAP_WIDTH)
+    black_font = get_menu_black_font(MAP_WIDTH)
     ok_sound = get_ok_sound()
 end
 
@@ -57,12 +52,16 @@ local function menu_draw()
         MenuButton.new("start game", 180),
     }
 
-    for i, button in ipairs(menu_buttons) do
-        if i == menu_selection.value then
-            print_centered(button.text, white_font, button.y_pos)
+    local function get_font(button_index): MenuFont
+        if button_index == menu_selection.value then
+            return white_font
         else
-            print_centered(button.text, black_font, button.y_pos)
+            return black_font
         end
+    end
+
+    for button_index, button in ipairs(menu_buttons) do
+        get_font(button_index):print_centered(button.text, Point.new(0, button.y_pos))
     end
 end
 
