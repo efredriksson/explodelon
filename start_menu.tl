@@ -12,8 +12,8 @@ local white_font: MenuFont
 local ok_sound: Source
 
 local function menu_load_resources()
-    white_font = get_menu_white_font(MAP_WIDTH)
-    black_font = get_menu_black_font(MAP_WIDTH)
+    white_font = get_menu_white_font()
+    black_font = get_menu_black_font()
     ok_sound = get_ok_sound()
 end
 
@@ -50,8 +50,14 @@ local function menu_draw()
 	lutro.graphics.rectangle("fill", 0, 0, MAP_WIDTH, MAP_HEIGHT)
 
     local menu_buttons = {
-        MenuButton.new("number of players - " .. tostring(player_selection.value), 50),
-        MenuButton.new("start game", 180),
+        MenuLine.new({
+            MenuLineColumn.new("", 20),
+            MenuLineColumn.new("number of players", 170),
+            MenuLineColumn.new("-", 30),
+            MenuLineColumn.new(tostring(player_selection.value), 50),
+            MenuLineColumn.new("", 50),
+        }, 50),
+        MenuLine.new({MenuLineColumn.new("start game", MAP_WIDTH)}, 180),
     }
 
     local function get_font(button_index): MenuFont
@@ -63,7 +69,13 @@ local function menu_draw()
     end
 
     for button_index, button in ipairs(menu_buttons) do
-        get_font(button_index):print_centered(button.text, Point.new(0, button.y_pos))
+        local font = get_font(button_index)
+
+        local x_pos = 0.0
+        for _, column in ipairs(button.columns) do
+            font:print_centered(column.text, column.width, Point.new(x_pos, button.y_pos))
+            x_pos = x_pos + column.width
+        end
     end
 end
 
