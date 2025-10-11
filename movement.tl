@@ -160,7 +160,7 @@ local function restrict_player_movement(
 	end
 
 	for _, hard_block in ipairs(HARD_BLOCKS) do
-		if new_hitbox:overlap(hard_block) then
+		if new_hitbox:overlap(new_hit_box(hard_block)) then
 			if movement.x == 0 then
 				local movement_len = movement.y
 				local pos_and_block_lateral_diff = player.position.x - hard_block.x
