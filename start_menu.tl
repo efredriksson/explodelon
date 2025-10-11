@@ -6,7 +6,8 @@ require("menu_items")
 require("character_sprites")
 
 local player_selection = MenuSelection.new(4, 2, 8)
-local menu_selection = MenuSelection.new(1, 1, 2)
+local player_selection_on = MenuSelection.new(1, 1, 2)
+local menu_selection = MenuSelection.new(1, 1, 3)
 local black_font: MenuFont
 local white_font: MenuFont
 local ok_sound: Source
@@ -28,8 +29,20 @@ local function menu_update(_: number)
     end
 
     if menu_selection.value == 2 then
+        if joystick_is_pressed(1, JOYPAD_RIGHT) then
+            ok_action = player_selection_on:increment()
+        elseif joystick_is_pressed(1, JOYPAD_LEFT) then
+            ok_action = player_selection_on:decrement()
+        end
+    end
+
+    if menu_selection.value == 3 then
         if joystick_is_pressed(1, JOYPAD_B) then
-            set_scene(require("game")(get_sprites(player_selection.value)))
+            if player_selection_on.value == 1 then
+                set_scene(require("player_selection")(player_selection.value))
+            else
+                set_scene(require("game")(get_sprites(player_selection.value)))
+            end
             ok_action = true
         end
     end
@@ -49,6 +62,14 @@ local function menu_draw()
     lutro.graphics.setColor(200, 200, 200)
 	lutro.graphics.rectangle("fill", 0, 0, MAP_WIDTH, MAP_HEIGHT)
 
+    local function player_selection_text(): string
+        if player_selection_on.value == 1 then
+            return 'on'
+        else
+            return 'off'
+        end
+    end
+
     local menu_buttons = {
         MenuLine.new({
             MenuLineColumn.new("", 20),
@@ -57,6 +78,13 @@ local function menu_draw()
             MenuLineColumn.new(tostring(player_selection.value), 50),
             MenuLineColumn.new("", 50),
         }, 50),
+        MenuLine.new({
+            MenuLineColumn.new("", 20),
+            MenuLineColumn.new("player selection", 170),
+            MenuLineColumn.new("-", 30),
+            MenuLineColumn.new(player_selection_text(), 50),
+            MenuLineColumn.new("", 50),
+        }, 70),
         MenuLine.new({MenuLineColumn.new("start game", MAP_WIDTH)}, 180),
     }
 
