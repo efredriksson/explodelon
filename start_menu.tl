@@ -5,7 +5,7 @@ require("input")
 require("menu_items")
 require("character_sprites")
 
-local player_selection = MenuSelection.new(4, 2, 8)
+local player_selection = MenuSelection.new(4, 2, MAX_PLAYERS)
 local player_selection_on = MenuSelection.new(1, 1, 2)
 local menu_selection = MenuSelection.new(1, 1, 3)
 local black_font: MenuFont

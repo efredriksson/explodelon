@@ -15,6 +15,9 @@ global JOYPAD_R2       = 14
 global JOYPAD_L3       = 15
 global JOYPAD_R3       = 16
 
+global MAX_PLAYERS = 8
+global MAX_BUTTONS = 16
+
 global MAP_WIDTH = 320
 global MAP_HEIGHT = 224
 global BLOCK_SIZE = 16
