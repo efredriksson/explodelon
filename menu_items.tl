@@ -28,6 +28,11 @@ function MenuSelection:decrement(): boolean
     return new_val >= self.min
 end
 
+function MenuSelection:reduce_max_val()
+    self.max = self.max - 1
+    self.value = math.min(self.value, self.max)
+end
+
 function MenuSelection.new(start: integer, min: integer, max: integer): MenuSelection
    local self: MenuSelection = setmetatable({}, { __index = MenuSelection })
    self.value = start
