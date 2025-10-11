@@ -33,29 +33,27 @@ end
 
 global record MenuFont
    image_font: Font
-   box_width: number
 end
 
-function MenuFont.new(image_font: Font, box_width: number): MenuFont
+function MenuFont.new(image_font: Font): MenuFont
    local self: MenuFont = setmetatable({}, { __index = MenuFont })
    self.image_font = image_font
-   self.box_width = box_width
    return self
 end
 
 local FONT_SYMBOLS = " abcdefghijklmnopqrstuvwxyz0123456789.!'-:*"
 
-global function get_menu_white_font(box_width: number): MenuFont
+global function get_menu_white_font(): MenuFont
     local white_font = lutro.graphics.newImageFont("assets/imgfont/white.png", FONT_SYMBOLS)
-    return MenuFont.new(white_font, box_width)
+    return MenuFont.new(white_font)
 end
 
-global function get_menu_black_font(box_width: number): MenuFont
+global function get_menu_black_font(): MenuFont
     local black_font = lutro.graphics.newImageFont("assets/imgfont/black.png", FONT_SYMBOLS)
-    return MenuFont.new(black_font, box_width)
+    return MenuFont.new(black_font)
 end
 
-function MenuFont:print_centered(text: string, position: Point)
+function MenuFont:print_centered(text: string, box_width: number, position: Point)
 	lutro.graphics.setFont(self.image_font)
-	lutro.graphics.printf(text, position.x, position.y, self.box_width, "center")
+	lutro.graphics.printf(text, position.x, position.y, box_width, "center")
 end
