@@ -68,6 +68,10 @@ function Vector:minus(other: Vector): Vector
    return Vector.new(self.x - other.x, self.y - other.y)
 end
 
+function Vector:plus(other: Vector): Vector
+   return Vector.new(self.x + other.x, self.y + other.y)
+end
+
 function Rectangle.new(x: number, y: number, width: number, height: number): Rectangle
    local self: Rectangle = setmetatable({}, { __index = Rectangle })
    self.x = x or 0
