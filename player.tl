@@ -3,6 +3,7 @@ require("geometry")
 require("animation")
 require("entity")
 require("dinos")
+require("character_sprites")
 
 global type Action = enum
    "walk"
@@ -18,6 +19,7 @@ end
 
 global record Player
 	id: integer
+	sprite: CharacterSprite
    	position: Point
 	direction: Direction
 	action: Action
@@ -40,9 +42,10 @@ global record Player
 	bomb_beneath: any
 end
 
-function Player.new(id: integer, position: Point): Player
+function Player.new(id: integer, sprite: CharacterSprite, position: Point): Player
 	local self: Player = setmetatable({}, { __index = Player })
 	self.id = id
+	self.sprite = sprite
 	self.position = position
 	self.direction = "down"
 	self.action = "idle"

@@ -2,6 +2,7 @@ require("const")
 require("scene")
 require("fonts")
 require("menu_items")
+require("character_sprites")
 
 local player_selection = MenuSelection.new(4, 2, 8)
 local menu_selection = MenuSelection.new(1, 1, 2)
@@ -27,7 +28,7 @@ local function menu_gamepadpressed(button: GamepadButton)
 
     if menu_selection.value == 2 then
         if button == "b" then
-            set_scene(require("game")(player_selection.value))
+            set_scene(require("game")(get_sprites(player_selection.value)))
             ok_action = true
         end
     end
