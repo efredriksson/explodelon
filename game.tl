@@ -282,8 +282,6 @@ local function game_update(dt: number)
 	eggs:update(dt)
 	animated_dinos:update(dt)
 	bombs:update(dt, players)
-
-	input_update(players)
 end
 
 local function sort_entities_by_y_cord(players_to_sort: {Entity})

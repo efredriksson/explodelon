@@ -1,5 +1,6 @@
 require("const")
 require("scene")
+require("input")
 
 function lutro.conf(t: Configuration)
 	t.width  = MAP_WIDTH
@@ -7,19 +8,13 @@ function lutro.conf(t: Configuration)
 end
 
 function lutro.load()
+	input_setup()
 	set_scene(require("start_menu"))
 end
 
 function lutro.update(dt: number)
 	get_scene().update(dt)
-end
-
-function lutro.gamepadpressed(_: integer, button: GamepadButton)
-	get_scene().gamepadpressed(button)
-end
-
-function lutro.gamepadreleased(_: integer, _: GamepadButton)
-	-- Must be defined for 'gamepadpressed' to work properly
+	input_update()
 end
 
 function lutro.draw()

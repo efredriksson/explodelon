@@ -1,6 +1,7 @@
 require("const")
 require("scene")
 require("fonts")
+require("input")
 require("menu_items")
 require("character_sprites")
 
@@ -16,26 +17,26 @@ local function menu_load_resources()
     ok_sound = get_ok_sound()
 end
 
-local function menu_gamepadpressed(button: GamepadButton)
+local function menu_update(_: number)
     local ok_action = false
     if menu_selection.value == 1 then
-        if button == "right" then
+        if joystick_is_pressed(1, JOYPAD_RIGHT) then
             ok_action = player_selection:increment()
-        elseif button == "left" then
+        elseif joystick_is_pressed(1, JOYPAD_LEFT) then
             ok_action = player_selection:decrement()
         end
     end
 
     if menu_selection.value == 2 then
-        if button == "b" then
+        if joystick_is_pressed(1, JOYPAD_B) then
             set_scene(require("game")(get_sprites(player_selection.value)))
             ok_action = true
         end
     end
     
-    if button == "down" then
+    if joystick_is_pressed(1, JOYPAD_DOWN) then
         ok_action = menu_selection:increment()
-    elseif button == "up" then
+    elseif joystick_is_pressed(1, JOYPAD_UP) then
         ok_action = menu_selection:decrement()
     end
 
@@ -68,6 +69,6 @@ end
 
 local module = Scene.new()
 module.load = menu_load_resources
-module.gamepadpressed = menu_gamepadpressed
+module.update = menu_update
 module.draw = menu_draw
 return module
