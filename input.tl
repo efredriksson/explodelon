@@ -10,9 +10,6 @@ global function joystick_is_pressed(player_id: integer, button: integer): boolea
     return is_currently_down and not was_previously_down
 end
 
-local MAX_PLAYERS = 8
-local MAX_BUTTONS = 16
-
 global function input_setup()
     for player_id = 1, MAX_PLAYERS do
         previous_states[player_id] = {}
