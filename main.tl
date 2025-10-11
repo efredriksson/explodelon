@@ -7,7 +7,7 @@ function lutro.conf(t: Configuration)
 end
 
 function lutro.load()
-	set_scene(require("menu"))
+	set_scene(require("start_menu"))
 end
 
 function lutro.update(dt: number)
