@@ -13,10 +13,12 @@ require("eggs")
 require("dino_animations")
 require("bombs")
 require("input")
+require("character_sprites")
 
 local bombs: Bombs
+local background: Image
 
-local function setup_players(number_players: integer): {Player}
+local function setup_players(selected_sprites: {CharacterSprite}): {Player}
 	global players: {Player} = {}
 	local start_by_id: {number:Point} = {
 		[1] = Point.new(24, 32),
@@ -30,8 +32,8 @@ local function setup_players(number_players: integer): {Player}
 		[9] = Point.new(152, 32),
 		[10] = Point.new(216, 160),
 	}
-	for i=1, number_players do
-		table.insert(players, Player.new(i, start_by_id[i]))
+	for i, sprite in ipairs(selected_sprites) do
+		table.insert(players, Player.new(i, sprite, start_by_id[i]))
 	end
 
 	return players
@@ -116,37 +118,17 @@ local function character_animation(character_asset: string, invulnerable: boolea
 	}
 end
 
-local function character_animations(invulnerable: boolean): {integer: {PlayerState: {Action: {Direction: Animation}}}}
-	return {
-		[1] = character_animation("kotetsu", invulnerable),
-		[2] = character_animation("honey", invulnerable),
-		[3] = character_animation("kinu", invulnerable),
-		[4] = character_animation("milon", invulnerable),
-		[5] = character_animation("black", invulnerable),
-		[6] = character_animation("white", invulnerable),
-		[7] = character_animation("kabuki", invulnerable),
-		[8] = character_animation("master_higins", invulnerable),
-		[9] = character_animation("manjimaru", invulnerable),
-		[10] = character_animation("bonks", invulnerable),
-	}
-end
+local animations: {integer: {PlayerState: {Action: {Direction: Animation}}}} = {}
+local animations_invulnerable: {integer: {PlayerState: {Action: {Direction: Animation}}}} = {}
+local avatars: {integer: Image} = {}
 
 local function game_load()
-	global background = lutro.graphics.newImage("assets/footboll-map.png")
-	global animations = character_animations(false)
-	global animations_invulnerable = character_animations(true)
-	global avatars: {integer: Image} = {
-		[1] = character_avatar("kotetsu"),
-		[2] = character_avatar("honey"),
-		[3] = character_avatar("kinu"),
-		[4] = character_avatar("milon"),
-		[5] = character_avatar("black"),
-		[6] = character_avatar("white"),
-		[7] = character_avatar("kabuki"),
-		[8] = character_avatar("master_higins"),
-		[9] = character_avatar("manjimaru"),
-		[10] = character_avatar("bonks"),
-	}
+	background = lutro.graphics.newImage("assets/footboll-map.png")
+	for _, player in ipairs(players) do
+		animations[player.id] = character_animation(player.sprite, false)
+		animations_invulnerable[player.id] = character_animation(player.sprite, true)
+		avatars[player.id] = character_avatar(player.sprite)
+	end
 
 	global animated_dinos = AnimatedDinos.new()
 
@@ -204,7 +186,11 @@ end
 
 local function next_game()
 	local old_player_datas = players
-	setup_players(#old_player_datas)
+	local sprites: {CharacterSprite} = {}
+	for _, player in ipairs(players) do
+		table.insert(sprites, player.sprite)
+	end
+	setup_players(sprites)
 	transfere_player_data(old_player_datas)
 	game_load()
 end
@@ -380,8 +366,8 @@ local function game_draw()
 	end
 end
 
-local function setup(number_players: integer): Scene
-	setup_players(number_players)
+local function setup(selected_sprites: {CharacterSprite}): Scene
+	setup_players(selected_sprites)
 
 	local module = Scene.new()
 	module.load = game_load
