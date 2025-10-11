@@ -1,5 +1,5 @@
 require("geometry")
-require("shade_font")
+require("fonts")
 
 local TIMER_POS = Point.new(18, 8)
 
