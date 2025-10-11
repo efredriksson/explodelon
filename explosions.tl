@@ -89,7 +89,7 @@ function Explosion:get_active_tiles(): {ExplosionTile}
 
         -- is hard block
         for _, block in ipairs(HARD_BLOCKS) do
-            if pos:equal(block:top_left()) then
+            if pos:equal(block) then
                 return true
             end
         end

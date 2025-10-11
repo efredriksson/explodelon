@@ -17,6 +17,8 @@ require("character_sprites")
 
 local bombs: Bombs
 local background: Image
+local soft_block: Image
+local soft_blocks: {Point}
 
 local function setup_players(selected_sprites: {CharacterSprite}): {Player}
 	global players: {Player} = {}
@@ -124,10 +126,13 @@ local avatars: {integer: Image} = {}
 
 local function game_load()
 	background = lutro.graphics.newImage("assets/footboll-map.png")
+	soft_block = lutro.graphics.newImage("assets/soft-block.png")
+	local player_positions: {Point} = {}
 	for _, player in ipairs(players) do
 		animations[player.id] = character_animation(player.sprite, false)
 		animations_invulnerable[player.id] = character_animation(player.sprite, true)
 		avatars[player.id] = character_avatar(player.sprite)
+		table.insert(player_positions, player.position)
 	end
 
 	global animated_dinos = AnimatedDinos.new()
@@ -149,6 +154,8 @@ local function game_load()
 	global pressure_blocks = PressureBlocks.new(time_left)
 
 	global score_font = get_shaded_number_font()
+
+	soft_blocks = get_soft_blocks(player_positions)
 end
 
 local function get_available_item_spots(): {Point}
@@ -312,7 +319,9 @@ local function game_draw()
 		-- but their shadows have to be behind anything
 		block:draw_shadow()
 	end
-
+	for _, pos in ipairs(soft_blocks) do
+		lutro.graphics.draw(soft_block, pos.x, pos.y)
+	end
 	for _, block in ipairs(pressure_blocks.on_ground) do
 		block:draw()
 	end
