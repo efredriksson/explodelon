@@ -39,23 +39,25 @@ function MenuSelection.new(start: integer, min: integer, max: integer): MenuSele
    return self
 end
 
-global player_selection = MenuSelection.new(4, 2, 8)
-global menu_selection = MenuSelection.new(1, 1, 2)
+local player_selection = MenuSelection.new(4, 2, 8)
+local menu_selection = MenuSelection.new(1, 1, 2)
+local black_font: Font
+local white_font: Font
+local ok_sound: Source
 
 local function print_centered(text: string, font: Font, y: number)
 	lutro.graphics.setFont(font)
 	lutro.graphics.printf(text, 0, y, MAP_WIDTH, "center")
 end
 
-global function menu_load_resources()
+local function menu_load_resources()
     local font_symbols = " abcdefghijklmnopqrstuvwxyz0123456789.!'-:*"
-    global black_font = lutro.graphics.newImageFont("assets/imgfont/black.png", font_symbols)
-    global white_font = lutro.graphics.newImageFont("assets/imgfont/white.png", font_symbols)
-
-    global ok_sound = lutro.audio.newSource("assets/menu_good.wav", "static")
+    black_font = lutro.graphics.newImageFont("assets/imgfont/black.png", font_symbols)
+    white_font = lutro.graphics.newImageFont("assets/imgfont/white.png", font_symbols)
+    ok_sound = lutro.audio.newSource("assets/menu_good.wav", "static")
 end
 
-global function menu_gamepadpressed(button: GamepadButton)
+local function menu_gamepadpressed(button: GamepadButton)
     local ok_action = false
     if menu_selection.value == 1 then
         if button == "right" then
@@ -83,7 +85,7 @@ global function menu_gamepadpressed(button: GamepadButton)
     end
 end
 
-global function menu_draw()
+local function menu_draw()
     lutro.graphics.setColor(200, 200, 200)
 	lutro.graphics.rectangle("fill", 0, 0, MAP_WIDTH, MAP_HEIGHT)
 

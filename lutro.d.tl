@@ -48,7 +48,7 @@ global type Quad = interface
    setViewport: function(self: Quad, x: number, y: number, w: number, h: number, sw?: number, sh?: number)
 end
 
-local type Source = interface
+global type Source = interface
    is Object
    setVolume: function(self: Source, volume: number)
 end
