@@ -22,20 +22,9 @@ local soft_blocks: SoftBlocks
 
 local function setup_players(selected_sprites: {CharacterSprite}): {Player}
 	global players: {Player} = {}
-	local start_by_id: {number:Point} = {
-		[1] = Point.new(24, 32),
-		[2] = Point.new(280, 32),
-		[3] = Point.new(24, 192),
-		[4] = Point.new(280, 192),
-		[5] = Point.new(152, 112),
-		[6] = Point.new(56, 112),
-		[7] = Point.new(248, 112),
-		[8] = Point.new(152, 192),
-		[9] = Point.new(152, 32),
-		[10] = Point.new(216, 160),
-	}
+	local start_positions = get_player_start_positions(#selected_sprites)
 	for i, sprite in ipairs(selected_sprites) do
-		table.insert(players, Player.new(i, sprite, start_by_id[i]))
+		table.insert(players, Player.new(i, sprite, start_positions[i]))
 	end
 
 	return players
