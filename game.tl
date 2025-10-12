@@ -251,11 +251,7 @@ local function game_update(dt: number)
 		animations[player.id][player.state][player.action][player.direction]:update(dt)
 		animations_invulnerable[player.id][player.state][player.action][player.direction]:update(dt)
 
-		for j, item in ipairs(items.on_ground) do
-			if item.position:in_radius_of(player.position, BLOCK_SIZE / 2) then
-				items:consumed_by_player(player, j)
-			end
-		end
+		items:possible_pickup_by(player)
 
 		local hatching_dino = eggs:possible_hatcher_at(player.position, player.direction)
 		if hatching_dino then
@@ -296,7 +292,7 @@ local function game_update(dt: number)
 		eggs.on_ground, items.on_ground, soft_blocks.on_ground
 	)
 	local explosion_targets: {ExplodeTarget} = combine(
-		players, soft_blocks.on_ground
+		players, soft_blocks.on_ground, eggs.on_ground, items.on_ground
 	)
 	bombs:update(dt, blocks_explosions, explosion_targets)
 	soft_blocks:update(dt)

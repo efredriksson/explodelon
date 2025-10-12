@@ -4,15 +4,19 @@ require("entity")
 require("animation")
 require("dinos")
 
+local EGG_EXPLOSION_DURATION: number = 0.7
+
 global function load_egg_assets()
     global egg_anim = Animation.new(lutro.graphics.newImage("assets/tirras/egg.png"), 20, 26, 3, 18, 2)
     global egg_open_image = lutro.graphics.newImage("assets/tirras/egg_open.png")
 end
 
-global record Egg is Entity, BlocksExplosion
+global record Egg is Entity, BlocksExplosion, ExplodeTarget
     position: Point
     breaking: boolean
     hatched: boolean
+    is_exploding: boolean
+    exploded_for: number
     animate_explosion: boolean
     animation: Animation
 end
@@ -22,6 +26,8 @@ function Egg.new(position: Point): Egg
     self.position = position
     self.breaking = false
     self.hatched = false
+    self.is_exploding = false
+    self.exploded_for = 0
     self.animate_explosion = true
     self.animation = egg_anim
     return self
@@ -36,7 +42,15 @@ function Egg:open()
     self.animation = Animation.new(egg_open_image, 34, 34, 3, 18, 0.5)
 end
 
+function Egg:blow_up()
+    self.is_exploding = true
+end
+
 function Egg:draw()
+    if self.is_exploding then
+        return
+    end
+
     local draw_pos = convert_pos_for_egg_draw(self.animation, self.position)
 	self.animation:draw(draw_pos.x, draw_pos.y)
 end
@@ -47,6 +61,14 @@ function Egg:update(dt: number)
         -- After one animation cycle as 'breaking' the egg have hatched
         self.hatched = true
     end
+
+    if self.is_exploding then
+        self.exploded_for = self.exploded_for + dt
+    end
+end
+
+function Egg:is_destroyed(): boolean
+    return self.exploded_for > EGG_EXPLOSION_DURATION
 end
 
 global record Eggs
@@ -62,7 +84,7 @@ end
 function Eggs:update(dt: number)
     for i, egg in ipairs(self.on_ground) do
         egg:update(dt)
-        if egg.hatched then
+        if egg.hatched or egg:is_destroyed() then
             table.remove(self.on_ground, i)
         end
     end
@@ -75,7 +97,7 @@ end
 function Eggs:possible_hatcher_at(player_position: Point, player_dir: Direction): Dino
     for _, egg in ipairs(self.on_ground) do
         if egg.position:in_radius_of(player_position, BLOCK_SIZE / 2) then
-			if not egg.breaking then
+			if not egg.breaking and not egg.is_exploding then
 				egg:open()
                 return Dino.new(egg.position, player_dir)
 			end
