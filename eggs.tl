@@ -4,7 +4,7 @@ require("entity")
 require("animation")
 require("dinos")
 
-local EGG_EXPLOSION_DURATION: number = 0.7
+local EGG_EXPLOSION_DURATION: number = 0.8
 
 global function load_egg_assets()
     global egg_shake_image = lutro.graphics.newImage("assets/tirras/egg.png")
