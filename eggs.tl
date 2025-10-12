@@ -90,8 +90,18 @@ function Eggs:update(dt: number)
     end
 end
 
-function Eggs:spawn(position: Point)
+function Eggs:spawn_at(position: Point)
     table.insert(self.on_ground, Egg.new(position))
+end
+
+function Eggs:possible_spawn(available_spots: {Point})
+    local spawn_probability = 0.05
+    if lutro.math.random() > spawn_probability then
+        return
+    end
+
+    local spot_to_spawn = available_spots[lutro.math.random(#available_spots)]
+    self:spawn_at(spot_to_spawn)
 end
 
 function Eggs:possible_hatcher_at(player_position: Point, player_dir: Direction): Dino

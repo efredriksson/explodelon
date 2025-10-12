@@ -15,7 +15,6 @@ end
 global function load_item_assets()
     global take_item_sound = lutro.audio.newSource("assets/take_item.wav", "static")
     take_item_sound:setVolume(0.25)
-    global tic_counter = 0
     global frame_animation = Animation.new(lutro.graphics.newImage("assets/items/frame.png"), 18, 18, 1, 30)
 	global item_shadow = lutro.graphics.newImage("assets/items/shadow.png")
 	global item_icons: {ItemType: Image} = {
@@ -83,24 +82,10 @@ function Items.new(): Items
    return self
 end
 
-function Items:dropNew(available_spots: {Point})
-    tic_counter = tic_counter + 1
-    if tic_counter % 120 ~= 0 then
-        -- Only consider drop a new item every 120 tic (2 seconds)
-        return
-    end
-
+function Items:possible_drop(available_spots: {Point})
     local item_drop_probability = 0.1
     if lutro.math.random() > item_drop_probability then
         return
-    end
-
-    for i, available_spot in ipairs(available_spots) do
-        for _, existing_item in ipairs(self.on_ground) do
-            if available_spot.x == existing_item.position.x and available_spot.y == existing_item.position.y then
-                table.remove(available_spots, i)
-            end 
-        end
     end
 
     local spot_to_drop = available_spots[lutro.math.random(#available_spots)]

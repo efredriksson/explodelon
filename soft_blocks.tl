@@ -10,7 +10,7 @@ local BLOCK_EXPLOSION_DURATION: number = 0.7
 local soft_block_image: Image
 local soft_block_breaking_image: Image
 
-global record SoftBlock is ExplodeTarget, BlocksExplosion
+global record SoftBlock is Entity, ExplodeTarget, BlocksExplosion
 	position: Point
     is_exploding: boolean
     animate_explosion: boolean
