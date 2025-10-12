@@ -5,7 +5,7 @@ require("itertools")
 require("level_map")
 
 
-global record PressureBlock is Entity
+global record PressureBlock is Entity, BlocksExplosion
 	falling_position: Point
     position: Point
 end
@@ -41,7 +41,7 @@ function PressureBlock:is_on_ground(): boolean
     return self.falling_position.y == self.position.y
 end
 
-global record PressureBlocks is Entity
+global record PressureBlocks
 	next_left_index: integer
     next_right_index: integer
     left_positions: {Point}
