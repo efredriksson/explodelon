@@ -1,6 +1,7 @@
 require("const")
 require("geometry")
 require("entity")
+require("itertools")
 require("level_map")
 
 
@@ -142,13 +143,8 @@ function PressureBlocks:update(dt: number): {PressureBlock}
 end
 
 function PressureBlocks:hitboxes(): {Rectangle}
-    local hitboxes: {Rectangle} = {} 
-    for _, block in ipairs(self.on_ground) do
-        local hitbox = Rectangle.new(
-            block.position.x, block.position.y, BLOCK_SIZE, BLOCK_SIZE
-        )
-        table.insert(hitboxes, hitbox)
+    local function hitbox_map_f(block: PressureBlock): Rectangle
+        return new_hit_box(block.position) 
     end
-
-    return hitboxes
+    return map(self.on_ground, hitbox_map_f)
 end

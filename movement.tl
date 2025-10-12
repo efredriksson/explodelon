@@ -1,5 +1,6 @@
 require("const")
 require("geometry")
+require("level_map")
 require("player")
 require("bombs")
 
