@@ -237,13 +237,13 @@ function Explosions:place_explosion(position: Point, range: number)
     table.insert(self.on_ground, explosion)
 end
 
-function Explosions:update(dt: number, blocked: {Point}, players: {Player})
+function Explosions:update(dt: number, blocked: {Point}, explode_targets: {ExplodeTarget})
     for i, explosion in ipairs(self.on_ground) do
         explosion:update(dt, blocked)
 
-        for _, player in ipairs(players) do
-            if explosion:collides_with(player.position) then
-                player:kill()
+        for _, explode_target in ipairs(explode_targets) do
+            if explosion:collides_with(explode_target.position) then
+                explode_target:blow_up()
             end
         end
 
