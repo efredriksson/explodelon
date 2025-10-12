@@ -48,3 +48,23 @@ global function double_loop_inner_loopback(
         if i <= n then return values[i][1], values[i][2] end
     end
 end
+
+global function combine<T>(...: {T}): {T}
+	local combined_list: {T} = {}
+	
+	for _, list in ipairs({...}) do
+		for _, elem in ipairs(list) do
+			table.insert(combined_list, elem)
+		end
+	end
+
+   	return combined_list
+end
+
+global function map<T, V>(iterator: {T}, f: function(T): V): {V}
+    local result = {}
+    for _, args in ipairs(iterator) do
+        table.insert(result, f(args))
+    end
+    return result
+end
