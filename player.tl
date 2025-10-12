@@ -17,7 +17,7 @@ global type PlayerState = enum
 	"mounted"
 end
 
-global record Player
+global record Player is ExplodeTarget
 	id: integer
 	sprite: CharacterSprite
    	position: Point
@@ -172,6 +172,10 @@ function Player:kill()
 	end
 
 	self.is_alive = false
+end
+
+function Player:blow_up()
+	self:kill()
 end
 
 function Player:update(dt: number)
