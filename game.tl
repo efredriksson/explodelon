@@ -209,11 +209,16 @@ local function next_game()
 	game_load()
 end
 
-local function clear_items(hitting_ground: {PressureBlock})
+local function clear_items_and_eggs(hitting_ground: {PressureBlock})
 	for _, block in ipairs(hitting_ground) do
 		for j, item in ipairs(items.on_ground) do
 			if item.position:equal(block.position) then
 				table.remove(items.on_ground, j)
+			end
+		end
+		for j, egg in ipairs(eggs.on_ground) do
+			if egg.position:equal(block.position) then
+				table.remove(eggs.on_ground, j)
 			end
 		end
 	end
@@ -289,7 +294,7 @@ local function game_update(dt: number)
 		items:possible_drop(get_available_spots())
     end
 
-	clear_items(hitting_ground)
+	clear_items_and_eggs(hitting_ground)
 	
 	local out_of_time = game_timer:decrement(dt)
 	if #alive_players == 1 then
