@@ -6,7 +6,7 @@ require("animation")
 
 -- Must be greater than 'END_ANIMATION_DURATION' so the block
 -- remains and block during the entire explosion duration.
-local BLOCK_EXPLOSION_DURATION: number = 0.7
+local BLOCK_EXPLOSION_DURATION: number = 0.8
 local soft_block_image: Image
 local soft_block_breaking_image: Image
 

@@ -3,7 +3,7 @@ require("geometry")
 require("player")
 require("entity")
 
-local ITEM_EXPLOSION_DURATION: number = 0.7
+local ITEM_EXPLOSION_DURATION: number = 0.8
 
 global enum ItemType
    "speed"
