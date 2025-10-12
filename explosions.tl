@@ -75,7 +75,7 @@ function Explosion.new(position: Point, range: number): Explosion
    return self
 end
 
-function Explosion:_update_active_tiles()
+function Explosion:_update_active_tiles(blocked: {Point})
     self.tiles = {}
 
     -- Calculate how far the explosion should expanded
@@ -90,7 +90,7 @@ function Explosion:_update_active_tiles()
         end
 
         -- is hard block
-        for _, block in ipairs(HARD_BLOCKS) do
+        for _, block in ipairs(combine(HARD_BLOCKS, blocked)) do
             if pos:equal(block) then
                 return true
             end
@@ -202,9 +202,9 @@ function Explosion:update_end_animation(dt: number)
     self.animations.center:update(dt)
 end
 
-function Explosion:update(dt: number)
+function Explosion:update(dt: number, blocked: {Point})
     self.duration = self.duration + dt
-    self:_update_active_tiles()
+    self:_update_active_tiles(blocked)
 
     if self:has_reached_max_range() then
         self:update_end_animation(dt)
@@ -237,9 +237,9 @@ function Explosions:place_explosion(position: Point, range: number)
     table.insert(self.on_ground, explosion)
 end
 
-function Explosions:update(dt: number, players: {Player})
+function Explosions:update(dt: number, blocked: {Point}, players: {Player})
     for i, explosion in ipairs(self.on_ground) do
-        explosion:update(dt)
+        explosion:update(dt, blocked)
 
         for _, player in ipairs(players) do
             if explosion:collides_with(player.position) then
