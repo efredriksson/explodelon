@@ -7,7 +7,7 @@ require("dinos")
 local EGG_EXPLOSION_DURATION: number = 0.7
 
 global function load_egg_assets()
-    global egg_anim = Animation.new(lutro.graphics.newImage("assets/tirras/egg.png"), 20, 26, 3, 18, 2)
+    global egg_shake_image = lutro.graphics.newImage("assets/tirras/egg.png")
     global egg_open_image = lutro.graphics.newImage("assets/tirras/egg_open.png")
 end
 
@@ -29,7 +29,7 @@ function Egg.new(position: Point): Egg
     self.is_exploding = false
     self.exploded_for = 0
     self.animate_explosion = true
-    self.animation = egg_anim
+    self.animation = Animation.new(egg_shake_image, 20, 26, 3, 18, 2)
     return self
 end
 
@@ -96,7 +96,7 @@ end
 
 function Eggs:possible_spawn(available_spots: {Point})
     local spawn_probability = 0.05
-    if lutro.math.random() > spawn_probability then
+    if lutro.math.random() > spawn_probability or #available_spots == 0 then
         return
     end
 
