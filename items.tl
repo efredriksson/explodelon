@@ -3,6 +3,8 @@ require("geometry")
 require("player")
 require("entity")
 
+local ITEM_EXPLOSION_DURATION: number = 0.7
+
 global enum ItemType
    "speed"
    "bomb"
@@ -24,9 +26,11 @@ global function load_item_assets()
     }
 end
 
-global record Item is Entity, BlocksExplosion
+global record Item is Entity, BlocksExplosion, ExplodeTarget
     type: ItemType
     position: Point
+    is_exploding: boolean
+    exploded_for: number
     animate_explosion: boolean
 end
 
@@ -34,17 +38,37 @@ function Item.new(item_type: ItemType, position: Point): Item
     local self: Item = setmetatable({}, { __index = Item })
     self.type = item_type
     self.position = position
+    self.is_exploding = false
+    self.exploded_for = 0
     self.animate_explosion = true
     return self
 end
 
+function Item:blow_up()
+    self.is_exploding = true
+end
+
 function Item:draw()
+    if self.is_exploding then
+        return
+    end
+
     local item_icon = item_icons[self.type]
     local y_draw = self.position.y - 9
     local x_draw = self.position.x - 1
 	frame_animation:draw(x_draw, y_draw)
 	lutro.graphics.draw(item_icon, x_draw, y_draw)
 	lutro.graphics.draw(item_shadow, x_draw, y_draw)
+end
+
+function Item:update(dt: number)
+    if self.is_exploding then
+        self.exploded_for = self.exploded_for + dt
+    end
+end
+
+function Item:is_destroyed(): boolean
+    return self.exploded_for > ITEM_EXPLOSION_DURATION
 end
 
 global record Items
@@ -87,6 +111,12 @@ end
 
 function Items:update(dt: number)
     frame_animation:update(dt)
+    for i, item in ipairs(self.on_ground) do
+        item:update(dt)
+        if item:is_destroyed() then
+            table.remove(self.on_ground, i)
+        end
+    end
 end
 
 function Items:consumed_by_player(player: Player, index: integer)
@@ -107,5 +137,13 @@ function Items:consumed_by_player(player: Player, index: integer)
         player.fire = player.fire + 1
     else
         assert(false, "Unhandled item type!")
+    end
+end
+
+function Items:possible_pickup_by(player: Player)
+    for i, item in ipairs(self.on_ground) do
+        if item.position:in_radius_of(player.position, BLOCK_SIZE / 2) and not item.is_exploding then
+            self:consumed_by_player(player, i)
+        end
     end
 end
