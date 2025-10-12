@@ -1,6 +1,5 @@
 require("const")
 require("geometry")
-require("level_map")
 require("player")
 require("bombs")
 
@@ -113,7 +112,7 @@ local function in_end_of_corridor_and_walking_out(
 end
 
 local function restrict_player_movement(
-	player: Player, movement: Vector, pressure_blocks: {Rectangle}, bombs: Bombs
+	player: Player, movement: Vector, blocking_blocks: {Rectangle}, bombs: Bombs
 ): CheckedMovement
 	local margin_for_corner_assist = 8
 	local new_position = player.position:move(movement)
@@ -147,11 +146,11 @@ local function restrict_player_movement(
 		end
 	end
 
-	for _, pressure_block in ipairs(pressure_blocks) do
-		if new_hitbox:overlap(pressure_block) then
+	for _, block in ipairs(blocking_blocks) do
+		if new_hitbox:overlap(block) then
 			local old_hitbox = new_hit_box(player.position)
-			local new_dist_to_1_ton_block = pressure_block:center_distance(new_hitbox)
-			local old_dist_to_1_ton_block = pressure_block:center_distance(old_hitbox)
+			local new_dist_to_1_ton_block = block:center_distance(new_hitbox)
+			local old_dist_to_1_ton_block = block:center_distance(old_hitbox)
 			if new_dist_to_1_ton_block < old_dist_to_1_ton_block then
 				-- Not allowed to walk further into 1 ton block
 				return CheckedMovement.new(player.position, false, false)
@@ -193,7 +192,7 @@ end
 local function get_new_player_orientation(
 	player_dir: Direction,
 	directions: {Movement},
-	pressure_blocks: {Rectangle},
+	blocking_blocks: {Rectangle},
 	bombs: Bombs,
 	player: Player
 ): Direction, Point
@@ -205,7 +204,7 @@ local function get_new_player_orientation(
 	-- directions in a deterministic and expected way.
 	local function movement_prio(movement: Movement): integer
 		local move_if_done = restrict_player_movement(
-			player, movement.dxdy, pressure_blocks, bombs
+			player, movement.dxdy, blocking_blocks, bombs
 		)
 
 		if in_end_of_corridor_and_walking_out(movement, player.position) then
@@ -231,7 +230,7 @@ local function get_new_player_orientation(
 
 	sort_directions_by_prio(directions)
 	for _, direction in ipairs(directions) do
-		local movement = restrict_player_movement(player, direction.dxdy, pressure_blocks, bombs)
+		local movement = restrict_player_movement(player, direction.dxdy, blocking_blocks, bombs)
 		cur_position = movement.position
 		cur_direction = direction.dir
 
@@ -242,10 +241,10 @@ local function get_new_player_orientation(
 	return cur_direction, cur_position
 end
 
-global function set_position_and_dir_from_input(player: Player, dt: number, pressure_blocks: {Rectangle}, bombs: Bombs)
+global function set_position_and_dir_from_input(player: Player, dt: number, blocking_blocks: {Rectangle}, bombs: Bombs)
 	local directions = get_directions_from_input(player, dt)
 	local new_dir, new_pos = get_new_player_orientation(
-		player.direction, directions, pressure_blocks, bombs, player
+		player.direction, directions, blocking_blocks, bombs, player
 	)
 	player:set_movement(new_pos, new_dir)
 	if #directions == 0 then

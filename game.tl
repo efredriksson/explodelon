@@ -242,7 +242,10 @@ local function game_update(dt: number)
 		player:update(dt)
 		if player:accepts_input() then
 			handle_bomb_drop_input(player)
-			set_position_and_dir_from_input(player, dt, pressure_blocks:hitboxes(), bombs)
+			local blocking_blocks = combine(
+				map(soft_blocks, new_hit_box), pressure_blocks:hitboxes()
+			)
+			set_position_and_dir_from_input(player, dt, blocking_blocks, bombs)
 		end
 
 		animations[player.id][player.state][player.action][player.direction]:update(dt)

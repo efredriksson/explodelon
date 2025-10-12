@@ -91,18 +91,6 @@ global function get_left_side_pressure_blocks(): {Point}
 	return blocks
 end
 
-local function combine<T>(...: {T}): {T}
-	local combined_list: {T} = {}
-	
-	for _, list in ipairs({...}) do
-		for _, elem in ipairs(list) do
-			table.insert(combined_list, elem)
-		end
-	end
-
-   	return combined_list
-end
-
 local function contains_position(list: {Point}, check_for: Point): boolean
 	for _, elem in ipairs(list) do
 		if elem:equal(check_for) then
