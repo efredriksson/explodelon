@@ -132,3 +132,47 @@ end
 global function new_hit_box(new_position: Point): Rectangle
     return Rectangle.new(new_position.x, new_position.y, BLOCK_SIZE, BLOCK_SIZE)
 end
+
+global function get_player_start_positions(number_of_players: integer): {Point}
+	local x_min = 0
+	local x_max = 16
+	local y_min = 0
+	local y_max = 10
+
+	local corners = {
+		get_block_point(x_min, y_min),
+		get_block_point(x_max, y_max),
+		get_block_point(x_max, y_min),
+		get_block_point(x_min, y_max)
+	}
+	local center = {get_block_point(x_max / 2, y_max / 2)}
+	local inner_positions = {
+		get_block_point(x_min + 5, y_min + 2),
+		get_block_point(x_max - 5, y_max - 2),
+		get_block_point(x_max - 5, y_min + 2),
+		get_block_point(x_min + 5, y_max - 2)
+	}
+
+	local function shuffle<T>(t: {T}): {T}
+		-- https://stackoverflow.com/a/68486276
+		local s = {}
+		for i = 1, #t do s[i] = t[i] end
+		for i = #t, 2, -1 do
+			local j = lutro.math.random(i)
+			s[i], s[j] = s[j], s[i]
+		end
+		return s
+	end
+
+	local function get_positions(): {Point}
+		if number_of_players == 5 then
+			-- Only if there are 5 players can you start dead in the middle
+			return combine(corners, center)
+		else
+			local result = combine(corners, inner_positions)
+			return {table.unpack(result, 1, number_of_players)}
+		end
+	end
+
+	return shuffle(get_positions())
+end
