@@ -308,7 +308,7 @@ local function game_update(dt: number)
 	animated_dinos:update(dt)
 
 	local blocks_explosions: {BlocksExplosion} = combine(
-		eggs.on_ground, items.on_ground, soft_blocks.on_ground
+		eggs.on_ground, items.on_ground, soft_blocks.on_ground, pressure_blocks.on_ground
 	)
 	local explosion_targets: {ExplodeTarget} = combine(
 		players, soft_blocks.on_ground, eggs.on_ground, items.on_ground
