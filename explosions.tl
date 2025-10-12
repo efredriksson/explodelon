@@ -30,6 +30,7 @@ local enum ExplosionTileType
     "left"
     "up"
     "down"
+    "none"
 end
 
 local record ExplosionTile
@@ -75,28 +76,38 @@ function Explosion.new(position: Point, range: number): Explosion
    return self
 end
 
-function Explosion:_update_active_tiles(blocked: {Point})
+function Explosion:_update_active_tiles(blocks: {BlocksExplosion})
     self.tiles = {}
 
     -- Calculate how far the explosion should expanded
     -- based on time elapsed, capped at max range
     local current_radius = math.floor(math.min(self.duration * self.speed, self.range))
 
-    local function is_blocked(pos: Point): boolean
+    local function is_blocked(pos: Point, explosion_type: ExplosionTileType): ExplosionTileType
         -- is out of bounds
         if pos.x < PLAYER_AREA.x or pos.x >= PLAYER_AREA.x + PLAYER_AREA.width or
            pos.y < PLAYER_AREA.y or pos.y >= PLAYER_AREA.y + PLAYER_AREA.height then
-            return true
+            return "none"
         end
 
-        -- is hard block
-        for _, block in ipairs(combine(HARD_BLOCKS, blocked)) do
-            if pos:equal(block) then
-                return true
+        for _, block in ipairs(blocks) do
+            if block.position:equal(pos) then
+                if block.animate_explosion then
+                    return explosion_type
+                else
+                    return "none"
+                end
             end
         end
 
-        return false
+        -- is hard block
+        for _, block in ipairs(combine(HARD_BLOCKS)) do
+            if pos:equal(block) then
+                return "none"
+            end
+        end
+
+        return nil
     end
 
     -- Recursively propagates explosion tiles until blocked or max range reached
@@ -115,8 +126,10 @@ function Explosion:_update_active_tiles(blocked: {Point})
 
         local next_pos = Point.new(pos.x + dx * BLOCK_SIZE, pos.y + dy * BLOCK_SIZE)
 
-        if is_blocked(next_pos) then
-            return {}
+        local blocked_explosion_type = is_blocked(next_pos, explosion_type)
+        if blocked_explosion_type then
+            -- Return a 'blocked' tile to enable collosion detection on update
+            return {ExplosionTile.new(new_hit_box(next_pos), true, blocked_explosion_type)}
         end
 
         local remaining_tiles = propagate(next_pos, dx, dy, distance_traveled + 1, explosion_type)
@@ -187,8 +200,10 @@ end
 
 function Explosion:draw()
     for _, tile in ipairs(self.tiles) do
-        local animation = self:get_tile_animation(tile)
-        animation:draw(tile.rect.x, tile.rect.y)
+        if tile.type ~= "none" then
+            local animation = self:get_tile_animation(tile)
+            animation:draw(tile.rect.x, tile.rect.y)
+        end
     end
 end
 
@@ -202,9 +217,9 @@ function Explosion:update_end_animation(dt: number)
     self.animations.center:update(dt)
 end
 
-function Explosion:update(dt: number, blocked: {Point})
+function Explosion:update(dt: number, blocks: {BlocksExplosion})
     self.duration = self.duration + dt
-    self:_update_active_tiles(blocked)
+    self:_update_active_tiles(blocks)
 
     if self:has_reached_max_range() then
         self:update_end_animation(dt)
@@ -237,9 +252,9 @@ function Explosions:place_explosion(position: Point, range: number)
     table.insert(self.on_ground, explosion)
 end
 
-function Explosions:update(dt: number, blocked: {Point}, explode_targets: {ExplodeTarget})
+function Explosions:update(dt: number, blocks: {BlocksExplosion}, explode_targets: {ExplodeTarget})
     for i, explosion in ipairs(self.on_ground) do
-        explosion:update(dt, blocked)
+        explosion:update(dt, blocks)
 
         for _, explode_target in ipairs(explode_targets) do
             if explosion:collides_with(explode_target.position) then

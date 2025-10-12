@@ -24,16 +24,18 @@ global function load_item_assets()
     }
 end
 
-global record Item is Entity
+global record Item is Entity, BlocksExplosion
     type: ItemType
     position: Point
+    animate_explosion: boolean
 end
 
 function Item.new(item_type: ItemType, position: Point): Item
-   local self: Item = setmetatable({}, { __index = Item })
-   self.type = item_type
-   self.position = position
-   return self
+    local self: Item = setmetatable({}, { __index = Item })
+    self.type = item_type
+    self.position = position
+    self.animate_explosion = true
+    return self
 end
 
 function Item:draw()
