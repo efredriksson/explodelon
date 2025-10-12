@@ -170,8 +170,9 @@ local function get_available_item_spots(): {Point}
 			end
 		end
 
-		for _, pressure_block in ipairs(pressure_blocks.on_ground) do
-			if pressure_block.position:equal(pos) then
+		local occupied = combine(pressure_blocks:hitboxes(), soft_blocks:hitboxes())
+		for _, block in ipairs(occupied) do
+			if block:top_left():equal(pos) then
 				invalid_position = true
 			end
 		end
