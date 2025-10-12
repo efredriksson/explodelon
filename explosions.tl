@@ -50,6 +50,7 @@ global record Explosion is Entity
     range: number
     duration: number
     speed: number
+    tiles: {ExplosionTile}
     animations: ExplosionAnimations
 end
 
@@ -57,6 +58,7 @@ function Explosion.new(position: Point, range: number): Explosion
    local self: Explosion = setmetatable({}, { __index = Explosion })
    self.position = position
    self.range = range
+   self.tiles = {}
    self.duration = 0
    self.speed = 28
    local frame_duration = END_ANIMATION_DURATION / 4
@@ -73,8 +75,8 @@ function Explosion.new(position: Point, range: number): Explosion
    return self
 end
 
-function Explosion:get_active_tiles(): {ExplosionTile}
-    local tiles: {ExplosionTile} = {}
+function Explosion:_update_active_tiles()
+    self.tiles = {}
 
     -- Calculate how far the explosion should expanded
     -- based on time elapsed, capped at max range
@@ -127,23 +129,21 @@ function Explosion:get_active_tiles(): {ExplosionTile}
     end
 
     -- Center tile
-    table.insert(tiles, ExplosionTile.new(new_hit_box(self.position), false, "center"))
+    table.insert(self.tiles, ExplosionTile.new(new_hit_box(self.position), false, "center"))
 
     -- Propagate in all four directions
     for _, tile in ipairs(propagate(self.position, 1, 0, 1, "right")) do
-        table.insert(tiles, tile)
+        table.insert(self.tiles, tile)
     end
     for _, tile in ipairs(propagate(self.position, -1, 0, 1, "left")) do
-        table.insert(tiles, tile)
+        table.insert(self.tiles, tile)
     end
     for _, tile in ipairs(propagate(self.position, 0, 1, 1, "down")) do
-        table.insert(tiles, tile)
+        table.insert(self.tiles, tile)
     end
     for _, tile in ipairs(propagate(self.position, 0, -1, 1, "up")) do
-        table.insert(tiles, tile)
+        table.insert(self.tiles, tile)
     end
-
-    return tiles
 end
 
 function Explosion:get_tile_animation(tile: ExplosionTile): Animation
@@ -171,9 +171,8 @@ end
 
 function Explosion:collides_with(position: Point): boolean
     local hitbox = new_hit_box(position)
-    local tiles = self:get_active_tiles()
 
-    for _, tile in ipairs(tiles) do
+    for _, tile in ipairs(self.tiles) do
         if hitbox:overlap(tile.rect:shrink(2)) then
             return true
         end
@@ -187,9 +186,7 @@ function Explosion:is_complete(): boolean
 end
 
 function Explosion:draw()
-    local tiles = self:get_active_tiles()
-
-    for _, tile in ipairs(tiles) do
+    for _, tile in ipairs(self.tiles) do
         local animation = self:get_tile_animation(tile)
         animation:draw(tile.rect.x, tile.rect.y)
     end
@@ -207,6 +204,7 @@ end
 
 function Explosion:update(dt: number)
     self.duration = self.duration + dt
+    self:_update_active_tiles()
 
     if self:has_reached_max_range() then
         self:update_end_animation(dt)
