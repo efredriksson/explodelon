@@ -125,6 +125,7 @@ local animations_invulnerable: {integer: {PlayerState: {Action: {Direction: Anim
 local avatars: {integer: Image} = {}
 
 local function game_load()
+	global tic_counter = 0
 	background = lutro.graphics.newImage("assets/footboll-map.png")
 	local player_positions: {Point} = {}
 	for _, player in ipairs(players) do
@@ -157,10 +158,17 @@ local function game_load()
 	soft_blocks:load_assets()
 end
 
-local function get_available_item_spots(): {Point}
-	-- Return places an item can drop, non-hard positions
-	-- and also let's not drop items too close to players
+local function get_available_spots(): {Point}
+	-- Return places an item/egg can drop. The spot needs to
+	-- be free and not too close to a player
 	local available_spots: {Point} = {}
+	
+	local occupied: {Entity} = combine(
+		eggs.on_ground,
+		items.on_ground,
+		soft_blocks.on_ground,
+		pressure_blocks.on_ground
+	)
 
 	for _, pos in ipairs(NON_HARD_POSITIONS) do
 		local invalid_position = false
@@ -170,9 +178,8 @@ local function get_available_item_spots(): {Point}
 			end
 		end
 
-		local occupied = combine(pressure_blocks:hitboxes(), soft_blocks:hitboxes())
-		for _, block in ipairs(occupied) do
-			if block:top_left():equal(pos) then
+		for _, entity in ipairs(occupied) do
+			if entity.position:equal(pos) then
 				invalid_position = true
 			end
 		end
@@ -273,7 +280,15 @@ local function game_update(dt: number)
 	end
 	
 	items:update(dt)
-	items:dropNew(get_available_item_spots())
+	eggs:update(dt)
+
+	tic_counter = tic_counter + 1
+    if tic_counter % 120 == 0 then
+        -- Only consider generating these every 120 tic (2 seconds)
+        eggs:possible_spawn(get_available_spots())
+		items:possible_drop(get_available_spots())
+    end
+
 	clear_items(hitting_ground)
 	
 	local out_of_time = game_timer:decrement(dt)
@@ -285,7 +300,6 @@ local function game_update(dt: number)
 		next_game()
 	end
 	
-	eggs:update(dt)
 	animated_dinos:update(dt)
 
 	local blocks_explosions: {BlocksExplosion} = combine(
