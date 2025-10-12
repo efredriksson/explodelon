@@ -291,7 +291,17 @@ local function game_update(dt: number)
 	
 	eggs:update(dt)
 	animated_dinos:update(dt)
-	bombs:update(dt, players)
+	local blocks_explosions: {Point} = {}
+	for _, block in ipairs(soft_blocks) do
+		table.insert(blocks_explosions, block)
+	end
+	for _, egg in ipairs(eggs.on_ground) do
+		table.insert(blocks_explosions, egg.position)
+	end
+	for _, item in ipairs(items.on_ground) do
+		table.insert(blocks_explosions, item.position)
+	end
+	bombs:update(dt, blocks_explosions, players)
 end
 
 local function sort_entities_by_y_cord(players_to_sort: {Entity})

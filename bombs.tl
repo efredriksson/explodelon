@@ -68,7 +68,7 @@ function Bombs:place_bomb(position: Point, player: Player): Bomb
     return bomb
 end
 
-function Bombs:update(dt: number, players: {Player})
+function Bombs:update(dt: number, blocked: {Point}, players: {Player})
     for i = #self.on_ground, 1, -1 do
         local bomb = self.on_ground[i]
         bomb:update(dt)
@@ -88,7 +88,7 @@ function Bombs:update(dt: number, players: {Player})
         end
     end
 
-    self.explosions:update(dt, players)
+    self.explosions:update(dt, blocked, players)
 end
 
 function Bombs:draw()
