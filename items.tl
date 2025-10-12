@@ -84,7 +84,7 @@ end
 
 function Items:possible_drop(available_spots: {Point})
     local item_drop_probability = 0.1
-    if lutro.math.random() > item_drop_probability then
+    if lutro.math.random() > item_drop_probability or #available_spots == 0 then
         return
     end
 
