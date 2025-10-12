@@ -9,20 +9,22 @@ global function load_egg_assets()
     global egg_open_image = lutro.graphics.newImage("assets/tirras/egg_open.png")
 end
 
-global record Egg is Entity
+global record Egg is Entity, BlocksExplosion
     position: Point
     breaking: boolean
     hatched: boolean
+    animate_explosion: boolean
     animation: Animation
 end
 
 function Egg.new(position: Point): Egg
-   local self: Egg = setmetatable({}, { __index = Egg })
-   self.position = position
-   self.breaking = false
-   self.hatched = false
-   self.animation = egg_anim
-   return self
+    local self: Egg = setmetatable({}, { __index = Egg })
+    self.position = position
+    self.breaking = false
+    self.hatched = false
+    self.animate_explosion = true
+    self.animation = egg_anim
+    return self
 end
 
 local function convert_pos_for_egg_draw(animation: Animation, pos: Point): Point
