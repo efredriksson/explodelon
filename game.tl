@@ -14,11 +14,11 @@ require("dino_animations")
 require("bombs")
 require("input")
 require("character_sprites")
+require("soft_blocks")
 
 local bombs: Bombs
 local background: Image
-local soft_block: Image
-local soft_blocks: {Point}
+local soft_blocks: SoftBlocks
 
 local function setup_players(selected_sprites: {CharacterSprite}): {Player}
 	global players: {Player} = {}
@@ -126,7 +126,6 @@ local avatars: {integer: Image} = {}
 
 local function game_load()
 	background = lutro.graphics.newImage("assets/footboll-map.png")
-	soft_block = lutro.graphics.newImage("assets/soft-block.png")
 	local player_positions: {Point} = {}
 	for _, player in ipairs(players) do
 		animations[player.id] = character_animation(player.sprite, false)
@@ -155,7 +154,8 @@ local function game_load()
 
 	global score_font = get_shaded_number_font()
 
-	soft_blocks = get_soft_blocks(player_positions)
+	soft_blocks = SoftBlocks.new(get_soft_blocks(player_positions))
+	soft_blocks:load_assets()
 end
 
 local function get_available_item_spots(): {Point}
@@ -243,7 +243,7 @@ local function game_update(dt: number)
 		if player:accepts_input() then
 			handle_bomb_drop_input(player)
 			local blocking_blocks = combine(
-				map(soft_blocks, new_hit_box), pressure_blocks:hitboxes()
+				soft_blocks:hitboxes(), pressure_blocks:hitboxes()
 			)
 			set_position_and_dir_from_input(player, dt, blocking_blocks, bombs)
 		end
@@ -293,7 +293,7 @@ local function game_update(dt: number)
 	animated_dinos:update(dt)
 
 	local blocks_explosions: {BlocksExplosion} = combine(
-		eggs.on_ground, items.on_ground
+		eggs.on_ground, items.on_ground, soft_blocks.on_ground
 	)
 	local explosion_targets: {ExplodeTarget} = combine(
 		players, soft_blocks.on_ground
@@ -323,15 +323,16 @@ end
 
 local function game_draw()
 	lutro.graphics.draw(background)
+	for _, block in ipairs(soft_blocks.on_ground) do
+		block:draw()
+	end
+	
 	game_timer:draw()
 
 	for _, block in ipairs(pressure_blocks:falling()) do
 		-- falling blocks are rendered last on top of everything,
 		-- but their shadows have to be behind anything
 		block:draw_shadow()
-	end
-	for _, pos in ipairs(soft_blocks) do
-		lutro.graphics.draw(soft_block, pos.x, pos.y)
 	end
 	for _, block in ipairs(pressure_blocks.on_ground) do
 		block:draw()
