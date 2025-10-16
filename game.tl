@@ -234,12 +234,19 @@ local function handle_bomb_drop_input(player: Player)
 	end
 end
 
+local is_alive = function(player: Player): boolean
+	return player.is_alive
+end
+
+local is_dead = function(player: Player): boolean
+	return not player.is_alive
+end
 
 local function game_update(dt: number)
 	local hitting_ground = pressure_blocks:update(dt)
-	local alive_players: {Player} = {}
+	local alive_players = filter(players, is_alive)
 
-	for _, player in ipairs(players) do
+	for _, player in ipairs(alive_players) do
 		player:update(dt)
 		if player:accepts_input() then
 			handle_bomb_drop_input(player)
@@ -267,21 +274,13 @@ local function game_update(dt: number)
 				player:kill()
 			end
 		end
-
-		if player.is_alive then
-			table.insert(alive_players, player)
-		end
 	end
 	
 	items:update(dt)
 	eggs:update(dt)
 
-	tic_counter = tic_counter + 1
-    if tic_counter % 120 == 0 then
-        -- Only consider generating these every 120 tic (2 seconds)
-        eggs:possible_spawn(get_available_spots())
-		items:possible_drop(get_available_spots())
-    end
+	local dead_players = filter(players, is_dead)
+	items:drop_items_of(dead_players, get_available_spots())
 
 	clear_items_and_eggs(hitting_ground)
 	
@@ -304,6 +303,15 @@ local function game_update(dt: number)
 	)
 	bombs:update(dt, blockers, explodables)
 	soft_blocks:update(dt)
+	for _, soft_block in ipairs(soft_blocks:exploding()) do
+		if soft_block.item then
+			items:drop_at(soft_block.position, soft_block.item)
+			soft_block.item = nil
+		elseif soft_block.egg then
+			eggs:spawn_at(soft_block.position)
+			soft_block.egg = false
+		end
+	end
 end
 
 local function sort_entities_by_y_cord(players_to_sort: {Entity})
@@ -327,7 +335,7 @@ end
 
 local function game_draw()
 	lutro.graphics.draw(background)
-	for _, block in ipairs(soft_blocks.on_ground) do
+	for _, block in ipairs(soft_blocks:not_exploding()) do
 		block:draw()
 	end
 	
@@ -344,7 +352,7 @@ local function game_draw()
 
 	local dinos_drawn_with_player: {Dino} = {}
 	local entities_to_draw: {Entity} = {}
-	for _, player in ipairs(players) do
+	for _, player in ipairs(filter(players, is_alive)) do
 		local player_animation = animations[player.id][player.state][player.action][player.direction]
 		if player:is_invulnerable() and player.invulnerable_for % 0.3 < 0.15 then
 			player_animation = animations_invulnerable[player.id][player.state][player.action][player.direction]
@@ -386,6 +394,11 @@ local function game_draw()
 
 	for _, entity in ipairs(entities_to_draw) do
 		entity:draw()
+	end
+
+	-- Draw soft blocks exploding last, revealing possible item under
+	for _, block in ipairs(soft_blocks:exploding()) do
+		block:draw()
 	end
 end
 

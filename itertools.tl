@@ -68,3 +68,24 @@ global function map<T, V>(iterator: {T}, f: function(T): V): {V}
     end
     return result
 end
+
+global function filter<T>(iterator: {T}, predicate: function(T): boolean): {T}
+    local result = {}
+    for _, element in ipairs(iterator) do
+		if predicate(element) then
+	        table.insert(result, element)
+		end
+    end
+    return result
+end
+
+global function shuffle<T>(t: {T}): {T}
+	-- https://stackoverflow.com/a/68486276
+	local s = {}
+	for i = 1, #t do s[i] = t[i] end
+	for i = #t, 2, -1 do
+		local j = lutro.math.random(i)
+		s[i], s[j] = s[j], s[i]
+	end
+	return s
+end

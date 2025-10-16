@@ -86,16 +86,6 @@ function Eggs:spawn_at(position: Point)
     table.insert(self.on_ground, Egg.new(position))
 end
 
-function Eggs:possible_spawn(available_spots: {Point})
-    local spawn_probability = 0.05
-    if lutro.math.random() > spawn_probability or #available_spots == 0 then
-        return
-    end
-
-    local spot_to_spawn = available_spots[lutro.math.random(#available_spots)]
-    self:spawn_at(spot_to_spawn)
-end
-
 function Eggs:possible_hatcher_at(player_position: Point, player_dir: Direction): Dino
     for _, egg in ipairs(self.on_ground) do
         if egg.position:in_radius_of(player_position, BLOCK_SIZE / 2) then

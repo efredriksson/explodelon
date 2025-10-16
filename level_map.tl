@@ -1,5 +1,6 @@
 require("const")
 require("geometry")
+require("items")
 require("itertools")
 
 global PLAYER_AREA = Rectangle.new(24, 32, 272, 176)
@@ -101,9 +102,23 @@ local function contains_position(list: {Point}, check_for: Point): boolean
 	return false
 end
 
+global record SoftBlockConfig
+	position: Point
+    item: ItemType
+    egg: boolean
+end
+
+function SoftBlockConfig.new(position: Point, item: ItemType, egg: boolean): SoftBlockConfig
+    local self: SoftBlockConfig = setmetatable({}, { __index = SoftBlockConfig })
+    self.position = position
+    self.item = item
+    self.egg = egg
+    return self
+end
+
 local MAX_SOFT_BLOCKS = 105
 
-global function get_soft_blocks(player_positions: {Point}): {Point}
+local function get_soft_block_positions(player_positions: {Point}): {Point}
 	local soft_blocks: {Point} = {}
 	local close_to_player: {Point} = {}
 
@@ -124,6 +139,35 @@ global function get_soft_blocks(player_positions: {Point}): {Point}
 		if not contains_position(occupied, random_block) then
 			table.insert(soft_blocks, random_block)
 		end
+	end
+
+	return soft_blocks
+end
+
+local NBR_OF_EGGS = 4
+local NBR_OF_ITMES: {ItemType: integer} = {
+	bomb = 8,
+	fire = 6,
+	speed = 4,
+	kick = 8,
+}
+
+global function get_soft_blocks(player_positions: {Point}): {SoftBlockConfig}
+	local soft_blocks: {SoftBlockConfig} = {}
+
+	local blocks_positions = get_soft_block_positions(player_positions)
+	for item_type, quantity in pairs(NBR_OF_ITMES) do
+		for _=1, quantity do
+			local pos = table.remove(blocks_positions, 1)
+			table.insert(soft_blocks, SoftBlockConfig.new(pos, item_type, false))
+		end
+	end
+	for _=1, NBR_OF_EGGS do
+		local pos = table.remove(blocks_positions, 1)
+		table.insert(soft_blocks, SoftBlockConfig.new(pos, nil, true))
+	end
+	for _, pos in ipairs(blocks_positions) do
+		table.insert(soft_blocks, SoftBlockConfig.new(pos, nil, false))
 	end
 
 	return soft_blocks
@@ -152,17 +196,6 @@ global function get_player_start_positions(number_of_players: integer): {Point}
 		get_block_point(x_max - 5, y_min + 2),
 		get_block_point(x_min + 5, y_max - 2)
 	}
-
-	local function shuffle<T>(t: {T}): {T}
-		-- https://stackoverflow.com/a/68486276
-		local s = {}
-		for i = 1, #t do s[i] = t[i] end
-		for i = #t, 2, -1 do
-			local j = lutro.math.random(i)
-			s[i], s[j] = s[j], s[i]
-		end
-		return s
-	end
 
 	local function get_positions(): {Point}
 		if number_of_players == 5 then

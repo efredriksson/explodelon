@@ -2,6 +2,7 @@ require("animation")
 require("geometry")
 require("player")
 require("entity")
+require("itertools")
 
 global enum ItemType
    "speed"
@@ -62,7 +63,7 @@ end
 
 global record Items
     on_ground: {Item}
-    by_players: {integer: {Item}}
+    by_players: {integer: {ItemType}}
 end
 
 function Items.new(): Items
@@ -72,16 +73,13 @@ function Items.new(): Items
    return self
 end
 
-function Items:possible_drop(available_spots: {Point})
-    local item_drop_probability = 0.1
-    if lutro.math.random() > item_drop_probability or #available_spots == 0 then
-        return
-    end
-
-    local spot_to_drop = available_spots[lutro.math.random(#available_spots)]
+global function get_random_item(): ItemType
     local items_that_can_drop: {ItemType} = {"speed", "bomb", "kick", "fire"}
-    local item_to_drop = items_that_can_drop[lutro.math.random(#items_that_can_drop)]
-    table.insert(self.on_ground, Item.new(item_to_drop, spot_to_drop))
+    return items_that_can_drop[lutro.math.random(#items_that_can_drop)]
+end
+
+function Items:drop_at(position: Point, item: ItemType)
+    table.insert(self.on_ground, Item.new(item, position))
 end
 
 function Items:update(dt: number)
@@ -93,6 +91,23 @@ function Items:update(dt: number)
     end
 end
 
+function Items:drop_items_of(players: {Player}, available_spots: {Point})
+    local max_items_to_drop = 5
+
+    for _, player in ipairs(players) do
+        if self.by_players[player.id] then
+            local items = shuffle(self.by_players[player.id])
+            self.by_players[player.id] = nil
+            for i, item in ipairs(items) do
+                if i <= max_items_to_drop then
+                   local spot_to_drop = available_spots[lutro.math.random(#available_spots)]
+                   self:drop_at(spot_to_drop, item)
+                end
+            end
+        end
+    end
+end
+
 function Items:consumed_by_player(player: Player, index: integer)
     lutro.audio.play(take_item_sound)
 
@@ -100,7 +115,7 @@ function Items:consumed_by_player(player: Player, index: integer)
     if self.by_players[player.id] == nil then
         self.by_players[player.id] = {}
     end
-    table.insert(self.by_players[player.id], item)
+    table.insert(self.by_players[player.id], item.type)
     if item.type == "speed" then
         player.speed = player.speed + 5
     elseif item.type == "bomb" then
