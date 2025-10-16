@@ -5,12 +5,13 @@ global type Entity = interface
     draw: function(self)
 end
 
-global type BlocksExplosion = interface
+global type ExplosionBlocking = interface
     position: Point
-    animate_explosion: boolean
+    in_explosion: boolean
+    blow_up: function(self)
 end
 
-global type ExplodeTarget = interface
+global type Explodable = interface
     position: Point
     blow_up: function(self)
 end

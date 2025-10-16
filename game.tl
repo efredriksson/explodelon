@@ -217,7 +217,7 @@ local function find_closest_non_hard_position(pos: Point): Point
 	-- Snap to nearest grid tile
 	local x = math.floor((pos.x - PLAYER_AREA.x) / BLOCK_SIZE + 0.5) * BLOCK_SIZE + PLAYER_AREA.x
 	local y = math.floor((pos.y - PLAYER_AREA.y) / BLOCK_SIZE + 0.5) * BLOCK_SIZE + PLAYER_AREA.y
-	return {x = x, y = y}
+	return Point.new(x, y)
 end
 
 local function handle_bomb_drop_input(player: Player)
@@ -296,13 +296,13 @@ local function game_update(dt: number)
 	
 	animated_dinos:update(dt)
 
-	local blocks_explosions: {BlocksExplosion} = combine(
+	local blockers: {ExplosionBlocking} = combine(
 		eggs.on_ground, items.on_ground, soft_blocks.on_ground, pressure_blocks.on_ground
 	)
-	local explosion_targets: {ExplodeTarget} = combine(
+	local explodables: {Explodable} = combine(
 		players, soft_blocks.on_ground, eggs.on_ground, items.on_ground
 	)
-	bombs:update(dt, blocks_explosions, explosion_targets)
+	bombs:update(dt, blockers, explodables)
 	soft_blocks:update(dt)
 end
 

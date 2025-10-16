@@ -52,12 +52,14 @@ global record Explosion is Entity
     duration: number
     speed: number
     tiles: {ExplosionTile}
+    blocked_at: {Point}
     animations: ExplosionAnimations
 end
 
 function Explosion.new(position: Point, range: number): Explosion
    local self: Explosion = setmetatable({}, { __index = Explosion })
    self.position = position
+   self.blocked_at = {}
    self.range = range
    self.tiles = {}
    self.duration = 0
@@ -76,26 +78,40 @@ function Explosion.new(position: Point, range: number): Explosion
    return self
 end
 
-function Explosion:_update_active_tiles(blocks: {BlocksExplosion})
+local enum BlockingResult
+    "next"
+    "now"
+    "nil"
+end
+
+function Explosion:_update_active_tiles(blockers: {ExplosionBlocking})
     self.tiles = {}
 
     -- Calculate how far the explosion should expanded
     -- based on time elapsed, capped at max range
     local current_radius = math.floor(math.min(self.duration * self.speed, self.range))
 
-    local function is_blocked(pos: Point, explosion_type: ExplosionTileType): ExplosionTileType
+    local function is_blocked(pos: Point): BlockingResult
         -- is out of bounds
-        if pos.x < PLAYER_AREA.x or pos.x >= PLAYER_AREA.x + PLAYER_AREA.width or
-           pos.y < PLAYER_AREA.y or pos.y >= PLAYER_AREA.y + PLAYER_AREA.height then
-            return "none"
+        if not PLAYER_AREA:contains(new_hit_box(pos)) then
+            return "now"
         end
 
-        for _, block in ipairs(blocks) do
-            if block.position:equal(pos) then
-                if block.animate_explosion then
-                    return explosion_type
+        -- Once blocked, always blocked for one instance of explosion
+        for _, block_at in ipairs(self.blocked_at) do
+            if block_at:equal(pos) then
+                return "now"
+            end
+        end
+
+        for _, blocker in ipairs(blockers) do
+            if blocker.position:equal(pos) then
+                if blocker.in_explosion then
+                    return "next"
                 else
-                    return "none"
+                    blocker:blow_up()
+                    table.insert(self.blocked_at, pos)
+                    return "now"
                 end
             end
         end
@@ -103,18 +119,17 @@ function Explosion:_update_active_tiles(blocks: {BlocksExplosion})
         -- is hard block
         for _, block in ipairs(combine(HARD_BLOCKS)) do
             if pos:equal(block) then
-                return "none"
+                return "now"
             end
         end
 
-        return nil
+        return "nil"
     end
 
     -- Recursively propagates explosion tiles until blocked or max range reached
     local function propagate(
         pos: Point,
-        dx: number,
-        dy: number,
+        delta: Vector,
         distance_traveled: number,
         explosion_type: ExplosionTileType
     ): {ExplosionTile}
@@ -124,15 +139,17 @@ function Explosion:_update_active_tiles(blocks: {BlocksExplosion})
             return {}
         end
 
-        local next_pos = Point.new(pos.x + dx * BLOCK_SIZE, pos.y + dy * BLOCK_SIZE)
+        local next_pos = pos:move(delta)
 
-        local blocked_explosion_type = is_blocked(next_pos, explosion_type)
-        if blocked_explosion_type then
-            -- Return a 'blocked' tile to enable collosion detection on update
-            return {ExplosionTile.new(new_hit_box(next_pos), true, blocked_explosion_type)}
+        local blocked = is_blocked(next_pos)
+        if blocked == "now" then
+            return {}
+        elseif blocked == "next" then
+            table.insert(self.blocked_at, next_pos:move(delta))
+            return {ExplosionTile.new(new_hit_box(next_pos), true, explosion_type)}
         end
 
-        local remaining_tiles = propagate(next_pos, dx, dy, distance_traveled + 1, explosion_type)
+        local remaining_tiles = propagate(next_pos, delta, distance_traveled + 1, explosion_type)
         local is_last = #remaining_tiles == 0
 
         local tile = ExplosionTile.new(new_hit_box(next_pos), is_last, explosion_type)
@@ -144,18 +161,18 @@ function Explosion:_update_active_tiles(blocks: {BlocksExplosion})
     -- Center tile
     table.insert(self.tiles, ExplosionTile.new(new_hit_box(self.position), false, "center"))
 
+    local directions: {ExplosionTileType: Vector} = {
+        right = Vector.new(1, 0),
+        left = Vector.new(-1, 0),
+        down = Vector.new(0, 1),
+        up = Vector.new(0, -1),
+    }
+
     -- Propagate in all four directions
-    for _, tile in ipairs(propagate(self.position, 1, 0, 1, "right")) do
-        table.insert(self.tiles, tile)
-    end
-    for _, tile in ipairs(propagate(self.position, -1, 0, 1, "left")) do
-        table.insert(self.tiles, tile)
-    end
-    for _, tile in ipairs(propagate(self.position, 0, 1, 1, "down")) do
-        table.insert(self.tiles, tile)
-    end
-    for _, tile in ipairs(propagate(self.position, 0, -1, 1, "up")) do
-        table.insert(self.tiles, tile)
+    for direction, delta in pairs(directions) do
+        for _, tile in ipairs(propagate(self.position, delta:scale(BLOCK_SIZE), 1, direction)) do
+            table.insert(self.tiles, tile)
+        end
     end
 end
 
@@ -217,9 +234,9 @@ function Explosion:update_end_animation(dt: number)
     self.animations.center:update(dt)
 end
 
-function Explosion:update(dt: number, blocks: {BlocksExplosion})
+function Explosion:update(dt: number, blockers: {ExplosionBlocking})
     self.duration = self.duration + dt
-    self:_update_active_tiles(blocks)
+    self:_update_active_tiles(blockers)
 
     if self:has_reached_max_range() then
         self:update_end_animation(dt)
@@ -252,13 +269,13 @@ function Explosions:place_explosion(position: Point, range: number)
     table.insert(self.on_ground, explosion)
 end
 
-function Explosions:update(dt: number, blocks: {BlocksExplosion}, explode_targets: {ExplodeTarget})
+function Explosions:update(dt: number, blockers: {ExplosionBlocking}, explodables: {Explodable})
     for i, explosion in ipairs(self.on_ground) do
-        explosion:update(dt, blocks)
+        explosion:update(dt, blockers)
 
-        for _, explode_target in ipairs(explode_targets) do
-            if explosion:collides_with(explode_target.position) then
-                explode_target:blow_up()
+        for _, explodable in ipairs(explodables) do
+            if explosion:collides_with(explodable.position) then
+                explodable:blow_up()
             end
         end
 

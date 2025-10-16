@@ -17,7 +17,7 @@ global type PlayerState = enum
 	"mounted"
 end
 
-global record Player is ExplodeTarget
+global record Player is Explodable
 	id: integer
 	sprite: CharacterSprite
    	position: Point

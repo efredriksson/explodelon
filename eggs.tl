@@ -4,20 +4,17 @@ require("entity")
 require("animation")
 require("dinos")
 
-local EGG_EXPLOSION_DURATION: number = 0.8
-
 global function load_egg_assets()
     global egg_shake_image = lutro.graphics.newImage("assets/tirras/egg.png")
     global egg_open_image = lutro.graphics.newImage("assets/tirras/egg_open.png")
 end
 
-global record Egg is Entity, BlocksExplosion, ExplodeTarget
+global record Egg is Entity, ExplosionBlocking, Explodable
     position: Point
     breaking: boolean
     hatched: boolean
     is_exploding: boolean
-    exploded_for: number
-    animate_explosion: boolean
+    in_explosion: boolean
     animation: Animation
 end
 
@@ -27,8 +24,7 @@ function Egg.new(position: Point): Egg
     self.breaking = false
     self.hatched = false
     self.is_exploding = false
-    self.exploded_for = 0
-    self.animate_explosion = true
+    self.in_explosion = true
     self.animation = Animation.new(egg_shake_image, 20, 26, 3, 18, 2)
     return self
 end
@@ -61,14 +57,10 @@ function Egg:update(dt: number)
         -- After one animation cycle as 'breaking' the egg have hatched
         self.hatched = true
     end
-
-    if self.is_exploding then
-        self.exploded_for = self.exploded_for + dt
-    end
 end
 
 function Egg:is_destroyed(): boolean
-    return self.exploded_for > EGG_EXPLOSION_DURATION
+    return self.is_exploding
 end
 
 global record Eggs
