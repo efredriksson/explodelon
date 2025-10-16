@@ -3,8 +3,6 @@ require("geometry")
 require("player")
 require("entity")
 
-local ITEM_EXPLOSION_DURATION: number = 0.8
-
 global enum ItemType
    "speed"
    "bomb"
@@ -25,12 +23,11 @@ global function load_item_assets()
     }
 end
 
-global record Item is Entity, BlocksExplosion, ExplodeTarget
+global record Item is Entity, ExplosionBlocking, Explodable
     type: ItemType
     position: Point
     is_exploding: boolean
-    exploded_for: number
-    animate_explosion: boolean
+    in_explosion: boolean
 end
 
 function Item.new(item_type: ItemType, position: Point): Item
@@ -38,8 +35,7 @@ function Item.new(item_type: ItemType, position: Point): Item
     self.type = item_type
     self.position = position
     self.is_exploding = false
-    self.exploded_for = 0
-    self.animate_explosion = true
+    self.in_explosion = true
     return self
 end
 
@@ -60,14 +56,8 @@ function Item:draw()
 	lutro.graphics.draw(item_shadow, x_draw, y_draw)
 end
 
-function Item:update(dt: number)
-    if self.is_exploding then
-        self.exploded_for = self.exploded_for + dt
-    end
-end
-
 function Item:is_destroyed(): boolean
-    return self.exploded_for > ITEM_EXPLOSION_DURATION
+    return self.is_exploding
 end
 
 global record Items
@@ -97,7 +87,6 @@ end
 function Items:update(dt: number)
     frame_animation:update(dt)
     for i, item in ipairs(self.on_ground) do
-        item:update(dt)
         if item:is_destroyed() then
             table.remove(self.on_ground, i)
         end

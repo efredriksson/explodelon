@@ -4,17 +4,13 @@ require("level_map")
 require("itertools")
 require("animation")
 
--- Must be greater than 'END_ANIMATION_DURATION' so the block
--- remains and block during the entire explosion duration.
-local BLOCK_EXPLOSION_DURATION: number = 0.8
 local soft_block_image: Image
 local soft_block_breaking_image: Image
 
-global record SoftBlock is Entity, ExplodeTarget, BlocksExplosion
+global record SoftBlock is Entity, Explodable, ExplosionBlocking
 	position: Point
     is_exploding: boolean
-    animate_explosion: boolean
-    exploded_for: number
+    in_explosion: boolean
     breaking_animation: Animation
 end
 
@@ -22,15 +18,11 @@ function SoftBlock.new(position: Point): SoftBlock
     local self: SoftBlock = setmetatable({}, { __index = SoftBlock })
     self.position = position
     self.is_exploding = false
-    self.animate_explosion = false
-    self.exploded_for = 0.0
+    self.in_explosion = false
     return self
 end
 
 function SoftBlock:update(dt: number)
-    if self.is_exploding then
-        self.exploded_for = self.exploded_for + dt
-    end
     if self.breaking_animation then
         self.breaking_animation:update(dt)
     end
@@ -45,12 +37,10 @@ end
 
 function SoftBlock:draw()
     if self.is_exploding then
-        if self.breaking_animation.loops == 0 then -- Only play one loop of breaking
-            local position = center_animation_on_block(
-                self.breaking_animation, self.position
-            )
-            self.breaking_animation:draw(position.x, position.y)
-        end
+        local position = center_animation_on_block(
+            self.breaking_animation, self.position
+        )
+        self.breaking_animation:draw(position.x, position.y)
     else
         lutro.graphics.draw(soft_block_image, self.position.x, self.position.y)
     end
@@ -66,7 +56,7 @@ function SoftBlock:blow_up()
 end
 
 function SoftBlock:is_destroyed(): boolean
-    return self.exploded_for > BLOCK_EXPLOSION_DURATION
+    return self.breaking_animation and self.breaking_animation.loops > 0
 end
 
 global record SoftBlocks 

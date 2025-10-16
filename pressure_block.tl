@@ -5,15 +5,17 @@ require("itertools")
 require("level_map")
 
 
-global record PressureBlock is Entity, BlocksExplosion
+global record PressureBlock is Entity, ExplosionBlocking
 	falling_position: Point
     position: Point
+    in_explosion: boolean
 end
 
 function PressureBlock.new(target: Point): PressureBlock
 	local self: PressureBlock = setmetatable({}, { __index = PressureBlock })
 	self.falling_position = Point.new(target.x, -BLOCK_SIZE)
     self.position = target
+    self.in_explosion = false
 	return self
 end
 
@@ -30,6 +32,10 @@ function PressureBlock:draw_shadow()
     local shadow_y = self.position.y - 9
     local shadow_x = self.position.x - 1
     lutro.graphics.draw(block_fall_shadow, shadow_x, shadow_y)
+end
+
+function PressureBlock:blow_up()
+    -- Does nothing
 end
 
 function PressureBlock:update(dt: number)
