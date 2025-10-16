@@ -250,10 +250,6 @@ local function block_to_anim_draw_pos(animation: Animation, pos: Point): Point
 end
 
 function PlayerAnimation:draw()
-	if not self.player.is_alive then
-		return
-	end
-
 	local draw_pos = block_to_anim_draw_pos(self.animation, self.draw_position)
 	self.animation:draw(draw_pos.x, draw_pos.y)
 end

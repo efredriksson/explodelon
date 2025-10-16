@@ -3,6 +3,7 @@ require("entity")
 require("level_map")
 require("itertools")
 require("animation")
+require("items")
 
 local soft_block_image: Image
 local soft_block_breaking_image: Image
@@ -12,13 +13,17 @@ global record SoftBlock is Entity, Explodable, ExplosionBlocking
     is_exploding: boolean
     in_explosion: boolean
     breaking_animation: Animation
+    item: ItemType
+    egg: boolean
 end
 
-function SoftBlock.new(position: Point): SoftBlock
+function SoftBlock.new(position: Point, item: ItemType, egg: boolean): SoftBlock
     local self: SoftBlock = setmetatable({}, { __index = SoftBlock })
     self.position = position
     self.is_exploding = false
     self.in_explosion = false
+    self.item = item
+    self.egg = egg
     return self
 end
 
@@ -63,11 +68,12 @@ global record SoftBlocks
 	on_ground: {SoftBlock}
 end
 
-function SoftBlocks.new(positions: {Point}): SoftBlocks
+function SoftBlocks.new(configs: {SoftBlockConfig}): SoftBlocks
     local self: SoftBlocks = setmetatable({}, { __index = SoftBlocks })
     self.on_ground = {}
-    for _, position in ipairs(positions) do
-        table.insert(self.on_ground, SoftBlock.new(position))
+    for _, config in ipairs(configs) do
+        local block = SoftBlock.new(config.position, config.item, config.egg)
+        table.insert(self.on_ground, block)
     end
     return self
 end
@@ -84,9 +90,24 @@ end
 
 function SoftBlocks:hitboxes(): {Rectangle}
     local function hitbox_map_f(block: SoftBlock): Rectangle
-        return new_hit_box(block.position) 
+        return new_hit_box(block.position)
     end
     return map(self.on_ground, hitbox_map_f)
+end
+
+local is_exploding = function(block: SoftBlock): boolean
+    return block.is_exploding
+end
+local is_not_exploding = function(block: SoftBlock): boolean
+    return not block.is_exploding
+end
+
+function SoftBlocks:exploding(): {SoftBlock}
+    return filter(self.on_ground, is_exploding)
+end
+
+function SoftBlocks:not_exploding(): {SoftBlock}
+    return filter(self.on_ground, is_not_exploding)
 end
 
 function SoftBlocks:load_assets()
