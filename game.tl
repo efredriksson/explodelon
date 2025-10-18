@@ -333,10 +333,17 @@ local function game_update(dt: number)
 end
 
 local function sort_entities_by_y_cord(players_to_sort: {Entity})
-	local function compare_player_y_pose(e1: Entity, e2: Entity): boolean
+	local function compare_entity_y_pos(e1: Entity, e2: Entity): boolean
 		return e1.position.y < e2.position.y
 	end
-	table.sort(players_to_sort, compare_player_y_pose)
+	table.sort(players_to_sort, compare_entity_y_pos)
+end
+
+local function sort_carts_by_y_cord(carts_to_sort: {PlayerCart})
+	local function compare_cart_y_pos(c1: PlayerCart, c2: PlayerCart): boolean
+		return c1:get_x_y_position().y < c2:get_x_y_position().y
+	end
+	table.sort(carts_to_sort, compare_cart_y_pos)
 end
 
 local function get_avatar_position(avatar_num: number, num_avatars: number): Point
@@ -420,7 +427,12 @@ local function game_draw()
 		block:draw()
 	end
 
+	local carts_to_draw: {PlayerCart} = {}
 	for _, cart in pairs(carts) do
+		table.insert(carts_to_draw, cart)
+	end
+	sort_carts_by_y_cord(carts_to_draw)
+	for _, cart in ipairs(carts_to_draw) do
 		cart:draw()
 	end
 end
