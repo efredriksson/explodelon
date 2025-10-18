@@ -150,6 +150,8 @@ local function game_load()
 
 	soft_blocks = SoftBlocks.new(get_soft_blocks(player_positions))
 	soft_blocks:load_assets()
+
+	load_cart_assets()
 end
 
 local function get_available_spots(): {Point}
@@ -283,7 +285,7 @@ local function game_update(dt: number)
 
 	for _, player in ipairs(filter(players, is_dead)) do
 		if not carts[player.id] then
-			carts[player.id] = PlayerCart.new(player.id, 50)
+			carts[player.id] = PlayerCart.new(player.id, 50, player.sprite)
 		end
 	end
 
