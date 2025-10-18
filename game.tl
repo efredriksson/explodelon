@@ -381,7 +381,8 @@ local function game_draw()
 		else
 			table.insert(entities_to_draw, PlayerAnimation.new(player_animation, player))
 		end
-
+	end
+	for _, player in ipairs(players) do
 		local avatar_pos = get_avatar_position(player.id, #players)
 		local score_pos = avatar_pos:move(Vector.new(18, 5))
 		lutro.graphics.draw(avatars[player.id], avatar_pos.x, avatar_pos.y)
