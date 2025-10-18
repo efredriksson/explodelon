@@ -67,7 +67,7 @@ local function get_animation(asset_file: string, invulnerable: boolean): Animati
 end
 
 local function character_avatar(character_asset: string): Image
-	return lutro.graphics.newImage("assets/" .. character_asset .. "/avatar_neutral.png")
+	return lutro.graphics.newImage("assets/" .. character_asset .. "/head_down.png")
 end
 
 local function character_animation_for_action(character_asset: string, state: PlayerState, action: Action, invulnerable: boolean): {Direction: Animation}
