@@ -129,7 +129,7 @@ function PlayerCart:update(dt: number)
     self:_get_animation():update(dt)
 end
 
-function PlayerCart:_get_x_y_position(): Point
+function PlayerCart:get_x_y_position(): Point
     local side = self:get_side()
     local side_move_len = self.position - DISTANCE_TO_SIDE[side]
     local side_start = START_POSITION_OF_SIDE[side]
@@ -154,7 +154,7 @@ function PlayerCart:_get_draw_offset(): Vector
 end
 
 function PlayerCart:_get_x_y_draw_position(): Point
-    return self:_get_x_y_position():move(self:_get_draw_offset())
+    return self:get_x_y_position():move(self:_get_draw_offset())
 end
 
 function PlayerCart:draw()
