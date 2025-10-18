@@ -15,13 +15,18 @@ require("bombs")
 require("input")
 require("character_sprites")
 require("soft_blocks")
+require("carts")
 
 local bombs: Bombs
 local background: Image
 local soft_blocks: SoftBlocks
+local carts: {integer: PlayerCart} = {}
+local players: {Player} = {}
 
 local function setup_players(selected_sprites: {CharacterSprite}): {Player}
-	global players: {Player} = {}
+	players = {}
+	carts = {}
+
 	local start_positions = get_player_start_positions(#selected_sprites)
 	for i, sprite in ipairs(selected_sprites) do
 		table.insert(players, Player.new(i, sprite, start_positions[i]))
@@ -275,6 +280,17 @@ local function game_update(dt: number)
 			end
 		end
 	end
+
+	for _, player in ipairs(filter(players, is_dead)) do
+		if not carts[player.id] then
+			carts[player.id] = PlayerCart.new(player.id, 50)
+		end
+	end
+
+	for _, cart in pairs(carts) do
+		handle_cart_move_input(cart)
+		cart:update(dt)
+	end
 	
 	items:update(dt)
 	eggs:update(dt)
@@ -338,7 +354,7 @@ local function game_draw()
 	for _, block in ipairs(soft_blocks:not_exploding()) do
 		block:draw()
 	end
-	
+
 	game_timer:draw()
 
 	for _, block in ipairs(pressure_blocks:falling()) do
@@ -399,6 +415,10 @@ local function game_draw()
 	-- Draw soft blocks exploding last, revealing possible item under
 	for _, block in ipairs(soft_blocks:exploding()) do
 		block:draw()
+	end
+
+	for _, cart in pairs(carts) do
+		cart:draw()
 	end
 end
 
