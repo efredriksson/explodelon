@@ -1,5 +1,6 @@
 require("geometry")
 require("level_map")
+require("character_sprites")
 
 local RAIL_LENGHT = PLAYER_AREA.width * 2 + PLAYER_AREA.height * 2
 local CART_SPEEDS = {
@@ -24,6 +25,12 @@ local MOVE_DIRECTION_OF_SIDE: {Direction: Vector} = {
     down = Vector.new(-1, 0),
     left = Vector.new(0, -1),
 }
+local HEAD_DIR_BY_SIDE: {Direction: Direction} = {
+    up = "down",
+    down = "up",
+    right = "left",
+    left = "right",
+}
 
 global type CartState = enum
    "forward" -- Moving clockwise
@@ -31,28 +38,44 @@ global type CartState = enum
    "idle"
 end
 
-local function cart_animation(side: Direction, state: CartState): Animation
-	local image = lutro.graphics.newImage("assets/carts/" .. side .. "_" .. state .. ".png")
+local SIDES: {Direction} = {"up", "down", "left", "right"}
+local CART_STATES: {CartState} = {"forward", "backward", "idle"}
+local cart_images: {Direction: {CartState: Image}} = {}
+local cart_heads: {CharacterSprite: {Direction: Image}} = {}
 
+global function load_cart_assets()
+    for _, side in ipairs(SIDES) do
+        cart_images[side] = {}
+        for _, state in ipairs(CART_STATES) do
+            local asset_file = "assets/carts/" .. side .. "_" .. state .. ".png"
+            cart_images[side][state] = lutro.graphics.newImage(asset_file)
+        end
+    end
+    for _, sprite in ipairs(get_sprites()) do
+        cart_heads[sprite] = {}
+        for _, dir in ipairs(SIDES) do
+            local asset_file = "assets/" .. sprite .. "/head_" .. dir .. ".png"
+            cart_heads[sprite][dir] = lutro.graphics.newImage(asset_file)
+        end
+    end
+end
+
+local function cart_animation(side: Direction, state: CartState): Animation
+	local image = cart_images[side][state]
 	local nbr_steps = 2
 	return Animation.new(image, image:getWidth() / nbr_steps, image:getHeight(), 1, 20)
 end
 
-local function cart_animations_by_side(side: Direction): {CartState: Animation}
-	return {
-		forward=cart_animation(side, "forward"),
-		backward=cart_animation(side, "backward"),
-		idle=cart_animation(side, "idle"),
-	}
-end
-
 local function get_cart_animations(): {Direction: {CartState: Animation}}
-	return {
-		up=cart_animations_by_side("up"),
-		down=cart_animations_by_side("down"),
-		left=cart_animations_by_side("left"),
-		right=cart_animations_by_side("right"),
-	}
+    local animations: {Direction: {CartState: Animation}} = {}
+    for _, side in ipairs(SIDES) do
+        animations[side] = {}
+        for _, state in ipairs(CART_STATES) do
+            animations[side][state] = cart_animation(side, state)
+        end
+    end
+
+    return animations
 end
 
 global record PlayerCart
@@ -60,14 +83,16 @@ global record PlayerCart
     position: number -- 1D position on cart rail 
     state: CartState
     previous_direction: CartState
+    head: CharacterSprite
     turbo: boolean
     animations: {Direction: {CartState: Animation}}
 end
 
-function PlayerCart.new(id: integer, position: number): PlayerCart
+function PlayerCart.new(id: integer, position: number, head: CharacterSprite): PlayerCart
     local self: PlayerCart = setmetatable({}, { __index = PlayerCart })
     self.id = id
     self.position = position
+    self.head = head
     self.state = "idle"
     self.previous_direction = "idle"
     self.turbo = false
@@ -133,8 +158,16 @@ function PlayerCart:_get_x_y_draw_position(): Point
 end
 
 function PlayerCart:draw()
-    local pos = self:_get_x_y_draw_position()
-    self:_get_animation():draw(pos.x, pos.y)
+    local cart_pos = self:_get_x_y_draw_position()
+    local animation = self:_get_animation()
+    animation:draw(cart_pos.x, cart_pos.y)
+    
+    local head_image = cart_heads[self.head][HEAD_DIR_BY_SIDE[self:get_side()]]
+    local head_pos = Point.new(
+        cart_pos.x + animation.width / 2 - head_image:getWidth() / 2,
+        cart_pos.y -(head_image:getHeight() - 4) / 2
+    )
+    lutro.graphics.draw(head_image, head_pos.x, head_pos.y)
 end
 
 function PlayerCart:set_state(state: CartState)
