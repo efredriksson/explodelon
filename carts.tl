@@ -15,9 +15,15 @@ local DISTANCE_TO_SIDE: {Direction: number} = {
 }
 local START_POSITION_OF_SIDE: {Direction: Point} = {
     up = PLAYER_AREA:top_left(),
-    right = PLAYER_AREA:top_left():move(Vector.new(PLAYER_AREA.width, 0)),
-    down = PLAYER_AREA:top_left():move(Vector.new(PLAYER_AREA.width, PLAYER_AREA.height)),
-    left = PLAYER_AREA:top_left():move(Vector.new(0, PLAYER_AREA.height)),
+    right = PLAYER_AREA:top_left():move(
+        Vector.new(PLAYER_AREA.width, 0)
+    ),
+    down = PLAYER_AREA:top_left():move(
+        Vector.new(PLAYER_AREA.width, PLAYER_AREA.height)
+    ),
+    left = PLAYER_AREA:top_left():move(
+        Vector.new(0, PLAYER_AREA.height)
+    ),
 }
 local MOVE_DIRECTION_OF_SIDE: {Direction: Vector} = {
     up = Vector.new(1, 0),
@@ -38,25 +44,28 @@ global type CartState = enum
    "idle"
 end
 
-global type CanonState = enum
+global type CannonState = enum
    "ready"
-   "shooting"
+   "pre-fire"
+   "firing"
    "loading"
 end
 
 local type CartAnimations = {Direction: {CartState: Animation}}
 local SIDES: {Direction} = {"up", "down", "left", "right"}
 local CART_STATES: {CartState} = {"forward", "backward", "idle"}
+local CANNON_RELOAD_TIME = 6.5
+local CANNON_PRE_FIRE_TIME = 0.3
 local cart_images: {Direction: {CartState: Image}} = {}
 local cart_loading_images: {Direction: {CartState: Image}} = {}
-local cart_shooting_images: {Direction: Image} = {}
+local cart_firing_images: {Direction: Image} = {}
 local cart_heads: {CharacterSprite: {Direction: Image}} = {}
 
 global function load_cart_assets()
     local folder = "assets/carts/"
 
     for _, side in ipairs(SIDES) do
-        cart_shooting_images[side] = lutro.graphics.newImage(
+        cart_firing_images[side] = lutro.graphics.newImage(
             folder .. side .. "_shoot.png"
         )
 
@@ -65,7 +74,9 @@ global function load_cart_assets()
         for _, state in ipairs(CART_STATES) do
             local file_name = side .. "_" .. state .. ".png"
             cart_images[side][state] = lutro.graphics.newImage(folder .. file_name)
-            cart_loading_images[side][state] = lutro.graphics.newImage(folder .. "loading_" .. file_name)
+            cart_loading_images[side][state] = lutro.graphics.newImage(
+                folder .. "loading_" .. file_name
+            )
         end
     end
     for _, sprite in ipairs(get_sprites()) do
@@ -82,19 +93,39 @@ local function cart_animation(image: Image): Animation
 	return Animation.new(image, image:getWidth() / nbr_steps, image:getHeight(), 1, 20)
 end
 
-local function get_cart_animations(): CartAnimations, CartAnimations
+local function get_firing_animation(side: Direction): Animation
+    local function animation_steps(): integer
+        if side == "up" or side == "down" then
+            return 4
+        else
+            return 5
+        end
+    end
+
+    local image = cart_firing_images[side]
+    return Animation.new(
+        image, image:getWidth() / animation_steps(), image:getHeight(), 1, 10
+    )
+end
+
+local function get_cart_animations(): CartAnimations, CartAnimations, CartAnimations
     local animations: CartAnimations = {}
+    local firing_animations: CartAnimations = {}
     local loading_animations: CartAnimations = {}
     for _, side in ipairs(SIDES) do
         animations[side] = {}
         loading_animations[side] = {}
+        firing_animations[side] = {}
+        firing_animations[side]["idle"] = get_firing_animation(side)
         for _, state in ipairs(CART_STATES) do
             animations[side][state] = cart_animation(cart_images[side][state])
-            loading_animations[side][state] = cart_animation(cart_loading_images[side][state])
+            loading_animations[side][state] = cart_animation(
+                cart_loading_images[side][state]
+            )
         end
     end
 
-    return animations, loading_animations
+    return animations, loading_animations, firing_animations
 end
 
 global record PlayerCart
@@ -102,27 +133,28 @@ global record PlayerCart
     position: number -- 1D position on cart rail 
     state: CartState
     previous_direction: CartState
-    canon: CanonState
+    cannon: CannonState
     head: CharacterSprite
     turbo: boolean
     reload_countdown: number
     animations: CartAnimations
     loading_animations: CartAnimations
-    shoot_animation: Animation
+    firing_animations: CartAnimations
 end
 
-function PlayerCart.new(id: integer, position: number, head: CharacterSprite): PlayerCart
+function PlayerCart.new(
+    id: integer, position: number, head: CharacterSprite
+): PlayerCart
     local self: PlayerCart = setmetatable({}, { __index = PlayerCart })
     self.id = id
     self.position = position
     self.head = head
     self.state = "idle"
     self.previous_direction = "idle"
-    self.canon = "ready"
+    self.cannon = "ready"
     self.turbo = false
     self.reload_countdown = 0.0
-    self.animations, self.loading_animations = get_cart_animations()
-    self.shoot_animation = nil
+    self.animations, self.loading_animations, self.firing_animations = get_cart_animations()
     return self
 end
 
@@ -139,10 +171,14 @@ function PlayerCart:get_side(): Direction
 end
 
 function PlayerCart:_get_animation(): Animation
-    if self.canon == "loading" then
-        return self.loading_animations[self:get_side()][self.state]
+    local side = self:get_side()
+    if self.cannon == "loading" then
+        return self.loading_animations[side][self.state]
+    elseif self.cannon == "firing" then
+        assert(self.state == "idle")
+        return self.firing_animations[side][self.state]
     else
-        return self.animations[self:get_side()][self.state]
+        return self.animations[side][self.state]
     end
 end
 
@@ -156,19 +192,18 @@ function PlayerCart:update(dt: number)
     
     self.position = self.position + pos_dt * CART_SPEEDS[self.turbo]
     self.position = self.position % RAIL_LENGHT
-    self:_get_animation():update(dt)
+    local animation = self:_get_animation()
+    animation:update(dt)
 
     self.reload_countdown = self.reload_countdown - dt
-    if self.shoot_animation then
-        self.shoot_animation:update(dt)
-        if self.shoot_animation.loops > 0 then
-            self.shoot_animation = nil
-            self.canon = "loading"
-        end
-    end
-
-    if self.canon ~= "ready" and self.reload_countdown <= 0 then
-        self.canon = "ready"
+    local time_to_fire = CANNON_RELOAD_TIME - CANNON_PRE_FIRE_TIME
+    if self.cannon == "pre-fire" and self.reload_countdown < time_to_fire then
+        self.cannon = "firing"
+    elseif self.cannon == "firing" and animation.loops > 0 then
+        self.cannon = "loading"
+        animation:reset()
+    elseif self.cannon ~= "ready" and self.reload_countdown <= 0 then
+        self.cannon = "ready"
     end
 end
 
@@ -213,20 +248,18 @@ function PlayerCart:_get_draw_offset(): Vector
 end
 
 function PlayerCart:_get_x_y_draw_position(): Point
-    return self:get_x_y_position():move(self:_get_draw_offset()):move(self:_get_cart_image_padding())
+    return self:get_x_y_position():move(
+        self:_get_draw_offset()
+    ):move(self:_get_cart_image_padding())
 end
 
 function PlayerCart:draw()
     local cart_pos = self:_get_x_y_draw_position()
     local animation = self:_get_animation()
-    if self.shoot_animation and self.shoot_animation.idle_timer <= 0 then
-        self.shoot_animation:draw(cart_pos.x, cart_pos.y)
-    else
-        animation:draw(cart_pos.x, cart_pos.y)
-    end
+    animation:draw(cart_pos.x, cart_pos.y)
 
-    if self.canon ~= "ready" and self.reload_countdown % 0.05 < 0.025 then
-        -- If not ready, head is blinking by skipping rendering it below
+    if self.cannon ~= "ready" and self.reload_countdown % 0.05 < 0.025 then
+        -- If not ready, head is blinking by only sometimes not rendering it below
         return
     end
     
@@ -280,33 +313,24 @@ function PlayerCart:set_state(state: CartState)
     end
 end
 
-function PlayerCart:shoot()
-    if self.canon ~= "ready" then
+function PlayerCart:fire_cannon()
+    if self.cannon ~= "ready" then
         return
     end
 
-    local side = self:get_side()
-    local function animation_steps(): integer
-        if side == "up" or side == "down" then
-            return 4
-        else
-            return 5
-        end
-    end
-
-    local image = cart_shooting_images[side]
-    self.shoot_animation = Animation.new(
-        image, image:getWidth() / animation_steps(), image:getHeight(), 1, 10, 0.3
-    )
     self:set_state("idle")
-    self.canon = "shooting"
+    self.cannon = "pre-fire"
     -- TODO: countdown is from when bomb as landed, can bounce for a while
-    self.reload_countdown = 6.5
+    self.reload_countdown = CANNON_RELOAD_TIME
+end
+
+function PlayerCart:firing_cannon(): boolean
+    return self.cannon == "pre-fire" or self.cannon == "firing"
 end
 
 global function handle_cart_move_input(cart: PlayerCart)
-    if cart.canon == "shooting" then
-        -- Not possible to do anything while shooting
+    if cart:firing_cannon() then
+        -- Not possible to do anything while firing
         return
     end
 
@@ -340,7 +364,7 @@ global function handle_cart_move_input(cart: PlayerCart)
     end
     
     if lutro.joystick.isDown(cart.id, JOYPAD_R) then
-        cart:shoot()
+        cart:fire_cannon()
     end
     cart.turbo = lutro.joystick.isDown(cart.id, JOYPAD_A)
 end

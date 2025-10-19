@@ -31,6 +31,13 @@ function Animation.new(image: Image, width: number, height: number, period: numb
     return self
 end
 
+function Animation:reset()
+    self.timer = 0
+    self.playing = true
+    self.loops = 0
+    self.idle_timer = self.idle_time
+end
+
 function Animation:update(dt: number)
     if not self.playing then
         return
