@@ -41,10 +41,15 @@ end
 local SIDES: {Direction} = {"up", "down", "left", "right"}
 local CART_STATES: {CartState} = {"forward", "backward", "idle"}
 local cart_images: {Direction: {CartState: Image}} = {}
+local cart_shooting_images: {Direction: Image} = {}
 local cart_heads: {CharacterSprite: {Direction: Image}} = {}
 
 global function load_cart_assets()
     for _, side in ipairs(SIDES) do
+        cart_shooting_images[side] = lutro.graphics.newImage(
+            "assets/carts/" .. side .. "_shoot.png"
+        )
+
         cart_images[side] = {}
         for _, state in ipairs(CART_STATES) do
             local asset_file = "assets/carts/" .. side .. "_" .. state .. ".png"
@@ -86,6 +91,7 @@ global record PlayerCart
     head: CharacterSprite
     turbo: boolean
     animations: {Direction: {CartState: Animation}}
+    shoot_animation: Animation
 end
 
 function PlayerCart.new(id: integer, position: number, head: CharacterSprite): PlayerCart
@@ -97,6 +103,7 @@ function PlayerCart.new(id: integer, position: number, head: CharacterSprite): P
     self.previous_direction = "idle"
     self.turbo = false
     self.animations = get_cart_animations()
+    self.shoot_animation = nil
     return self
 end
 
@@ -127,6 +134,12 @@ function PlayerCart:update(dt: number)
     self.position = self.position + pos_dt * CART_SPEEDS[self.turbo]
     self.position = self.position % RAIL_LENGHT
     self:_get_animation():update(dt)
+    if self.shoot_animation then
+        self.shoot_animation:update(dt)
+        if self.shoot_animation.loops > 0 then
+            self.shoot_animation = nil
+        end
+    end
 end
 
 function PlayerCart:get_x_y_position(): Point
@@ -176,7 +189,11 @@ end
 function PlayerCart:draw()
     local cart_pos = self:_get_x_y_draw_position()
     local animation = self:_get_animation()
-    animation:draw(cart_pos.x, cart_pos.y)
+    if self.shoot_animation and self.shoot_animation.idle_timer <= 0 then
+        self.shoot_animation:draw(cart_pos.x, cart_pos.y)
+    else
+        animation:draw(cart_pos.x, cart_pos.y)
+    end
     
     local side = self:get_side()
     local head_image = cart_heads[self.head][HEAD_DIR_BY_SIDE[side]]
@@ -228,7 +245,29 @@ function PlayerCart:set_state(state: CartState)
     end
 end
 
+function PlayerCart:shoot()
+    local side = self:get_side()
+    local function animation_steps(): integer
+        if side == "up" or side == "down" then
+            return 4
+        else
+            return 5
+        end
+    end
+
+    local image = cart_shooting_images[side]
+    self.shoot_animation = Animation.new(
+        image, image:getWidth() / animation_steps(), image:getHeight(), 1, 10, 0.3
+    )
+    self:set_state("idle")
+end
+
 global function handle_cart_move_input(cart: PlayerCart)
+    if cart.shoot_animation then
+        -- Not possible to do anything while shooting
+        return
+    end
+
     cart:set_state("idle")
 
     local up = lutro.joystick.isDown(cart.id, JOYPAD_UP)
@@ -257,6 +296,9 @@ global function handle_cart_move_input(cart: PlayerCart)
     if (side == "left" and down) or (side == "right" and up) then
         cart:set_state("backward")
     end
-
+    
+    if lutro.joystick.isDown(cart.id, JOYPAD_R) then
+        cart:shoot()
+    end
     cart.turbo = lutro.joystick.isDown(cart.id, JOYPAD_A)
 end
