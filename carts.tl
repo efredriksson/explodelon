@@ -137,24 +137,40 @@ function PlayerCart:get_x_y_position(): Point
     return side_start:move(move_dir:scale(side_move_len))
 end
 
+-- This is the padding in the cart images
+function PlayerCart:_get_cart_image_padding(): Vector
+    local side = self:get_side()
+    if side == "up" then
+        return Vector.new(0, 5)
+    elseif side == "right" then
+        return Vector.new(-12, 0)
+    elseif side == "down" then
+        return Vector.new(0, -8)
+    elseif side == "left" then
+        return Vector.new(12, 0)
+    end
+end
+
 function PlayerCart:_get_draw_offset(): Vector
     local side = self:get_side()
     local animation = self:_get_animation()
     local height = animation.height
     local width = animation.width
+    local margin = 2 -- The cart is not directly at side line but at bit in
     if side == "up" then
-        return Vector.new(-width / 2, -(height + 1))
+        return Vector.new(-width / 2, -height - margin)
     elseif side == "right" then
-        return Vector.new(1, -height / 2)
+        return Vector.new(2, -height / margin)
     elseif side == "down" then
-        return Vector.new(-width / 2, -4)
+        -- '-margin' as cart is rendered in player area
+        return Vector.new(-width / 2, -margin)
     elseif side == "left" then
-        return Vector.new(-(width + 1), -height / 2)
+        return Vector.new(-width - margin, -height / 2)
     end
 end
 
 function PlayerCart:_get_x_y_draw_position(): Point
-    return self:get_x_y_position():move(self:_get_draw_offset())
+    return self:get_x_y_position():move(self:_get_draw_offset()):move(self:_get_cart_image_padding())
 end
 
 function PlayerCart:draw()
@@ -162,11 +178,46 @@ function PlayerCart:draw()
     local animation = self:_get_animation()
     animation:draw(cart_pos.x, cart_pos.y)
     
-    local head_image = cart_heads[self.head][HEAD_DIR_BY_SIDE[self:get_side()]]
+    local side = self:get_side()
+    local head_image = cart_heads[self.head][HEAD_DIR_BY_SIDE[side]]
+    local cart_paddings = self:_get_cart_image_padding():abs()
+
+    local function total_padding(): Vector
+        if side == "down" or side == "up" then
+            -- Up/Down carts have padding on both sides:
+            return cart_paddings:scale(2)
+        else
+            return cart_paddings
+        end
+    end
+
+    -- Final pixel tweaks for where head is on cart
+    local function pixel_tweaks(): Vector
+        if side == "up" then
+            return Vector.new(0, 1)
+        elseif side == "right" then
+            return Vector.new(1, 3)
+        elseif side == "left" then
+            return Vector.new(0, 3)
+        elseif side == "down" then
+            return Vector.new(0, 0)
+        end
+    end
+
+    local cart_half_size = Vector.new(
+        animation.width, animation.height
+    ):minus(total_padding()):scale(1/2)
     local head_pos = Point.new(
-        cart_pos.x + animation.width / 2 - head_image:getWidth() / 2,
-        cart_pos.y -(head_image:getHeight() - 4) / 2
-    )
+        cart_pos.x + cart_half_size.x - head_image:getWidth() / 2,
+        cart_pos.y + cart_paddings.y - head_image:getHeight() / 2
+    ):move(pixel_tweaks())
+    
+    if side == "right" then
+        -- Note, special case for the right hand side. This is because
+        -- the right/left cart sprites are not centered with equal padding
+        -- on both sides. 
+        head_pos = head_pos:move(Vector.new(cart_paddings.x, 0))
+    end
     lutro.graphics.draw(head_image, head_pos.x, head_pos.y)
 end
 

@@ -64,6 +64,10 @@ function Vector:scale(val: number): Vector
    return Vector.new(self.x * val, self.y * val)
 end
 
+function Vector:abs(): Vector
+   return Vector.new(math.abs(self.x), math.abs(self.y))
+end
+
 function Vector:minus(other: Vector): Vector
    return Vector.new(self.x - other.x, self.y - other.y)
 end
