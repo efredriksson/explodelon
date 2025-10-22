@@ -10,16 +10,16 @@ local bomb_image: Image
 global record Bomb is Entity
     timer: number
     range: number
-    owner: Player
+    owner_id: integer
     animation: Animation
 end
 
-function Bomb.new(position: Point, player: Player): Bomb
+function Bomb.new(position: Point, range: integer, owner_id: integer): Bomb
    local self: Bomb = setmetatable({}, { __index = Bomb })
    self.position = position
-   self.range = player.fire
+   self.range = range
    self.timer = 2.5
-   self.owner = player
+   self.owner_id = owner_id
    self.animation = Animation.new(bomb_image, 16, 16, 1, 4)
    return self
 end
@@ -46,6 +46,7 @@ end
 
 global record Bombs
     on_ground: {Bomb}
+    exploded: {Bomb}
     explosions: Explosions
 end
 
@@ -55,15 +56,15 @@ function Bombs:load()
 end
 
 function Bombs.new(): Bombs
-   local self: Bombs = setmetatable({}, { __index = Bombs })
-   self.on_ground = {}
-   self.explosions = Explosions.new()
-
-   return self
+    local self: Bombs = setmetatable({}, { __index = Bombs })
+    self.on_ground = {}
+    self.exploded = {}
+    self.explosions = Explosions.new()
+    return self
 end
 
 function Bombs:place_bomb(position: Point, player: Player): Bomb
-    local bomb = Bomb.new(position, player)
+    local bomb = Bomb.new(position, player.fire, player.id)
     table.insert(self.on_ground, bomb)
     return bomb
 end
@@ -75,7 +76,7 @@ function Bombs:update(dt: number, blockers: {ExplosionBlocking}, explodables: {E
 
         if bomb:is_complete() then
             table.remove(self.on_ground, i)
-            bomb.owner.bombs = bomb.owner.bombs + 1
+            table.insert(self.exploded, bomb)
             self.explosions:place_explosion(bomb.position, bomb.range)
         end
     end
@@ -97,4 +98,10 @@ function Bombs:draw()
     end
 
     self.explosions:draw()
+end
+
+function Bombs:to_hand_back(): {Bomb}
+    local to_hand_back = self.exploded
+    self.exploded = {}
+    return to_hand_back
 end
