@@ -61,33 +61,6 @@ local cart_loading_images: {Direction: {CartState: Image}} = {}
 local cart_firing_images: {Direction: Image} = {}
 local cart_heads: {CharacterSprite: {Direction: Image}} = {}
 
-global function load_cart_assets()
-    local folder = "assets/carts/"
-
-    for _, side in ipairs(SIDES) do
-        cart_firing_images[side] = lutro.graphics.newImage(
-            folder .. side .. "_shoot.png"
-        )
-
-        cart_images[side] = {}
-        cart_loading_images[side] = {}
-        for _, state in ipairs(CART_STATES) do
-            local file_name = side .. "_" .. state .. ".png"
-            cart_images[side][state] = lutro.graphics.newImage(folder .. file_name)
-            cart_loading_images[side][state] = lutro.graphics.newImage(
-                folder .. "loading_" .. file_name
-            )
-        end
-    end
-    for _, sprite in ipairs(get_sprites()) do
-        cart_heads[sprite] = {}
-        for _, dir in ipairs(SIDES) do
-            local asset_file = "assets/" .. sprite .. "/head_" .. dir .. ".png"
-            cart_heads[sprite][dir] = lutro.graphics.newImage(asset_file)
-        end
-    end
-end
-
 local function cart_animation(image: Image): Animation
 	local nbr_steps = 2
 	return Animation.new(image, image:getWidth() / nbr_steps, image:getHeight(), 1, 20)
@@ -328,7 +301,7 @@ function PlayerCart:firing_cannon(): boolean
     return self.cannon == "pre-fire" or self.cannon == "firing"
 end
 
-global function handle_cart_move_input(cart: PlayerCart)
+local function handle_cart_move_input(cart: PlayerCart)
     if cart:firing_cannon() then
         -- Not possible to do anything while firing
         return
@@ -367,4 +340,73 @@ global function handle_cart_move_input(cart: PlayerCart)
         cart:fire_cannon()
     end
     cart.turbo = lutro.joystick.isDown(cart.id, JOYPAD_A)
+end
+
+
+global record MadBombers
+    by_player: {integer: PlayerCart}
+end
+
+function MadBombers.new(): MadBombers
+    local self: MadBombers = setmetatable({}, { __index = MadBombers })
+    self.by_player = {}
+    return self
+end
+
+function MadBombers:ensure_exist_for(player_id: integer, player_sprite: CharacterSprite)
+    if not self.by_player[player_id] then
+        self.by_player[player_id] = PlayerCart.new(player_id, 50, player_sprite)
+    end
+end
+
+function MadBombers:update(dt: number)
+    for _, cart in pairs(self.by_player) do
+		handle_cart_move_input(cart)
+		cart:update(dt)
+	end
+end
+
+local function sort_carts_by_y_cord(carts_to_sort: {PlayerCart})
+	local function compare_cart_y_pos(c1: PlayerCart, c2: PlayerCart): boolean
+		return c1:get_x_y_position().y < c2:get_x_y_position().y
+	end
+	table.sort(carts_to_sort, compare_cart_y_pos)
+end
+
+function MadBombers:to_draw(): {PlayerCart}
+    local carts_to_draw: {PlayerCart} = {}
+
+    for _, cart in pairs(self.by_player) do
+		table.insert(carts_to_draw, cart)
+	end
+
+	sort_carts_by_y_cord(carts_to_draw)
+    return carts_to_draw
+end
+
+function MadBombers:load_assets()
+    local folder = "assets/carts/"
+
+    for _, side in ipairs(SIDES) do
+        cart_firing_images[side] = lutro.graphics.newImage(
+            folder .. side .. "_shoot.png"
+        )
+
+        cart_images[side] = {}
+        cart_loading_images[side] = {}
+        for _, state in ipairs(CART_STATES) do
+            local file_name = side .. "_" .. state .. ".png"
+            cart_images[side][state] = lutro.graphics.newImage(folder .. file_name)
+            cart_loading_images[side][state] = lutro.graphics.newImage(
+                folder .. "loading_" .. file_name
+            )
+        end
+    end
+    for _, sprite in ipairs(get_sprites()) do
+        cart_heads[sprite] = {}
+        for _, dir in ipairs(SIDES) do
+            local asset_file = "assets/" .. sprite .. "/head_" .. dir .. ".png"
+            cart_heads[sprite][dir] = lutro.graphics.newImage(asset_file)
+        end
+    end
 end

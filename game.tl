@@ -20,12 +20,11 @@ require("carts")
 local bombs: Bombs
 local background: Image
 local soft_blocks: SoftBlocks
-local carts: {integer: PlayerCart} = {}
+local mad_bombers: MadBombers
 local players: {Player} = {}
 
 local function setup_players(selected_sprites: {CharacterSprite}): {Player}
 	players = {}
-	carts = {}
 
 	local start_positions = get_player_start_positions(#selected_sprites)
 	for i, sprite in ipairs(selected_sprites) do
@@ -151,7 +150,8 @@ local function game_load()
 	soft_blocks = SoftBlocks.new(get_soft_blocks(player_positions))
 	soft_blocks:load_assets()
 
-	load_cart_assets()
+	mad_bombers = MadBombers.new()
+	mad_bombers:load_assets()
 end
 
 local function get_available_spots(): {Point}
@@ -284,16 +284,10 @@ local function game_update(dt: number)
 	end
 
 	for _, player in ipairs(filter(players, is_dead)) do
-		if not carts[player.id] then
-			carts[player.id] = PlayerCart.new(player.id, 50, player.sprite)
-		end
-	end
-
-	for _, cart in pairs(carts) do
-		handle_cart_move_input(cart)
-		cart:update(dt)
+		mad_bombers:ensure_exist_for(player.id, player.sprite)
 	end
 	
+	mad_bombers:update(dt)
 	items:update(dt)
 	eggs:update(dt)
 
@@ -337,13 +331,6 @@ local function sort_entities_by_y_cord(players_to_sort: {Entity})
 		return e1.position.y < e2.position.y
 	end
 	table.sort(players_to_sort, compare_entity_y_pos)
-end
-
-local function sort_carts_by_y_cord(carts_to_sort: {PlayerCart})
-	local function compare_cart_y_pos(c1: PlayerCart, c2: PlayerCart): boolean
-		return c1:get_x_y_position().y < c2:get_x_y_position().y
-	end
-	table.sort(carts_to_sort, compare_cart_y_pos)
 end
 
 local function get_avatar_position(avatar_num: number, num_avatars: number): Point
@@ -427,12 +414,7 @@ local function game_draw()
 		block:draw()
 	end
 
-	local carts_to_draw: {PlayerCart} = {}
-	for _, cart in pairs(carts) do
-		table.insert(carts_to_draw, cart)
-	end
-	sort_carts_by_y_cord(carts_to_draw)
-	for _, cart in ipairs(carts_to_draw) do
+	for _, cart in ipairs(mad_bombers:to_draw()) do
 		cart:draw()
 	end
 end
