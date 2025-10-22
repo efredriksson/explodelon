@@ -314,6 +314,11 @@ local function game_update(dt: number)
 		players, soft_blocks.on_ground, eggs.on_ground, items.on_ground
 	)
 	bombs:update(dt, blockers, explodables)
+	for _, bomb in ipairs(bombs:to_hand_back()) do
+		local player = players[bomb.owner_id]
+		player.bombs = player.bombs + 1
+	end
+
 	soft_blocks:update(dt)
 	for _, soft_block in ipairs(soft_blocks:exploding()) do
 		if soft_block.item then
