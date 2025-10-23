@@ -1,6 +1,7 @@
 require("geometry")
 require("level_map")
 require("character_sprites")
+require("bombs")
 
 local RAIL_LENGHT = PLAYER_AREA.width * 2 + PLAYER_AREA.height * 2
 local CART_SPEEDS = {
@@ -30,6 +31,12 @@ local MOVE_DIRECTION_OF_SIDE: {Direction: Vector} = {
     right = Vector.new(0, 1),
     down = Vector.new(-1, 0),
     left = Vector.new(0, -1),
+}
+local THROW_BOMB_DIRECTION_BY_SIDE: {Direction: Vector} = {
+    up = Vector.new(0, 1),
+    right = Vector.new(-1, 0),
+    down = Vector.new(0, -1),
+    left = Vector.new(1, 0),
 }
 local HEAD_DIR_BY_SIDE: {Direction: Direction} = {
     up = "down",
@@ -286,22 +293,56 @@ function PlayerCart:set_state(state: CartState)
     end
 end
 
-function PlayerCart:fire_cannon()
-    if self.cannon ~= "ready" then
-        return
+function PlayerCart:fire_cannon(): Point
+    local side = self:get_side()
+    local shoot_from = self:get_x_y_position()
+    -- Adjust so we shoot from inside player area if 'down' or 'right'
+    -- Also adjust for the cart position being its center for 'up' and 'down'
+    if side == "down" then
+        shoot_from = shoot_from:move(Vector.new(-BLOCK_SIZE / 2, -BLOCK_SIZE))
+    elseif side == "up" then
+        shoot_from = shoot_from:move(Vector.new(-BLOCK_SIZE / 2, 0))
+    elseif side == "right" then
+        shoot_from = shoot_from:move(Vector.new(-BLOCK_SIZE, 0))
     end
+    shoot_from = snap_to_closest_grid_tile(shoot_from)
+
+    local fired_bomb = new_hit_box(shoot_from)
+    if self.cannon ~= "ready" or not PLAYER_AREA:contains(fired_bomb) then
+        return nil
+    end
+
 
     self:set_state("idle")
     self.cannon = "pre-fire"
     -- TODO: countdown is from when bomb as landed, can bounce for a while
     self.reload_countdown = CANNON_RELOAD_TIME
+    return shoot_from
 end
 
 function PlayerCart:firing_cannon(): boolean
     return self.cannon == "pre-fire" or self.cannon == "firing"
 end
 
-local function handle_cart_move_input(cart: PlayerCart)
+global record MadBombers
+    by_player: {integer: PlayerCart}
+    bombs: Bombs
+end
+
+function MadBombers.new(bombs: Bombs): MadBombers
+    local self: MadBombers = setmetatable({}, { __index = MadBombers })
+    self.by_player = {}
+    self.bombs = bombs
+    return self
+end
+
+function MadBombers:ensure_exist_for(player_id: integer, player_sprite: CharacterSprite)
+    if not self.by_player[player_id] then
+        self.by_player[player_id] = PlayerCart.new(player_id, 50, player_sprite)
+    end
+end
+
+local function handle_cart_move_input(bombs: Bombs, cart: PlayerCart)
     if cart:firing_cannon() then
         -- Not possible to do anything while firing
         return
@@ -337,31 +378,20 @@ local function handle_cart_move_input(cart: PlayerCart)
     end
     
     if lutro.joystick.isDown(cart.id, JOYPAD_R) then
-        cart:fire_cannon()
+        local fire_from = cart:fire_cannon()
+        if fire_from then
+            local fire_dir = THROW_BOMB_DIRECTION_BY_SIDE[side]
+            -- TODO The length here should depend on how long joystick is hold down
+            local target = fire_from:move(fire_dir:scale(3 * BLOCK_SIZE))
+            bombs:throw_bomb(fire_from, target, cart.id)
+        end
     end
     cart.turbo = lutro.joystick.isDown(cart.id, JOYPAD_A)
 end
 
-
-global record MadBombers
-    by_player: {integer: PlayerCart}
-end
-
-function MadBombers.new(): MadBombers
-    local self: MadBombers = setmetatable({}, { __index = MadBombers })
-    self.by_player = {}
-    return self
-end
-
-function MadBombers:ensure_exist_for(player_id: integer, player_sprite: CharacterSprite)
-    if not self.by_player[player_id] then
-        self.by_player[player_id] = PlayerCart.new(player_id, 50, player_sprite)
-    end
-end
-
 function MadBombers:update(dt: number)
     for _, cart in pairs(self.by_player) do
-		handle_cart_move_input(cart)
+		handle_cart_move_input(self.bombs, cart)
 		cart:update(dt)
 	end
 end

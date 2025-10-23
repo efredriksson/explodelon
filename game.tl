@@ -150,8 +150,16 @@ local function game_load()
 	soft_blocks = SoftBlocks.new(get_soft_blocks(player_positions))
 	soft_blocks:load_assets()
 
-	mad_bombers = MadBombers.new()
+	mad_bombers = MadBombers.new(bombs)
 	mad_bombers:load_assets()
+end
+
+local function get_blocks(): {Point}
+	local available_spots: {Point} = {}
+	for _, entity in ipairs(soft_blocks.on_ground) do
+		table.insert(available_spots, entity.position)
+	end
+	return combine(available_spots, HARD_BLOCKS)
 end
 
 local function get_available_spots(): {Point}
@@ -220,20 +228,13 @@ local function clear_items_and_eggs(hitting_ground: {PressureBlock})
 	end
 end
 
-local function find_closest_non_hard_position(pos: Point): Point
-	-- Snap to nearest grid tile
-	local x = math.floor((pos.x - PLAYER_AREA.x) / BLOCK_SIZE + 0.5) * BLOCK_SIZE + PLAYER_AREA.x
-	local y = math.floor((pos.y - PLAYER_AREA.y) / BLOCK_SIZE + 0.5) * BLOCK_SIZE + PLAYER_AREA.y
-	return Point.new(x, y)
-end
-
 local function handle_bomb_drop_input(player: Player)
 	if joystick_is_pressed(player.id, JOYPAD_R) then
 		if (player.bomb_beneath or player.bombs <= 0) then
 			return
 		end
 
-		local closest_non_hard_position = find_closest_non_hard_position(player.position)
+		local closest_non_hard_position = snap_to_closest_grid_tile(player.position)
 		local bomb = bombs:place_bomb(closest_non_hard_position, player)
 
 		player.bombs = player.bombs - 1
@@ -313,7 +314,7 @@ local function game_update(dt: number)
 	local explodables: {Explodable} = combine(
 		players, soft_blocks.on_ground, eggs.on_ground, items.on_ground
 	)
-	bombs:update(dt, blockers, explodables)
+	bombs:update(dt, blockers, explodables, get_blocks())
 	for _, bomb in ipairs(bombs:to_hand_back()) do
 		local player = players[bomb.owner_id]
 		player.bombs = player.bombs + 1
@@ -401,6 +402,9 @@ local function game_draw()
 	end
 	for dino, animation in pairs(animated_dinos:get_all_except(dinos_drawn_with_player)) do
 		table.insert(entities_to_draw, MountAnimation.new(animation, dino))
+	end
+	for _, bomb in ipairs(bombs.in_air) do
+		table.insert(entities_to_draw, bomb)
 	end
 
 	-- Need to render entities in the front last so they are on top of any other entity

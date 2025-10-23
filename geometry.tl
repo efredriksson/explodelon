@@ -68,6 +68,14 @@ function Vector:abs(): Vector
    return Vector.new(math.abs(self.x), math.abs(self.y))
 end
 
+function Vector:length(): number
+   return math.sqrt(self.x ^ 2 + self.y ^ 2)
+end
+
+function Vector:normalize(): Vector
+   return self:scale(1 / self:length())
+end
+
 function Vector:minus(other: Vector): Vector
    return Vector.new(self.x - other.x, self.y - other.y)
 end

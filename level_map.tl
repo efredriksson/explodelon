@@ -50,6 +50,12 @@ local function is_hard_block_at(position: Point): boolean
 	return false
 end
 
+global function snap_to_closest_grid_tile(pos: Point): Point
+	local x = math.floor((pos.x - PLAYER_AREA.x) / BLOCK_SIZE + 0.5) * BLOCK_SIZE + PLAYER_AREA.x
+	local y = math.floor((pos.y - PLAYER_AREA.y) / BLOCK_SIZE + 0.5) * BLOCK_SIZE + PLAYER_AREA.y
+	return Point.new(x, y)
+end
+
 local function get_non_hard_block_positions(): {Point}
 	local positions: {Point} = {}
 

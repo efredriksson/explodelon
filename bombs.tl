@@ -1,6 +1,7 @@
 require("animation")
 require("player")
 require("explosions")
+require("physics")
 
 -- Bomb --
 
@@ -42,10 +43,74 @@ function Bomb:update(dt: number)
     self.animation:update(dt)
 end
 
+global record ThrownBomb is Entity
+    delegate: Bomb
+    target: Point
+    position: Point
+    direction: Vector
+    height: number
+    fall_velocity: number
+    side_velocity: Vector
+    gravity: number
+end
+
+function ThrownBomb.new(delegate: Bomb, target: Point, start_height: number, throw_height: number, throw_time: number): ThrownBomb
+    local self: ThrownBomb = setmetatable({}, { __index = ThrownBomb })
+    self.delegate = delegate
+    self.position = delegate.position
+    self.target = target
+    
+    self.height = start_height
+    self.fall_velocity = get_init_projectile_velocity(
+		start_height, throw_height, throw_time
+	)
+	self.gravity = get_gravity(self.fall_velocity, throw_height)
+	
+    local throw_vector = Vector.new(
+        self.target.x - self.position.x,
+        self.target.y - self.position.y
+    )
+    self.side_velocity = throw_vector:scale(1 / throw_time)
+    self.direction = throw_vector:normalize()
+    return self
+end
+
+function ThrownBomb:draw()
+    lutro.graphics.draw(bomb_shadow, self.position.x - 1, self.position.y - 8)
+    self.delegate.animation:draw(self.delegate.position.x, self.delegate.position.y)
+end
+
+function ThrownBomb:has_landed(): boolean
+    return self.position:distance_to(self.target) < 1
+end
+
+function ThrownBomb:update(dt: number)
+    if not self:has_landed() then
+        self.position = self.position:move(self.side_velocity:scale(dt))
+        self.height = self.height + self.fall_velocity * dt
+        self.fall_velocity = self.fall_velocity - self.gravity * dt
+    end
+
+    if self:has_landed() then
+        self.position = self.target
+        self.height = 0
+    end
+
+    -- Bomb delegate position is set as draw position accounting for height
+    self.delegate.position = self.position:move(Vector.new(0, -self.height))
+    -- Don't update bomb as time should not change
+    self.delegate.animation:update(dt)
+end
+
+function ThrownBomb:get_direction(): Vector
+    return self.side_velocity:normalize()
+end
+
 -- Bombs --
 
 global record Bombs
     on_ground: {Bomb}
+    in_air: {ThrownBomb}
     exploded: {Bomb}
     explosions: Explosions
 end
@@ -58,6 +123,7 @@ end
 function Bombs.new(): Bombs
     local self: Bombs = setmetatable({}, { __index = Bombs })
     self.on_ground = {}
+    self.in_air = {}
     self.exploded = {}
     self.explosions = Explosions.new()
     return self
@@ -69,7 +135,20 @@ function Bombs:place_bomb(position: Point, player: Player): Bomb
     return bomb
 end
 
-function Bombs:update(dt: number, blockers: {ExplosionBlocking}, explodables: {Explodable})
+function Bombs:throw_bomb(from: Point, to: Point, by_id: integer): Bomb
+    local bomb = Bomb.new(from, 2, by_id)
+    local thrown = ThrownBomb.new(bomb, to, BLOCK_SIZE, BLOCK_SIZE * 2, 0.4)
+    table.insert(self.in_air, thrown)
+    return bomb
+end
+
+function Bombs:bounce_bomb(bomb: ThrownBomb)
+    local bounce_to = bomb.position:move(bomb.direction:scale(BLOCK_SIZE))
+    local bouncing_bomb = ThrownBomb.new(bomb.delegate, bounce_to, 0, BLOCK_SIZE * 0.8, 0.25)
+    table.insert(self.in_air, bouncing_bomb)
+end
+
+function Bombs:update(dt: number, blockers: {ExplosionBlocking}, explodables: {Explodable}, blocks: {Point})
     for i = #self.on_ground, 1, -1 do
         local bomb = self.on_ground[i]
         bomb:update(dt)
@@ -78,6 +157,25 @@ function Bombs:update(dt: number, blockers: {ExplosionBlocking}, explodables: {E
             table.remove(self.on_ground, i)
             table.insert(self.exploded, bomb)
             self.explosions:place_explosion(bomb.position, bomb.range)
+        end
+    end
+
+    for i, bomb in ipairs(self.in_air) do
+        bomb:update(dt)
+        if bomb:has_landed() then
+            local landed_on_block = false
+            for _, block in ipairs(blocks) do
+                if block:equal(bomb.target) then
+                    landed_on_block = true
+                end
+            end
+
+            table.remove(self.in_air, i)
+            if landed_on_block then
+                self:bounce_bomb(bomb)
+            else
+                table.insert(self.on_ground, bomb.delegate)
+            end
         end
     end
     
