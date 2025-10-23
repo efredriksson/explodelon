@@ -213,8 +213,9 @@ local function next_game()
 	game_load()
 end
 
-local function clear_items_and_eggs(hitting_ground: {PressureBlock})
-	for _, block in ipairs(hitting_ground) do
+local function clear_items_and_eggs(destroys: {Entity})
+	-- This is for things that directly removes items and eggs (no animations or such)
+	for _, block in ipairs(destroys) do
 		for j, item in ipairs(items.on_ground) do
 			if item.position:equal(block.position) then
 				table.remove(items.on_ground, j)
@@ -295,7 +296,8 @@ local function game_update(dt: number)
 	local dead_players = filter(players, is_dead)
 	items:drop_items_of(dead_players, get_available_spots())
 
-	clear_items_and_eggs(hitting_ground)
+	local remove_items: {Entity} = combine(hitting_ground, bombs.on_ground)
+	clear_items_and_eggs(remove_items)
 	
 	local out_of_time = game_timer:decrement(dt)
 	if #alive_players == 1 then
