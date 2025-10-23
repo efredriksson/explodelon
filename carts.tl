@@ -2,6 +2,8 @@ require("geometry")
 require("level_map")
 require("character_sprites")
 require("bombs")
+require("input")
+
 
 local RAIL_LENGHT = PLAYER_AREA.width * 2 + PLAYER_AREA.height * 2
 local CART_SPEEDS = {
@@ -114,6 +116,7 @@ global record PlayerCart
     state: CartState
     previous_direction: CartState
     cannon: CannonState
+    cannon_powerup_for: number
     head: CharacterSprite
     turbo: boolean
     reload_countdown: number
@@ -132,6 +135,7 @@ function PlayerCart.new(
     self.state = "idle"
     self.previous_direction = "idle"
     self.cannon = "ready"
+    self.cannon_powerup_for = 0.0
     self.turbo = false
     self.reload_countdown = 0.0
     self.animations, self.loading_animations, self.firing_animations = get_cart_animations()
@@ -293,7 +297,7 @@ function PlayerCart:set_state(state: CartState)
     end
 end
 
-function PlayerCart:fire_cannon(): Point
+function PlayerCart:fire_cannon(): Point, integer
     local side = self:get_side()
     local shoot_from = self:get_x_y_position()
     -- Adjust so we shoot from inside player area if 'down' or 'right'
@@ -309,15 +313,16 @@ function PlayerCart:fire_cannon(): Point
 
     local fired_bomb = new_hit_box(shoot_from)
     if self.cannon ~= "ready" or not PLAYER_AREA:contains(fired_bomb) then
-        return nil
+        return nil, nil
     end
 
-
+    local fire_lenght = 2 + math.floor(self.cannon_powerup_for * 5)
+    self.cannon_powerup_for = 0.0
     self:set_state("idle")
     self.cannon = "pre-fire"
     -- TODO: countdown is from when bomb as landed, can bounce for a while
     self.reload_countdown = CANNON_RELOAD_TIME
-    return shoot_from
+    return shoot_from, fire_lenght
 end
 
 function PlayerCart:firing_cannon(): boolean
@@ -342,7 +347,7 @@ function MadBombers:ensure_exist_for(player_id: integer, player_sprite: Characte
     end
 end
 
-local function handle_cart_move_input(bombs: Bombs, cart: PlayerCart)
+local function handle_cart_move_input(dt: number, bombs: Bombs, cart: PlayerCart)
     if cart:firing_cannon() then
         -- Not possible to do anything while firing
         return
@@ -378,11 +383,14 @@ local function handle_cart_move_input(bombs: Bombs, cart: PlayerCart)
     end
     
     if lutro.joystick.isDown(cart.id, JOYPAD_R) then
-        local fire_from = cart:fire_cannon()
+        cart.cannon_powerup_for = cart.cannon_powerup_for + dt
+    end
+
+    if joystick_is_released(cart.id, JOYPAD_R) or cart.cannon_powerup_for > 0.8 then
+        local fire_from, fire_len = cart:fire_cannon()
         if fire_from then
             local fire_dir = THROW_BOMB_DIRECTION_BY_SIDE[side]
-            -- TODO The length here should depend on how long joystick is hold down
-            local target = fire_from:move(fire_dir:scale(3 * BLOCK_SIZE))
+            local target = fire_from:move(fire_dir:scale(fire_len * BLOCK_SIZE))
             bombs:throw_bomb(fire_from, target, cart.id)
         end
     end
@@ -391,7 +399,7 @@ end
 
 function MadBombers:update(dt: number)
     for _, cart in pairs(self.by_player) do
-		handle_cart_move_input(self.bombs, cart)
+		handle_cart_move_input(dt, self.bombs, cart)
 		cart:update(dt)
 	end
 end
