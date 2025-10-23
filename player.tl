@@ -3,6 +3,7 @@ require("geometry")
 require("animation")
 require("entity")
 require("dinos")
+require("physics")
 require("character_sprites")
 
 global type Action = enum
@@ -98,21 +99,8 @@ local JUMP_OFF_TIME = 0.9              -- Unit: seconds
 local JUMP_ON_HEIGHT = 2 * BLOCK_SIZE  -- Unit: pixels (not SI unit!)
 local JUMP_OFF_HEIGHT = 3 * BLOCK_SIZE -- Unit: pixels (not SI unit!)
 
-local function get_init_jump_velocity(h_diff: number, h_max: number, t_end: number): number
-	-- Derived from projectile equation, calculates initial velocity given the
-	-- jump height (h_max) and the time the jump will take (t_end) and the height
-	-- difference of start and end position (h_diff).
-	return (2 / t_end) * (h_max + math.sqrt(h_max * (h_max + h_diff)))
-end
-
-local function get_gravity(init_velocity: number, h_max: number): number
-	-- Calculates gravity from how the jump should look like. Not very physical
-	-- but making up gravity coffecients that makes things look good is hard. 
-	return init_velocity * init_velocity / (2 * h_max)
-end
-
 function Player:_set_jump_v_and_g(jump_height: number, jump_time: number)
-	local v_0 = get_init_jump_velocity(
+	local v_0 = get_init_projectile_velocity(
 		math.abs(self.jump_visual_target.y - self.jump_p.y), jump_height, jump_time
 	)
 	local g = get_gravity(v_0, jump_height)
