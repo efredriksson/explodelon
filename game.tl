@@ -16,6 +16,7 @@ require("input")
 require("character_sprites")
 require("soft_blocks")
 require("carts")
+require("hitboxes")
 
 local bombs: Bombs
 local background: Image
@@ -268,9 +269,9 @@ local function game_update(dt: number)
 			animated_dinos:add_for(hatching_dino)
 		end
 
-		local player_hitbox = new_hit_box(player.position)
+		local player_hitbox = new_hitbox(player.position)
 		for _, block in ipairs(hitting_ground) do
-			local block_hitbox = new_hit_box(block.position)
+			local block_hitbox = new_hitbox(block.position)
 			if player_hitbox:center_distance(block_hitbox) < BLOCK_SIZE / 2 then
 				player:kill()
 			end

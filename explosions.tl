@@ -1,8 +1,10 @@
 require("animation")
 require("player")
 require("level_map")
+require("hitboxes")
 
 local END_ANIMATION_DURATION: number = 0.6
+local FRAME_DURATION = END_ANIMATION_DURATION / 4
 
 local explosion_end_right_image: Image
 local explosion_end_left_image: Image
@@ -33,17 +35,23 @@ local enum ExplosionTileType
 end
 
 local record ExplosionTile
-    rect: Rectangle
+    position: Point
+    reduction: number
     is_last: boolean
     type: ExplosionTileType
 end
 
-function ExplosionTile.new(rect: Rectangle, is_last: boolean, explosion_type: ExplosionTileType): ExplosionTile
+function ExplosionTile.new(position: Point, reduction: number, is_last: boolean, explosion_type: ExplosionTileType): ExplosionTile
     local self: ExplosionTile = setmetatable({}, { __index = ExplosionTile })
-    self.rect = rect
+    self.position = position
+    self.reduction = reduction
     self.is_last = is_last
     self.type = explosion_type
     return self
+end
+
+function ExplosionTile:hit_box(): Rectangle
+    return new_hitbox(self.position):shrink(self.reduction)
 end
 
 global record Explosion is Entity
@@ -63,18 +71,34 @@ function Explosion.new(position: Point, range: number): Explosion
    self.tiles = {}
    self.duration = 0
    self.speed = 28
-   local frame_duration = END_ANIMATION_DURATION / 4
    self.animations = {
-       right_end = Animation.new(explosion_end_right_image, 16, 16, frame_duration, 1),
-       left_end = Animation.new(explosion_end_left_image, 16, 16, frame_duration, 1),
-       top_end = Animation.new(explosion_end_top_image, 16, 16, frame_duration, 1),
-       bottom_end = Animation.new(explosion_end_bottom_image, 16, 16, frame_duration, 1),
-       middle_horizontal = Animation.new(explosion_horizontal_image, 16, 16, frame_duration, 1),
-       middle_vertical = Animation.new(explosion_vertical_image, 16, 16, frame_duration, 1),
-       center = Animation.new(explosion_center_image, 16, 16, frame_duration, 1)
+       right_end = Animation.new(explosion_end_right_image, 16, 16, FRAME_DURATION, 1),
+       left_end = Animation.new(explosion_end_left_image, 16, 16, FRAME_DURATION, 1),
+       top_end = Animation.new(explosion_end_top_image, 16, 16, FRAME_DURATION, 1),
+       bottom_end = Animation.new(explosion_end_bottom_image, 16, 16, FRAME_DURATION, 1),
+       middle_horizontal = Animation.new(explosion_horizontal_image, 16, 16, FRAME_DURATION, 1),
+       middle_vertical = Animation.new(explosion_vertical_image, 16, 16, FRAME_DURATION, 1),
+       center = Animation.new(explosion_center_image, 16, 16, FRAME_DURATION, 1)
    }
 
    return self
+end
+
+function Explosion:has_reached_max_range(): boolean
+    return self.duration >= self.range / self.speed
+end
+
+function Explosion:new_tile(position: Point, is_last: boolean, explosion_type: ExplosionTileType): ExplosionTile
+    local function tile_reduction(): integer
+        if not self:has_reached_max_range() then
+            return 1
+        end
+        
+        local time_since_max_range = self.duration - self.range / self.speed
+        return 1 + math.floor(time_since_max_range / FRAME_DURATION) * 2
+    end
+    
+    return ExplosionTile.new(position, tile_reduction(), is_last, explosion_type)
 end
 
 local enum BlockingResult
@@ -92,7 +116,7 @@ function Explosion:_update_active_tiles(blockers: {ExplosionBlocking})
 
     local function is_blocked(pos: Point): BlockingResult
         -- is out of bounds
-        if not PLAYER_AREA:contains(new_hit_box(pos)) then
+        if not PLAYER_AREA:contains(new_hitbox(pos)) then
             return "now"
         end
 
@@ -145,20 +169,20 @@ function Explosion:_update_active_tiles(blockers: {ExplosionBlocking})
             return {}
         elseif blocked == "next" then
             table.insert(self.blocked_at, next_pos:move(delta))
-            return {ExplosionTile.new(new_hit_box(next_pos), true, explosion_type)}
+            return {self:new_tile(next_pos, true, explosion_type)}
         end
 
         local remaining_tiles = propagate(next_pos, delta, distance_traveled + 1, explosion_type)
         local is_last = #remaining_tiles == 0
 
-        local tile = ExplosionTile.new(new_hit_box(next_pos), is_last, explosion_type)
+        local tile = self:new_tile(next_pos, is_last, explosion_type)
 
         table.insert(remaining_tiles, tile)
         return remaining_tiles
     end
 
     -- Center tile
-    table.insert(self.tiles, ExplosionTile.new(new_hit_box(self.position), false, "center"))
+    table.insert(self.tiles, self:new_tile(self.position, false, "center"))
 
     local directions: {ExplosionTileType: Vector} = {
         right = Vector.new(1, 0),
@@ -194,15 +218,11 @@ function Explosion:get_tile_animation(tile: ExplosionTile): Animation
     return self.animations.middle_vertical
 end
 
-function Explosion:has_reached_max_range(): boolean
-    return self.duration >= self.range / self.speed
-end
-
 function Explosion:collides_with(position: Point): boolean
-    local hitbox = new_hit_box(position)
+    local hitbox = new_hitbox(position)
 
     for _, tile in ipairs(self.tiles) do
-        if hitbox:overlap(tile.rect:shrink(2)) then
+        if hitbox:overlap(tile:hit_box()) then
             return true
         end
     end
@@ -217,7 +237,8 @@ end
 function Explosion:draw()
     for _, tile in ipairs(self.tiles) do
         local animation = self:get_tile_animation(tile)
-        animation:draw(tile.rect.x, tile.rect.y)
+        animation:draw(tile.position.x, tile.position.y)
+        draw_hitbox(tile:hit_box())
     end
 end
 

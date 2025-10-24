@@ -3,6 +3,7 @@ require("level_map")
 require("character_sprites")
 require("bombs")
 require("input")
+require("hitboxes")
 
 
 local RAIL_LENGHT = PLAYER_AREA.width * 2 + PLAYER_AREA.height * 2
@@ -311,7 +312,7 @@ function PlayerCart:fire_cannon(): Point, integer
     end
     shoot_from = snap_to_closest_grid_tile(shoot_from)
 
-    local fired_bomb = new_hit_box(shoot_from)
+    local fired_bomb = new_hitbox(shoot_from)
     if self.cannon ~= "ready" or not PLAYER_AREA:contains(fired_bomb) then
         return nil, nil
     end

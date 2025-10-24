@@ -3,6 +3,7 @@ require("geometry")
 require("entity")
 require("itertools")
 require("level_map")
+require("hitboxes")
 
 
 global record PressureBlock is Entity, ExplosionBlocking
@@ -150,7 +151,7 @@ end
 
 function PressureBlocks:hitboxes(): {Rectangle}
     local function hitbox_map_f(block: PressureBlock): Rectangle
-        return new_hit_box(block.position) 
+        return new_hitbox(block.position) 
     end
     return map(self.on_ground, hitbox_map_f)
 end
