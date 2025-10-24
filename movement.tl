@@ -3,6 +3,7 @@ require("geometry")
 require("level_map")
 require("player")
 require("bombs")
+require("hitboxes")
 
 local record Movement
 	dxdy: Vector
@@ -117,7 +118,7 @@ local function restrict_player_movement(
 ): CheckedMovement
 	local margin_for_corner_assist = 8
 	local new_position = player.position:move(movement)
-	local new_hitbox = new_hit_box(new_position)
+	local new_hit_box = new_hitbox(new_position)
 
 	local function move_against_block(
 		movement_len: number,
@@ -140,19 +141,19 @@ local function restrict_player_movement(
 		return CheckedMovement.new(new_position:move(along_wall), true, true)
 	end
 
-	local old_hitbox = new_hit_box(player.position)
+	local old_hitbox = new_hitbox(player.position)
 	local function walking_further_into_block(block: Rectangle): boolean
-		if not new_hitbox:overlap(block) then
+		if not new_hit_box:overlap(block) then
 			return false
 		end
 
-		local new_dist_to_1_ton_block = block:center_distance(new_hitbox)
+		local new_dist_to_1_ton_block = block:center_distance(new_hit_box)
 		local old_dist_to_1_ton_block = block:center_distance(old_hitbox)
 		return new_dist_to_1_ton_block < old_dist_to_1_ton_block
 	end
 
 	for _, bomb in ipairs(bombs.on_ground) do
-		local bomb_hitbox = new_hit_box(bomb.position)
+		local bomb_hitbox = new_hitbox(bomb.position)
 		if bomb.position:distance_to(player.position) > BLOCK_SIZE * (3 / 4) then
 			if walking_further_into_block(bomb_hitbox) then
 				-- Not allowed to walk further into bomb if not close to center of it
@@ -169,7 +170,7 @@ local function restrict_player_movement(
 	end
 
 	for _, hard_block in ipairs(HARD_BLOCKS) do
-		if new_hitbox:overlap(new_hit_box(hard_block)) then
+		if new_hit_box:overlap(new_hitbox(hard_block)) then
 			if movement.x == 0 then
 				local movement_len = movement.y
 				local pos_and_block_lateral_diff = player.position.x - hard_block.x
@@ -190,8 +191,8 @@ local function restrict_player_movement(
 		end
 	end
 
-	if not PLAYER_AREA:contains(new_hitbox) then
-		local clamped_position = PLAYER_AREA:clamp(new_hitbox):top_left()
+	if not PLAYER_AREA:contains(new_hit_box) then
+		local clamped_position = PLAYER_AREA:clamp(new_hit_box):top_left()
 		return CheckedMovement.new(clamped_position, false, false)
 	end
 

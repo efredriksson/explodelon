@@ -4,6 +4,7 @@ require("level_map")
 require("itertools")
 require("animation")
 require("items")
+require("hitboxes")
 
 local soft_block_image: Image
 local soft_block_breaking_image: Image
@@ -90,7 +91,7 @@ end
 
 function SoftBlocks:hitboxes(): {Rectangle}
     local function hitbox_map_f(block: SoftBlock): Rectangle
-        return new_hit_box(block.position)
+        return new_hitbox(block.position)
     end
     return map(self.on_ground, hitbox_map_f)
 end

@@ -179,10 +179,6 @@ global function get_soft_blocks(player_positions: {Point}): {SoftBlockConfig}
 	return soft_blocks
 end
 
-global function new_hit_box(new_position: Point): Rectangle
-    return Rectangle.new(new_position.x, new_position.y, BLOCK_SIZE, BLOCK_SIZE)
-end
-
 global function get_player_start_positions(number_of_players: integer): {Point}
 	local x_min = 0
 	local x_max = 16
