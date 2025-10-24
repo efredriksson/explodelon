@@ -90,12 +90,14 @@ end
 
 function Explosion:new_tile(position: Point, is_last: boolean, explosion_type: ExplosionTileType): ExplosionTile
     local function tile_reduction(): integer
+        local min_reduction = 3
         if not self:has_reached_max_range() then
-            return 1
+            return min_reduction
         end
         
         local time_since_max_range = self.duration - self.range / self.speed
-        return 1 + math.floor(time_since_max_range / FRAME_DURATION) * 2
+        local reduction = (1 + math.floor(time_since_max_range / FRAME_DURATION)) * 2
+        return math.max(reduction, min_reduction)
     end
     
     return ExplosionTile.new(position, tile_reduction(), is_last, explosion_type)
@@ -219,7 +221,9 @@ function Explosion:get_tile_animation(tile: ExplosionTile): Animation
 end
 
 function Explosion:collides_with(position: Point): boolean
-    local hitbox = new_hitbox(position)
+    -- This should reflect on player hitbox, not same as
+    -- hitbox stopping you from moving into wall.
+    local hitbox = new_hitbox(position):shrink(2)
 
     for _, tile in ipairs(self.tiles) do
         if hitbox:overlap(tile:hit_box()) then
