@@ -30,7 +30,6 @@ local enum ExplosionTileType
     "left"
     "up"
     "down"
-    "none"
 end
 
 local record ExplosionTile
@@ -217,10 +216,8 @@ end
 
 function Explosion:draw()
     for _, tile in ipairs(self.tiles) do
-        if tile.type ~= "none" then
-            local animation = self:get_tile_animation(tile)
-            animation:draw(tile.rect.x, tile.rect.y)
-        end
+        local animation = self:get_tile_animation(tile)
+        animation:draw(tile.rect.x, tile.rect.y)
     end
 end
 
