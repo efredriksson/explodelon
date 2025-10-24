@@ -231,15 +231,7 @@ end
 
 local function handle_bomb_drop_input(player: Player)
 	if joystick_is_pressed(player.id, JOYPAD_R) then
-		if (player.bomb_beneath or player.bombs <= 0) then
-			return
-		end
-
-		local closest_non_hard_position = snap_to_closest_grid_tile(player.position)
-		local bomb = bombs:place_bomb(closest_non_hard_position, player)
-
-		player.bombs = player.bombs - 1
-		player.bomb_beneath = bomb
+		bombs:place_bomb(player)
 	end
 end
 

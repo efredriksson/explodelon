@@ -129,10 +129,20 @@ function Bombs.new(): Bombs
     return self
 end
 
-function Bombs:place_bomb(position: Point, player: Player): Bomb
+function Bombs:place_bomb(player: Player)
+    local position = snap_to_closest_grid_tile(player.position)
+    for _, existing_bomb in ipairs(self.on_ground) do
+        if existing_bomb.position:equal(position) then
+            return
+        end
+    end
+    if player.bombs == 0 then
+        return
+    end
+    
     local bomb = Bomb.new(position, player.fire, player.id)
     table.insert(self.on_ground, bomb)
-    return bomb
+    player.bombs = player.bombs - 1
 end
 
 function Bombs:throw_bomb(from: Point, to: Point, by_id: integer): Bomb

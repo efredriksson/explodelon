@@ -140,22 +140,31 @@ local function restrict_player_movement(
 		return CheckedMovement.new(new_position:move(along_wall), true, true)
 	end
 
+	local old_hitbox = new_hit_box(player.position)
+	local function walking_further_into_block(block: Rectangle): boolean
+		if not new_hitbox:overlap(block) then
+			return false
+		end
+
+		local new_dist_to_1_ton_block = block:center_distance(new_hitbox)
+		local old_dist_to_1_ton_block = block:center_distance(old_hitbox)
+		return new_dist_to_1_ton_block < old_dist_to_1_ton_block
+	end
+
 	for _, bomb in ipairs(bombs.on_ground) do
 		local bomb_hitbox = new_hit_box(bomb.position)
-		if new_hitbox:overlap(bomb_hitbox) and bomb ~= player.bomb_beneath then
-			return CheckedMovement.new(player.position, false, false)
+		if bomb.position:distance_to(player.position) > BLOCK_SIZE * (3 / 4) then
+			if walking_further_into_block(bomb_hitbox) then
+				-- Not allowed to walk further into bomb if not close to center of it
+				return CheckedMovement.new(player.position, false, false)
+			end
 		end
 	end
 
 	for _, block in ipairs(blocking_blocks) do
-		if new_hitbox:overlap(block) then
-			local old_hitbox = new_hit_box(player.position)
-			local new_dist_to_1_ton_block = block:center_distance(new_hitbox)
-			local old_dist_to_1_ton_block = block:center_distance(old_hitbox)
-			if new_dist_to_1_ton_block < old_dist_to_1_ton_block then
-				-- Not allowed to walk further into 1 ton block
-				return CheckedMovement.new(player.position, false, false)
-			end
+		if walking_further_into_block(block) then
+			-- Not allowed to walk further into 1 ton block
+			return CheckedMovement.new(player.position, false, false)
 		end
 	end
 
@@ -252,16 +261,5 @@ global function set_position_and_dir_from_input(player: Player, dt: number, bloc
 		player:set_action("idle")
 	else
 		player:set_action("walk")
-	end
-
-	-- Check if player has moved off bomb they were standing on
-	if player.bomb_beneath then
-		local bomb = player.bomb_beneath as Bomb
-		local player_hitbox = new_hit_box(player.position)
-		local bomb_hitbox = new_hit_box(bomb.position):shrink(1)
-
-		if not player_hitbox:overlap(bomb_hitbox) then
-			player.bomb_beneath = nil
-		end
 	end
 end
