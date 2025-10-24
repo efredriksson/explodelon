@@ -5,6 +5,7 @@ require("entity")
 require("dinos")
 require("physics")
 require("character_sprites")
+require("hitboxes")
 
 global type Action = enum
    "walk"
@@ -237,6 +238,7 @@ end
 function PlayerAnimation:draw()
 	local draw_pos = block_to_anim_draw_pos(self.animation, self.draw_position)
 	self.animation:draw(draw_pos.x, draw_pos.y)
+	draw_hitbox(new_hitbox(self.position))
 end
 
 global record MountAnimation is Entity
@@ -256,6 +258,7 @@ end
 function MountAnimation:draw()
 	local draw_pos = block_to_anim_draw_pos(self.animation, self.position)
 	self.animation:draw(draw_pos.x, draw_pos.y)
+	draw_hitbox(new_hitbox(self.position))
 end
 
 global record MountedPlayerAnimation is Entity
@@ -297,4 +300,5 @@ function MountedPlayerAnimation:draw()
 		draw(self.dino_animation, self.player.position)
 		draw(self.player_animation, self.draw_position)
 	end
+	draw_hitbox(new_hitbox(self.position))
 end
