@@ -84,7 +84,11 @@ end
 function Bomb:update(dt: number, occupies: {BlocksBombs})
     if self.velocity:length() > 0 then
         local new_position = self.position:move(self.velocity:scale(dt))
-        if self:can_move(self.velocity:scale(dt), occupies) then
+        local new_hit_box = new_hitbox(new_position)
+        if not PLAYER_AREA:contains(new_hit_box) then
+            self.position = PLAYER_AREA:clamp(new_hit_box):top_left()
+            self.velocity = Vector.new(0, 0)
+        elseif self:can_move(self.velocity:scale(dt), occupies) then
             self.position = new_position
         else
             -- If bomb can't move stop it and snap to grid
@@ -97,7 +101,7 @@ function Bomb:update(dt: number, occupies: {BlocksBombs})
 end
 
 function Bomb:kick(direction: Vector)
-    local slide_speed = 115
+    local slide_speed = 120
     self.velocity = direction:scale(slide_speed)
     self.has_been_kicked = true
 end
