@@ -52,6 +52,10 @@ function Bomb:can_move(direction: Vector, occupies: {BlocksBombs}): boolean
     local test_hit_box = new_hitbox(test_position)
     local old_hit_box = new_hitbox(self.position)
     
+    if not PLAYER_AREA:contains(test_hit_box) then
+        return false
+    end
+
     local function move_further_into_occupied(block: Rectangle): boolean
 		if not test_hit_box:overlap(block) then
 			return false
@@ -90,11 +94,7 @@ function Bomb:update(dt: number, occupies: {BlocksBombs})
     
     if self.velocity:length() > 0 then
         local new_position = self.position:move(self.velocity:scale(dt))
-        local new_hit_box = new_hitbox(new_position)
-        if not PLAYER_AREA:contains(new_hit_box) then
-            self.position = PLAYER_AREA:clamp(new_hit_box):top_left()
-            self.velocity = Vector.new(0, 0)
-        elseif self:can_move(self.velocity:scale(dt), occupies) then
+        if self:can_move(self.velocity:scale(dt), occupies) then
             self.position = new_position
         else
             -- If bomb can't move stop it and snap to grid
