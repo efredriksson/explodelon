@@ -8,7 +8,7 @@ require("physics")
 local bomb_shadow: Image
 local bomb_image: Image
 
-global record Bomb is Entity
+global record Bomb is Entity, BlocksBombs
     position: Point
     velocity: Vector
     timer: number
@@ -67,7 +67,11 @@ function Bomb:can_move(direction: Vector, occupies: {BlocksBombs}): boolean
         return occupied:get_position():distance_to(hitbox:top_left()) < BLOCK_SIZE
     end
 
-    for _, occupied in ipairs(occupies) do
+    local function not_this_bomb(occupied: BlocksBombs): boolean
+        return occupied ~= self
+    end
+
+    for _, occupied in ipairs(filter(occupies, not_this_bomb)) do
         if move_further_into_occupied(new_hitbox(occupied:get_position())) then
             return false
         end

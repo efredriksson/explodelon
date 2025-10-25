@@ -240,7 +240,10 @@ local function game_update(dt: number)
 	local hitting_ground = pressure_blocks:update(dt)
 	local alive_players = filter(players, is_alive)
 	local blocks_bombs: {BlocksBombs} = combine(
-		soft_blocks.on_ground, HARD_BLOCKS, filter(players, is_alive)
+		soft_blocks.on_ground,
+		HARD_BLOCKS,
+		filter(players, is_alive),
+		bombs.on_ground
 	)
 	local blockers: {ExplosionBlocking} = combine(
 		eggs.on_ground,
