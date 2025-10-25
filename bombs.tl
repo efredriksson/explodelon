@@ -39,7 +39,7 @@ function Bomb:detonate()
 end
 
 function Bomb:is_complete(): boolean
-    return self.timer <= 0
+    return self.timer <= 0 and self.position:equal(snap_to_closest_grid_tile(self.position))
 end
 
 function Bomb:draw()
@@ -82,6 +82,8 @@ function Bomb:can_move(direction: Vector, occupies: {BlocksBombs}): boolean
 end
 
 function Bomb:update(dt: number, occupies: {BlocksBombs})
+    self.timer = self.timer - dt
+    
     if self.velocity:length() > 0 then
         local new_position = self.position:move(self.velocity:scale(dt))
         local new_hit_box = new_hitbox(new_position)
@@ -95,8 +97,16 @@ function Bomb:update(dt: number, occupies: {BlocksBombs})
             self.velocity = Vector.new(0, 0)
             self.position = snap_to_closest_grid_tile(self.position)
         end
+
+        if self.timer <= 0 then
+            -- If bomb timer is up, snap to closest tile if it is close enough.
+            -- This is to explode bomb on the grid. Bomb can slide to next intersection!
+            if self.position:distance_to(snap_to_closest_grid_tile(self.position)) <= 3 then
+                self.position = snap_to_closest_grid_tile(self.position)
+            end
+        end
     end
-    self.timer = self.timer - dt
+
     self.animation:update(dt)
 end
 
