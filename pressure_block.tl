@@ -20,6 +20,10 @@ function PressureBlock.new(target: Point): PressureBlock
 	return self
 end
 
+function PressureBlock:get_position(): Point
+    return self.position
+end
+
 global function load_pressure_block_assets()
     global pressure_block_image = lutro.graphics.newImage("assets/1_ton.png")
     global block_fall_shadow = lutro.graphics.newImage("assets/items/shadow.png")

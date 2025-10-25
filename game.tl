@@ -184,7 +184,7 @@ local function get_available_spots(): {Point}
 		end
 
 		for _, entity in ipairs(occupied) do
-			if entity.position:equal(pos) then
+			if entity:get_position():equal(pos) then
 				invalid_position = true
 			end
 		end
@@ -218,12 +218,12 @@ local function clear_items_and_eggs(destroys: {Entity})
 	-- This is for things that directly removes items and eggs (no animations or such)
 	for _, block in ipairs(destroys) do
 		for j, item in ipairs(items.on_ground) do
-			if item.position:equal(block.position) then
+			if item.position:equal(block:get_position()) then
 				table.remove(items.on_ground, j)
 			end
 		end
 		for j, egg in ipairs(eggs.on_ground) do
-			if egg.position:equal(block.position) then
+			if egg.position:equal(block:get_position()) then
 				table.remove(eggs.on_ground, j)
 			end
 		end
@@ -329,7 +329,7 @@ end
 
 local function sort_entities_by_y_cord(players_to_sort: {Entity})
 	local function compare_entity_y_pos(e1: Entity, e2: Entity): boolean
-		return e1.position.y < e2.position.y
+		return e1:get_position().y < e2:get_position().y
 	end
 	table.sort(players_to_sort, compare_entity_y_pos)
 end

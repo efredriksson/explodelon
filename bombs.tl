@@ -9,6 +9,7 @@ local bomb_shadow: Image
 local bomb_image: Image
 
 global record Bomb is Entity
+    position: Point
     timer: number
     range: number
     owner_id: integer
@@ -23,6 +24,10 @@ function Bomb.new(position: Point, range: integer, owner_id: integer): Bomb
    self.owner_id = owner_id
    self.animation = Animation.new(bomb_image, 16, 16, 1, 4)
    return self
+end
+
+function Bomb:get_position(): Point
+    return self.position
 end
 
 function Bomb:detonate()
@@ -46,7 +51,6 @@ end
 global record ThrownBomb is Entity
     delegate: Bomb
     target: Point
-    position: Point
     direction: Vector
     height: number
     fall_velocity: number
@@ -54,12 +58,7 @@ global record ThrownBomb is Entity
     gravity: number
 end
 
-function ThrownBomb.new(delegate: Bomb, target: Point, start_height: number, throw_height: number, throw_time: number): ThrownBomb
-    local self: ThrownBomb = setmetatable({}, { __index = ThrownBomb })
-    self.delegate = delegate
-    self.position = delegate.position
-    self.target = target
-    
+function ThrownBomb:_set_trajectory(start_height: number, throw_height: number, throw_time: number)
     self.height = start_height
     self.fall_velocity = get_init_projectile_velocity(
 		start_height, throw_height, throw_time
@@ -67,39 +66,58 @@ function ThrownBomb.new(delegate: Bomb, target: Point, start_height: number, thr
 	self.gravity = get_gravity(self.fall_velocity, throw_height)
 	
     local throw_vector = Vector.new(
-        self.target.x - self.position.x,
-        self.target.y - self.position.y
+        self.target.x - self.delegate.position.x,
+        self.target.y - self.delegate.position.y
     )
     self.side_velocity = throw_vector:scale(1 / throw_time)
     self.direction = throw_vector:normalize()
+end
+
+function ThrownBomb.new(delegate: Bomb, target: Point, start_height: number, throw_height: number, throw_time: number): ThrownBomb
+    local self: ThrownBomb = setmetatable({}, { __index = ThrownBomb })
+    self.delegate = delegate
+    self.target = target
+    self:_set_trajectory(start_height, throw_height, throw_time)
     return self
 end
 
+function ThrownBomb:bounce()
+    self.target = self:get_position():move(self.direction:scale(BLOCK_SIZE))
+    self:_set_trajectory(0, BLOCK_SIZE * 0.8, 0.25)
+end
+
+function ThrownBomb:get_position(): Point
+    return self.delegate.position
+end
+
 function ThrownBomb:draw()
-    lutro.graphics.draw(bomb_shadow, self.position.x - 1, self.position.y - 8)
-    self.delegate.animation:draw(self.delegate.position.x, self.delegate.position.y)
+    local position = self:get_position()
+    lutro.graphics.draw(bomb_shadow, position.x - 1, position.y - 8)
+
+    -- Bomb is drawn in the air
+    local draw_position = position:move(Vector.new(0, -self.height))
+    self.delegate.animation:draw(draw_position.x, draw_position.y)
 end
 
 function ThrownBomb:has_landed(): boolean
-    return self.position:distance_to(self.target) < 1
+    return self:get_position():distance_to(self.target) < 1
 end
 
 function ThrownBomb:update(dt: number)
+    local bomb = self.delegate
     if not self:has_landed() then
-        self.position = self.position:move(self.side_velocity:scale(dt))
+        bomb.position = bomb.position:move(self.side_velocity:scale(dt))
         self.height = self.height + self.fall_velocity * dt
         self.fall_velocity = self.fall_velocity - self.gravity * dt
     end
 
     if self:has_landed() then
-        self.position = self.target
+        bomb.position = self.target
         self.height = 0
     end
 
-    -- Bomb delegate position is set as draw position accounting for height
-    self.delegate.position = self.position:move(Vector.new(0, -self.height))
     -- Don't update bomb as time should not change
-    self.delegate.animation:update(dt)
+    bomb.animation:update(dt)
 end
 
 -- Bombs --
@@ -148,12 +166,6 @@ function Bombs:throw_bomb(from: Point, to: Point, by_id: integer): Bomb
     return bomb
 end
 
-function Bombs:bounce_bomb(bomb: ThrownBomb)
-    local bounce_to = bomb.position:move(bomb.direction:scale(BLOCK_SIZE))
-    local bouncing_bomb = ThrownBomb.new(bomb.delegate, bounce_to, 0, BLOCK_SIZE * 0.8, 0.25)
-    table.insert(self.in_air, bouncing_bomb)
-end
-
 function Bombs:update(dt: number, blockers: {ExplosionBlocking}, explodables: {Explodable}, blocks: {Point})
     for i = #self.on_ground, 1, -1 do
         local bomb = self.on_ground[i]
@@ -176,10 +188,11 @@ function Bombs:update(dt: number, blockers: {ExplosionBlocking}, explodables: {E
                 end
             end
 
-            table.remove(self.in_air, i)
+            
             if landed_on_block then
-                self:bounce_bomb(bomb)
+                bomb:bounce()
             else
+                table.remove(self.in_air, i)
                 table.insert(self.on_ground, bomb.delegate)
             end
         end

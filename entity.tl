@@ -1,17 +1,17 @@
 require("geometry")
 
 global type Entity = interface
-    position: Point
+    get_position: function(self): Point
     draw: function(self)
 end
 
 global type ExplosionBlocking = interface
-    position: Point
+    get_position: function(self): Point
     in_explosion: boolean
     blow_up: function(self)
 end
 
 global type Explodable = interface
-    position: Point
+    get_position: function(self): Point
     blow_up: function(self)
 end

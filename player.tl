@@ -60,6 +60,10 @@ function Player.new(id: integer, sprite: CharacterSprite, position: Point): Play
 	return self
 end
 
+function Player:get_position(): Point
+	return self.position
+end
+
 function Player:won_game()
 	self.score = self.score + 1
 end
@@ -214,7 +218,6 @@ end
 
 global record PlayerAnimation is Entity
 	player: Player
-	position: Point
 	draw_position: Point
 	animation: Animation
 end
@@ -223,9 +226,12 @@ function PlayerAnimation.new(animation: Animation, player: Player): PlayerAnimat
 	local self: PlayerAnimation = setmetatable({}, { __index = PlayerAnimation })
 	self.animation = animation
 	self.player = player
-	self.position = player.position
 	self.draw_position = player:get_draw_position()
 	return self
+end
+
+function PlayerAnimation:get_position(): Point
+    return self.player.position
 end
 
 local function block_to_anim_draw_pos(animation: Animation, pos: Point): Point
@@ -238,32 +244,33 @@ end
 function PlayerAnimation:draw()
 	local draw_pos = block_to_anim_draw_pos(self.animation, self.draw_position)
 	self.animation:draw(draw_pos.x, draw_pos.y)
-	draw_hitbox(new_hitbox(self.position))
+	draw_hitbox(new_hitbox(self.player.position))
 end
 
 global record MountAnimation is Entity
 	dino: Dino
-	position: Point
 	animation: Animation
 end
 
 function MountAnimation.new(animation: Animation, dino: Dino): MountAnimation
 	local self: MountAnimation = setmetatable({}, { __index = MountAnimation })
 	self.dino = dino
-	self.position = dino.position
 	self.animation = animation
 	return self
 end
 
+function MountAnimation:get_position(): Point
+    return self.dino.position
+end
+
 function MountAnimation:draw()
-	local draw_pos = block_to_anim_draw_pos(self.animation, self.position)
+	local draw_pos = block_to_anim_draw_pos(self.animation, self.dino.position)
 	self.animation:draw(draw_pos.x, draw_pos.y)
-	draw_hitbox(new_hitbox(self.position))
+	draw_hitbox(new_hitbox(self.dino.position))
 end
 
 global record MountedPlayerAnimation is Entity
 	player: Player
-	position: Point
 	draw_position: Point
 	player_animation: Animation
 	dino_animation: Animation
@@ -276,9 +283,12 @@ function MountedPlayerAnimation.new(
 	self.player_animation = player_animation
 	self.dino_animation = dino_animation
 	self.player = player
-	self.position = player.position
 	self.draw_position = player:get_draw_position()
 	return self
+end
+
+function MountedPlayerAnimation:get_position(): Point
+    return self.player.position
 end
 
 function MountedPlayerAnimation:draw()
@@ -300,5 +310,5 @@ function MountedPlayerAnimation:draw()
 		draw(self.dino_animation, self.player.position)
 		draw(self.player_animation, self.draw_position)
 	end
-	draw_hitbox(new_hitbox(self.position))
+	draw_hitbox(new_hitbox(self.player.position))
 end
