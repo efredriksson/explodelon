@@ -32,7 +32,7 @@ function SoftBlock:get_position(): Point
     return self.position
 end
 
-function Player:hit_with_bomb()
+function SoftBlock:hit_with_bomb()
 	-- Does nothing
 end
 
