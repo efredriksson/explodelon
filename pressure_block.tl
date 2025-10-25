@@ -63,10 +63,10 @@ global record PressureBlocks
     left_fall_finished: boolean
     on_ground: {PressureBlock}
     no_more_falling_blocks: boolean
-    time_left: number
+    sudden_death: boolean
 end
 
-function PressureBlocks.new(time_left: number): PressureBlocks
+function PressureBlocks.new(): PressureBlocks
 	local self: PressureBlocks = setmetatable({}, { __index = PressureBlocks })
     self.left_positions = get_left_side_pressure_blocks()
     self.right_positions = get_right_side_pressure_blocks()
@@ -77,15 +77,13 @@ function PressureBlocks.new(time_left: number): PressureBlocks
     self.next_right_index = 2
     self.right_fall_finished = false
     self.left_fall_finished = false
-    self.time_left = time_left
     self.no_more_falling_blocks = false
+    self.sudden_death = false
 	return self
 end
 
 function PressureBlocks:no_updates(): boolean
-    local time_to_start_dropping_pressure_blocks = 60
-    return self.no_more_falling_blocks or
-        (self.time_left > time_to_start_dropping_pressure_blocks)
+    return self.no_more_falling_blocks or not self.sudden_death
 end
 
 function PressureBlocks:set_next_right_falling_block()
@@ -125,7 +123,6 @@ function PressureBlocks:falling(): {PressureBlock}
 end
 
 function PressureBlocks:update(dt: number): {PressureBlock}
-    self.time_left = self.time_left - dt
     local blocks_hitting_ground: {PressureBlock} = {}
     if self:no_updates() then
         return blocks_hitting_ground

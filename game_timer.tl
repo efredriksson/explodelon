@@ -2,14 +2,15 @@ require("geometry")
 require("fonts")
 
 local TIMER_POS = Point.new(18, 8)
+local GAME_TIME = 180
 
 global record GameTimer
    time_left: number
 end
 
-function GameTimer.new(time_left: number): GameTimer
+function GameTimer.new(): GameTimer
    local self: GameTimer = setmetatable({}, { __index = GameTimer })
-   self.time_left = time_left
+   self.time_left = GAME_TIME
    return self
 end
 
