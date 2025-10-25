@@ -146,13 +146,6 @@ function Explosion:_update_active_tiles(blockers: {ExplosionBlocking})
             end
         end
 
-        -- is hard block
-        for _, block in ipairs(combine(HARD_BLOCKS)) do
-            if pos:equal(block) then
-                return "now"
-            end
-        end
-
         return "nil"
     end
 

@@ -15,3 +15,8 @@ global type Explodable = interface
     get_position: function(self): Point
     blow_up: function(self)
 end
+
+global type BlocksBombs = interface
+    get_position: function(self): Point
+    hit_with_bomb: function(self)
+end

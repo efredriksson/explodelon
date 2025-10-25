@@ -155,14 +155,6 @@ local function game_load()
 	mad_bombers:load_assets()
 end
 
-local function get_blocks(): {Point}
-	local available_spots: {Point} = {}
-	for _, entity in ipairs(soft_blocks.on_ground) do
-		table.insert(available_spots, entity.position)
-	end
-	return combine(available_spots, HARD_BLOCKS)
-end
-
 local function get_available_spots(): {Point}
 	-- Return places an item/egg can drop. The spot needs to
 	-- be free and not too close to a player
@@ -247,15 +239,34 @@ end
 local function game_update(dt: number)
 	local hitting_ground = pressure_blocks:update(dt)
 	local alive_players = filter(players, is_alive)
+	local blocks_bombs: {BlocksBombs} = combine(
+		soft_blocks.on_ground, HARD_BLOCKS, filter(players, is_alive)
+	)
+	local blockers: {ExplosionBlocking} = combine(
+		eggs.on_ground,
+		items.on_ground,
+		soft_blocks.on_ground,
+		pressure_blocks.on_ground,
+		HARD_BLOCKS
+	)
+	local explodables: {Explodable} = combine(
+		players, soft_blocks.on_ground, eggs.on_ground, items.on_ground
+	)
+
+	bombs:update(dt, blockers, explodables, blocks_bombs)
+	for _, bomb in ipairs(bombs:to_hand_back()) do
+		local player = players[bomb.owner_id]
+		player.bombs = player.bombs + 1
+	end
 
 	for _, player in ipairs(alive_players) do
 		player:update(dt)
 		if player:accepts_input() then
 			handle_bomb_drop_input(player)
-			local blocking_blocks = combine(
-				soft_blocks:hitboxes(), pressure_blocks:hitboxes()
+			local blocking_blocks = get_block_hitboxes(
+				combine(soft_blocks.on_ground, pressure_blocks.on_ground)
 			)
-			set_position_and_dir_from_input(player, dt, blocking_blocks, bombs)
+			set_position_and_dir_from_input(player, dt, blocking_blocks, bombs, blocks_bombs)
 		end
 
 		animations[player.id][player.state][player.action][player.direction]:update(dt)
@@ -302,19 +313,6 @@ local function game_update(dt: number)
 	end
 	
 	animated_dinos:update(dt)
-
-	local blockers: {ExplosionBlocking} = combine(
-		eggs.on_ground, items.on_ground, soft_blocks.on_ground, pressure_blocks.on_ground
-	)
-	local explodables: {Explodable} = combine(
-		players, soft_blocks.on_ground, eggs.on_ground, items.on_ground
-	)
-	bombs:update(dt, blockers, explodables, get_blocks())
-	for _, bomb in ipairs(bombs:to_hand_back()) do
-		local player = players[bomb.owner_id]
-		player.bombs = player.bombs + 1
-	end
-
 	soft_blocks:update(dt)
 	for _, soft_block in ipairs(soft_blocks:exploding()) do
 		if soft_block.item then
