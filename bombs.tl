@@ -102,10 +102,6 @@ function ThrownBomb:update(dt: number)
     self.delegate.animation:update(dt)
 end
 
-function ThrownBomb:get_direction(): Vector
-    return self.side_velocity:normalize()
-end
-
 -- Bombs --
 
 global record Bombs
