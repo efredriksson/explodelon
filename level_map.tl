@@ -237,3 +237,28 @@ global function get_player_start_positions(number_of_players: integer): {Point}
 
 	return shuffle(get_positions())
 end
+
+global record Goal
+	position: Point
+	pair: Point
+end
+
+function Goal.new(position: Point, pair: Point): Goal
+   local self: Goal = setmetatable({}, { __index = Goal })
+   self.position = position
+   self.pair = pair
+   return self
+end
+
+function Goal:get_hitbox(): Rectangle
+	return new_hitbox(self.position)
+end
+
+global function get_possible_goals(): {Goal}
+	return {
+		Goal.new(get_block_point(-1, 4), get_block_point(-1, 6)),
+		Goal.new(get_block_point(-1, 6), get_block_point(-1, 4)),
+		Goal.new(get_block_point(17, 4), get_block_point(17, 6)),
+		Goal.new(get_block_point(17, 6), get_block_point(17, 4)),
+	}
+end

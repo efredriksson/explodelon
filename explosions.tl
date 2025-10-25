@@ -58,19 +58,21 @@ global record Explosion is Entity
     position: Point
     range: number
     duration: number
+    delay: number
     speed: number
     tiles: {ExplosionTile}
     blocked_at: {Point}
     animations: ExplosionAnimations
 end
 
-function Explosion.new(position: Point, range: number): Explosion
+function Explosion.new(position: Point, range: number, delay?: number): Explosion
    local self: Explosion = setmetatable({}, { __index = Explosion })
    self.position = position
    self.blocked_at = {}
    self.range = range
    self.tiles = {}
    self.duration = 0
+   self.delay = delay or 0
    self.speed = 28
    self.animations = {
        right_end = Animation.new(explosion_end_right_image, 16, 16, FRAME_DURATION, 1),
@@ -255,6 +257,11 @@ function Explosion:update_end_animation(dt: number)
 end
 
 function Explosion:update(dt: number, blockers: {ExplosionBlocking})
+    if self.delay > 0 then
+        self.delay = self.delay - dt
+        return
+    end
+
     self.duration = self.duration + dt
     self:_update_active_tiles(blockers)
 
@@ -284,8 +291,8 @@ function Explosions.new(): Explosions
    return self
 end
 
-function Explosions:place_explosion(position: Point, range: number)
-    local explosion = Explosion.new(position, range)
+function Explosions:place_explosion(position: Point, range: number, delay?: number)
+    local explosion = Explosion.new(position, range, delay)
     table.insert(self.on_ground, explosion)
 end
 

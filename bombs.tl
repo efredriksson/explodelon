@@ -38,7 +38,21 @@ function Bomb:detonate()
     self.timer = 0
 end
 
+function Bomb:get_goal(): Goal
+    for _, goal in ipairs(get_possible_goals()) do
+        if self.position:distance_to(goal.position) < 3 then
+            return goal
+        end
+    end
+
+    return nil
+end
+
 function Bomb:is_complete(): boolean
+    if self:get_goal() then
+        return true
+    end
+
     return self.timer <= 0 and self.position:equal(snap_to_closest_grid_tile(self.position))
 end
 
@@ -52,7 +66,14 @@ function Bomb:can_move(direction: Vector, occupies: {BlocksBombs}): boolean
     local test_hit_box = new_hitbox(test_position)
     local old_hit_box = new_hitbox(self.position)
     
-    if not PLAYER_AREA:contains(test_hit_box) then
+    local bomb_in_goal = false
+    for _, goal in ipairs(get_possible_goals()) do
+        if test_hit_box:overlap(goal:get_hitbox()) then
+            bomb_in_goal = true
+        end
+    end
+
+    if not PLAYER_AREA:contains(test_hit_box) and not bomb_in_goal then
         return false
     end
 
@@ -246,7 +267,13 @@ function Bombs:update(dt: number, blockers: {ExplosionBlocking}, explodables: {E
         if bomb:is_complete() then
             table.remove(self.on_ground, i)
             table.insert(self.exploded, bomb)
-            self.explosions:place_explosion(bomb.position, bomb.range)
+            local goal = bomb:get_goal()
+            if not goal then
+                self.explosions:place_explosion(bomb.position, bomb.range)
+            else
+                self.explosions:place_explosion(goal.position, 16)
+                self.explosions:place_explosion(goal.pair, 14, 0.072)
+            end
         end
     end
 
