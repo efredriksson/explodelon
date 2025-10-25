@@ -28,6 +28,10 @@ function SoftBlock.new(position: Point, item: ItemType, egg: boolean): SoftBlock
     return self
 end
 
+function SoftBlock:get_position(): Point
+    return self.position
+end
+
 function SoftBlock:update(dt: number)
     if self.breaking_animation then
         self.breaking_animation:update(dt)

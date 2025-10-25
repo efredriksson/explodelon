@@ -40,6 +40,10 @@ function Item.new(item_type: ItemType, position: Point): Item
     return self
 end
 
+function Item:get_position(): Point
+    return self.position
+end
+
 function Item:blow_up()
     self.is_exploding = true
 end

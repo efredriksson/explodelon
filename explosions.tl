@@ -55,6 +55,7 @@ function ExplosionTile:hit_box(): Rectangle
 end
 
 global record Explosion is Entity
+    position: Point
     range: number
     duration: number
     speed: number
@@ -82,6 +83,10 @@ function Explosion.new(position: Point, range: number): Explosion
    }
 
    return self
+end
+
+function Explosion:get_position(): Point
+    return self.position
 end
 
 function Explosion:has_reached_max_range(): boolean
@@ -130,7 +135,7 @@ function Explosion:_update_active_tiles(blockers: {ExplosionBlocking})
         end
 
         for _, blocker in ipairs(blockers) do
-            if blocker.position:equal(pos) then
+            if blocker:get_position():equal(pos) then
                 if blocker.in_explosion then
                     return "next"
                 else
@@ -296,7 +301,7 @@ function Explosions:update(dt: number, blockers: {ExplosionBlocking}, explodable
         explosion:update(dt, blockers)
 
         for _, explodable in ipairs(explodables) do
-            if explosion:collides_with(explodable.position) then
+            if explosion:collides_with(explodable:get_position()) then
                 explodable:blow_up()
             end
         end

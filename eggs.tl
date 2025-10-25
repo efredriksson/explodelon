@@ -29,6 +29,10 @@ function Egg.new(position: Point): Egg
     return self
 end
 
+function Egg:get_position(): Point
+    return self.position
+end
+
 local function convert_pos_for_egg_draw(animation: Animation, pos: Point): Point
 	return Point.new(pos.x + (BLOCK_SIZE - animation.width) / 2, pos.y + BLOCK_SIZE - animation.height)
 end
