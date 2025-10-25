@@ -208,14 +208,15 @@ end
 
 local function clear_items_and_eggs(destroys: {Entity})
 	-- This is for things that directly removes items and eggs (no animations or such)
-	for _, block in ipairs(destroys) do
+	for _, entity in ipairs(destroys) do
+		local position = entity:get_position()
 		for j, item in ipairs(items.on_ground) do
-			if item.position:equal(block:get_position()) then
+			if position:in_radius_of(item.position, BLOCK_SIZE / 2) then
 				table.remove(items.on_ground, j)
 			end
 		end
 		for j, egg in ipairs(eggs.on_ground) do
-			if egg.position:equal(block:get_position()) then
+			if position:in_radius_of(egg.position, BLOCK_SIZE / 2) then
 				table.remove(eggs.on_ground, j)
 			end
 		end
