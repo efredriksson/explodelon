@@ -9,7 +9,7 @@ require("hitboxes")
 local soft_block_image: Image
 local soft_block_breaking_image: Image
 
-global record SoftBlock is Entity, Explodable, ExplosionBlocking
+global record SoftBlock is Entity, Explodable, ExplosionBlocking, BlocksBombs
 	position: Point
     is_exploding: boolean
     in_explosion: boolean
@@ -30,6 +30,10 @@ end
 
 function SoftBlock:get_position(): Point
     return self.position
+end
+
+function Player:hit_with_bomb()
+	-- Does nothing
 end
 
 function SoftBlock:update(dt: number)

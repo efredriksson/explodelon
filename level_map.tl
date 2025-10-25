@@ -5,14 +5,38 @@ require("itertools")
 
 global PLAYER_AREA = Rectangle.new(24, 32, 272, 176)
 
-local function get_hard_blocks(): {Point}
-	local blocks: {Point} = {}
+global record HardBlock is ExplosionBlocking, BlocksBombs
+	position: Point
+	in_explosion: boolean
+end
 
-	local function hard_block(i: number, j: number): Point
-		return Point.new(
+function HardBlock.new(position: Point): HardBlock
+   local self: HardBlock = setmetatable({}, { __index = HardBlock })
+   self.position = position
+   self.in_explosion = false
+   return self
+end
+
+function HardBlock:get_position(): Point
+	return self.position
+end
+
+function HardBlock:blow_up()
+	-- Does nothing
+end
+
+function HardBlock:hit_with_bomb()
+	-- Does nothing
+end
+
+local function get_hard_blocks(): {HardBlock}
+	local blocks: {HardBlock} = {}
+
+	local function hard_block(i: number, j: number): HardBlock
+		return HardBlock.new(Point.new(
 		    PLAYER_AREA.x + BLOCK_SIZE + i * 2 * BLOCK_SIZE,
 			PLAYER_AREA.y + BLOCK_SIZE + j * 2 * BLOCK_SIZE
-		)
+		))
 	end
 
 	for i, j in double_loop_inner_loopback({0, 7}, {0, 4}) do
@@ -42,7 +66,7 @@ end
 
 local function is_hard_block_at(position: Point): boolean
 	for _, hard_block in ipairs(HARD_BLOCKS) do
-		if hard_block:equal(position) then
+		if hard_block.position:equal(position) then
 			return true
 		end
 	end
@@ -127,6 +151,8 @@ local MAX_SOFT_BLOCKS = 105
 local function get_soft_block_positions(player_positions: {Point}): {Point}
 	local soft_blocks: {Point} = {}
 	local close_to_player: {Point} = {}
+	local get_point = function (h: HardBlock): Point return h.position end
+	local hard_blocks = map(HARD_BLOCKS, get_point)
 
 	for _, player_pos in ipairs(player_positions) do
 		-- Do allow some positions close to player to have soft blocks:
@@ -140,7 +166,7 @@ local function get_soft_block_positions(player_positions: {Point}): {Point}
 	end
 
 	while #soft_blocks < MAX_SOFT_BLOCKS do
-		local occupied = combine(HARD_BLOCKS, close_to_player, soft_blocks)
+		local occupied = combine(hard_blocks, close_to_player, soft_blocks)
 		local random_block = get_random_block()
 		if not contains_position(occupied, random_block) then
 			table.insert(soft_blocks, random_block)

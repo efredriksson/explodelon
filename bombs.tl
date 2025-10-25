@@ -10,18 +10,22 @@ local bomb_image: Image
 
 global record Bomb is Entity
     position: Point
+    velocity: Vector
     timer: number
     range: number
     owner_id: integer
+    has_been_kicked: boolean
     animation: Animation
 end
 
 function Bomb.new(position: Point, range: integer, owner_id: integer): Bomb
    local self: Bomb = setmetatable({}, { __index = Bomb })
    self.position = position
+   self.velocity = Vector.new(0, 0)
    self.range = range
    self.timer = 2.5
    self.owner_id = owner_id
+   self.has_been_kicked = false
    self.animation = Animation.new(bomb_image, 16, 16, 1, 4)
    return self
 end
@@ -43,9 +47,59 @@ function Bomb:draw()
     self.animation:draw(self.position.x, self.position.y)
 end
 
-function Bomb:update(dt: number)
+function Bomb:can_move(direction: Vector, occupies: {BlocksBombs}): boolean
+    local test_position = self.position:move(direction)
+    local test_hit_box = new_hitbox(test_position)
+    local old_hit_box = new_hitbox(self.position)
+    
+    local function move_further_into_occupied(block: Rectangle): boolean
+		if not test_hit_box:overlap(block) then
+			return false
+		end
+
+		local new_dist_to_1_ton_block = block:center_distance(test_hit_box)
+		local old_dist_to_1_ton_block = block:center_distance(old_hit_box)
+		return new_dist_to_1_ton_block < old_dist_to_1_ton_block
+	end
+    
+    local function conflict(occupied: BlocksBombs, hitbox: Rectangle): boolean
+        -- Bomb must always be one block away from player
+        return occupied:get_position():distance_to(hitbox:top_left()) < BLOCK_SIZE
+    end
+
+    for _, occupied in ipairs(occupies) do
+        if move_further_into_occupied(new_hitbox(occupied:get_position())) then
+            return false
+        end
+
+        if not conflict(occupied, old_hit_box) and conflict(occupied, test_hit_box) then
+            -- Do not allow bomb move so its hitbox conflicts when it did not before
+            return false
+        end
+    end
+
+    return true
+end
+
+function Bomb:update(dt: number, occupies: {BlocksBombs})
+    if self.velocity:length() > 0 then
+        local new_position = self.position:move(self.velocity:scale(dt))
+        if self:can_move(self.velocity:scale(dt), occupies) then
+            self.position = new_position
+        else
+            -- If bomb can't move stop it and snap to grid
+            self.velocity = Vector.new(0, 0)
+            self.position = snap_to_closest_grid_tile(self.position)
+        end
+    end
     self.timer = self.timer - dt
     self.animation:update(dt)
+end
+
+function Bomb:kick(direction: Vector)
+    local slide_speed = 115
+    self.velocity = direction:scale(slide_speed)
+    self.has_been_kicked = true
 end
 
 global record ThrownBomb is Entity
@@ -166,10 +220,10 @@ function Bombs:throw_bomb(from: Point, to: Point, by_id: integer): Bomb
     return bomb
 end
 
-function Bombs:update(dt: number, blockers: {ExplosionBlocking}, explodables: {Explodable}, blocks: {Point})
+function Bombs:update(dt: number, blockers: {ExplosionBlocking}, explodables: {Explodable}, occupies: {BlocksBombs})
     for i = #self.on_ground, 1, -1 do
         local bomb = self.on_ground[i]
-        bomb:update(dt)
+        bomb:update(dt, occupies)
 
         if bomb:is_complete() then
             table.remove(self.on_ground, i)
@@ -181,15 +235,15 @@ function Bombs:update(dt: number, blockers: {ExplosionBlocking}, explodables: {E
     for i, bomb in ipairs(self.in_air) do
         bomb:update(dt)
         if bomb:has_landed() then
-            local landed_on_block = false
-            for _, block in ipairs(blocks) do
-                if block:equal(bomb.target) then
-                    landed_on_block = true
+            local space_is_occupied = false
+            for _, occupied in ipairs(occupies) do
+                if occupied:get_position():distance_to(bomb.target) < BLOCK_SIZE / 2 then
+                    space_is_occupied = true
+                    occupied:hit_with_bomb()
                 end
             end
-
             
-            if landed_on_block then
+            if space_is_occupied then
                 bomb:bounce()
             else
                 table.remove(self.in_air, i)

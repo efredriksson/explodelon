@@ -19,7 +19,7 @@ global type PlayerState = enum
 	"mounted"
 end
 
-global record Player is Explodable
+global record Player is Explodable, BlocksBombs
 	id: integer
 	sprite: CharacterSprite
    	position: Point
@@ -62,6 +62,10 @@ end
 
 function Player:get_position(): Point
 	return self.position
+end
+
+function Player:hit_with_bomb()
+	-- Stun of player not implemented
 end
 
 function Player:won_game()

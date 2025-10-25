@@ -1,5 +1,7 @@
 require("const")
+require("entity")
 require("geometry")
+require("itertools")
 
 local DRAW_HITBOXES = false
 
@@ -14,4 +16,11 @@ global function draw_hitbox(rectangle: Rectangle)
             "line", rectangle.x, rectangle.y, rectangle.width, rectangle.height
         )
     end
+end
+
+global function get_block_hitboxes(blocks: {ExplosionBlocking}): {Rectangle}
+    local function hitbox_map_f(block: ExplosionBlocking): Rectangle
+        return new_hitbox(block:get_position())
+    end
+    return map(blocks, hitbox_map_f)
 end
