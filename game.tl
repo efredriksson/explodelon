@@ -137,14 +137,13 @@ local function game_load()
 	load_item_assets()
 	global items = Items.new()
 
-	local time_left = 180
-	global game_timer = GameTimer.new(time_left)
+	global game_timer = GameTimer.new()
 	Bombs:load()
 	Explosions:load()
 	bombs = Bombs.new()
 	game_timer:load_assets()
 	load_pressure_block_assets()
-	global pressure_blocks = PressureBlocks.new(time_left)
+	global pressure_blocks = PressureBlocks.new()
 
 	global score_font = get_shaded_number_font()
 
@@ -238,6 +237,9 @@ local is_dead = function(player: Player): boolean
 end
 
 local function game_update(dt: number)
+	local out_of_time = game_timer:decrement(dt)
+	pressure_blocks.sudden_death = game_timer:sudden_death()
+
 	local hitting_ground = pressure_blocks:update(dt)
 	local alive_players = filter(players, is_alive)
 	local blocks_bombs: {BlocksBombs} = combine(
@@ -312,7 +314,6 @@ local function game_update(dt: number)
 	local remove_items: {Entity} = combine(hitting_ground, bombs.on_ground)
 	clear_items_and_eggs(remove_items)
 	
-	local out_of_time = game_timer:decrement(dt)
 	if #alive_players == 1 then
 		alive_players[1]:won_game()
 		next_game()
