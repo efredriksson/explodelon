@@ -296,6 +296,11 @@ local function game_update(dt: number)
 	for _, player in ipairs(filter(players, is_dead)) do
 		mad_bombers:ensure_exist_for(player.id, player.sprite)
 	end
+
+	if game_timer:sudden_death() then
+		-- Remove all mad bombers when sudden death
+		mad_bombers.by_player = {}
+	end
 	
 	mad_bombers:update(dt)
 	items:update(dt)

@@ -53,3 +53,7 @@ end
 function GameTimer:finished(): boolean
 	return self.time_left <= 0.0
 end
+
+function GameTimer:sudden_death(): boolean
+	return self.time_left <= 60.0
+end
