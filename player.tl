@@ -12,6 +12,7 @@ global type Action = enum
    "jump_on"
    "jump_off"
    "idle"
+   "dying"
 end
 
 global type PlayerState = enum
@@ -166,6 +167,7 @@ function Player:kill()
 	end
 
 	self.is_alive = false
+	self.action = "dying"
 end
 
 function Player:blow_up()
