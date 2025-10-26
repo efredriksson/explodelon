@@ -23,6 +23,8 @@ local background: Image
 local soft_blocks: SoftBlocks
 local mad_bombers: MadBombers
 local players: {Player} = {}
+local time_to_wait_to_end_game = 2.0
+local time_of_1_alive_player = 0.0
 
 local function setup_players(selected_sprites: {CharacterSprite}): {Player}
 	players = {}
@@ -132,7 +134,7 @@ local animations_invulnerable: {integer: {PlayerState: {Action: {Direction: Anim
 local avatars: {integer: Image} = {}
 
 local function game_load()
-	global tic_counter = 0
+	time_of_1_alive_player = 0
 	background = lutro.graphics.newImage("assets/footboll-map.png")
 	local player_positions: {Point} = {}
 	for _, player in ipairs(players) do
@@ -250,7 +252,7 @@ local is_dead = function(player: Player): boolean
 end
 
 local function game_update(dt: number)
-	local out_of_time = game_timer:decrement(dt)
+	game_timer:update(dt)
 	pressure_blocks.sudden_death = game_timer:sudden_death()
 
 	local hitting_ground = pressure_blocks:update(dt)
@@ -328,12 +330,19 @@ local function game_update(dt: number)
 	local remove_items: {Entity} = combine(hitting_ground, bombs.on_ground)
 	clear_items_and_eggs(remove_items)
 	
-	if #alive_players == 1 then
-		alive_players[1]:won_game()
-		next_game()
+	if #alive_players <= 1 then
+		time_of_1_alive_player = time_of_1_alive_player + dt
+	elseif game_timer:out_of_time() then
+		next_game() -- Many alive and time out => draw
 	end
-	if #alive_players == 0 or out_of_time then
-		next_game()
+
+	if time_of_1_alive_player > time_to_wait_to_end_game then
+		if #alive_players == 1 then
+			alive_players[1]:won_game()
+			next_game()
+		else
+			next_game()
+		end
 	end
 	
 	animated_dinos:update(dt)

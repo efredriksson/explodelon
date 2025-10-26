@@ -19,8 +19,11 @@ function GameTimer:load_assets()
 	global clock_font = get_shaded_number_font()
 end
 
-function GameTimer:decrement(dt: number): boolean
+function GameTimer:update(dt: number)
 	self.time_left = self.time_left - dt
+end
+
+function GameTimer:out_of_time(): boolean
 	return self.time_left < 0
 end
 
