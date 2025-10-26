@@ -17,6 +17,7 @@ require("character_sprites")
 require("soft_blocks")
 require("carts")
 require("hitboxes")
+require("game_countdown")
 
 local bombs: Bombs
 local background: Image
@@ -25,6 +26,7 @@ local mad_bombers: MadBombers
 local players: {Player} = {}
 local time_to_wait_to_end_game = 2.0
 local time_of_1_alive_player = 0.0
+local game_countdown: GameCountdown
 
 local function setup_players(selected_sprites: {CharacterSprite}): {Player}
 	players = {}
@@ -167,6 +169,9 @@ local function game_load()
 
 	mad_bombers = MadBombers.new(bombs)
 	mad_bombers:load_assets()
+
+	GameCountdown.load_assets()
+	game_countdown = GameCountdown.new()
 end
 
 local function get_available_spots(): {Point}
@@ -252,6 +257,11 @@ local is_dead = function(player: Player): boolean
 end
 
 local function game_update(dt: number)
+	game_countdown:update(dt)
+	if not game_countdown:finished() then
+		return
+	end
+
 	game_timer:update(dt)
 	pressure_blocks.sudden_death = game_timer:sudden_death()
 
@@ -384,6 +394,7 @@ local function game_draw()
 	end
 
 	game_timer:draw()
+	game_countdown:draw()
 
 	for _, block in ipairs(pressure_blocks:falling()) do
 		-- falling blocks are rendered last on top of everything,
