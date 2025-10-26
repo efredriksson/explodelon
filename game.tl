@@ -91,10 +91,22 @@ local function character_animation_for_action(character_asset: string, state: Pl
 
 	local base_path = "assets/" .. character_asset .. "/" .. state .. "/" .. action_resolved()
 	return {
-		["up"] = get_animation(base_path .. "_up.png", invulnerable),
-		["down"] = get_animation(base_path .. "_down.png", invulnerable),
-		["right"] = get_animation(base_path .. "_right.png", invulnerable),
-		["left"] = get_animation(base_path .. "_left.png", invulnerable),
+		up = get_animation(base_path .. "_up.png", invulnerable),
+		down = get_animation(base_path .. "_down.png", invulnerable),
+		right = get_animation(base_path .. "_right.png", invulnerable),
+		left = get_animation(base_path .. "_left.png", invulnerable),
+	}
+end
+
+local function character_animation_for_dying(character_asset: string): {Direction: Animation}
+	local asset_file = "assets/" .. character_asset .. "/foot/dying.png"
+	local image = lutro.graphics.newImage(asset_file)
+	local animation = Animation.new(image, 18, 34, 1, 8)
+	return {
+		up = animation,
+		down = animation,
+		right = animation,
+		left = animation,
 	}
 end
 
@@ -104,6 +116,7 @@ local function character_animations_for_state(character_asset: string, state: Pl
 		["idle"] = character_animation_for_action(character_asset, state, "idle", invulnerable),
 		["jump_on"] = character_animation_for_action(character_asset, state, "jump_on", invulnerable),
 		["jump_off"] = character_animation_for_action(character_asset, state, "jump_off", invulnerable),
+		["dying"] = character_animation_for_dying(character_asset),
 	}
 end
 
@@ -275,9 +288,6 @@ local function game_update(dt: number)
 			set_position_and_dir_from_input(player, dt, blocking_blocks, bombs, blocks_bombs)
 		end
 
-		animations[player.id][player.state][player.action][player.direction]:update(dt)
-		animations_invulnerable[player.id][player.state][player.action][player.direction]:update(dt)
-
 		items:possible_pickup_by(player)
 
 		local hatching_dino = eggs:possible_hatcher_at(player.position, player.direction)
@@ -294,7 +304,11 @@ local function game_update(dt: number)
 			end
 		end
 	end
-
+	for _, player in ipairs(players) do
+		-- Update animations regardless if alive or not
+		animations[player.id][player.state][player.action][player.direction]:update(dt)
+		animations_invulnerable[player.id][player.state][player.action][player.direction]:update(dt)
+	end
 	for _, player in ipairs(filter(players, is_dead)) do
 		mad_bombers:ensure_exist_for(player.id, player.sprite)
 	end
@@ -371,19 +385,29 @@ local function game_draw()
 		block:draw()
 	end
 
+	local function get_player_animation(player: Player): Animation
+		if player:is_invulnerable() and player.invulnerable_for % 0.3 < 0.15 then
+			return animations_invulnerable[player.id][player.state][player.action][player.direction]
+		else
+			local animation = animations[player.id][player.state][player.action][player.direction]
+			if player.action == "dying" and animation.loops > 0 then
+				-- If dying and the animation have played one loop then don't draw anything:
+				return nil
+			else
+				return animation
+			end
+		end
+	end
+
 	local dinos_drawn_with_player: {Dino} = {}
 	local entities_to_draw: {Entity} = {}
-	for _, player in ipairs(filter(players, is_alive)) do
-		local player_animation = animations[player.id][player.state][player.action][player.direction]
-		if player:is_invulnerable() and player.invulnerable_for % 0.3 < 0.15 then
-			player_animation = animations_invulnerable[player.id][player.state][player.action][player.direction]
-		end
-
+	for _, player in ipairs(players) do
+		local player_animation = get_player_animation(player)
 		if player:is_riding_dino() then
 			local dion_anim = animated_dinos:get_from(player.dino)
 			table.insert(dinos_drawn_with_player, player.dino)
 			table.insert(entities_to_draw, MountedPlayerAnimation.new(player_animation, dion_anim, player))
-		else
+		elseif player_animation then
 			table.insert(entities_to_draw, PlayerAnimation.new(player_animation, player))
 		end
 	end
