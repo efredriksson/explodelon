@@ -25,6 +25,7 @@ local soft_blocks: SoftBlocks
 local mad_bombers: MadBombers
 local eggs: Eggs
 local items: Items
+local game_timer: GameTimer
 local players: {Player} = {}
 local animated_dinos: AnimatedDinos
 local time_to_wait_to_end_game = 2.0
@@ -174,12 +175,13 @@ local function game_load()
 	Items:load_assets()
 	items = Items.new()
 
-	global game_timer = GameTimer.new()
+	GameTimer.load_assets()
+	game_timer = GameTimer.new()
 	Bombs:load()
 	Explosions:load()
 	bombs = Bombs.new()
-	game_timer:load_assets()
-	load_pressure_block_assets()
+
+	PressureBlocks:load_assets()
 	pressure_blocks = PressureBlocks.new()
 
 	global score_font = get_shaded_number_font()

@@ -12,6 +12,9 @@ global record PressureBlock is Entity, ExplosionBlocking
     in_explosion: boolean
 end
 
+local pressure_block_image: Image
+local block_fall_shadow: Image
+
 function PressureBlock.new(target: Point): PressureBlock
 	local self: PressureBlock = setmetatable({}, { __index = PressureBlock })
 	self.falling_position = Point.new(target.x, -BLOCK_SIZE)
@@ -22,11 +25,6 @@ end
 
 function PressureBlock:get_position(): Point
     return self.position
-end
-
-global function load_pressure_block_assets()
-    global pressure_block_image = lutro.graphics.newImage("assets/1_ton.png")
-    global block_fall_shadow = lutro.graphics.newImage("assets/items/shadow.png")
 end
 
 function PressureBlock:draw()
@@ -155,4 +153,9 @@ function PressureBlocks:hitboxes(): {Rectangle}
         return new_hitbox(block.position) 
     end
     return map(self.on_ground, hitbox_map_f)
+end
+
+function PressureBlocks:load_assets()
+    pressure_block_image = lutro.graphics.newImage("assets/1_ton.png")
+    block_fall_shadow = lutro.graphics.newImage("assets/items/shadow.png")
 end
