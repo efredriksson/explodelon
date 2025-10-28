@@ -249,11 +249,11 @@ local function handle_bomb_drop_input(player: Player)
 end
 
 local is_alive = function(player: Player): boolean
-	return player.is_alive
+	return player:is_alive()
 end
 
 local is_dead = function(player: Player): boolean
-	return not player.is_alive
+	return not player:is_alive()
 end
 
 local function game_update(dt: number)
