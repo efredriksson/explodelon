@@ -38,6 +38,10 @@ function Bomb:detonate()
     self.timer = 0
 end
 
+function Bomb:hit_with_bomb()
+	-- Does nothing
+end
+
 function Bomb:get_goal(): Goal
     for _, goal in ipairs(get_possible_goals()) do
         if self.position:distance_to(goal.position) < 3 then
