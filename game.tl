@@ -18,6 +18,7 @@ require("soft_blocks")
 require("carts")
 require("hitboxes")
 require("game_countdown")
+require("score_board")
 
 local bombs: Bombs
 local background: Image
@@ -26,6 +27,8 @@ local mad_bombers: MadBombers
 local eggs: Eggs
 local items: Items
 local game_timer: GameTimer
+local score_board: ScoreBoard
+local character_sprites: {CharacterSprite} = {}
 local players: {Player} = {}
 local animated_dinos: AnimatedDinos
 local time_to_wait_to_end_game = 2.0
@@ -73,10 +76,6 @@ local function get_animation(asset_file: string, invulnerable: boolean): Animati
 	end
 
 	return Animation.new(image, 18, 34, 3, 18)
-end
-
-local function character_avatar(character_asset: string): Image
-	return lutro.graphics.newImage("assets/" .. character_asset .. "/head_down.png")
 end
 
 local function character_animation_for_action(character_asset: string, state: PlayerState, action: Action, invulnerable: boolean): {Direction: Animation}
@@ -156,15 +155,14 @@ end
 
 local animations: {integer: {PlayerState: {Action: {Direction: Animation}}}} = {}
 local animations_invulnerable: {integer: {PlayerState: {Action: {Direction: Animation}}}} = {}
-local avatars: {integer: Image} = {}
 
 local function game_load()
 	time_of_1_alive_player = 0
 	background = lutro.graphics.newImage("assets/footboll-map.png")
+	setup_players(character_sprites)
 	for _, player in ipairs(players) do
 		animations[player.id] = character_animation(player.sprite, false)
 		animations_invulnerable[player.id] = character_animation(player.sprite, true)
-		avatars[player.id] = character_avatar(player.sprite)
 	end
 
 	animated_dinos = AnimatedDinos.new()
@@ -183,8 +181,6 @@ local function game_load()
 
 	PressureBlocks:load_assets()
 	pressure_blocks = PressureBlocks.new()
-
-	global score_font = get_shaded_number_font()
 
 	soft_blocks = SoftBlocks.new(get_soft_blocks(players))
 	soft_blocks:load_assets()
@@ -228,23 +224,6 @@ local function get_available_spots(): {Point}
 	end
 
 	return available_spots
-end
-
-local function transfere_player_data(old_player_datas: {Player})
-	for i=1, #players do
-		players[i].score = old_player_datas[i].score
-	end
-end
-
-local function next_game()
-	local old_player_datas = players
-	local sprites: {CharacterSprite} = {}
-	for _, player in ipairs(players) do
-		table.insert(sprites, player.sprite)
-	end
-	setup_players(sprites)
-	transfere_player_data(old_player_datas)
-	game_load()
 end
 
 local function clear_items_and_eggs(destroys: {Entity})
@@ -365,15 +344,15 @@ local function game_update(dt: number)
 	if #alive_players <= 1 then
 		time_of_1_alive_player = time_of_1_alive_player + dt
 	elseif game_timer:out_of_time() then
-		next_game() -- Many alive and time out => draw
+		game_load() -- Many alive and time out => draw
 	end
 
 	if time_of_1_alive_player > time_to_wait_to_end_game then
 		if #alive_players == 1 then
-			alive_players[1]:won_game()
-			next_game()
+			score_board:add_point(alive_players[1].id)
+			game_load()
 		else
-			next_game()
+			game_load()
 		end
 	end
 	
@@ -395,18 +374,6 @@ local function sort_entities_by_y_cord(players_to_sort: {Entity})
 		return e1:get_position().y < e2:get_position().y
 	end
 	table.sort(players_to_sort, compare_entity_y_pos)
-end
-
-local function get_avatar_position(avatar_num: number, num_avatars: number): Point
-	local space_for_avatar = 35
-	local x_start = 75
-	local y_start = 3
-	local avatar_space_padding = 10
-
-	local total_space = MAP_WIDTH - x_start - avatar_space_padding
-	local padding = (total_space - space_for_avatar * num_avatars) / (num_avatars + 1)
-	local x_pos = x_start + padding * avatar_num + space_for_avatar * (avatar_num - 1)
-	return Point.new(x_pos, y_start)
 end
 
 local function game_draw()
@@ -453,12 +420,7 @@ local function game_draw()
 			table.insert(entities_to_draw, PlayerAnimation.new(player_animation, player))
 		end
 	end
-	for _, player in ipairs(players) do
-		local avatar_pos = get_avatar_position(player.id, #players)
-		local score_pos = avatar_pos:move(Vector.new(18, 5))
-		lutro.graphics.draw(avatars[player.id], avatar_pos.x, avatar_pos.y)
-		score_font:draw(tostring(player.score), score_pos)
-	end
+	score_board:draw()
 
 	for _, item in ipairs(items.on_ground) do
 		table.insert(entities_to_draw, item)
@@ -498,7 +460,9 @@ local function game_draw()
 end
 
 local function setup(selected_sprites: {CharacterSprite}): Scene
-	setup_players(selected_sprites)
+	character_sprites = selected_sprites
+	ScoreBoard.load_assets()
+	score_board = ScoreBoard.new(selected_sprites)
 
 	local module = Scene.new()
 	module.load = game_load

@@ -28,7 +28,6 @@ global record Player is Entity, Explodable, BlocksBombs
 	direction: Direction
 	action: Action
 	state: PlayerState
-	score: integer
 	speed: integer
 	bombs: integer
 	fire: integer
@@ -51,7 +50,6 @@ function Player.new(id: integer, sprite: CharacterSprite, position: Point): Play
 	self.direction = "down"
 	self.action = "idle"
 	self.state = "foot"
-	self.score = 0
 	self.speed = PLAYER_SPEED
 	self.bombs = 1
 	self.fire = 2
@@ -101,10 +99,6 @@ function Player:hit_with_bomb()
 	self:set_action("stunned")
 	self.stunned_for = 1
 	self.direction = "down"
-end
-
-function Player:won_game()
-	self.score = self.score + 1
 end
 
 local function get_player_position_on_mount(original_pos: Point, direction: Direction): Point
