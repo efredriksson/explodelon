@@ -32,7 +32,6 @@ global record Player is Explodable, BlocksBombs
 	bombs: integer
 	fire: integer
 	has_kick: boolean
-	is_alive: boolean
 	invulnerable_for: number
 	dino: Dino
 	jump_p: Point
@@ -55,7 +54,6 @@ function Player.new(id: integer, sprite: CharacterSprite, position: Point): Play
 	self.bombs = 1
 	self.fire = 2
 	self.has_kick = false
-	self.is_alive = true
 	self.invulnerable_for = 0
 	self.dino = nil
 	return self
@@ -166,12 +164,15 @@ function Player:kill()
 		return
 	end
 
-	self.is_alive = false
 	self.action = "dying"
 end
 
 function Player:blow_up()
 	self:kill()
+end
+
+function Player:is_alive(): boolean
+	return self.action ~= "dying"
 end
 
 function Player:update(dt: number)
@@ -298,7 +299,7 @@ function MountedPlayerAnimation:get_position(): Point
 end
 
 function MountedPlayerAnimation:draw()
-	if not self.player.is_alive then
+	if not self.player:is_alive() then
 		return
 	end
 
