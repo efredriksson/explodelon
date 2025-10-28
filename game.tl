@@ -19,6 +19,7 @@ require("carts")
 require("hitboxes")
 require("game_countdown")
 require("score_board")
+require("player_animations")
 
 local bombs: Bombs
 local background: Image
@@ -30,7 +31,7 @@ local game_timer: GameTimer
 local score_board: ScoreBoard
 local character_sprites: {CharacterSprite} = {}
 local players: {Player} = {}
-local animated_dinos: AnimatedDinos
+local player_animations: PlayerAnimations
 local time_to_wait_to_end_game = 2.0
 local time_of_1_alive_player = 0.0
 local game_countdown: GameCountdown
@@ -47,125 +48,12 @@ local function setup_players(selected_sprites: {CharacterSprite}): {Player}
 	return players
 end
 
---- Scale 0-1 represent how far from current to max to increase color component 
-local function increase_color(color: number, scale: number): number
-	return color + scale * (255 - color)
-end
-
-local function make_lighter(image: Image)
-	local image_data = image:getData()
-	local scale = 0.6
-	-- Using C index in getPixel API for some reason...
-	for i = 0, image:getWidth() - 1 do
-		for j = 0, image:getHeight() - 1 do
-			local r, g, b, alpha = image_data:getPixel(i, j)
-			if alpha ~= 0 then
-				r = increase_color(r, scale)
-				g = increase_color(g, scale)
-				b = increase_color(b, scale)
-				image_data:setPixel(i, j, r, g, b, alpha)
-			end
-		end
-	end
-end
-
-local function get_animation(asset_file: string, invulnerable: boolean): Animation
-	local image = lutro.graphics.newImage(asset_file)
-	if invulnerable then
-		make_lighter(image)
-	end
-
-	return Animation.new(image, 18, 34, 3, 18)
-end
-
-local function character_animation_for_action(character_asset: string, state: PlayerState, action: Action, invulnerable: boolean): {Direction: Animation}
-	if state == "mounted" then
-		if action == "jump_on" or action == "jump_off" then
-			-- Same sprite for 'jump' when on foot as when mounted
-			state = "foot"
-		elseif action == "idle" then
-			-- Same sprite for 'idle' as 'walk' when mounted
-			action = "walk"
-		end
-	end
-
-	local function action_resolved(): string
-		if action == "jump_on" or action == "jump_off" then
-			return "jump"
-		else
-			return action
-		end
-	end
-
-	local base_path = "assets/" .. character_asset .. "/" .. state .. "/" .. action_resolved()
-	return {
-		up = get_animation(base_path .. "_up.png", invulnerable),
-		down = get_animation(base_path .. "_down.png", invulnerable),
-		right = get_animation(base_path .. "_right.png", invulnerable),
-		left = get_animation(base_path .. "_left.png", invulnerable),
-	}
-end
-
-local function character_animation_for_dying(character_asset: string): {Direction: Animation}
-	local asset_file = "assets/" .. character_asset .. "/foot/dying.png"
-	local image = lutro.graphics.newImage(asset_file)
-	local animation = Animation.new(image, 18, 34, 1, 8)
-	return {
-		up = animation,
-		down = animation,
-		right = animation,
-		left = animation,
-	}
-end
-
-local function character_animation_for_stunned(character_asset: string, state: PlayerState): {Direction: Animation}
-	if state == "mounted" then
-		-- Stunned when mounted has same sprite as for walking
-		return character_animation_for_action(character_asset, state, "walk", false)
-	end
-
-	local asset_file = "assets/" .. character_asset .. "/" .. state .. "/stunned.png"
-	local image = lutro.graphics.newImage(asset_file)
-	local animation = Animation.new(image, 18, 34, 1, 8)
-	return {
-		up = animation,
-		down = animation,
-		right = animation,
-		left = animation,
-	}
-end
-
-local function character_animations_for_state(character_asset: string, state: PlayerState, invulnerable: boolean): {Action: {Direction: Animation}}
-	return {
-		["walk"] = character_animation_for_action(character_asset, state, "walk", invulnerable),
-		["idle"] = character_animation_for_action(character_asset, state, "idle", invulnerable),
-		["jump_on"] = character_animation_for_action(character_asset, state, "jump_on", invulnerable),
-		["jump_off"] = character_animation_for_action(character_asset, state, "jump_off", invulnerable),
-		["dying"] = character_animation_for_dying(character_asset),
-		["stunned"] = character_animation_for_stunned(character_asset, state)
-	}
-end
-
-local function character_animation(character_asset: string, invulnerable: boolean): {PlayerState: {Action: {Direction: Animation}}}
-	return {
-		["foot"] = character_animations_for_state(character_asset, "foot", invulnerable),
-		["mounted"] = character_animations_for_state(character_asset, "mounted", invulnerable),
-	}
-end
-
-local animations: {integer: {PlayerState: {Action: {Direction: Animation}}}} = {}
-local animations_invulnerable: {integer: {PlayerState: {Action: {Direction: Animation}}}} = {}
-
 local function game_load()
 	time_of_1_alive_player = 0
 	background = lutro.graphics.newImage("assets/footboll-map.png")
 	setup_players(character_sprites)
-	for _, player in ipairs(players) do
-		animations[player.id] = character_animation(player.sprite, false)
-		animations_invulnerable[player.id] = character_animation(player.sprite, true)
-	end
 
-	animated_dinos = AnimatedDinos.new()
+	player_animations = PlayerAnimations.new(players)
 
 	Eggs.load_assets()
 	eggs = Eggs.new()
@@ -306,7 +194,7 @@ local function game_update(dt: number)
 		local hatching_dino = eggs:possible_hatcher_at(player.position, player.direction)
 		if hatching_dino then
 			player:jumps_onto(hatching_dino)
-			animated_dinos:add_for(hatching_dino)
+			player_animations.dinos:add_for(hatching_dino)
 		end
 
 		local player_hitbox = new_hitbox(player.position)
@@ -316,11 +204,6 @@ local function game_update(dt: number)
 				player:kill()
 			end
 		end
-	end
-	for _, player in ipairs(players) do
-		-- Update animations regardless if alive or not
-		animations[player.id][player.state][player.action][player.direction]:update(dt)
-		animations_invulnerable[player.id][player.state][player.action][player.direction]:update(dt)
 	end
 	for _, player in ipairs(filter(players, is_dead)) do
 		mad_bombers:ensure_exist_for(player.id, player.sprite)
@@ -356,7 +239,7 @@ local function game_update(dt: number)
 		end
 	end
 	
-	animated_dinos:update(dt)
+	player_animations:update(dt)
 	soft_blocks:update(dt)
 	for _, soft_block in ipairs(soft_blocks:exploding()) do
 		if soft_block.item then
@@ -394,49 +277,15 @@ local function game_draw()
 		block:draw()
 	end
 
-	local function get_player_animation(player: Player): Animation
-		if player:is_invulnerable() and player.invulnerable_for % 0.3 < 0.15 then
-			return animations_invulnerable[player.id][player.state][player.action][player.direction]
-		else
-			local animation = animations[player.id][player.state][player.action][player.direction]
-			if player.action == "dying" and animation.loops > 0 then
-				-- If dying and the animation have played one loop then don't draw anything:
-				return nil
-			else
-				return animation
-			end
-		end
-	end
-
-	local dinos_drawn_with_player: {Dino} = {}
-	local entities_to_draw: {Entity} = {}
-	for _, player in ipairs(players) do
-		local player_animation = get_player_animation(player)
-		if player:is_riding_dino() then
-			local dion_anim = animated_dinos:get_from(player.dino)
-			table.insert(dinos_drawn_with_player, player.dino)
-			table.insert(entities_to_draw, MountedPlayerAnimation.new(player_animation, dion_anim, player))
-		elseif player_animation then
-			table.insert(entities_to_draw, PlayerAnimation.new(player_animation, player))
-		end
-	end
 	score_board:draw()
 
-	for _, item in ipairs(items.on_ground) do
-		table.insert(entities_to_draw, item)
-	end
-	for _, block in ipairs(pressure_blocks:falling()) do
-		table.insert(entities_to_draw, block)
-	end
-	for _, egg in ipairs(eggs.on_ground) do
-		table.insert(entities_to_draw, egg)
-	end
-	for dino, animation in pairs(animated_dinos:get_all_except(dinos_drawn_with_player)) do
-		table.insert(entities_to_draw, MountAnimation.new(animation, dino))
-	end
-	for _, bomb in ipairs(bombs.in_air) do
-		table.insert(entities_to_draw, bomb)
-	end
+	local entities_to_draw: {Entity} = combine(
+		player_animations:get_all(),
+		items.on_ground,
+		pressure_blocks:falling(),
+		eggs.on_ground,
+		bombs.in_air
+	)
 
 	-- Need to render entities in the front last so they are on top of any other entity
 	sort_entities_by_y_cord(entities_to_draw)
