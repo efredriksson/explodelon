@@ -67,6 +67,31 @@ function Player:hit_with_bomb()
 	-- Stun of player not implemented
 end
 
+function Player:set_movement(position: Point, direction: Direction)
+	self.position = position
+	self.direction = direction
+	if self.dino then
+		self.dino.position = position
+		self.dino.direction = direction
+	end
+end
+
+function Player:set_action(action: Action)
+	if self.action == "dying" then
+		-- If dead, you stay dead. No new action possible
+		return
+	end
+
+	self.action = action
+	if self.dino then
+		if action == "walk" then
+			self.dino.action = "walk"
+		elseif action == "idle" then
+			self.dino.action = "idle"
+		end
+	end
+end
+
 function Player:won_game()
 	self.score = self.score + 1
 end
@@ -117,7 +142,7 @@ end
 
 function Player:jumps_onto(dino: Dino)
 	if not self:is_jumping() then
-		self.action = "jump_on"
+		self:set_action("jump_on")
 		self.state = "mounted"
 
 		if self.dino then
@@ -139,7 +164,7 @@ end
 
 function Player:jump_off_dino()
 	if not self:is_jumping() then
-		self.action = "jump_off"
+		self:set_action("jump_off")
 		self.state = "foot"
 
 		self.jump_p = get_player_position_on_mount(self.position, self.direction)
@@ -164,7 +189,7 @@ function Player:kill()
 		return
 	end
 
-	self.action = "dying"
+	self:set_action("dying")
 end
 
 function Player:blow_up()
@@ -183,31 +208,11 @@ function Player:update(dt: number)
 		self.jump_v = self.jump_v:minus(self.jump_g:scale(dt))
 
 		if self.jump_p:distance_to(self.jump_visual_target) < 1 and self.jump_v.y > 0 then
-			self.action = "idle"
+			self:set_action("idle")
 			self.position = self.jump_target
 			if self.dino then
 				self.dino.hatching = false
 			end
-		end
-	end
-end
-
-function Player:set_movement(position: Point, direction: Direction)
-	self.position = position
-	self.direction = direction
-	if self.dino then
-		self.dino.position = position
-		self.dino.direction = direction
-	end
-end
-
-function Player:set_action(action: Action)
-	self.action = action
-	if self.dino then
-		if action == "walk" then
-			self.dino.action = "walk"
-		elseif action == "idle" then
-			self.dino.action = "idle"
 		end
 	end
 end
