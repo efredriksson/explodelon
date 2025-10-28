@@ -23,6 +23,7 @@ local bombs: Bombs
 local background: Image
 local soft_blocks: SoftBlocks
 local mad_bombers: MadBombers
+local eggs: Eggs
 local players: {Player} = {}
 local time_to_wait_to_end_game = 2.0
 local time_of_1_alive_player = 0.0
@@ -164,8 +165,8 @@ local function game_load()
 
 	global animated_dinos = AnimatedDinos.new()
 
-	load_egg_assets()
-	global eggs = Eggs.new()
+	Eggs.load_assets()
+	eggs = Eggs.new()
 
 	load_item_assets()
 	global items = Items.new()
