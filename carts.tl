@@ -299,6 +299,9 @@ function PlayerCart:set_state(state: CartState)
 end
 
 function PlayerCart:fire_cannon(): Point, integer
+    local fire_lenght = 2 + math.floor(self.cannon_powerup_for * 5)
+    self.cannon_powerup_for = 0.0 -- Reset regardless if actually fire or not
+
     local side = self:get_side()
     local shoot_from = self:get_x_y_position()
     -- Adjust so we shoot from inside player area if 'down' or 'right'
@@ -317,8 +320,6 @@ function PlayerCart:fire_cannon(): Point, integer
         return nil, nil
     end
 
-    local fire_lenght = 2 + math.floor(self.cannon_powerup_for * 5)
-    self.cannon_powerup_for = 0.0
     self:set_state("idle")
     self.cannon = "pre-fire"
     -- TODO: countdown is from when bomb as landed, can bounce for a while
@@ -383,7 +384,7 @@ local function handle_cart_move_input(dt: number, bombs: Bombs, cart: PlayerCart
         cart:set_state("backward")
     end
     
-    if lutro.joystick.isDown(cart.id, JOYPAD_R) then
+    if lutro.joystick.isDown(cart.id, JOYPAD_R) and cart.cannon == "ready" then
         cart.cannon_powerup_for = cart.cannon_powerup_for + dt
     end
 
