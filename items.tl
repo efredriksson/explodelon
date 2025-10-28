@@ -11,18 +11,10 @@ global enum ItemType
    "fire"
 end
 
-global function load_item_assets()
-    global take_item_sound = lutro.audio.newSource("assets/take_item.wav", "static")
-    take_item_sound:setVolume(0.25)
-    global frame_animation = Animation.new(lutro.graphics.newImage("assets/items/frame.png"), 18, 18, 1, 30)
-	global item_shadow = lutro.graphics.newImage("assets/items/shadow.png")
-	global item_icons: {ItemType: Image} = {
-        ["speed"] = lutro.graphics.newImage("assets/items/speed.png"),
-        ["bomb"] = lutro.graphics.newImage("assets/items/bomb.png"),
-        ["kick"] = lutro.graphics.newImage("assets/items/kick.png"),
-        ["fire"] = lutro.graphics.newImage("assets/items/fire.png"),
-    }
-end
+local take_item_sound: Source
+local frame_animation: Animation
+local item_shadow: Image
+local item_icons: {ItemType: Image}
 
 global record Item is Entity, ExplosionBlocking, Explodable
     type: ItemType
@@ -139,4 +131,18 @@ function Items:possible_pickup_by(player: Player)
             self:consumed_by_player(player, i)
         end
     end
+end
+
+
+function Items:load_assets()
+    take_item_sound = lutro.audio.newSource("assets/take_item.wav", "static")
+    take_item_sound:setVolume(0.25)
+    frame_animation = Animation.new(lutro.graphics.newImage("assets/items/frame.png"), 18, 18, 1, 30)
+	item_shadow = lutro.graphics.newImage("assets/items/shadow.png")
+	item_icons = {
+        ["speed"] = lutro.graphics.newImage("assets/items/speed.png"),
+        ["bomb"] = lutro.graphics.newImage("assets/items/bomb.png"),
+        ["kick"] = lutro.graphics.newImage("assets/items/kick.png"),
+        ["fire"] = lutro.graphics.newImage("assets/items/fire.png"),
+    }
 end

@@ -24,10 +24,13 @@ local background: Image
 local soft_blocks: SoftBlocks
 local mad_bombers: MadBombers
 local eggs: Eggs
+local items: Items
 local players: {Player} = {}
+local animated_dinos: AnimatedDinos
 local time_to_wait_to_end_game = 2.0
 local time_of_1_alive_player = 0.0
 local game_countdown: GameCountdown
+local pressure_blocks: PressureBlocks
 
 local function setup_players(selected_sprites: {CharacterSprite}): {Player}
 	players = {}
@@ -163,13 +166,13 @@ local function game_load()
 		avatars[player.id] = character_avatar(player.sprite)
 	end
 
-	global animated_dinos = AnimatedDinos.new()
+	animated_dinos = AnimatedDinos.new()
 
 	Eggs.load_assets()
 	eggs = Eggs.new()
 
-	load_item_assets()
-	global items = Items.new()
+	Items:load_assets()
+	items = Items.new()
 
 	global game_timer = GameTimer.new()
 	Bombs:load()
@@ -177,7 +180,7 @@ local function game_load()
 	bombs = Bombs.new()
 	game_timer:load_assets()
 	load_pressure_block_assets()
-	global pressure_blocks = PressureBlocks.new()
+	pressure_blocks = PressureBlocks.new()
 
 	global score_font = get_shaded_number_font()
 
