@@ -8,6 +8,8 @@ global record GameTimer
    time_left: number
 end
 
+local clock_font: ShadedFont
+
 function GameTimer.new(): GameTimer
    local self: GameTimer = setmetatable({}, { __index = GameTimer })
    self.time_left = GAME_TIME
@@ -15,8 +17,8 @@ function GameTimer.new(): GameTimer
 end
 
 
-function GameTimer:load_assets()
-	global clock_font = get_shaded_number_font()
+function GameTimer.load_assets()
+	clock_font = get_shaded_number_font()
 end
 
 function GameTimer:update(dt: number)
