@@ -114,6 +114,23 @@ local function character_animation_for_dying(character_asset: string): {Directio
 	}
 end
 
+local function character_animation_for_stunned(character_asset: string, state: PlayerState): {Direction: Animation}
+	if state == "mounted" then
+		-- Stunned when mounted has same sprite as for walking
+		return character_animation_for_action(character_asset, state, "walk", false)
+	end
+
+	local asset_file = "assets/" .. character_asset .. "/" .. state .. "/stunned.png"
+	local image = lutro.graphics.newImage(asset_file)
+	local animation = Animation.new(image, 18, 34, 1, 8)
+	return {
+		up = animation,
+		down = animation,
+		right = animation,
+		left = animation,
+	}
+end
+
 local function character_animations_for_state(character_asset: string, state: PlayerState, invulnerable: boolean): {Action: {Direction: Animation}}
 	return {
 		["walk"] = character_animation_for_action(character_asset, state, "walk", invulnerable),
@@ -121,6 +138,7 @@ local function character_animations_for_state(character_asset: string, state: Pl
 		["jump_on"] = character_animation_for_action(character_asset, state, "jump_on", invulnerable),
 		["jump_off"] = character_animation_for_action(character_asset, state, "jump_off", invulnerable),
 		["dying"] = character_animation_for_dying(character_asset),
+		["stunned"] = character_animation_for_stunned(character_asset, state)
 	}
 end
 

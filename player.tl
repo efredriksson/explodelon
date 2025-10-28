@@ -13,6 +13,7 @@ global type Action = enum
    "jump_off"
    "idle"
    "dying"
+   "stunned"
 end
 
 global type PlayerState = enum
@@ -33,6 +34,7 @@ global record Player is Explodable, BlocksBombs
 	fire: integer
 	has_kick: boolean
 	invulnerable_for: number
+	stunned_for: number
 	dino: Dino
 	jump_p: Point
 	jump_v: Vector
@@ -55,16 +57,13 @@ function Player.new(id: integer, sprite: CharacterSprite, position: Point): Play
 	self.fire = 2
 	self.has_kick = false
 	self.invulnerable_for = 0
+	self.stunned_for = 0
 	self.dino = nil
 	return self
 end
 
 function Player:get_position(): Point
 	return self.position
-end
-
-function Player:hit_with_bomb()
-	-- Stun of player not implemented
 end
 
 function Player:set_movement(position: Point, direction: Direction)
@@ -76,9 +75,13 @@ function Player:set_movement(position: Point, direction: Direction)
 	end
 end
 
+function Player:is_stunned(): boolean
+	return self.stunned_for > 0
+end
+
 function Player:set_action(action: Action)
-	if self.action == "dying" then
-		-- If dead, you stay dead. No new action possible
+	if self.action == "dying" or self:is_stunned() then
+		-- Not able to perform new action due to conditions
 		return
 	end
 
@@ -88,8 +91,16 @@ function Player:set_action(action: Action)
 			self.dino.action = "walk"
 		elseif action == "idle" then
 			self.dino.action = "idle"
+		elseif action == "stunned" then
+			self.dino.action = "stunned"
 		end
 	end
+end
+
+function Player:hit_with_bomb()
+	self:set_action("stunned")
+	self.stunned_for = 1
+	self.direction = "down"
 end
 
 function Player:won_game()
@@ -120,7 +131,7 @@ function Player:is_invulnerable(): boolean
 end
 
 function Player:accepts_input(): boolean
-	return not self:is_jumping()
+	return not self:is_jumping() and not self:is_stunned() 
 end
 
 -- Player jump constants 
@@ -202,6 +213,10 @@ end
 
 function Player:update(dt: number)
 	self.invulnerable_for = self.invulnerable_for - dt
+	self.stunned_for = self.stunned_for - dt
+	if self.action == "stunned" then
+		self:set_action("idle") -- Try to transition from stunned
+	end
 
 	if self:is_jumping() then
 		self.jump_p = self.jump_p:move(self.jump_v:scale(dt))

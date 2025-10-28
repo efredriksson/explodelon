@@ -12,6 +12,7 @@ global type DinoAction = enum
     "walk"
     "idle"
     "dying"
+    "stunned"
 end
 
 global record Dino

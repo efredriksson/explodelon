@@ -72,7 +72,7 @@ end
 
 local function dino_animation_for_level(action: DinoAction, direction: Direction, color: DinoColor): {integer: Animation}
 	local png_name = action .. "_" .. direction
-	if action == "dying" then
+	if action == "dying" or action == "stunned" then
 		png_name = action
 	end
 
@@ -88,6 +88,7 @@ local function dino_animation_for_dir(direction: Direction, color: DinoColor): {
 		["walk"] = dino_animation_for_level("walk", direction, color),
 		["idle"] = dino_animation_for_level("idle", direction, color),
 		["dying"] = dino_animation_for_level("dying", direction, color),
+		["stunned"] = dino_animation_for_level("stunned", direction, color),
 	}
 end
 
