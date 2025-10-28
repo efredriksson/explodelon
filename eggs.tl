@@ -4,10 +4,8 @@ require("entity")
 require("animation")
 require("dinos")
 
-global function load_egg_assets()
-    global egg_shake_image = lutro.graphics.newImage("assets/tirras/egg.png")
-    global egg_open_image = lutro.graphics.newImage("assets/tirras/egg_open.png")
-end
+local egg_shake_image: Image
+local egg_open_image: Image
 
 global record Egg is Entity, ExplosionBlocking, Explodable
     position: Point
@@ -101,4 +99,9 @@ function Eggs:possible_hatcher_at(player_position: Point, player_dir: Direction)
     end
 
     return nil
+end
+
+function Eggs.load_assets()
+    egg_shake_image = lutro.graphics.newImage("assets/tirras/egg.png")
+    egg_open_image = lutro.graphics.newImage("assets/tirras/egg_open.png")
 end
