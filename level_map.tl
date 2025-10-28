@@ -148,25 +148,25 @@ end
 
 local MAX_SOFT_BLOCKS = 105
 
-local function get_soft_block_positions(player_positions: {Point}): {Point}
+local function get_soft_block_positions(occupies: {Entity}): {Point}
 	local soft_blocks: {Point} = {}
-	local close_to_player: {Point} = {}
+	local close_to_entity: {Point} = {}
 	local get_point = function (h: HardBlock): Point return h.position end
 	local hard_blocks = map(HARD_BLOCKS, get_point)
 
-	for _, player_pos in ipairs(player_positions) do
-		-- Do allow some positions close to player to have soft blocks:
+	for _, occupied in ipairs(occupies) do
+		-- Do allow some positions close to occupied entity to have soft blocks:
 		local sum_to_allow = lutro.math.random() < 0.5 and 2 or 0
 		for j, i in double_loop_inner_loopback({-1, 1}, {-1, 1}) do
 			if sum_to_allow ~= math.abs(i + j) or (i == 0 and j == 0) then
 				local close_by = Vector.new(j, i):scale(BLOCK_SIZE)
-				table.insert(close_to_player, player_pos:move(close_by))				
+				table.insert(close_to_entity, occupied:get_position():move(close_by))
 			end
 		end
 	end
 
 	while #soft_blocks < MAX_SOFT_BLOCKS do
-		local occupied = combine(hard_blocks, close_to_player, soft_blocks)
+		local occupied = combine(hard_blocks, close_to_entity, soft_blocks)
 		local random_block = get_random_block()
 		if not contains_position(occupied, random_block) then
 			table.insert(soft_blocks, random_block)
@@ -184,10 +184,10 @@ local NBR_OF_ITMES: {ItemType: integer} = {
 	kick = 8,
 }
 
-global function get_soft_blocks(player_positions: {Point}): {SoftBlockConfig}
+global function get_soft_blocks(occupied: {Entity}): {SoftBlockConfig}
 	local soft_blocks: {SoftBlockConfig} = {}
 
-	local blocks_positions = get_soft_block_positions(player_positions)
+	local blocks_positions = get_soft_block_positions(occupied)
 	for item_type, quantity in pairs(NBR_OF_ITMES) do
 		for _=1, quantity do
 			local pos = table.remove(blocks_positions, 1)

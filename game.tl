@@ -156,12 +156,10 @@ local avatars: {integer: Image} = {}
 local function game_load()
 	time_of_1_alive_player = 0
 	background = lutro.graphics.newImage("assets/footboll-map.png")
-	local player_positions: {Point} = {}
 	for _, player in ipairs(players) do
 		animations[player.id] = character_animation(player.sprite, false)
 		animations_invulnerable[player.id] = character_animation(player.sprite, true)
 		avatars[player.id] = character_avatar(player.sprite)
-		table.insert(player_positions, player.position)
 	end
 
 	global animated_dinos = AnimatedDinos.new()
@@ -182,7 +180,7 @@ local function game_load()
 
 	global score_font = get_shaded_number_font()
 
-	soft_blocks = SoftBlocks.new(get_soft_blocks(player_positions))
+	soft_blocks = SoftBlocks.new(get_soft_blocks(players))
 	soft_blocks:load_assets()
 
 	mad_bombers = MadBombers.new(bombs)
