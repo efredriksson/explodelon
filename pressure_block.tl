@@ -155,7 +155,7 @@ function PressureBlocks:hitboxes(): {Rectangle}
     return map(self.on_ground, hitbox_map_f)
 end
 
-function PressureBlocks:load_assets()
+function PressureBlocks.load_assets()
     pressure_block_image = lutro.graphics.newImage("assets/1_ton.png")
     block_fall_shadow = lutro.graphics.newImage("assets/items/shadow.png")
 end

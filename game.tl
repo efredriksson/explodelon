@@ -54,29 +54,13 @@ local function game_load()
 	setup_players(character_sprites)
 
 	player_animations = PlayerAnimations.new(players)
-
-	Eggs.load_assets()
 	eggs = Eggs.new()
-
-	Items:load_assets()
 	items = Items.new()
-
-	GameTimer.load_assets()
 	game_timer = GameTimer.new()
-	Bombs:load()
-	Explosions:load()
 	bombs = Bombs.new()
-
-	PressureBlocks:load_assets()
 	pressure_blocks = PressureBlocks.new()
-
 	soft_blocks = SoftBlocks.new(get_soft_blocks(players))
-	soft_blocks:load_assets()
-
 	mad_bombers = MadBombers.new(bombs)
-	mad_bombers:load_assets()
-
-	GameCountdown.load_assets()
 	game_countdown = GameCountdown.new()
 end
 
@@ -310,6 +294,16 @@ end
 
 local function setup(selected_sprites: {CharacterSprite}): Scene
 	character_sprites = selected_sprites
+
+	Eggs.load_assets()
+	Items:load_assets()
+	GameTimer.load_assets()
+	Bombs.load_assets()
+	Explosions.load_assets()
+	PressureBlocks.load_assets()
+	SoftBlocks.load_assets()
+	MadBombers.load_assets()
+	GameCountdown.load_assets()
 	ScoreBoard.load_assets()
 	score_board = ScoreBoard.new(selected_sprites)
 

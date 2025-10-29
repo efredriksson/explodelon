@@ -424,7 +424,7 @@ function MadBombers:to_draw(): {PlayerCart}
     return carts_to_draw
 end
 
-function MadBombers:load_assets()
+function MadBombers.load_assets()
     local folder = "assets/carts/"
 
     for _, side in ipairs(SIDES) do
