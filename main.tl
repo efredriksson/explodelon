@@ -1,6 +1,7 @@
 require("const")
 require("scene")
 require("input")
+local start_menu = require("start_menu")
 
 function lutro.conf(t: Configuration)
 	t.width  = MAP_WIDTH
@@ -9,14 +10,14 @@ end
 
 function lutro.load()
 	input_setup()
-	set_scene(require("start_menu"))
+	set_scene(start_menu)
 end
 
 function lutro.update(dt: number)
-	get_scene().update(dt)
+	get_scene():update(dt)
 	input_update()
 end
 
 function lutro.draw()
-	get_scene().draw()
+	get_scene():draw()
 end

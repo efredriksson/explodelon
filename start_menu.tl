@@ -12,13 +12,21 @@ local black_font: MenuFont
 local white_font: MenuFont
 local ok_sound: Source
 
-local function menu_load_resources()
+local record StartMenu is Scene
+end
+
+function StartMenu.new(): StartMenu
+   local self: StartMenu = setmetatable({}, { __index = StartMenu })
+   return self
+end
+
+function StartMenu:load()
     white_font = get_menu_white_font()
     black_font = get_menu_black_font()
     ok_sound = get_ok_sound()
 end
 
-local function menu_update(_: number)
+function StartMenu:update(_: number)
     local ok_action = false
     if menu_selection.value == 1 then
         if joystick_is_pressed(1, JOYPAD_RIGHT) then
@@ -58,7 +66,7 @@ local function menu_update(_: number)
     end
 end
 
-local function menu_draw()
+function StartMenu:draw()
     lutro.graphics.setColor(200, 200, 200)
 	lutro.graphics.rectangle("fill", 0, 0, MAP_WIDTH, MAP_HEIGHT)
 
@@ -107,8 +115,4 @@ local function menu_draw()
     end
 end
 
-local module = Scene.new()
-module.load = menu_load_resources
-module.update = menu_update
-module.draw = menu_draw
-return module
+return StartMenu.new()
