@@ -1,13 +1,17 @@
-require("const")
-require("scene")
-require("fonts")
-require("input")
-require("menu_items")
-require("character_sprites")
+local const = require("const")
+local scenes = require("scenes")
+local geometry = require("geometry")
+local fonts = require("fonts")
+local joysticks = require("joysticks")
+local menu_items = require("menu_items")
+local character_sprites = require("character_sprites")
+local player_selection = require("player_selection")
+local game = require("game")
 
-local player_selection = MenuSelection.new(4, 2, MAX_PLAYERS)
-local player_selection_on = MenuSelection.new(1, 1, 2)
-local menu_selection = MenuSelection.new(1, 1, 3)
+local JOYPAD = joysticks.buttons()
+local nbr_player_selected = menu_items.new_selection(4, 2, const.MAX_PLAYERS)
+local player_selection_on = menu_items.new_selection(1, 1, 2)
+local menu_selection = menu_items.new_selection(1, 1, 3)
 local black_font: MenuFont
 local white_font: MenuFont
 local ok_sound: Source
@@ -15,49 +19,51 @@ local ok_sound: Source
 local record StartMenu is Scene
 end
 
-function StartMenu.new(): StartMenu
+local start_menu = {}
+
+function start_menu.new(): StartMenu
    local self: StartMenu = setmetatable({}, { __index = StartMenu })
    return self
 end
 
 function StartMenu:load()
-    white_font = get_menu_white_font()
-    black_font = get_menu_black_font()
-    ok_sound = get_ok_sound()
+    white_font = fonts.new_menu_white()
+    black_font = fonts.new_menu_black()
+    ok_sound = menu_items.ok_sound()
 end
 
 function StartMenu:update(_: number)
     local ok_action = false
     if menu_selection.value == 1 then
-        if joystick_is_pressed(1, JOYPAD_RIGHT) then
-            ok_action = player_selection:increment()
-        elseif joystick_is_pressed(1, JOYPAD_LEFT) then
-            ok_action = player_selection:decrement()
+        if joysticks.is_pressed(1, JOYPAD.RIGHT) then
+            ok_action = nbr_player_selected:increment()
+        elseif joysticks.is_pressed(1, JOYPAD.LEFT) then
+            ok_action = nbr_player_selected:decrement()
         end
     end
 
     if menu_selection.value == 2 then
-        if joystick_is_pressed(1, JOYPAD_RIGHT) then
+        if joysticks.is_pressed(1, JOYPAD.RIGHT) then
             ok_action = player_selection_on:increment()
-        elseif joystick_is_pressed(1, JOYPAD_LEFT) then
+        elseif joysticks.is_pressed(1, JOYPAD.LEFT) then
             ok_action = player_selection_on:decrement()
         end
     end
 
     if menu_selection.value == 3 then
-        if joystick_is_pressed(1, JOYPAD_B) then
+        if joysticks.is_pressed(1, JOYPAD.B) then
             if player_selection_on.value == 1 then
-                set_scene(require("player_selection")(player_selection.value))
+                scenes.set(player_selection.setup(nbr_player_selected.value))
             else
-                set_scene(require("game")(get_sprites(player_selection.value)))
+                scenes.set(game.setup(character_sprites.get(nbr_player_selected.value)))
             end
             ok_action = true
         end
     end
     
-    if joystick_is_pressed(1, JOYPAD_DOWN) then
+    if joysticks.is_pressed(1, JOYPAD.DOWN) then
         ok_action = menu_selection:increment()
-    elseif joystick_is_pressed(1, JOYPAD_UP) then
+    elseif joysticks.is_pressed(1, JOYPAD.UP) then
         ok_action = menu_selection:decrement()
     end
 
@@ -68,7 +74,7 @@ end
 
 function StartMenu:draw()
     lutro.graphics.setColor(200, 200, 200)
-	lutro.graphics.rectangle("fill", 0, 0, MAP_WIDTH, MAP_HEIGHT)
+	lutro.graphics.rectangle("fill", 0, 0, const.MAP_WIDTH, const.MAP_HEIGHT)
 
     local function player_selection_text(): string
         if player_selection_on.value == 1 then
@@ -83,7 +89,7 @@ function StartMenu:draw()
             MenuLineColumn.new("", 20),
             MenuLineColumn.new("number of players", 170),
             MenuLineColumn.new("-", 30),
-            MenuLineColumn.new(tostring(player_selection.value), 50),
+            MenuLineColumn.new(tostring(nbr_player_selected.value), 50),
             MenuLineColumn.new("", 50),
         }, 50),
         MenuLine.new({
@@ -93,7 +99,7 @@ function StartMenu:draw()
             MenuLineColumn.new(player_selection_text(), 50),
             MenuLineColumn.new("", 50),
         }, 70),
-        MenuLine.new({MenuLineColumn.new("start game", MAP_WIDTH)}, 180),
+        MenuLine.new({MenuLineColumn.new("start game", const.MAP_WIDTH)}, 180),
     }
 
     local function get_font(button_index): MenuFont
@@ -109,10 +115,10 @@ function StartMenu:draw()
 
         local x_pos = 0.0
         for _, column in ipairs(button.columns) do
-            font:print_centered(column.text, column.width, Point.new(x_pos, button.y_pos))
+            font:print_centered(column.text, column.width, geometry.new_point(x_pos, button.y_pos))
             x_pos = x_pos + column.width
         end
     end
 end
 
-return StartMenu.new()
+return start_menu

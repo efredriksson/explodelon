@@ -1,11 +1,11 @@
-require("const")
-require("animation")
-require("geometry")
-require("scene")
-require("fonts")
-require("menu_items")
-require("input")
-require("character_sprites")
+local animations = require("animations")
+local geometry = require("geometry")
+local scenes = require("scenes")
+local fonts = require("fonts")
+local menu_items = require("menu_items")
+local joysticks = require("joysticks")
+local character_sprites = require("character_sprites")
+local game = require("game")
 
 local record Character
    sprite: CharacterSprite
@@ -21,9 +21,10 @@ function Character.new(sprite: CharacterSprite, number: integer): Character
     return self
 end
 
-local FIRST_CHAR_POS = Point.new(50, 50)
-local ROW_OFFSET = Vector.new(23, 20)
-local COLUMN_OFFSET = Vector.new(45, 0)
+local JOYPAD = joysticks.buttons()
+local FIRST_CHAR_POS = geometry.new_point(50, 50)
+local ROW_OFFSET = geometry.new_vector(23, 20)
+local COLUMN_OFFSET = geometry.new_vector(45, 0)
 
 function Character:get_position(): Point
     local character_rows = 2
@@ -34,7 +35,7 @@ function Character:get_position(): Point
     local row = math.fmod(character_number, character_rows)
 
     local pos_offset = ROW_OFFSET:scale(row):plus(COLUMN_OFFSET:scale(column))
-    local walk_offset = Vector.new(0, self.y_shift)
+    local walk_offset = geometry.new_vector(0, self.y_shift)
     return FIRST_CHAR_POS:move(pos_offset):move(walk_offset)
 end
 
@@ -43,6 +44,7 @@ function Character:walk(dt: number)
     self.y_shift = self.y_shift + dt * walk_speed
 end
 
+-- TODO: Move these into the scene object
 local player_selecting = 1
 local number_players_selecting: integer
 local ok_sound: Source
@@ -51,7 +53,7 @@ local slow_walk_animations: {integer: Animation} = {}
 local selector_indicator: Image
 local background: Image
 local black_font: MenuFont
-local selector = MenuSelection.new(1, 1, 10)
+local selector = menu_items.new_selection(1, 1, 10)
 local selected_characters: {Character} = {}
 local selectable_characters: {Character} = {}
 
@@ -61,7 +63,7 @@ end
 
 local function get_walk_down_animation(character_name: string): Animation
     local image = lutro.graphics.newImage("assets/" .. character_name .. "/foot/walk_down.png")
-    local animation = Animation.new(image, 18, 34, 3, 6)
+    local animation = animations.new(image, 18, 34, 3, 6)
     animation.steps = animation.steps - 1 -- Skip final step when walking slowly
     return animation
 end
@@ -75,7 +77,7 @@ function PlayerSelection.new(): PlayerSelection
 end
 
 function PlayerSelection:load()
-    for idx, sprite in ipairs(get_sprites()) do
+    for idx, sprite in ipairs(character_sprites.get()) do
         table.insert(selectable_characters, Character.new(sprite, idx))
     end
 
@@ -87,19 +89,19 @@ function PlayerSelection:load()
     selector_indicator = lutro.graphics.newImage("assets/player_indicator.png")
     background = lutro.graphics.newImage("assets/grass.png")
 
-    ok_sound = get_ok_sound()
-    black_font = get_menu_black_font()
+    ok_sound = menu_items.ok_sound()
+    black_font = fonts.new_menu_black()
 end
 
 local function handle_player_input()
     local ok_action = false
     
-    if joystick_is_pressed(player_selecting, JOYPAD_RIGHT) then
+    if joysticks.is_pressed(player_selecting, JOYPAD.RIGHT) then
         ok_action = selector:increment()
-    elseif joystick_is_pressed(player_selecting, JOYPAD_LEFT) then
+    elseif joysticks.is_pressed(player_selecting, JOYPAD.LEFT) then
         ok_action = selector:decrement()
-    elseif (joystick_is_pressed(player_selecting, JOYPAD_B) or 
-            joystick_is_pressed(player_selecting, JOYPAD_R)) then
+    elseif (joysticks.is_pressed(player_selecting, JOYPAD.B) or 
+            joysticks.is_pressed(player_selecting, JOYPAD.R)) then
 
         local selected = table.remove(selectable_characters, selector.value)
         table.insert(selected_characters, selected)
@@ -118,7 +120,7 @@ local function handle_player_input()
         for _, selected in ipairs(selected_characters) do
             table.insert(selected_sprites, selected.sprite)
         end 
-        set_scene(require("game")(selected_sprites))
+        scenes.set(game.setup(selected_sprites))
     end
 end
 
@@ -152,21 +154,22 @@ function PlayerSelection:draw()
     end
 
     local character = selectable_characters[selector.value]
-    local indicator_offset = Vector.new(4, -5)
+    local indicator_offset = geometry.new_vector(4, -5)
     local indicator_pos = character:get_position():move(indicator_offset)
     lutro.graphics.draw(selector_indicator, indicator_pos.x, indicator_pos.y)
 
     local indicator_text = tostring(player_selecting)
-    local indicator_text_offset = Vector.new(0, 3)
+    local indicator_text_offset = geometry.new_vector(0, 3)
     local text_pos = indicator_pos:move(indicator_text_offset)
     local text_box = selector_indicator:getWidth()
     black_font:print_centered(indicator_text, text_box, text_pos)
 end
 
-local function setup(number_players: integer): Scene
+local player_selection = {}
+
+function player_selection.setup(number_players: integer): Scene
     number_players_selecting = number_players
-	local player_selection = PlayerSelection.new()
-    return player_selection
+	return PlayerSelection.new()
 end
 
-return setup
+return player_selection

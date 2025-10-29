@@ -1,5 +1,6 @@
-require("animation")
 require("dinos")
+local animations = require("animations")
+
 
 local IMAGE_CACHE: {string: Image} = {}
 local type Color = {number, number, number}
@@ -67,7 +68,7 @@ local function get_cached_lutro_image(asset_file: string, color: DinoColor): Ima
 end
 
 local function dino_animation(asset_file: string, color: DinoColor): Animation
-	return Animation.new(get_cached_lutro_image(asset_file, color), 34, 34, 3, 18)
+	return animations.new(get_cached_lutro_image(asset_file, color), 34, 34, 3, 18)
 end
 
 local function dino_animation_for_level(action: DinoAction, direction: Direction, color: DinoColor): {integer: Animation}
@@ -133,7 +134,9 @@ global record AnimatedDinos
     existing: {AnimatedDino}
 end
 
-function AnimatedDinos.new(): AnimatedDinos
+local dino_animations = {}
+
+function dino_animations.new(): AnimatedDinos
    local self: AnimatedDinos = setmetatable({}, { __index = AnimatedDinos })
    self.existing = {}
    return self
@@ -183,3 +186,4 @@ function AnimatedDinos:get_all_except(exclude: {Dino}): {Dino: Animation}
 	return to_return
 end
 
+return dino_animations

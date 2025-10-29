@@ -28,7 +28,9 @@ global record MenuSelection
    max: integer
 end
 
-function MenuSelection.new(start: integer, min: integer, max: integer): MenuSelection
+local menu_items = {}
+
+function menu_items.new_selection(start: integer, min: integer, max: integer): MenuSelection
    local self: MenuSelection = setmetatable({}, { __index = MenuSelection })
    self.value = start
    self.min = min or 0
@@ -53,6 +55,8 @@ function MenuSelection:reduce_max_val()
     self.value = math.min(self.value, self.max)
 end
 
-global function get_ok_sound(): Source
+function menu_items.ok_sound(): Source
     return lutro.audio.newSource("assets/menu_good.wav", "static")
 end
+
+return menu_items

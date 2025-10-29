@@ -1,7 +1,8 @@
-require("animation")
-require("player")
-require("level_map")
-require("hitboxes")
+local const = require("const")
+local animations = require("animations")
+local geometry = require("geometry")
+local level_map = require("level_map")
+local hitboxes = require("hitboxes")
 
 local END_ANIMATION_DURATION: number = 0.6
 local FRAME_DURATION = END_ANIMATION_DURATION / 4
@@ -51,7 +52,7 @@ function ExplosionTile.new(position: Point, reduction: number, is_last: boolean,
 end
 
 function ExplosionTile:hit_box(): Rectangle
-    return new_hitbox(self.position):shrink(self.reduction)
+    return hitboxes.new(self.position):shrink(self.reduction)
 end
 
 global record Explosion is Entity
@@ -75,13 +76,13 @@ function Explosion.new(position: Point, range: number, delay?: number): Explosio
    self.delay = delay or 0
    self.speed = 28
    self.animations = {
-       right_end = Animation.new(explosion_end_right_image, 16, 16, FRAME_DURATION, 1),
-       left_end = Animation.new(explosion_end_left_image, 16, 16, FRAME_DURATION, 1),
-       top_end = Animation.new(explosion_end_top_image, 16, 16, FRAME_DURATION, 1),
-       bottom_end = Animation.new(explosion_end_bottom_image, 16, 16, FRAME_DURATION, 1),
-       middle_horizontal = Animation.new(explosion_horizontal_image, 16, 16, FRAME_DURATION, 1),
-       middle_vertical = Animation.new(explosion_vertical_image, 16, 16, FRAME_DURATION, 1),
-       center = Animation.new(explosion_center_image, 16, 16, FRAME_DURATION, 1)
+       right_end = animations.new(explosion_end_right_image, 16, 16, FRAME_DURATION, 1),
+       left_end = animations.new(explosion_end_left_image, 16, 16, FRAME_DURATION, 1),
+       top_end = animations.new(explosion_end_top_image, 16, 16, FRAME_DURATION, 1),
+       bottom_end = animations.new(explosion_end_bottom_image, 16, 16, FRAME_DURATION, 1),
+       middle_horizontal = animations.new(explosion_horizontal_image, 16, 16, FRAME_DURATION, 1),
+       middle_vertical = animations.new(explosion_vertical_image, 16, 16, FRAME_DURATION, 1),
+       center = animations.new(explosion_center_image, 16, 16, FRAME_DURATION, 1)
    }
 
    return self
@@ -125,7 +126,7 @@ function Explosion:_update_active_tiles(blockers: {ExplosionBlocking})
 
     local function is_blocked(pos: Point): BlockingResult
         -- is out of bounds
-        if not PLAYER_AREA:contains(new_hitbox(pos)) then
+        if not level_map.player_area():contains(hitboxes.new(pos)) then
             return "now"
         end
 
@@ -187,15 +188,15 @@ function Explosion:_update_active_tiles(blockers: {ExplosionBlocking})
     table.insert(self.tiles, self:new_tile(self.position, false, "center"))
 
     local directions: {ExplosionTileType: Vector} = {
-        right = Vector.new(1, 0),
-        left = Vector.new(-1, 0),
-        down = Vector.new(0, 1),
-        up = Vector.new(0, -1),
+        right = geometry.new_vector(1, 0),
+        left = geometry.new_vector(-1, 0),
+        down = geometry.new_vector(0, 1),
+        up = geometry.new_vector(0, -1),
     }
 
     -- Propagate in all four directions
     for direction, delta in pairs(directions) do
-        for _, tile in ipairs(propagate(self.position, delta:scale(BLOCK_SIZE), 1, direction)) do
+        for _, tile in ipairs(propagate(self.position, delta:scale(const.BLOCK_SIZE), 1, direction)) do
             table.insert(self.tiles, tile)
         end
     end
@@ -223,7 +224,7 @@ end
 function Explosion:collides_with(position: Point): boolean
     -- This should reflect on player hitbox, not same as
     -- hitbox stopping you from moving into wall.
-    local hitbox = new_hitbox(position):shrink(2)
+    local hitbox = hitboxes.new(position):shrink(2)
 
     for _, tile in ipairs(self.tiles) do
         if hitbox:overlap(tile:hit_box()) then
@@ -242,7 +243,7 @@ function Explosion:draw()
     for _, tile in ipairs(self.tiles) do
         local animation = self:get_tile_animation(tile)
         animation:draw(tile.position.x, tile.position.y)
-        draw_hitbox(tile:hit_box())
+        hitboxes.draw(tile:hit_box())
     end
 end
 
@@ -285,7 +286,9 @@ function Explosions.load_assets()
     explosion_center_image = lutro.graphics.newImage("assets/bomb/explosion/explosion_center.png")
 end
 
-function Explosions.new(): Explosions
+local explosions = {}
+
+function explosions.new(): Explosions
    local self: Explosions = setmetatable({}, { __index = Explosions })
    self.on_ground = {}
    return self
@@ -317,3 +320,5 @@ function Explosions:draw()
         explosion:draw()
     end
 end
+
+return explosions

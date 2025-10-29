@@ -1,7 +1,11 @@
-require("animation")
-require("player")
-require("explosions")
-require("physics")
+local const = require("const")
+local animations = require("animations")
+local geometry = require("geometry")
+local itertools = require("itertools")
+local explosions = require("explosions")
+local physics = require("physics")
+local hitboxes = require("hitboxes")
+local level_map = require("level_map")
 
 -- Bomb --
 
@@ -21,12 +25,12 @@ end
 function Bomb.new(position: Point, range: integer, owner_id: integer): Bomb
    local self: Bomb = setmetatable({}, { __index = Bomb })
    self.position = position
-   self.velocity = Vector.new(0, 0)
+   self.velocity = geometry.new_vector(0, 0)
    self.range = range
    self.timer = 2.5
    self.owner_id = owner_id
    self.has_been_kicked = false
-   self.animation = Animation.new(bomb_image, 16, 16, 1, 4)
+   self.animation = animations.new(bomb_image, 16, 16, 1, 4)
    return self
 end
 
@@ -43,7 +47,7 @@ function Bomb:hit_with_bomb()
 end
 
 function Bomb:get_goal(): Goal
-    for _, goal in ipairs(get_possible_goals()) do
+    for _, goal in ipairs(level_map.get_possible_goals()) do
         if self.position:distance_to(goal.position) < 3 then
             return goal
         end
@@ -57,7 +61,9 @@ function Bomb:is_complete(): boolean
         return true
     end
 
-    return self.timer <= 0 and self.position:equal(snap_to_closest_grid_tile(self.position))
+    return self.timer <= 0 and self.position:equal(
+        level_map.snap_to_closest_grid_tile(self.position)
+    )
 end
 
 function Bomb:draw()
@@ -67,17 +73,17 @@ end
 
 function Bomb:can_move(direction: Vector, occupies: {BlocksBombs}): boolean
     local test_position = self.position:move(direction)
-    local test_hit_box = new_hitbox(test_position)
-    local old_hit_box = new_hitbox(self.position)
+    local test_hit_box = hitboxes.new(test_position)
+    local old_hit_box = hitboxes.new(self.position)
     
     local bomb_in_goal = false
-    for _, goal in ipairs(get_possible_goals()) do
+    for _, goal in ipairs(level_map.get_possible_goals()) do
         if test_hit_box:overlap(goal:get_hitbox()) then
             bomb_in_goal = true
         end
     end
 
-    if not PLAYER_AREA:contains(test_hit_box) and not bomb_in_goal then
+    if not level_map.player_area():contains(test_hit_box) and not bomb_in_goal then
         return false
     end
 
@@ -93,15 +99,15 @@ function Bomb:can_move(direction: Vector, occupies: {BlocksBombs}): boolean
     
     local function conflict(occupied: BlocksBombs, hitbox: Rectangle): boolean
         -- Bomb must always be one block away from player
-        return occupied:get_position():distance_to(hitbox:top_left()) < BLOCK_SIZE
+        return occupied:get_position():distance_to(hitbox:top_left()) < const.BLOCK_SIZE
     end
 
     local function not_this_bomb(occupied: BlocksBombs): boolean
         return occupied ~= self
     end
 
-    for _, occupied in ipairs(filter(occupies, not_this_bomb)) do
-        if move_further_into_occupied(new_hitbox(occupied:get_position())) then
+    for _, occupied in ipairs(itertools.filter(occupies, not_this_bomb)) do
+        if move_further_into_occupied(hitboxes.new(occupied:get_position())) then
             return false
         end
 
@@ -123,15 +129,15 @@ function Bomb:update(dt: number, occupies: {BlocksBombs})
             self.position = new_position
         else
             -- If bomb can't move stop it and snap to grid
-            self.velocity = Vector.new(0, 0)
-            self.position = snap_to_closest_grid_tile(self.position)
+            self.velocity = geometry.new_vector(0, 0)
+            self.position = level_map.snap_to_closest_grid_tile(self.position)
         end
 
         if self.timer <= 0 then
             -- If bomb timer is up, snap to closest tile if it is close enough.
             -- This is to explode bomb on the grid. Bomb can slide to next intersection!
-            if self.position:distance_to(snap_to_closest_grid_tile(self.position)) <= 3 then
-                self.position = snap_to_closest_grid_tile(self.position)
+            if self.position:distance_to(level_map.snap_to_closest_grid_tile(self.position)) <= 3 then
+                self.position = level_map.snap_to_closest_grid_tile(self.position)
             end
         end
     end
@@ -157,12 +163,12 @@ end
 
 function ThrownBomb:_set_trajectory(start_height: number, throw_height: number, throw_time: number)
     self.height = start_height
-    self.fall_velocity = get_init_projectile_velocity(
+    self.fall_velocity = physics.calc_init_projectile_velocity(
 		start_height, throw_height, throw_time
 	)
-	self.gravity = get_gravity(self.fall_velocity, throw_height)
+	self.gravity = physics.calc_gravity(self.fall_velocity, throw_height)
 	
-    local throw_vector = Vector.new(
+    local throw_vector = geometry.new_vector(
         self.target.x - self.delegate.position.x,
         self.target.y - self.delegate.position.y
     )
@@ -179,8 +185,8 @@ function ThrownBomb.new(delegate: Bomb, target: Point, start_height: number, thr
 end
 
 function ThrownBomb:bounce()
-    self.target = self:get_position():move(self.direction:scale(BLOCK_SIZE))
-    self:_set_trajectory(0, BLOCK_SIZE * 0.8, 0.25)
+    self.target = self:get_position():move(self.direction:scale(const.BLOCK_SIZE))
+    self:_set_trajectory(0, const.BLOCK_SIZE * 0.8, 0.25)
 end
 
 function ThrownBomb:get_position(): Point
@@ -192,7 +198,7 @@ function ThrownBomb:draw()
     lutro.graphics.draw(bomb_shadow, position.x - 1, position.y - 8)
 
     -- Bomb is drawn in the air
-    local draw_position = position:move(Vector.new(0, -self.height))
+    local draw_position = position:move(geometry.new_vector(0, -self.height))
     self.delegate.animation:draw(draw_position.x, draw_position.y)
 end
 
@@ -231,17 +237,19 @@ function Bombs.load_assets()
     bomb_image = lutro.graphics.newImage("assets/bomb/bomb.png")
 end
 
-function Bombs.new(): Bombs
+local bombs = {}
+
+function bombs.new(): Bombs
     local self: Bombs = setmetatable({}, { __index = Bombs })
     self.on_ground = {}
     self.in_air = {}
     self.exploded = {}
-    self.explosions = Explosions.new()
+    self.explosions = explosions.new()
     return self
 end
 
 function Bombs:place_bomb(player: Player)
-    local position = snap_to_closest_grid_tile(player.position)
+    local position = level_map.snap_to_closest_grid_tile(player.position)
     for _, existing_bomb in ipairs(self.on_ground) do
         if existing_bomb.position:equal(position) then
             return
@@ -258,7 +266,7 @@ end
 
 function Bombs:throw_bomb(from: Point, to: Point, by_id: integer): Bomb
     local bomb = Bomb.new(from, 2, by_id)
-    local thrown = ThrownBomb.new(bomb, to, BLOCK_SIZE, BLOCK_SIZE * 2, 0.4)
+    local thrown = ThrownBomb.new(bomb, to, const.BLOCK_SIZE, const.BLOCK_SIZE * 2, 0.4)
     table.insert(self.in_air, thrown)
     return bomb
 end
@@ -286,7 +294,7 @@ function Bombs:update(dt: number, blockers: {ExplosionBlocking}, explodables: {E
         if bomb:has_landed() then
             local space_is_occupied = false
             for _, occupied in ipairs(occupies) do
-                if occupied:get_position():distance_to(bomb.target) < BLOCK_SIZE / 2 then
+                if occupied:get_position():distance_to(bomb.target) < const.BLOCK_SIZE / 2 then
                     space_is_occupied = true
                     occupied:hit_with_bomb()
                 end
@@ -325,3 +333,5 @@ function Bombs:to_hand_back(): {Bomb}
     self.exploded = {}
     return to_hand_back
 end
+
+return bombs

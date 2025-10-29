@@ -1,9 +1,9 @@
-require("const")
-require("geometry")
 require("entity")
-require("itertools")
-require("level_map")
-require("hitboxes")
+local const = require("const")
+local geometry = require("geometry")
+local itertools = require("itertools")
+local level_map = require("level_map")
+local hitboxes = require("hitboxes")
 
 
 global record PressureBlock is Entity, ExplosionBlocking
@@ -17,7 +17,7 @@ local block_fall_shadow: Image
 
 function PressureBlock.new(target: Point): PressureBlock
 	local self: PressureBlock = setmetatable({}, { __index = PressureBlock })
-	self.falling_position = Point.new(target.x, -BLOCK_SIZE)
+	self.falling_position = geometry.new_point(target.x, -const.BLOCK_SIZE)
     self.position = target
     self.in_explosion = false
 	return self
@@ -64,10 +64,12 @@ global record PressureBlocks
     sudden_death: boolean
 end
 
-function PressureBlocks.new(): PressureBlocks
+local pressure_blocks = {}
+
+function pressure_blocks.new(): PressureBlocks
 	local self: PressureBlocks = setmetatable({}, { __index = PressureBlocks })
-    self.left_positions = get_left_side_pressure_blocks()
-    self.right_positions = get_right_side_pressure_blocks()
+    self.left_positions = level_map.get_left_side_pressure_blocks()
+    self.right_positions = level_map.get_right_side_pressure_blocks()
     self.on_ground = {}
     self.left_falling = PressureBlock.new(self.left_positions[1])
     self.right_falling = PressureBlock.new(self.right_positions[1])
@@ -150,12 +152,14 @@ end
 
 function PressureBlocks:hitboxes(): {Rectangle}
     local function hitbox_map_f(block: PressureBlock): Rectangle
-        return new_hitbox(block.position) 
+        return hitboxes.new(block.position) 
     end
-    return map(self.on_ground, hitbox_map_f)
+    return itertools.map(self.on_ground, hitbox_map_f)
 end
 
 function PressureBlocks.load_assets()
     pressure_block_image = lutro.graphics.newImage("assets/1_ton.png")
     block_fall_shadow = lutro.graphics.newImage("assets/items/shadow.png")
 end
+
+return pressure_blocks

@@ -1,9 +1,15 @@
-require("const")
-require("geometry")
 require("items")
-require("itertools")
+local const = require("const")
+local geometry = require("geometry")
+local itertools = require("itertools")
+local hitboxes = require("hitboxes")
 
-global PLAYER_AREA = Rectangle.new(24, 32, 272, 176)
+local PLAYER_AREA = Rectangle.new(24, 32, 272, 176)
+local level_map = {}
+
+function level_map.player_area(): Rectangle
+	return PLAYER_AREA
+end
 
 global record HardBlock is ExplosionBlocking, BlocksBombs
 	position: Point
@@ -29,30 +35,28 @@ function HardBlock:hit_with_bomb()
 	-- Does nothing
 end
 
-local function get_hard_blocks(): {HardBlock}
+function level_map.get_hard_blocks(): {HardBlock}
 	local blocks: {HardBlock} = {}
 
 	local function hard_block(i: number, j: number): HardBlock
-		return HardBlock.new(Point.new(
-		    PLAYER_AREA.x + BLOCK_SIZE + i * 2 * BLOCK_SIZE,
-			PLAYER_AREA.y + BLOCK_SIZE + j * 2 * BLOCK_SIZE
+		return HardBlock.new(geometry.new_point(
+		    PLAYER_AREA.x + const.BLOCK_SIZE + i * 2 * const.BLOCK_SIZE,
+			PLAYER_AREA.y + const.BLOCK_SIZE + j * 2 * const.BLOCK_SIZE
 		))
 	end
 
-	for i, j in double_loop_inner_loopback({0, 7}, {0, 4}) do
+	for i, j in itertools.double_loop_inner_loopback({0, 7}, {0, 4}) do
 		table.insert(blocks, hard_block(i, j))
 	end
 	return blocks
 end
 
-global HARD_BLOCKS = get_hard_blocks()
-
 local function get_block(i: number, j: number): Rectangle
 	return Rectangle.new(
-		PLAYER_AREA.x + i * BLOCK_SIZE,
-		PLAYER_AREA.y + j * BLOCK_SIZE,
-		BLOCK_SIZE,
-		BLOCK_SIZE
+		PLAYER_AREA.x + i * const.BLOCK_SIZE,
+		PLAYER_AREA.y + j * const.BLOCK_SIZE,
+		const.BLOCK_SIZE,
+		const.BLOCK_SIZE
 	)
 end
 
@@ -65,7 +69,7 @@ local function get_random_block(): Point
 end
 
 local function is_hard_block_at(position: Point): boolean
-	for _, hard_block in ipairs(HARD_BLOCKS) do
+	for _, hard_block in ipairs(level_map.get_hard_blocks()) do
 		if hard_block.position:equal(position) then
 			return true
 		end
@@ -74,16 +78,10 @@ local function is_hard_block_at(position: Point): boolean
 	return false
 end
 
-global function snap_to_closest_grid_tile(pos: Point): Point
-	local x = math.floor((pos.x - PLAYER_AREA.x) / BLOCK_SIZE + 0.5) * BLOCK_SIZE + PLAYER_AREA.x
-	local y = math.floor((pos.y - PLAYER_AREA.y) / BLOCK_SIZE + 0.5) * BLOCK_SIZE + PLAYER_AREA.y
-	return Point.new(x, y)
-end
-
-local function get_non_hard_block_positions(): {Point}
+function level_map.get_non_hard_block_positions(): {Point}
 	local positions: {Point} = {}
 
-	for i, j in double_loop_inner_loopback({0, 16}, {0, 10}) do
+	for i, j in itertools.double_loop_inner_loopback({0, 16}, {0, 10}) do
 		local block = get_block_point(i, j)
 		if not is_hard_block_at(block) then
 			table.insert(positions, block)
@@ -92,30 +90,34 @@ local function get_non_hard_block_positions(): {Point}
 	return positions
 end
 
-global NON_HARD_POSITIONS = get_non_hard_block_positions()
+function level_map.snap_to_closest_grid_tile(pos: Point): Point
+	local x = math.floor((pos.x - PLAYER_AREA.x) / const.BLOCK_SIZE + 0.5) * const.BLOCK_SIZE + PLAYER_AREA.x
+	local y = math.floor((pos.y - PLAYER_AREA.y) / const.BLOCK_SIZE + 0.5) * const.BLOCK_SIZE + PLAYER_AREA.y
+	return geometry.new_point(x, y)
+end
 
-global function get_right_side_pressure_blocks(): {Point}
+function level_map.get_right_side_pressure_blocks(): {Point}
 	local blocks: {Point} = {}
 
-	for i, j in double_loop_inner_loopback({0, 3}, {0, 10}) do
+	for i, j in itertools.double_loop_inner_loopback({0, 3}, {0, 10}) do
 		table.insert(blocks, get_block_point(i, j))
 	end
 
-	for j, i in double_loop_inner_loopback({0, 1}, {4, 12}) do
+	for j, i in itertools.double_loop_inner_loopback({0, 1}, {4, 12}) do
 		table.insert(blocks, get_block_point(i, j))
 	end
 
 	return blocks
 end
 
-global function get_left_side_pressure_blocks(): {Point}
+function level_map.get_left_side_pressure_blocks(): {Point}
 	local blocks: {Point} = {}
 
-	for i, j in double_loop_inner_loopback({16, 13, -1}, {10, 0, -1}) do
+	for i, j in itertools.double_loop_inner_loopback({16, 13, -1}, {10, 0, -1}) do
 		table.insert(blocks, get_block_point(i, j))
 	end
 
-	for j, i in double_loop_inner_loopback({10, 9, -1}, {12, 4, -1}) do
+	for j, i in itertools.double_loop_inner_loopback({10, 9, -1}, {12, 4, -1}) do
 		table.insert(blocks, get_block_point(i, j))
 	end
 
@@ -152,21 +154,21 @@ local function get_soft_block_positions(occupies: {Entity}): {Point}
 	local soft_blocks: {Point} = {}
 	local close_to_entity: {Point} = {}
 	local get_point = function (h: HardBlock): Point return h.position end
-	local hard_blocks = map(HARD_BLOCKS, get_point)
+	local hard_blocks = itertools.map(level_map.get_hard_blocks(), get_point)
 
 	for _, occupied in ipairs(occupies) do
 		-- Do allow some positions close to occupied entity to have soft blocks:
 		local sum_to_allow = lutro.math.random() < 0.5 and 2 or 0
-		for j, i in double_loop_inner_loopback({-1, 1}, {-1, 1}) do
+		for j, i in itertools.double_loop_inner_loopback({-1, 1}, {-1, 1}) do
 			if sum_to_allow ~= math.abs(i + j) or (i == 0 and j == 0) then
-				local close_by = Vector.new(j, i):scale(BLOCK_SIZE)
+				local close_by = geometry.new_vector(j, i):scale(const.BLOCK_SIZE)
 				table.insert(close_to_entity, occupied:get_position():move(close_by))
 			end
 		end
 	end
 
 	while #soft_blocks < MAX_SOFT_BLOCKS do
-		local occupied = combine(hard_blocks, close_to_entity, soft_blocks)
+		local occupied = itertools.combine(hard_blocks, close_to_entity, soft_blocks)
 		local random_block = get_random_block()
 		if not contains_position(occupied, random_block) then
 			table.insert(soft_blocks, random_block)
@@ -184,7 +186,7 @@ local NBR_OF_ITMES: {ItemType: integer} = {
 	kick = 8,
 }
 
-global function get_soft_blocks(occupied: {Entity}): {SoftBlockConfig}
+function level_map.get_soft_blocks(occupied: {Entity}): {SoftBlockConfig}
 	local soft_blocks: {SoftBlockConfig} = {}
 
 	local blocks_positions = get_soft_block_positions(occupied)
@@ -205,7 +207,7 @@ global function get_soft_blocks(occupied: {Entity}): {SoftBlockConfig}
 	return soft_blocks
 end
 
-global function get_player_start_positions(number_of_players: integer): {Point}
+function level_map.get_player_start_positions(number_of_players: integer): {Point}
 	local x_min = 0
 	local x_max = 16
 	local y_min = 0
@@ -228,14 +230,14 @@ global function get_player_start_positions(number_of_players: integer): {Point}
 	local function get_positions(): {Point}
 		if number_of_players == 5 then
 			-- Only if there are 5 players can you start dead in the middle
-			return combine(corners, center)
+			return itertools.combine(corners, center)
 		else
-			local result = combine(corners, inner_positions)
+			local result = itertools.combine(corners, inner_positions)
 			return {table.unpack(result, 1, number_of_players)}
 		end
 	end
 
-	return shuffle(get_positions())
+	return itertools.shuffle(get_positions())
 end
 
 global record Goal
@@ -251,10 +253,10 @@ function Goal.new(position: Point, pair: Point): Goal
 end
 
 function Goal:get_hitbox(): Rectangle
-	return new_hitbox(self.position)
+	return hitboxes.new(self.position)
 end
 
-global function get_possible_goals(): {Goal}
+function level_map.get_possible_goals(): {Goal}
 	return {
 		Goal.new(get_block_point(-1, 4), get_block_point(-1, 6)),
 		Goal.new(get_block_point(-1, 6), get_block_point(-1, 4)),
@@ -262,3 +264,5 @@ global function get_possible_goals(): {Goal}
 		Goal.new(get_block_point(17, 6), get_block_point(17, 4)),
 	}
 end
+
+return level_map

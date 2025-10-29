@@ -26,7 +26,9 @@ local ALL_SPRITES: {CharacterSprite} = {
     "bonks",
 }
 
-global function get_sprites(nbr_to_get?: integer): {CharacterSprite}
+local character_sprites = {}
+
+function character_sprites.get(nbr_to_get?: integer): {CharacterSprite}
     local sprites: {CharacterSprite} = {}
     for i, sprite in ipairs(ALL_SPRITES) do
         if not nbr_to_get or i <= nbr_to_get then
@@ -36,3 +38,5 @@ global function get_sprites(nbr_to_get?: integer): {CharacterSprite}
 
     return sprites
 end
+
+return character_sprites
