@@ -1,37 +1,24 @@
-require("const")
-require("geometry")
-require("player")
-require("animation")
-require("scene")
-require("game_timer")
-require("fonts")
-require("items")
-require("level_map")
-require("movement")
-require("pressure_block")
-require("eggs")
-require("dino_animations")
-require("bombs")
-require("input")
 require("character_sprites")
-require("soft_blocks")
-require("carts")
-require("hitboxes")
-require("game_countdown")
-require("score_board")
-require("player_animations")
+require("scenes")
+local bombs = require("bombs")
+local const = require("const")
+local players = require("players")
+local itertools = require("itertools")
+local game_timer = require("game_timer")
+local items = require("items")
+local level_map = require("level_map")
+local movement = require("movement")
+local pressure_blocks = require("pressure_block")
+local eggs = require("eggs")
+local joysticks = require("joysticks")
+local soft_blocks = require("soft_blocks")
+local mad_bombers = require("mad_bombers")
+local hitboxes = require("hitboxes")
+local game_countdown = require("game_countdown")
+local score_board = require("score_board")
+local player_animations = require("player_animations")
 
-
-local function setup_players(selected_sprites: {CharacterSprite}): {Player}
-	local players = {}
-
-	local start_positions = get_player_start_positions(#selected_sprites)
-	for i, sprite in ipairs(selected_sprites) do
-		table.insert(players, Player.new(i, sprite, start_positions[i]))
-	end
-
-	return players
-end
+local JOYPAD = joysticks.buttons()
 
 local record Game is Scene
 	score_board: ScoreBoard
@@ -53,25 +40,29 @@ local record Game is Scene
 end
 
 function Game:load()
-	self.players = setup_players(self.character_sprites)
-	self.bombs = Bombs.new()
+	self.players = {}
+	local start_positions = level_map.get_player_start_positions(#self.character_sprites)
+	for i, sprite in ipairs(self.character_sprites) do
+		table.insert(self.players, players.new(i, sprite, start_positions[i]))
+	end
 
-	self.soft_blocks = SoftBlocks.new(get_soft_blocks(self.players))
-	self.mad_bombers = MadBombers.new(self.bombs)
-	self.eggs = Eggs.new()
-	self.items = Items.new()
-	self.game_timer = GameTimer.new()
-	self.player_animations = PlayerAnimations.new(self.players)
+	self.bombs = bombs.new()
+	self.soft_blocks = soft_blocks.new(level_map.get_soft_blocks(self.players))
+	self.mad_bombers = mad_bombers.new(self.bombs)
+	self.eggs = eggs.new()
+	self.items = items.new()
+	self.game_timer = game_timer.new()
+	self.player_animations = player_animations.new(self.players)
 	self.time_to_wait_to_end_game = 2.0
 	self.time_of_1_alive_player = 0.0
-	self.game_countdown = GameCountdown.new()
-	self.pressure_blocks = PressureBlocks.new()
+	self.game_countdown = game_countdown.new()
+	self.pressure_blocks = pressure_blocks.new()
 end
 
 function Game.new(character_sprites: {CharacterSprite}): Game
    	local self: Game = setmetatable({}, { __index = Game })
 	self.character_sprites = character_sprites
-	self.score_board = ScoreBoard.new(character_sprites)
+	self.score_board = score_board.new(character_sprites)
 	self.background = lutro.graphics.newImage("assets/footboll-map.png")
 	self:load()
    	return self
@@ -82,17 +73,17 @@ function Game:get_available_spots(): {Point}
 	-- be free and not too close to a player
 	local available_spots: {Point} = {}
 	
-	local occupied: {Entity} = combine(
+	local occupied: {Entity} = itertools.combine(
 		self.eggs.on_ground,
 		self.items.on_ground,
 		self.soft_blocks.on_ground,
 		self.pressure_blocks.on_ground
 	)
 
-	for _, pos in ipairs(NON_HARD_POSITIONS) do
+	for _, pos in ipairs(level_map.get_non_hard_block_positions()) do
 		local invalid_position = false
 		for _, player in ipairs(self.players) do
-			if player.position:distance_to(pos) < BLOCK_SIZE * 2 then
+			if player.position:distance_to(pos) < const.BLOCK_SIZE * 2 then
 				invalid_position = true
 			end
 		end
@@ -116,12 +107,12 @@ function Game:clear_items_and_eggs(destroys: {Entity})
 	for _, entity in ipairs(destroys) do
 		local position = entity:get_position()
 		for j, item in ipairs(self.items.on_ground) do
-			if position:in_radius_of(item.position, BLOCK_SIZE / 2) then
+			if position:in_radius_of(item.position, const.BLOCK_SIZE / 2) then
 				table.remove(self.items.on_ground, j)
 			end
 		end
 		for j, egg in ipairs(self.eggs.on_ground) do
-			if position:in_radius_of(egg.position, BLOCK_SIZE / 2) then
+			if position:in_radius_of(egg.position, const.BLOCK_SIZE / 2) then
 				table.remove(self.eggs.on_ground, j)
 			end
 		end
@@ -129,7 +120,7 @@ function Game:clear_items_and_eggs(destroys: {Entity})
 end
 
 function Game:handle_bomb_drop_input(player: Player)
-	if joystick_is_pressed(player.id, JOYPAD_R) then
+	if joysticks.is_pressed(player.id, JOYPAD.R) then
 		self.bombs:place_bomb(player)
 	end
 end
@@ -152,21 +143,21 @@ function Game:update(dt: number)
 	self.pressure_blocks.sudden_death = self.game_timer:sudden_death()
 
 	local hitting_ground = self.pressure_blocks:update(dt)
-	local alive_players = filter(self.players, is_alive)
-	local blocks_bombs: {BlocksBombs} = combine(
+	local alive_players = itertools.filter(self.players, is_alive)
+	local blocks_bombs: {BlocksBombs} = itertools.combine(
 		self.soft_blocks.on_ground,
-		HARD_BLOCKS,
-		filter(self.players, is_alive),
+		level_map.get_hard_blocks(),
+		itertools.filter(self.players, is_alive),
 		self.bombs.on_ground
 	)
-	local blockers: {ExplosionBlocking} = combine(
+	local blockers: {ExplosionBlocking} = itertools.combine(
 		self.eggs.on_ground,
 		self.items.on_ground,
 		self.soft_blocks.on_ground,
 		self.pressure_blocks.on_ground,
-		HARD_BLOCKS
+		level_map.get_hard_blocks()
 	)
-	local explodables: {Explodable} = combine(
+	local explodables: {Explodable} = itertools.combine(
 		self.players,
 		self.soft_blocks.on_ground,
 		self.eggs.on_ground,
@@ -183,10 +174,12 @@ function Game:update(dt: number)
 		player:update(dt)
 		if player:accepts_input() then
 			self:handle_bomb_drop_input(player)
-			local blocking_blocks = get_block_hitboxes(
-				combine(self.soft_blocks.on_ground, self.pressure_blocks.on_ground)
+			local blocking_blocks = hitboxes.get_for_blocks(
+				itertools.combine(self.soft_blocks.on_ground, self.pressure_blocks.on_ground)
 			)
-			set_position_and_dir_from_input(player, dt, blocking_blocks, self.bombs, blocks_bombs)
+			movement.set_position_and_dir_from_input(
+				player, dt, blocking_blocks, self.bombs, blocks_bombs
+			)
 		end
 
 		self.items:possible_pickup_by(player)
@@ -197,15 +190,15 @@ function Game:update(dt: number)
 			self.player_animations.dinos:add_for(hatching_dino)
 		end
 
-		local player_hitbox = new_hitbox(player.position)
+		local player_hitbox = hitboxes.new(player.position)
 		for _, block in ipairs(hitting_ground) do
-			local block_hitbox = new_hitbox(block.position)
-			if player_hitbox:center_distance(block_hitbox) < BLOCK_SIZE / 2 then
+			local block_hitbox = hitboxes.new(block.position)
+			if player_hitbox:center_distance(block_hitbox) < const.BLOCK_SIZE / 2 then
 				player:kill()
 			end
 		end
 	end
-	for _, player in ipairs(filter(self.players, is_dead)) do
+	for _, player in ipairs(itertools.filter(self.players, is_dead)) do
 		self.mad_bombers:ensure_exist_for(player.id, player.sprite)
 	end
 
@@ -218,10 +211,10 @@ function Game:update(dt: number)
 	self.items:update(dt)
 	self.eggs:update(dt)
 
-	local dead_players = filter(self.players, is_dead)
+	local dead_players = itertools.filter(self.players, is_dead)
 	self.items:drop_items_of(dead_players, self:get_available_spots())
 
-	local remove_items: {Entity} = combine(hitting_ground, self.bombs.on_ground)
+	local remove_items: {Entity} = itertools.combine(hitting_ground, self.bombs.on_ground)
 	self:clear_items_and_eggs(remove_items)
 	
 	self.player_animations:update(dt)
@@ -279,7 +272,7 @@ function Game:draw()
 
 	self.score_board:draw()
 
-	local entities_to_draw: {Entity} = combine(
+	local entities_to_draw: {Entity} = itertools.combine(
 		self.player_animations:get_all(),
 		self.items.on_ground,
 		self.pressure_blocks:falling(),
@@ -308,7 +301,9 @@ function Game:draw()
 	end
 end
 
-local function setup(selected_sprites: {CharacterSprite}): Scene
+local game = {}
+
+function game.setup(selected_sprites: {CharacterSprite}): Scene
 	Eggs.load_assets()
 	Items:load_assets()
 	GameTimer.load_assets()
@@ -323,4 +318,4 @@ local function setup(selected_sprites: {CharacterSprite}): Scene
 	return Game.new(selected_sprites)
 end
 
-return setup
+return game

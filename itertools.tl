@@ -4,7 +4,9 @@ global record LoopIndex
 	step: integer
 end
 
-function LoopIndex.new(start: integer, end_: integer, step?: integer): LoopIndex
+local itertools = {}
+
+function itertools.new_loop(start: integer, end_: integer, step?: integer): LoopIndex
    local self: LoopIndex = setmetatable({}, { __index = LoopIndex })
    self.start = start
    self.end_ = end_
@@ -13,7 +15,7 @@ function LoopIndex.new(start: integer, end_: integer, step?: integer): LoopIndex
 end
 
 function LoopIndex:reverse(): LoopIndex
-	return LoopIndex.new(self.end_, self.start, -1 * self.step)
+	return itertools.new_loop(self.end_, self.start, -1 * self.step)
 end
 
 function LoopIndex:values(): function(): integer
@@ -28,11 +30,11 @@ function LoopIndex:values(): function(): integer
 	return value_iterator
 end
 
-global function double_loop_inner_loopback(
+function itertools.double_loop_inner_loopback(
 	outer_range: {integer, integer, integer}, inner_range: {integer, integer, integer}
 ): function(): integer, integer
-	local outer = LoopIndex.new(outer_range[1], outer_range[2], outer_range[3])
-	local inner = LoopIndex.new(inner_range[1], inner_range[2], inner_range[3])
+	local outer = itertools.new_loop(outer_range[1], outer_range[2], outer_range[3])
+	local inner = itertools.new_loop(inner_range[1], inner_range[2], inner_range[3])
 	local values: {{integer, integer}} = {}
 	for j in outer:values() do
 		for i in inner:values() do
@@ -49,7 +51,7 @@ global function double_loop_inner_loopback(
     end
 end
 
-global function combine<T>(...: {T}): {T}
+function itertools.combine<T>(...: {T}): {T}
 	local combined_list: {T} = {}
 	
 	for _, list in ipairs({...}) do
@@ -61,7 +63,7 @@ global function combine<T>(...: {T}): {T}
    	return combined_list
 end
 
-global function map<T, V>(iterator: {T}, f: function(T): V): {V}
+function itertools.map<T, V>(iterator: {T}, f: function(T): V): {V}
     local result = {}
     for _, args in ipairs(iterator) do
         table.insert(result, f(args))
@@ -69,7 +71,7 @@ global function map<T, V>(iterator: {T}, f: function(T): V): {V}
     return result
 end
 
-global function filter<T>(iterator: {T}, predicate: function(T): boolean): {T}
+function itertools.filter<T>(iterator: {T}, predicate: function(T): boolean): {T}
     local result = {}
     for _, element in ipairs(iterator) do
 		if predicate(element) then
@@ -79,7 +81,7 @@ global function filter<T>(iterator: {T}, predicate: function(T): boolean): {T}
     return result
 end
 
-global function shuffle<T>(t: {T}): {T}
+function itertools.shuffle<T>(t: {T}): {T}
 	-- https://stackoverflow.com/a/68486276
 	local s = {}
 	for i = 1, #t do s[i] = t[i] end
@@ -89,3 +91,5 @@ global function shuffle<T>(t: {T}): {T}
 	end
 	return s
 end
+
+return itertools

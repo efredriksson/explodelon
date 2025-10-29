@@ -1,8 +1,9 @@
-require("animation")
 require("geometry")
-require("player")
+require("players")
 require("entity")
-require("itertools")
+local animations = require("animations")
+local const = require("const")
+local itertools = require("itertools")
 
 global enum ItemType
    "speed"
@@ -62,7 +63,9 @@ global record Items
     by_players: {integer: {ItemType}}
 end
 
-function Items.new(): Items
+local items = {}
+
+function items.new(): Items
    local self: Items = setmetatable({}, { __index = Items })
    self.on_ground = {}
    self.by_players = {}
@@ -92,9 +95,9 @@ function Items:drop_items_of(players: {Player}, available_spots: {Point})
 
     for _, player in ipairs(players) do
         if self.by_players[player.id] then
-            local items = shuffle(self.by_players[player.id])
+            local shuffled_items = itertools.shuffle(self.by_players[player.id])
             self.by_players[player.id] = nil
-            for i, item in ipairs(items) do
+            for i, item in ipairs(shuffled_items) do
                 if i <= max_items_to_drop then
                    local spot_to_drop = available_spots[lutro.math.random(#available_spots)]
                    self:drop_at(spot_to_drop, item)
@@ -127,7 +130,7 @@ end
 
 function Items:possible_pickup_by(player: Player)
     for i, item in ipairs(self.on_ground) do
-        if item.position:in_radius_of(player.position, BLOCK_SIZE / 2) and not item.is_exploding then
+        if item.position:in_radius_of(player.position, const.BLOCK_SIZE / 2) and not item.is_exploding then
             self:consumed_by_player(player, i)
         end
     end
@@ -137,7 +140,7 @@ end
 function Items:load_assets()
     take_item_sound = lutro.audio.newSource("assets/take_item.wav", "static")
     take_item_sound:setVolume(0.25)
-    frame_animation = Animation.new(lutro.graphics.newImage("assets/items/frame.png"), 18, 18, 1, 30)
+    frame_animation = animations.new(lutro.graphics.newImage("assets/items/frame.png"), 18, 18, 1, 30)
 	item_shadow = lutro.graphics.newImage("assets/items/shadow.png")
 	item_icons = {
         ["speed"] = lutro.graphics.newImage("assets/items/speed.png"),
@@ -146,3 +149,5 @@ function Items:load_assets()
         ["fire"] = lutro.graphics.newImage("assets/items/fire.png"),
     }
 end
+
+return items

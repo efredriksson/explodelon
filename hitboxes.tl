@@ -1,15 +1,16 @@
-require("const")
 require("entity")
 require("geometry")
-require("itertools")
+local const = require("const")
+local itertools = require("itertools")
 
 local DRAW_HITBOXES = false
+local hitboxes = {}
 
-global function new_hitbox(new_position: Point): Rectangle
-    return Rectangle.new(new_position.x, new_position.y, BLOCK_SIZE, BLOCK_SIZE)
+function hitboxes.new(position: Point): Rectangle
+    return Rectangle.new(position.x, position.y, const.BLOCK_SIZE, const.BLOCK_SIZE)
 end
 
-global function draw_hitbox(rectangle: Rectangle)
+function hitboxes.draw(rectangle: Rectangle)
     if DRAW_HITBOXES then
         lutro.graphics.setColor(255, 255, 255)
         lutro.graphics.rectangle(
@@ -18,9 +19,11 @@ global function draw_hitbox(rectangle: Rectangle)
     end
 end
 
-global function get_block_hitboxes(blocks: {ExplosionBlocking}): {Rectangle}
+function hitboxes.get_for_blocks(blocks: {ExplosionBlocking}): {Rectangle}
     local function hitbox_map_f(block: ExplosionBlocking): Rectangle
-        return new_hitbox(block:get_position())
+        return hitboxes.new(block:get_position())
     end
-    return map(blocks, hitbox_map_f)
+    return itertools.map(blocks, hitbox_map_f)
 end
+
+return hitboxes

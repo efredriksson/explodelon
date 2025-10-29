@@ -22,7 +22,9 @@ global type Direction = enum
    "left"
 end
 
-function Point.new(x: number, y: number): Point
+local geometry = {}
+
+function geometry.new_point(x: number, y: number): Point
    local self: Point = setmetatable({}, { __index = Point })
    self.x = x or 0
    self.y = y or 0
@@ -30,7 +32,7 @@ function Point.new(x: number, y: number): Point
 end
 
 function Point:move(delta: Vector): Point
-   return Point.new(self.x + delta.x, self.y + delta.y)
+   return geometry.new_point(self.x + delta.x, self.y + delta.y)
 end
 
 function Point:distance_to(other: Point): number
@@ -45,7 +47,7 @@ function Point:equal(other: Point): boolean
    return self.x == other.x and self.y == other.y 
 end
 
-function Vector.new(x: number, y: number): Vector
+function geometry.new_vector(x: number, y: number): Vector
    local self: Vector = setmetatable({}, { __index = Vector })
    self.x = x or 0
    self.y = y or 0
@@ -54,18 +56,18 @@ end
 
 function Vector:permutate_if(condition: boolean): Vector
    if condition then
-      return Vector.new(self.y, self.x)
+      return geometry.new_vector(self.y, self.x)
    end
 
    return self
 end
 
 function Vector:scale(val: number): Vector
-   return Vector.new(self.x * val, self.y * val)
+   return geometry.new_vector(self.x * val, self.y * val)
 end
 
 function Vector:abs(): Vector
-   return Vector.new(math.abs(self.x), math.abs(self.y))
+   return geometry.new_vector(math.abs(self.x), math.abs(self.y))
 end
 
 function Vector:length(): number
@@ -77,11 +79,11 @@ function Vector:normalize(): Vector
 end
 
 function Vector:minus(other: Vector): Vector
-   return Vector.new(self.x - other.x, self.y - other.y)
+   return geometry.new_vector(self.x - other.x, self.y - other.y)
 end
 
 function Vector:plus(other: Vector): Vector
-   return Vector.new(self.x + other.x, self.y + other.y)
+   return geometry.new_vector(self.x + other.x, self.y + other.y)
 end
 
 function Rectangle.new(x: number, y: number, width: number, height: number): Rectangle
@@ -126,7 +128,7 @@ function Rectangle:clamp(rec: Rectangle): Rectangle
 end
 
 function Rectangle:center(): Point
-   return Point.new(
+   return geometry.new_point(
       self.x + self.width / 2,
       self.y + self.height / 2
    )
@@ -138,7 +140,7 @@ function Rectangle:center_distance(other: Rectangle): number
 end
 
 function Rectangle:top_left(): Point
-   return Point.new(self.x, self.y)
+   return geometry.new_point(self.x, self.y)
 end
 
 function Rectangle:shrink(shrink: number): Rectangle
@@ -149,3 +151,5 @@ function Rectangle:shrink(shrink: number): Rectangle
       self.height - 2 * shrink
    )
 end
+
+return geometry

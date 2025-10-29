@@ -1,10 +1,10 @@
-require("geometry")
 require("entity")
 require("level_map")
-require("itertools")
-require("animation")
-require("items")
-require("hitboxes")
+local const = require("const")
+local geometry = require("geometry")
+local itertools = require("itertools")
+local animations = require("animations")
+local hitboxes = require("hitboxes")
 
 local soft_block_image: Image
 local soft_block_breaking_image: Image
@@ -43,9 +43,9 @@ function SoftBlock:update(dt: number)
 end
 
 local function center_animation_on_block(animation: Animation, position: Point): Point
-	return Point.new(
-		position.x - (animation.width - BLOCK_SIZE) / 2,
-		position.y - (animation.height - BLOCK_SIZE) / 2
+	return geometry.new_point(
+		position.x - (animation.width - const.BLOCK_SIZE) / 2,
+		position.y - (animation.height - const.BLOCK_SIZE) / 2
     )
 end
 
@@ -66,7 +66,7 @@ function SoftBlock:blow_up()
     end
 
     self.is_exploding = true
-    self.breaking_animation = Animation.new(soft_block_breaking_image, 24, 24, 3, 18)
+    self.breaking_animation = animations.new(soft_block_breaking_image, 24, 24, 3, 18)
 end
 
 function SoftBlock:is_destroyed(): boolean
@@ -77,7 +77,9 @@ global record SoftBlocks
 	on_ground: {SoftBlock}
 end
 
-function SoftBlocks.new(configs: {SoftBlockConfig}): SoftBlocks
+local soft_blocks = {}
+
+function soft_blocks.new(configs: {SoftBlockConfig}): SoftBlocks
     local self: SoftBlocks = setmetatable({}, { __index = SoftBlocks })
     self.on_ground = {}
     for _, config in ipairs(configs) do
@@ -99,9 +101,9 @@ end
 
 function SoftBlocks:hitboxes(): {Rectangle}
     local function hitbox_map_f(block: SoftBlock): Rectangle
-        return new_hitbox(block.position)
+        return hitboxes.new(block.position)
     end
-    return map(self.on_ground, hitbox_map_f)
+    return itertools.map(self.on_ground, hitbox_map_f)
 end
 
 local is_exploding = function(block: SoftBlock): boolean
@@ -112,14 +114,16 @@ local is_not_exploding = function(block: SoftBlock): boolean
 end
 
 function SoftBlocks:exploding(): {SoftBlock}
-    return filter(self.on_ground, is_exploding)
+    return itertools.filter(self.on_ground, is_exploding)
 end
 
 function SoftBlocks:not_exploding(): {SoftBlock}
-    return filter(self.on_ground, is_not_exploding)
+    return itertools.filter(self.on_ground, is_not_exploding)
 end
 
 function SoftBlocks.load_assets()
     soft_block_image = lutro.graphics.newImage("assets/soft-block.png")
     soft_block_breaking_image = lutro.graphics.newImage("assets/soft-block-breaking.png")
 end
+
+return soft_blocks

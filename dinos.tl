@@ -26,7 +26,9 @@ end
 
 local DINO_COLORS: {DinoColor} = {"blue", "pink", "purple", "green", "yellow"}
 
-function Dino.new(position: Point, direction: Direction): Dino
+local dinos = {}
+
+function dinos.new(position: Point, direction: Direction): Dino
    local self: Dino = setmetatable({}, { __index = Dino })
    self.position = position
    self.direction = direction
@@ -40,3 +42,5 @@ end
 function Dino:level_up()
     self.level = math.min(self.level + 1, 3)
 end
+
+return dinos

@@ -1,11 +1,11 @@
-require("const")
-require("geometry")
-require("animation")
+require("animations")
 require("entity")
 require("dinos")
-require("physics")
 require("character_sprites")
-require("hitboxes")
+local const = require("const")
+local geometry = require("geometry")
+local physics = require("physics")
+local hitboxes = require("hitboxes")
 
 global type Action = enum
    "walk"
@@ -42,7 +42,9 @@ global record Player is Entity, Explodable, BlocksBombs
 	jump_visual_target: Point
 end
 
-function Player.new(id: integer, sprite: CharacterSprite, position: Point): Player
+local players = {}
+
+function players.new(id: integer, sprite: CharacterSprite, position: Point): Player
 	local self: Player = setmetatable({}, { __index = Player })
 	self.id = id
 	self.sprite = sprite
@@ -50,7 +52,7 @@ function Player.new(id: integer, sprite: CharacterSprite, position: Point): Play
 	self.direction = "down"
 	self.action = "idle"
 	self.state = "foot"
-	self.speed = PLAYER_SPEED
+	self.speed = const.PLAYER_SPEED
 	self.bombs = 1
 	self.fire = 2
 	self.has_kick = false
@@ -108,7 +110,7 @@ local function get_player_position_on_mount(original_pos: Point, direction: Dire
 	local horizonal_displacement = horizonal_displacements[direction]
 	local vertical_displacement = -8
 	return original_pos:move(
-		Vector.new(horizonal_displacement, vertical_displacement)
+		geometry.new_vector(horizonal_displacement, vertical_displacement)
 	)
 end
 
@@ -129,20 +131,20 @@ function Player:accepts_input(): boolean
 end
 
 -- Player jump constants 
-local JUMP_ON_TIME = 1.2               -- Unit: seconds
-local JUMP_OFF_TIME = 0.9              -- Unit: seconds
-local JUMP_ON_HEIGHT = 2 * BLOCK_SIZE  -- Unit: pixels (not SI unit!)
-local JUMP_OFF_HEIGHT = 3 * BLOCK_SIZE -- Unit: pixels (not SI unit!)
+local JUMP_ON_TIME = 1.2               		 -- Unit: seconds
+local JUMP_OFF_TIME = 0.9              		 -- Unit: seconds
+local JUMP_ON_HEIGHT = 2 * const.BLOCK_SIZE  -- Unit: pixels (not SI unit!)
+local JUMP_OFF_HEIGHT = 3 * const.BLOCK_SIZE -- Unit: pixels (not SI unit!)
 
 function Player:_set_jump_v_and_g(jump_height: number, jump_time: number)
-	local v_0 = get_init_projectile_velocity(
+	local v_0 = physics.calc_init_projectile_velocity(
 		math.abs(self.jump_visual_target.y - self.jump_p.y), jump_height, jump_time
 	)
-	local g = get_gravity(v_0, jump_height)
+	local g = physics.calc_gravity(v_0, jump_height)
 	local side_vel = (self.jump_visual_target.x - self.jump_p.x) / jump_time
 	-- Y values for physics vectors are negative to match game coordinates:
-	self.jump_v = Vector.new(side_vel, -v_0)
-	self.jump_g = Vector.new(0, -g)
+	self.jump_v = geometry.new_vector(side_vel, -v_0)
+	self.jump_g = geometry.new_vector(0, -g)
 end
 
 function Player:jumps_onto(dino: Dino)
@@ -257,15 +259,15 @@ end
 
 local function block_to_anim_draw_pos(animation: Animation, pos: Point): Point
 	-- y: +1 is because of the sprite, look over when doing animations
-	return Point.new(
-		pos.x + (BLOCK_SIZE - animation.width) / 2,
-		pos.y - animation.height + BLOCK_SIZE + 1)
+	return geometry.new_point(
+		pos.x + (const.BLOCK_SIZE - animation.width) / 2,
+		pos.y - animation.height + const.BLOCK_SIZE + 1)
 end
 
 function PlayerAnimation:draw()
 	local draw_pos = block_to_anim_draw_pos(self.animation, self.draw_position)
 	self.animation:draw(draw_pos.x, draw_pos.y)
-	draw_hitbox(new_hitbox(self.player.position))
+	hitboxes.draw(hitboxes.new(self.player.position))
 end
 
 global record MountAnimation is Entity
@@ -287,7 +289,7 @@ end
 function MountAnimation:draw()
 	local draw_pos = block_to_anim_draw_pos(self.animation, self.dino.position)
 	self.animation:draw(draw_pos.x, draw_pos.y)
-	draw_hitbox(new_hitbox(self.dino.position))
+	hitboxes.draw(hitboxes.new(self.dino.position))
 end
 
 global record MountedPlayerAnimation is Entity
@@ -331,5 +333,7 @@ function MountedPlayerAnimation:draw()
 		draw(self.dino_animation, self.player.position)
 		draw(self.player_animation, self.draw_position)
 	end
-	draw_hitbox(new_hitbox(self.player.position))
+	hitboxes.draw(hitboxes.new(self.player.position))
 end
+
+return players

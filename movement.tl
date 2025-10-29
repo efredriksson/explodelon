@@ -1,9 +1,12 @@
-require("const")
-require("geometry")
-require("level_map")
-require("player")
+require("players")
 require("bombs")
-require("hitboxes")
+local const = require("const")
+local geometry = require("geometry")
+local level_map = require("level_map")
+local hitboxes = require("hitboxes")
+local joysticks = require("joysticks")
+
+local JOYPAD = joysticks.buttons()
 
 local record Movement
 	dxdy: Vector
@@ -36,17 +39,17 @@ end
 local function get_directions_from_input(player: Player, dt: number): {Movement}
 	local result: {Movement} = {}
 
-	if lutro.joystick.isDown(player.id, JOYPAD_DOWN) then
-		table.insert(result, Movement.new(Vector.new(0, dt * player.speed), "down"))
+	if lutro.joystick.isDown(player.id, JOYPAD.DOWN) then
+		table.insert(result, Movement.new(geometry.new_vector(0, dt * player.speed), "down"))
 	end
-	if lutro.joystick.isDown(player.id, JOYPAD_UP) then
-		table.insert(result, Movement.new(Vector.new(0, -dt * player.speed), "up"))
+	if lutro.joystick.isDown(player.id, JOYPAD.UP) then
+		table.insert(result, Movement.new(geometry.new_vector(0, -dt * player.speed), "up"))
 	end
-	if lutro.joystick.isDown(player.id, JOYPAD_RIGHT) then
-		table.insert(result, Movement.new(Vector.new(dt * player.speed, 0), "right"))
+	if lutro.joystick.isDown(player.id, JOYPAD.RIGHT) then
+		table.insert(result, Movement.new(geometry.new_vector(dt * player.speed, 0), "right"))
 	end
-	if lutro.joystick.isDown(player.id, JOYPAD_LEFT) then
-		table.insert(result, Movement.new(Vector.new(-dt * player.speed, 0), "left"))
+	if lutro.joystick.isDown(player.id, JOYPAD.LEFT) then
+		table.insert(result, Movement.new(geometry.new_vector(-dt * player.speed, 0), "left"))
 	end
 
 	return result
@@ -59,9 +62,10 @@ end
 
 --- Get local position for point in block, so {x, y} ∈ [0, BLOCK_SIZE).
 local function get_local_position(global_position: Point): Point
-	return Point.new(
-		math.fmod(global_position.x - PLAYER_AREA.x, BLOCK_SIZE),
-		math.fmod(global_position.y - PLAYER_AREA.y, BLOCK_SIZE)
+	local player_area = level_map.player_area()
+	return geometry.new_point(
+		math.fmod(global_position.x - player_area.x, const.BLOCK_SIZE),
+		math.fmod(global_position.y - player_area.y, const.BLOCK_SIZE)
 	)
 end
 
@@ -78,7 +82,7 @@ local function around_corner_move(
 	local movement_towards_corner = math.min(dist_to_corner, movement_dist)
 	local movement_down_corner = movement_dist - movement_towards_corner
 
-	return Vector.new(
+	return geometry.new_vector(
 		sign_of(pos_and_block_lateral_diff) * movement_towards_corner,
 		sign_of(movement_len) * movement_down_corner
 	)
@@ -101,10 +105,10 @@ local function in_end_of_corridor_and_walking_out(
 	local local_pos = get_local_position(player_pos)
 
 	local function first_half_of_block(val: number): boolean
-		return val < BLOCK_SIZE / 2 and val > 0
+		return val < const.BLOCK_SIZE / 2 and val > 0
 	end
 	local function second_half_of_block(val: number): boolean
-		return val > BLOCK_SIZE / 2
+		return val > const.BLOCK_SIZE / 2
 	end
 
 	return (movement.dir == "down" and second_half_of_block(local_pos.y)) or
@@ -122,14 +126,14 @@ local function restrict_player_movement(
 ): CheckedMovement
 	local margin_for_corner_assist = 8
 	local new_position = player.position:move(movement)
-	local new_hit_box = new_hitbox(new_position)
+	local new_hit_box = hitboxes.new(new_position)
 
 	local function move_against_block(
 		movement_len: number,
 		pos_and_block_lateral_diff: number,
 		walk_along_y_axis: boolean
 	): CheckedMovement
-		local dist_to_corner = BLOCK_SIZE - math.abs(pos_and_block_lateral_diff)
+		local dist_to_corner = const.BLOCK_SIZE - math.abs(pos_and_block_lateral_diff)
 
 		if dist_to_corner > margin_for_corner_assist then
 			return CheckedMovement.new(player.position, false, false)
@@ -145,7 +149,7 @@ local function restrict_player_movement(
 		return CheckedMovement.new(new_position:move(along_wall), true, true)
 	end
 
-	local old_hitbox = new_hitbox(player.position)
+	local old_hitbox = hitboxes.new(player.position)
 	local function walking_further_into_block(block: Rectangle): boolean
 		if not new_hit_box:overlap(block) then
 			return false
@@ -157,14 +161,14 @@ local function restrict_player_movement(
 	end
 
 	for _, bomb in ipairs(bombs.on_ground) do
-		local bomb_hitbox = new_hitbox(bomb.position)
+		local bomb_hitbox = hitboxes.new(bomb.position)
 		if walking_further_into_block(bomb_hitbox) then
-			if bomb.position:distance_to(player.position) > BLOCK_SIZE * (3 / 4) or bomb.has_been_kicked then
+			if bomb.position:distance_to(player.position) > const.BLOCK_SIZE * (3 / 4) or bomb.has_been_kicked then
 				-- If a bomb has been kicked then it is no longer to move
 				-- freely in far inside it. This is to stop moving through
 				-- bombs that are kicked against a player.
 				local kick_direction = movement:normalize()
-				if player.has_kick and bomb:can_move(kick_direction:scale(BLOCK_SIZE * 0.9), blocks_bombs) then
+				if player.has_kick and bomb:can_move(kick_direction:scale(const.BLOCK_SIZE * 0.9), blocks_bombs) then
 					-- Walking into bomb and at edge of bomb then kick
 					bomb:kick(kick_direction)
 				else
@@ -182,7 +186,7 @@ local function restrict_player_movement(
 		end
 	end
 
-	for _, block in ipairs(get_block_hitboxes(HARD_BLOCKS)) do
+	for _, block in ipairs(hitboxes.get_for_blocks(level_map.get_hard_blocks())) do
 		if new_hit_box:overlap(block) then
 			if movement.x == 0 then
 				local movement_len = movement.y
@@ -204,8 +208,9 @@ local function restrict_player_movement(
 		end
 	end
 
-	if not PLAYER_AREA:contains(new_hit_box) then
-		local clamped_position = PLAYER_AREA:clamp(new_hit_box):top_left()
+	local player_area = level_map.player_area()
+	if not player_area:contains(new_hit_box) then
+		local clamped_position = player_area:clamp(new_hit_box):top_left()
 		return CheckedMovement.new(clamped_position, false, false)
 	end
 
@@ -268,7 +273,9 @@ local function get_new_player_orientation(
 	return cur_direction, cur_position
 end
 
-global function set_position_and_dir_from_input(
+local movement = {}
+
+function movement.set_position_and_dir_from_input(
 	player: Player,
 	dt: number,
 	blocking_blocks: {Rectangle},
@@ -286,3 +293,5 @@ global function set_position_and_dir_from_input(
 		player:set_action("walk")
 	end
 end
+
+return movement

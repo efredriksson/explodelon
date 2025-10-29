@@ -15,7 +15,9 @@ global record Animation
     loops: number
 end
 
-function Animation.new(image: Image, width: number, height: number, period: number, speed: number, idle_time?: number): Animation
+local animations = {}
+
+function animations.new(image: Image, width: number, height: number, period: number, speed: number, idle_time?: number): Animation
     local self: Animation = setmetatable({}, { __index = Animation })
     self.image = image
     self.timer = 0
@@ -76,3 +78,5 @@ function Animation:draw(x: number, y: number)
         math.floor(x), math.floor(y)
     )
 end
+
+return animations

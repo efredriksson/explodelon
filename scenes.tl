@@ -1,4 +1,4 @@
-
+local scenes = {}
 
 global type Scene = interface
     load: function(self)
@@ -39,11 +39,13 @@ end
 
 local current_scene: Scene
 
-global function get_scene(): Scene
+function scenes.get(): Scene
     return current_scene
 end
 
-global function set_scene(scene: Scene)
+function scenes.set(scene: Scene)
     current_scene = WrapperScene.new(scene)
     current_scene:load()
 end
+
+return scenes

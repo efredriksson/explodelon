@@ -1,8 +1,8 @@
-require("const")
-require("geometry")
 require("entity")
-require("animation")
-require("dinos")
+local const = require("const")
+local geometry = require("geometry")
+local animations = require("animations")
+local dinos = require("dinos")
 
 local egg_shake_image: Image
 local egg_open_image: Image
@@ -23,7 +23,7 @@ function Egg.new(position: Point): Egg
     self.hatched = false
     self.is_exploding = false
     self.in_explosion = true
-    self.animation = Animation.new(egg_shake_image, 20, 26, 3, 18, 2)
+    self.animation = animations.new(egg_shake_image, 20, 26, 3, 18, 2)
     return self
 end
 
@@ -31,13 +31,16 @@ function Egg:get_position(): Point
     return self.position
 end
 
-local function convert_pos_for_egg_draw(animation: Animation, pos: Point): Point
-	return Point.new(pos.x + (BLOCK_SIZE - animation.width) / 2, pos.y + BLOCK_SIZE - animation.height)
+function Egg:get_position_to_draw_egg(): Point
+	return geometry.new_point(
+        self.position.x + (const.BLOCK_SIZE - self.animation.width) / 2,
+        self.position.y + const.BLOCK_SIZE - self.animation.height
+    )
 end
 
 function Egg:open()
     self.breaking = true
-    self.animation = Animation.new(egg_open_image, 34, 34, 3, 18, 0.5)
+    self.animation = animations.new(egg_open_image, 34, 34, 3, 18, 0.5)
 end
 
 function Egg:blow_up()
@@ -49,7 +52,7 @@ function Egg:draw()
         return
     end
 
-    local draw_pos = convert_pos_for_egg_draw(self.animation, self.position)
+    local draw_pos = self:get_position_to_draw_egg()
 	self.animation:draw(draw_pos.x, draw_pos.y)
 end
 
@@ -69,7 +72,9 @@ global record Eggs
     on_ground: {Egg}
 end
 
-function Eggs.new(): Eggs
+local eggs = {}
+
+function eggs.new(): Eggs
    local self: Eggs = setmetatable({}, { __index = Eggs })
    self.on_ground = {}
    return self
@@ -90,10 +95,10 @@ end
 
 function Eggs:possible_hatcher_at(player_position: Point, player_dir: Direction): Dino
     for _, egg in ipairs(self.on_ground) do
-        if egg.position:in_radius_of(player_position, BLOCK_SIZE / 2) then
+        if egg.position:in_radius_of(player_position, const.BLOCK_SIZE / 2) then
 			if not egg.breaking and not egg.is_exploding then
 				egg:open()
-                return Dino.new(egg.position, player_dir)
+                return dinos.new(egg.position, player_dir)
 			end
         end
     end
@@ -105,3 +110,5 @@ function Eggs.load_assets()
     egg_shake_image = lutro.graphics.newImage("assets/tirras/egg.png")
     egg_open_image = lutro.graphics.newImage("assets/tirras/egg_open.png")
 end
+
+return eggs

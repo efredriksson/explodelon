@@ -1,23 +1,23 @@
-require("const")
-require("scene")
-require("input")
+local const = require("const")
+local scenes = require("scenes")
+local joysticks = require("joysticks")
 local start_menu = require("start_menu")
 
 function lutro.conf(t: Configuration)
-	t.width  = MAP_WIDTH
-	t.height = MAP_HEIGHT
+	t.width  = const.MAP_WIDTH
+	t.height = const.MAP_HEIGHT
 end
 
 function lutro.load()
-	input_setup()
-	set_scene(start_menu)
+	joysticks.setup()
+	scenes.set(start_menu.new())
 end
 
 function lutro.update(dt: number)
-	get_scene():update(dt)
-	input_update()
+	scenes.get():update(dt)
+	joysticks.update()
 end
 
 function lutro.draw()
-	get_scene():draw()
+	scenes.get():draw()
 end

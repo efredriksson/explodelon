@@ -1,6 +1,6 @@
-require("animation")
-require("const")
-require("geometry")
+local animations = require("animations")
+local const = require("const")
+local geometry = require("geometry")
 
 local READY_AT_TIME = 3
 local START_Y_POSITION = 25
@@ -20,11 +20,13 @@ function GameCountdown.load_assets()
 	ready_set_go_sound = lutro.audio.newSource("assets/ready_set_go.wav", "static")
 end
 
-function GameCountdown.new(): GameCountdown
+local game_countdown = {}
+
+function game_countdown.new(): GameCountdown
     local self: GameCountdown = setmetatable({}, { __index = GameCountdown })
-	self.animation = Animation.new(ready_set_go_image, 45, 20, 1, 1)
+	self.animation = animations.new(ready_set_go_image, 45, 20, 1, 1)
 	self.have_played_sound = false
-	self.position = Point.new((MAP_WIDTH - 45) / 2, START_Y_POSITION)
+	self.position = geometry.new_point((const.MAP_WIDTH - 45) / 2, START_Y_POSITION)
 	self.waited_for = 0.0
     return self
 end
@@ -44,10 +46,12 @@ function GameCountdown:update(dt: number)
 	end
 	if self:finished() then
 		local remove_speed = 25
-		self.position = self.position:move(Vector.new(0, -remove_speed):scale(dt))
+		self.position = self.position:move(geometry.new_vector(0, -remove_speed):scale(dt))
 	end
 end
 
 function GameCountdown:draw()
     self.animation:draw(self.position.x, self.position.y)
 end
+
+return game_countdown

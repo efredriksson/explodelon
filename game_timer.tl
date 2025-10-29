@@ -1,7 +1,7 @@
-require("geometry")
-require("fonts")
+local fonts = require("fonts")
+local geometry = require("geometry")
 
-local TIMER_POS = Point.new(18, 8)
+local TIMER_POS = geometry.new_point(18, 8)
 local GAME_TIME = 180
 
 global record GameTimer
@@ -9,8 +9,9 @@ global record GameTimer
 end
 
 local clock_font: ShadedFont
+local game_timer = {}
 
-function GameTimer.new(): GameTimer
+function game_timer.new(): GameTimer
    local self: GameTimer = setmetatable({}, { __index = GameTimer })
    self.time_left = GAME_TIME
    return self
@@ -18,7 +19,7 @@ end
 
 
 function GameTimer.load_assets()
-	clock_font = get_shaded_number_font()
+	clock_font = fonts.new_shaded_numbers()
 end
 
 function GameTimer:update(dt: number)
@@ -63,3 +64,5 @@ end
 function GameTimer:sudden_death(): boolean
 	return self.time_left <= 60.0
 end
+
+return game_timer

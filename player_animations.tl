@@ -1,6 +1,6 @@
-require("animation")
-require("player")
-require("dino_animations")
+require("players")
+local animations = require("animations")
+local dino_animations = require("dino_animations")
 
 
 --- Scale 0-1 represent how far from current to max to increase color component 
@@ -31,7 +31,7 @@ local function get_animation(asset_file: string, invulnerable: boolean): Animati
 		make_lighter(image)
 	end
 
-	return Animation.new(image, 18, 34, 3, 18)
+	return animations.new(image, 18, 34, 3, 18)
 end
 
 local function character_animation_for_action(character_asset: string, state: PlayerState, action: Action, invulnerable: boolean): {Direction: Animation}
@@ -65,7 +65,7 @@ end
 local function character_animation_for_dying(character_asset: string): {Direction: Animation}
 	local asset_file = "assets/" .. character_asset .. "/foot/dying.png"
 	local image = lutro.graphics.newImage(asset_file)
-	local animation = Animation.new(image, 18, 34, 1, 8)
+	local animation = animations.new(image, 18, 34, 1, 8)
 	return {
 		up = animation,
 		down = animation,
@@ -82,7 +82,7 @@ local function character_animation_for_stunned(character_asset: string, state: P
 
 	local asset_file = "assets/" .. character_asset .. "/" .. state .. "/stunned.png"
 	local image = lutro.graphics.newImage(asset_file)
-	local animation = Animation.new(image, 18, 34, 1, 8)
+	local animation = animations.new(image, 18, 34, 1, 8)
 	return {
 		up = animation,
 		down = animation,
@@ -122,12 +122,14 @@ function PlayerAnimations:add_new(player: Player)
     table.insert(self.players, player)
 end
 
-function PlayerAnimations.new(players: {Player}): PlayerAnimations
+local player_animations = {}
+
+function player_animations.new(players: {Player}): PlayerAnimations
     local self: PlayerAnimations = setmetatable({}, { __index = PlayerAnimations })
     self.regular = {}
     self.invulnerable = {}
     self.players = {}
-	self.dinos = AnimatedDinos.new()
+	self.dinos = dino_animations.new()
 
     for _, player in ipairs(players) do
 		self:add_new(player)
@@ -178,3 +180,5 @@ function PlayerAnimations:get_all(): {Entity}
 
 	return entities_to_draw
 end
+
+return player_animations

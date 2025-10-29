@@ -1,8 +1,9 @@
-require("const")
-require("fonts")
-require("character_sprites")
+local const = require("const")
+local geometry = require("geometry")
+local fonts = require("fonts")
+local character_sprites = require("character_sprites")
 
-local score_font: ShadedFont = get_shaded_number_font()
+local score_font: ShadedFont
 local avatar_images: {CharacterSprite: Image}
 
 global record PlayerScore
@@ -23,7 +24,9 @@ global record ScoreBoard
     players: {PlayerScore}
 end
 
-function ScoreBoard.new(avatars: {CharacterSprite}): ScoreBoard
+local score_board = {}
+
+function score_board.new(avatars: {CharacterSprite}): ScoreBoard
     local self: ScoreBoard = setmetatable({}, { __index = ScoreBoard })
     self.players = {}
     for id, avatar in ipairs(avatars) do
@@ -38,16 +41,16 @@ local function get_avatar_position(avatar_num: number, num_avatars: number): Poi
 	local y_start = 3
 	local avatar_space_padding = 10
 
-	local total_space = MAP_WIDTH - x_start - avatar_space_padding
+	local total_space = const.MAP_WIDTH - x_start - avatar_space_padding
 	local padding = (total_space - space_for_avatar * num_avatars) / (num_avatars + 1)
 	local x_pos = x_start + padding * avatar_num + space_for_avatar * (avatar_num - 1)
-	return Point.new(x_pos, y_start)
+	return geometry.new_point(x_pos, y_start)
 end
 
 function ScoreBoard:draw()
     for _, player in ipairs(self.players) do
 		local avatar_pos = get_avatar_position(player.id, #self.players)
-		local score_pos = avatar_pos:move(Vector.new(18, 5))
+		local score_pos = avatar_pos:move(geometry.new_vector(18, 5))
 		lutro.graphics.draw(avatar_images[player.avatar], avatar_pos.x, avatar_pos.y)
 		score_font:draw(tostring(player.score), score_pos)
 	end
@@ -65,11 +68,13 @@ function ScoreBoard:add_point(player_id: integer)
 end
 
 function ScoreBoard.load_assets()
-    score_font = get_shaded_number_font()
+    score_font = fonts.new_shaded_numbers()
     avatar_images = {}
-    for _, sprite in ipairs(get_sprites()) do
+    for _, sprite in ipairs(character_sprites.get()) do
         avatar_images[sprite] = lutro.graphics.newImage(
             "assets/" .. sprite .. "/head_down.png"
         )
     end
 end
+
+return score_board
