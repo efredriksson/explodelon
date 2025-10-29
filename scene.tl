@@ -1,24 +1,40 @@
-global record Scene
-   load: function()
-   update: function(dt: number)
-   draw: function()
+
+
+global type Scene = interface
+    load: function(self)
+    update: function(self, dt: number)
+    draw: function(self)
 end
 
-local function default_load()
+local record WrapperScene is Scene
+    to_wrap: Scene
+    load: function(self)
+    update: function(self, dt: number)
+    draw: function(self)
 end
 
-local function default_update(_: number)
+function WrapperScene.new(to_wrap: Scene): WrapperScene
+   local self: WrapperScene = setmetatable({}, { __index = WrapperScene })
+   self.to_wrap = to_wrap
+   return self
 end
 
-local function default_draw()
+function WrapperScene:load()
+    if self.to_wrap.load then
+        self.to_wrap:load()
+    end
 end
 
-function Scene.new(): Scene
-    local self: Scene = setmetatable({}, { __index = Scene })
-    self.load = default_load
-    self.update = default_update
-    self.draw = default_draw
-    return self
+function WrapperScene:update(dt: number)
+    if self.to_wrap.update then
+        self.to_wrap:update(dt)
+    end
+end
+
+function WrapperScene:draw()
+    if self.to_wrap.draw then
+        self.to_wrap:draw()
+    end
 end
 
 local current_scene: Scene
@@ -28,6 +44,6 @@ global function get_scene(): Scene
 end
 
 global function set_scene(scene: Scene)
-    current_scene = scene
-    current_scene.load()
+    current_scene = WrapperScene.new(scene)
+    current_scene:load()
 end

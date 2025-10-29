@@ -66,7 +66,15 @@ local function get_walk_down_animation(character_name: string): Animation
     return animation
 end
 
-local function load_menu()
+local record PlayerSelection is Scene
+end
+
+function PlayerSelection.new(): PlayerSelection
+   local self: PlayerSelection = setmetatable({}, { __index = PlayerSelection })
+   return self
+end
+
+function PlayerSelection:load()
     for idx, sprite in ipairs(get_sprites()) do
         table.insert(selectable_characters, Character.new(sprite, idx))
     end
@@ -114,7 +122,7 @@ local function handle_player_input()
     end
 end
 
-local function update(dt: number)
+function PlayerSelection:update(dt: number)
     handle_player_input()
 
     for _, selected in ipairs(selected_characters) do
@@ -133,7 +141,7 @@ local function draw_slow_walking(character: Character)
     slow_walk_animations[character.number]:draw(pos.x, pos.y)
 end
 
-local function draw()
+function PlayerSelection:draw()
 	lutro.graphics.draw(background)
 
     for _, char in ipairs(selectable_characters) do
@@ -157,11 +165,8 @@ end
 
 local function setup(number_players: integer): Scene
     number_players_selecting = number_players
-	local module = Scene.new()
-    module.load = load_menu
-    module.draw = draw
-    module.update = update
-    return module
+	local player_selection = PlayerSelection.new()
+    return player_selection
 end
 
 return setup
