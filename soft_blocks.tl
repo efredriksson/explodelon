@@ -119,7 +119,7 @@ function SoftBlocks:not_exploding(): {SoftBlock}
     return filter(self.on_ground, is_not_exploding)
 end
 
-function SoftBlocks:load_assets()
+function SoftBlocks.load_assets()
     soft_block_image = lutro.graphics.newImage("assets/soft-block.png")
     soft_block_breaking_image = lutro.graphics.newImage("assets/soft-block-breaking.png")
 end

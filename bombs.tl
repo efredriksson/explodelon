@@ -226,7 +226,7 @@ global record Bombs
     explosions: Explosions
 end
 
-function Bombs:load()
+function Bombs.load_assets()
     bomb_shadow = lutro.graphics.newImage("assets/items/shadow.png")
     bomb_image = lutro.graphics.newImage("assets/bomb/bomb.png")
 end

@@ -275,7 +275,7 @@ global record Explosions
     on_ground: {Explosion}
 end
 
-function Explosions:load()
+function Explosions.load_assets()
     explosion_end_right_image = lutro.graphics.newImage("assets/bomb/explosion/explosion_end_right.png")
     explosion_end_left_image = lutro.graphics.newImage("assets/bomb/explosion/explosion_end_left.png")
     explosion_end_top_image = lutro.graphics.newImage("assets/bomb/explosion/explosion_end_top.png")
