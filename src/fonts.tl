@@ -1,4 +1,4 @@
-require("geometry")
+require("geometry.points")
 
 global record ShadedFont
    main: Font

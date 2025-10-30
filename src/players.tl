@@ -3,8 +3,9 @@ require("character_sprites")
 require("dinos")
 require("entity")
 local const = require("const")
-local geometry = require("geometry")
 local physics = require("physics")
+local vectors = require("geometry.vectors")
+
 
 global type Action = enum
    "walk"
@@ -109,7 +110,7 @@ local function get_player_position_on_mount(original_pos: Point, direction: Dire
 	local horizonal_displacement = horizonal_displacements[direction]
 	local vertical_displacement = -8
 	return original_pos:move(
-		geometry.new_vector(horizonal_displacement, vertical_displacement)
+		vectors.new(horizonal_displacement, vertical_displacement)
 	)
 end
 
@@ -142,8 +143,8 @@ function Player:_set_jump_v_and_g(jump_height: number, jump_time: number)
 	local g = physics.calc_gravity(v_0, jump_height)
 	local side_vel = (self.jump_visual_target.x - self.jump_p.x) / jump_time
 	-- Y values for physics vectors are negative to match game coordinates:
-	self.jump_v = geometry.new_vector(side_vel, -v_0)
-	self.jump_g = geometry.new_vector(0, -g)
+	self.jump_v = vectors.new(side_vel, -v_0)
+	self.jump_g = vectors.new(0, -g)
 end
 
 function Player:jumps_onto(dino: Dino)

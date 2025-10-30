@@ -1,11 +1,11 @@
 require("players")
 require("bombs")
 local const = require("const")
-local geometry = require("geometry")
 local hitboxes = require("hitboxes")
 local joysticks = require("joysticks")
 local level_map = require("level_map")
-
+local points = require("geometry.points")
+local vectors = require("geometry.vectors")
 
 local JOYPAD = joysticks.buttons()
 
@@ -41,16 +41,16 @@ local function get_directions_from_input(player: Player, dt: number): {Movement}
 	local result: {Movement} = {}
 
 	if lutro.joystick.isDown(player.id, JOYPAD.DOWN) then
-		table.insert(result, Movement.new(geometry.new_vector(0, dt * player.speed), "down"))
+		table.insert(result, Movement.new(vectors.new(0, dt * player.speed), "down"))
 	end
 	if lutro.joystick.isDown(player.id, JOYPAD.UP) then
-		table.insert(result, Movement.new(geometry.new_vector(0, -dt * player.speed), "up"))
+		table.insert(result, Movement.new(vectors.new(0, -dt * player.speed), "up"))
 	end
 	if lutro.joystick.isDown(player.id, JOYPAD.RIGHT) then
-		table.insert(result, Movement.new(geometry.new_vector(dt * player.speed, 0), "right"))
+		table.insert(result, Movement.new(vectors.new(dt * player.speed, 0), "right"))
 	end
 	if lutro.joystick.isDown(player.id, JOYPAD.LEFT) then
-		table.insert(result, Movement.new(geometry.new_vector(-dt * player.speed, 0), "left"))
+		table.insert(result, Movement.new(vectors.new(-dt * player.speed, 0), "left"))
 	end
 
 	return result
@@ -64,7 +64,7 @@ end
 --- Get local position for point in block, so {x, y} ∈ [0, BLOCK_SIZE).
 local function get_local_position(global_position: Point): Point
 	local player_area = level_map.player_area()
-	return geometry.new_point(
+	return points.new(
 		math.fmod(global_position.x - player_area.x, const.BLOCK_SIZE),
 		math.fmod(global_position.y - player_area.y, const.BLOCK_SIZE)
 	)
@@ -83,7 +83,7 @@ local function around_corner_move(
 	local movement_towards_corner = math.min(dist_to_corner, movement_dist)
 	local movement_down_corner = movement_dist - movement_towards_corner
 
-	return geometry.new_vector(
+	return vectors.new(
 		sign_of(pos_and_block_lateral_diff) * movement_towards_corner,
 		sign_of(movement_len) * movement_down_corner
 	)

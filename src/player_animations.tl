@@ -2,7 +2,7 @@ require("players")
 local animations = require("animations")
 local const = require("const")
 local dino_animations = require("dino_animations")
-local geometry = require("geometry")
+local points = require("geometry.points")
 local hitboxes = require("hitboxes")
 
 
@@ -132,7 +132,7 @@ end
 
 local function block_to_anim_draw_pos(animation: Animation, pos: Point): Point
 	-- y: +1 is because of the sprite, look over when doing animations
-	return geometry.new_point(
+	return points.new(
 		pos.x + (const.BLOCK_SIZE - animation.width) / 2,
 		pos.y - animation.height + const.BLOCK_SIZE + 1)
 end

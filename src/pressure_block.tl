@@ -1,6 +1,6 @@
 require("entity")
 local const = require("const")
-local geometry = require("geometry")
+local points = require("geometry.points")
 local hitboxes = require("hitboxes")
 local itertools = require("itertools")
 local level_map = require("level_map")
@@ -17,7 +17,7 @@ local block_fall_shadow: Image
 
 function PressureBlock.new(target: Point): PressureBlock
 	local self: PressureBlock = setmetatable({}, { __index = PressureBlock })
-	self.falling_position = geometry.new_point(target.x, -const.BLOCK_SIZE)
+	self.falling_position = points.new(target.x, -const.BLOCK_SIZE)
     self.position = target
     self.in_explosion = false
 	return self

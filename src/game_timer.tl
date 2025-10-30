@@ -1,7 +1,7 @@
 local fonts = require("fonts")
-local geometry = require("geometry")
+local points = require("geometry.points")
 
-local TIMER_POS = geometry.new_point(18, 8)
+local TIMER_POS = points.new(18, 8)
 local GAME_TIME = 180
 
 global record GameTimer

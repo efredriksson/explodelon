@@ -1,13 +1,15 @@
 require("entity")
-require("geometry")
+require("geometry.points")
 local const = require("const")
 local itertools = require("itertools")
+local rectangles = require("geometry.rectangles")
+
 
 local DRAW_HITBOXES = false
 local hitboxes = {}
 
 function hitboxes.new(position: Point): Rectangle
-    return Rectangle.new(position.x, position.y, const.BLOCK_SIZE, const.BLOCK_SIZE)
+    return rectangles.new(position.x, position.y, const.BLOCK_SIZE, const.BLOCK_SIZE)
 end
 
 function hitboxes.draw(rectangle: Rectangle)

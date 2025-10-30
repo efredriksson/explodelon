@@ -1,4 +1,5 @@
-require("geometry")
+require("geometry.points")
+
 
 global type Entity = interface
     get_position: function(self): Point

@@ -2,7 +2,7 @@ local character_sprites = require("character_sprites")
 local const = require("const")
 local fonts = require("fonts")
 local game = require("game")
-local geometry = require("geometry")
+local points = require("geometry.points")
 local joysticks = require("joysticks")
 local menu_items = require("menu_items")
 local player_selection = require("player_selection")
@@ -116,7 +116,7 @@ function StartMenu:draw()
 
         local x_pos = 0.0
         for _, column in ipairs(button.columns) do
-            font:print_centered(column.text, column.width, geometry.new_point(x_pos, button.y_pos))
+            font:print_centered(column.text, column.width, points.new(x_pos, button.y_pos))
             x_pos = x_pos + column.width
         end
     end

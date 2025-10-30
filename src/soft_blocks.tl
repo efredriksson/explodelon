@@ -2,7 +2,7 @@ require("entity")
 require("level_map")
 local animations = require("animations")
 local const = require("const")
-local geometry = require("geometry")
+local points = require("geometry.points")
 local hitboxes = require("hitboxes")
 local itertools = require("itertools")
 
@@ -44,7 +44,7 @@ function SoftBlock:update(dt: number)
 end
 
 local function center_animation_on_block(animation: Animation, position: Point): Point
-	return geometry.new_point(
+	return points.new(
 		position.x - (animation.width - const.BLOCK_SIZE) / 2,
 		position.y - (animation.height - const.BLOCK_SIZE) / 2
     )

@@ -9,7 +9,7 @@ LUTRO_DIST_DIR ?= $(CURDIR)/dist
 LUTRO_DIST_PATH ?= ${LUTRO_DIST_DIR}/explodelon.lutro
 
 dist/%.lua : src/%.tl | dist
-	tl gen $< -o $@
+	@mkdir -p $(@D) && tl gen $< -o $@
 
 dist/assets/%: assets/% | dist
 	@mkdir -p $(@D) && cp $< $@

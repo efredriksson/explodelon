@@ -1,4 +1,6 @@
-require("geometry")
+require("geometry.points")
+require("geometry.vectors")
+
 
 global type DinoColor = enum
     "blue"

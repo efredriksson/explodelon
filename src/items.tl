@@ -1,5 +1,5 @@
 require("entity")
-require("geometry")
+require("geometry.points")
 require("players")
 local animations = require("animations")
 local const = require("const")

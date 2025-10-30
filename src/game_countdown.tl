@@ -1,6 +1,7 @@
 local animations = require("animations")
 local const = require("const")
-local geometry = require("geometry")
+local points = require("geometry.points")
+local vectors = require("geometry.vectors")
 
 local READY_AT_TIME = 3
 local START_Y_POSITION = 25
@@ -26,7 +27,7 @@ function game_countdown.new(): GameCountdown
     local self: GameCountdown = setmetatable({}, { __index = GameCountdown })
 	self.animation = animations.new(ready_set_go_image, 45, 20, 1, 1)
 	self.have_played_sound = false
-	self.position = geometry.new_point((const.MAP_WIDTH - 45) / 2, START_Y_POSITION)
+	self.position = points.new((const.MAP_WIDTH - 45) / 2, START_Y_POSITION)
 	self.waited_for = 0.0
     return self
 end
@@ -46,7 +47,7 @@ function GameCountdown:update(dt: number)
 	end
 	if self:finished() then
 		local remove_speed = 25
-		self.position = self.position:move(geometry.new_vector(0, -remove_speed):scale(dt))
+		self.position = self.position:move(vectors.new(0, -remove_speed):scale(dt))
 	end
 end
 

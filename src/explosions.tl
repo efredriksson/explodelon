@@ -1,8 +1,8 @@
 local animations = require("animations")
 local const = require("const")
-local geometry = require("geometry")
 local hitboxes = require("hitboxes")
 local level_map = require("level_map")
+local vectors = require("geometry.vectors")
 
 local END_ANIMATION_DURATION: number = 0.6
 local FRAME_DURATION = END_ANIMATION_DURATION / 4
@@ -188,10 +188,10 @@ function Explosion:_update_active_tiles(blockers: {ExplosionBlocking})
     table.insert(self.tiles, self:new_tile(self.position, false, "center"))
 
     local directions: {ExplosionTileType: Vector} = {
-        right = geometry.new_vector(1, 0),
-        left = geometry.new_vector(-1, 0),
-        down = geometry.new_vector(0, 1),
-        up = geometry.new_vector(0, -1),
+        right = vectors.new(1, 0),
+        left = vectors.new(-1, 0),
+        down = vectors.new(0, 1),
+        up = vectors.new(0, -1),
     }
 
     -- Propagate in all four directions
