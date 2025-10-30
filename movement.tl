@@ -126,7 +126,7 @@ local function restrict_player_movement(
 ): CheckedMovement
 	local margin_for_corner_assist = 8
 	local new_position = player.position:move(movement)
-	local new_hit_box = hitboxes.new(new_position)
+	local new_hitbox = hitboxes.new(new_position)
 
 	local function move_against_block(
 		movement_len: number,
@@ -151,11 +151,11 @@ local function restrict_player_movement(
 
 	local old_hitbox = hitboxes.new(player.position)
 	local function walking_further_into_block(block: Rectangle): boolean
-		if not new_hit_box:overlap(block) then
+		if not new_hitbox:overlap(block) then
 			return false
 		end
 
-		local new_dist_to_1_ton_block = block:center_distance(new_hit_box)
+		local new_dist_to_1_ton_block = block:center_distance(new_hitbox)
 		local old_dist_to_1_ton_block = block:center_distance(old_hitbox)
 		return new_dist_to_1_ton_block < old_dist_to_1_ton_block
 	end
@@ -187,7 +187,7 @@ local function restrict_player_movement(
 	end
 
 	for _, block in ipairs(hitboxes.get_for_blocks(level_map.get_hard_blocks())) do
-		if new_hit_box:overlap(block) then
+		if new_hitbox:overlap(block) then
 			if movement.x == 0 then
 				local movement_len = movement.y
 				local pos_and_block_lateral_diff = player.position.x - block.x
@@ -209,8 +209,8 @@ local function restrict_player_movement(
 	end
 
 	local player_area = level_map.player_area()
-	if not player_area:contains(new_hit_box) then
-		local clamped_position = player_area:clamp(new_hit_box):top_left()
+	if not player_area:contains(new_hitbox) then
+		local clamped_position = player_area:clamp(new_hitbox):top_left()
 		return CheckedMovement.new(clamped_position, false, false)
 	end
 
