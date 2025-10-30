@@ -5,7 +5,6 @@ require("character_sprites")
 local const = require("const")
 local geometry = require("geometry")
 local physics = require("physics")
-local hitboxes = require("hitboxes")
 
 global type Action = enum
    "walk"
@@ -242,103 +241,6 @@ function Player:get_draw_position(): Point
 	end
 
 	return self.position
-end
-
-global record PlayerAnimation is Entity
-	player: Player
-	draw_position: Point
-	animation: Animation
-end
-
-function PlayerAnimation.new(animation: Animation, player: Player): PlayerAnimation
-	local self: PlayerAnimation = setmetatable({}, { __index = PlayerAnimation })
-	self.animation = animation
-	self.player = player
-	self.draw_position = player:get_draw_position()
-	return self
-end
-
-function PlayerAnimation:get_position(): Point
-    return self.player.position
-end
-
-local function block_to_anim_draw_pos(animation: Animation, pos: Point): Point
-	-- y: +1 is because of the sprite, look over when doing animations
-	return geometry.new_point(
-		pos.x + (const.BLOCK_SIZE - animation.width) / 2,
-		pos.y - animation.height + const.BLOCK_SIZE + 1)
-end
-
-function PlayerAnimation:draw()
-	local draw_pos = block_to_anim_draw_pos(self.animation, self.draw_position)
-	self.animation:draw(draw_pos.x, draw_pos.y)
-	hitboxes.draw(hitboxes.new(self.player.position))
-end
-
-global record MountAnimation is Entity
-	dino: Dino
-	animation: Animation
-end
-
-function MountAnimation.new(animation: Animation, dino: Dino): MountAnimation
-	local self: MountAnimation = setmetatable({}, { __index = MountAnimation })
-	self.dino = dino
-	self.animation = animation
-	return self
-end
-
-function MountAnimation:get_position(): Point
-    return self.dino.position
-end
-
-function MountAnimation:draw()
-	local draw_pos = block_to_anim_draw_pos(self.animation, self.dino.position)
-	self.animation:draw(draw_pos.x, draw_pos.y)
-	hitboxes.draw(hitboxes.new(self.dino.position))
-end
-
-global record MountedPlayerAnimation is Entity
-	player: Player
-	draw_position: Point
-	player_animation: Animation
-	dino_animation: Animation
-end
-
-function MountedPlayerAnimation.new(
-	player_animation: Animation, dino_animation: Animation, player: Player
-): MountedPlayerAnimation
-	local self: MountedPlayerAnimation = setmetatable({}, { __index = MountedPlayerAnimation })
-	self.player_animation = player_animation
-	self.dino_animation = dino_animation
-	self.player = player
-	self.draw_position = player:get_draw_position()
-	return self
-end
-
-function MountedPlayerAnimation:get_position(): Point
-    return self.player.position
-end
-
-function MountedPlayerAnimation:draw()
-	if not self.player:is_alive() then
-		return
-	end
-
-	local function draw(animation: Animation, pos: Point)
-		local draw_pos = block_to_anim_draw_pos(animation, pos)
-		animation:draw(draw_pos.x, draw_pos.y)
-	end
-
-	if self.player.direction == "down" then
-		-- Need to draw dino in front of player walking towards screen
-		draw(self.player_animation, self.draw_position)
-		draw(self.dino_animation, self.player.position)
-	else
-		-- And player in front of dino in all other cases
-		draw(self.dino_animation, self.player.position)
-		draw(self.player_animation, self.draw_position)
-	end
-	hitboxes.draw(hitboxes.new(self.player.position))
 end
 
 return players
