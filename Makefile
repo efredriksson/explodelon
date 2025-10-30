@@ -1,13 +1,14 @@
 include $(wildcard .env)
 
-SRCS := $(filter-out %.d.tl, $(wildcard *.tl))
-TRANSPILED := $(patsubst %.tl, dist/%.lua, $(SRCS))
+SRCS := $(shell find src -type f)
+SRCS_LINT := $(patsubst src/%, ./src/%, $(SRCS))
+TRANSPILED := $(patsubst src/%.tl, dist/%.lua, $(SRCS))
 ASSETS := $(shell find assets -type f)
 DIST_ASSETS := $(patsubst %, dist/%, $(ASSETS))
 LUTRO_DIST_DIR ?= $(CURDIR)/dist
 LUTRO_DIST_PATH ?= ${LUTRO_DIST_DIR}/explodelon.lutro
 
-dist/%.lua : %.tl | dist
+dist/%.lua : src/%.tl | dist
 	tl gen $< -o $@
 
 dist/assets/%: assets/% | dist
@@ -25,4 +26,4 @@ ${LUTRO_DIST_PATH}: $(TRANSPILED) $(DIST_ASSETS)
 package: ${LUTRO_DIST_PATH}
 
 lint:
-	tl check ${SRCS}
+	tl check ${SRCS_LINT}
