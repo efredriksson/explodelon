@@ -215,10 +215,15 @@ function Player:update(dt: number)
 	end
 
 	if self:is_jumping() then
+		local previous_distance = self.jump_p:distance_to(self.jump_visual_target)
+		local falling = self.jump_v.y > 0
+
 		self.jump_p = self.jump_p:move(self.jump_v:scale(dt))
 		self.jump_v = self.jump_v:minus(self.jump_g:scale(dt))
 
-		if self.jump_p:distance_to(self.jump_visual_target) < 1 and self.jump_v.y > 0 then
+		local new_distance = self.jump_p:distance_to(self.jump_visual_target)
+		if new_distance >= previous_distance and falling then
+			-- When distance from target not decreasing while falling we have landed
 			self:set_action("idle")
 			self.position = self.jump_target
 			if self.dino then

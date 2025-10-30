@@ -153,6 +153,7 @@ end
 
 global record ThrownBomb is Entity
     delegate: Bomb
+    previous_position: Point
     target: Point
     direction: Vector
     height: number
@@ -179,6 +180,7 @@ end
 function ThrownBomb.new(delegate: Bomb, target: Point, start_height: number, throw_height: number, throw_time: number): ThrownBomb
     local self: ThrownBomb = setmetatable({}, { __index = ThrownBomb })
     self.delegate = delegate
+    self.previous_position = self.delegate.position
     self.target = target
     self:_set_trajectory(start_height, throw_height, throw_time)
     return self
@@ -203,12 +205,16 @@ function ThrownBomb:draw()
 end
 
 function ThrownBomb:has_landed(): boolean
-    return self:get_position():distance_to(self.target) < 1
+    if self:get_position():equal(self.target) then
+        return true
+    end
+    return self:get_position():distance_to(self.target) > self.previous_position:distance_to(self.target)
 end
 
 function ThrownBomb:update(dt: number)
     local bomb = self.delegate
     if not self:has_landed() then
+        self.previous_position = bomb.position
         bomb.position = bomb.position:move(self.side_velocity:scale(dt))
         self.height = self.height + self.fall_velocity * dt
         self.fall_velocity = self.fall_velocity - self.gravity * dt
@@ -216,6 +222,7 @@ function ThrownBomb:update(dt: number)
 
     if self:has_landed() then
         bomb.position = self.target
+        self.previous_position = self.target
         self.height = 0
     end
 
