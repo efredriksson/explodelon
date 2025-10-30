@@ -1,10 +1,11 @@
 require("entity")
 require("level_map")
+local animations = require("animations")
 local const = require("const")
 local geometry = require("geometry")
-local itertools = require("itertools")
-local animations = require("animations")
 local hitboxes = require("hitboxes")
+local itertools = require("itertools")
+
 
 local soft_block_image: Image
 local soft_block_breaking_image: Image

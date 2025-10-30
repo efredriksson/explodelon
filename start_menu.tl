@@ -1,12 +1,13 @@
+local character_sprites = require("character_sprites")
 local const = require("const")
-local scenes = require("scenes")
-local geometry = require("geometry")
 local fonts = require("fonts")
+local game = require("game")
+local geometry = require("geometry")
 local joysticks = require("joysticks")
 local menu_items = require("menu_items")
-local character_sprites = require("character_sprites")
 local player_selection = require("player_selection")
-local game = require("game")
+local scenes = require("scenes")
+
 
 local JOYPAD = joysticks.buttons()
 local nbr_player_selected = menu_items.new_selection(4, 2, const.MAX_PLAYERS)

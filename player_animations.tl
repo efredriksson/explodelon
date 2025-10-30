@@ -1,9 +1,9 @@
 require("players")
 local animations = require("animations")
-local dino_animations = require("dino_animations")
-local hitboxes = require("hitboxes")
 local const = require("const")
+local dino_animations = require("dino_animations")
 local geometry = require("geometry")
+local hitboxes = require("hitboxes")
 
 
 --- Scale 0-1 represent how far from current to max to increase color component 

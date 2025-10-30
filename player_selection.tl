@@ -1,11 +1,12 @@
 local animations = require("animations")
-local geometry = require("geometry")
-local scenes = require("scenes")
-local fonts = require("fonts")
-local menu_items = require("menu_items")
-local joysticks = require("joysticks")
 local character_sprites = require("character_sprites")
+local fonts = require("fonts")
 local game = require("game")
+local geometry = require("geometry")
+local joysticks = require("joysticks")
+local menu_items = require("menu_items")
+local scenes = require("scenes")
+
 
 local record Character
    sprite: CharacterSprite

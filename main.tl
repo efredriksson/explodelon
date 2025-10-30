@@ -1,6 +1,6 @@
 local const = require("const")
-local scenes = require("scenes")
 local joysticks = require("joysticks")
+local scenes = require("scenes")
 local start_menu = require("start_menu")
 
 function lutro.conf(t: Configuration)

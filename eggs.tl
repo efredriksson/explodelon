@@ -1,8 +1,8 @@
 require("entity")
-local const = require("const")
-local geometry = require("geometry")
 local animations = require("animations")
+local const = require("const")
 local dinos = require("dinos")
+local geometry = require("geometry")
 
 local egg_shake_image: Image
 local egg_open_image: Image
