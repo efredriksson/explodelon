@@ -1,10 +1,12 @@
 require("items")
 local const = require("const")
-local geometry = require("geometry")
+local points = require("geometry.points")
 local itertools = require("itertools")
 local hitboxes = require("hitboxes")
+local rectangles = require("geometry.rectangles")
+local vectors = require("geometry.vectors")
 
-local PLAYER_AREA = Rectangle.new(24, 32, 272, 176)
+local PLAYER_AREA = rectangles.new(24, 32, 272, 176)
 local level_map = {}
 
 function level_map.player_area(): Rectangle
@@ -39,7 +41,7 @@ function level_map.get_hard_blocks(): {HardBlock}
 	local blocks: {HardBlock} = {}
 
 	local function hard_block(i: number, j: number): HardBlock
-		return HardBlock.new(geometry.new_point(
+		return HardBlock.new(points.new(
 		    PLAYER_AREA.x + const.BLOCK_SIZE + i * 2 * const.BLOCK_SIZE,
 			PLAYER_AREA.y + const.BLOCK_SIZE + j * 2 * const.BLOCK_SIZE
 		))
@@ -52,7 +54,7 @@ function level_map.get_hard_blocks(): {HardBlock}
 end
 
 local function get_block(i: number, j: number): Rectangle
-	return Rectangle.new(
+	return rectangles.new(
 		PLAYER_AREA.x + i * const.BLOCK_SIZE,
 		PLAYER_AREA.y + j * const.BLOCK_SIZE,
 		const.BLOCK_SIZE,
@@ -93,7 +95,7 @@ end
 function level_map.snap_to_closest_grid_tile(pos: Point): Point
 	local x = math.floor((pos.x - PLAYER_AREA.x) / const.BLOCK_SIZE + 0.5) * const.BLOCK_SIZE + PLAYER_AREA.x
 	local y = math.floor((pos.y - PLAYER_AREA.y) / const.BLOCK_SIZE + 0.5) * const.BLOCK_SIZE + PLAYER_AREA.y
-	return geometry.new_point(x, y)
+	return points.new(x, y)
 end
 
 function level_map.get_right_side_pressure_blocks(): {Point}
@@ -161,7 +163,7 @@ local function get_soft_block_positions(occupies: {Entity}): {Point}
 		local sum_to_allow = lutro.math.random() < 0.5 and 2 or 0
 		for j, i in itertools.double_loop_inner_loopback({-1, 1}, {-1, 1}) do
 			if sum_to_allow ~= math.abs(i + j) or (i == 0 and j == 0) then
-				local close_by = geometry.new_vector(j, i):scale(const.BLOCK_SIZE)
+				local close_by = vectors.new(j, i):scale(const.BLOCK_SIZE)
 				table.insert(close_to_entity, occupied:get_position():move(close_by))
 			end
 		end

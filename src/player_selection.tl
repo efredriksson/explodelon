@@ -2,10 +2,11 @@ local animations = require("animations")
 local character_sprites = require("character_sprites")
 local fonts = require("fonts")
 local game = require("game")
-local geometry = require("geometry")
 local joysticks = require("joysticks")
 local menu_items = require("menu_items")
 local scenes = require("scenes")
+local vectors = require("geometry.vectors")
+local points = require("geometry.points")
 
 
 local record Character
@@ -23,9 +24,9 @@ function Character.new(sprite: CharacterSprite, number: integer): Character
 end
 
 local JOYPAD = joysticks.buttons()
-local FIRST_CHAR_POS = geometry.new_point(50, 50)
-local ROW_OFFSET = geometry.new_vector(23, 20)
-local COLUMN_OFFSET = geometry.new_vector(45, 0)
+local FIRST_CHAR_POS = points.new(50, 50)
+local ROW_OFFSET = vectors.new(23, 20)
+local COLUMN_OFFSET = vectors.new(45, 0)
 
 function Character:get_position(): Point
     local character_rows = 2
@@ -36,7 +37,7 @@ function Character:get_position(): Point
     local row = math.fmod(character_number, character_rows)
 
     local pos_offset = ROW_OFFSET:scale(row):plus(COLUMN_OFFSET:scale(column))
-    local walk_offset = geometry.new_vector(0, self.y_shift)
+    local walk_offset = vectors.new(0, self.y_shift)
     return FIRST_CHAR_POS:move(pos_offset):move(walk_offset)
 end
 
@@ -167,12 +168,12 @@ function PlayerSelection:draw()
     end
 
     local character = self.selectable_characters[self.selector.value]
-    local indicator_offset = geometry.new_vector(4, -5)
+    local indicator_offset = vectors.new(4, -5)
     local indicator_pos = character:get_position():move(indicator_offset)
     lutro.graphics.draw(selector_indicator, indicator_pos.x, indicator_pos.y)
 
     local indicator_text = tostring(self.player_selecting)
-    local indicator_text_offset = geometry.new_vector(0, 3)
+    local indicator_text_offset = vectors.new(0, 3)
     local text_pos = indicator_pos:move(indicator_text_offset)
     local text_box = selector_indicator:getWidth()
     black_font:print_centered(indicator_text, text_box, text_pos)

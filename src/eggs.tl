@@ -2,7 +2,7 @@ require("entity")
 local animations = require("animations")
 local const = require("const")
 local dinos = require("dinos")
-local geometry = require("geometry")
+local points = require("geometry.points")
 
 local egg_shake_image: Image
 local egg_open_image: Image
@@ -32,7 +32,7 @@ function Egg:get_position(): Point
 end
 
 function Egg:get_position_to_draw_egg(): Point
-	return geometry.new_point(
+	return points.new(
         self.position.x + (const.BLOCK_SIZE - self.animation.width) / 2,
         self.position.y + const.BLOCK_SIZE - self.animation.height
     )

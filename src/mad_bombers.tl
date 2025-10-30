@@ -2,11 +2,11 @@ require("bombs")
 local animations = require("animations")
 local character_sprites = require("character_sprites")
 local const = require("const")
-local geometry = require("geometry")
 local hitboxes = require("hitboxes")
 local joysticks = require("joysticks")
 local level_map = require("level_map")
-
+local points = require("geometry.points")
+local vectors = require("geometry.vectors")
 
 local JOYPAD = joysticks.buttons()
 local PLAYER_AREA = level_map.player_area()
@@ -24,26 +24,26 @@ local DISTANCE_TO_SIDE: {Direction: number} = {
 local START_POSITION_OF_SIDE: {Direction: Point} = {
     up = PLAYER_AREA:top_left(),
     right = PLAYER_AREA:top_left():move(
-        geometry.new_vector(PLAYER_AREA.width, 0)
+        vectors.new(PLAYER_AREA.width, 0)
     ),
     down = PLAYER_AREA:top_left():move(
-        geometry.new_vector(PLAYER_AREA.width, PLAYER_AREA.height)
+        vectors.new(PLAYER_AREA.width, PLAYER_AREA.height)
     ),
     left = PLAYER_AREA:top_left():move(
-        geometry.new_vector(0, PLAYER_AREA.height)
+        vectors.new(0, PLAYER_AREA.height)
     ),
 }
 local MOVE_DIRECTION_OF_SIDE: {Direction: Vector} = {
-    up = geometry.new_vector(1, 0),
-    right = geometry.new_vector(0, 1),
-    down = geometry.new_vector(-1, 0),
-    left = geometry.new_vector(0, -1),
+    up = vectors.new(1, 0),
+    right = vectors.new(0, 1),
+    down = vectors.new(-1, 0),
+    left = vectors.new(0, -1),
 }
 local THROW_BOMB_DIRECTION_BY_SIDE: {Direction: Vector} = {
-    up = geometry.new_vector(0, 1),
-    right = geometry.new_vector(-1, 0),
-    down = geometry.new_vector(0, -1),
-    left = geometry.new_vector(1, 0),
+    up = vectors.new(0, 1),
+    right = vectors.new(-1, 0),
+    down = vectors.new(0, -1),
+    left = vectors.new(1, 0),
 }
 local HEAD_DIR_BY_SIDE: {Direction: Direction} = {
     up = "down",
@@ -208,13 +208,13 @@ end
 function PlayerCart:_get_cart_image_padding(): Vector
     local side = self:get_side()
     if side == "up" then
-        return geometry.new_vector(0, 5)
+        return vectors.new(0, 5)
     elseif side == "right" then
-        return geometry.new_vector(-12, 0)
+        return vectors.new(-12, 0)
     elseif side == "down" then
-        return geometry.new_vector(0, -8)
+        return vectors.new(0, -8)
     elseif side == "left" then
-        return geometry.new_vector(12, 0)
+        return vectors.new(12, 0)
     end
 end
 
@@ -225,14 +225,14 @@ function PlayerCart:_get_draw_offset(): Vector
     local width = animation.width
     local margin = 2 -- The cart is not directly at side line but at bit in
     if side == "up" then
-        return geometry.new_vector(-width / 2, -height - margin)
+        return vectors.new(-width / 2, -height - margin)
     elseif side == "right" then
-        return geometry.new_vector(2, -height / margin)
+        return vectors.new(2, -height / margin)
     elseif side == "down" then
         -- '-margin' as cart is rendered in player area
-        return geometry.new_vector(-width / 2, -margin)
+        return vectors.new(-width / 2, -margin)
     elseif side == "left" then
-        return geometry.new_vector(-width - margin, -height / 2)
+        return vectors.new(-width - margin, -height / 2)
     end
 end
 
@@ -268,20 +268,20 @@ function PlayerCart:draw()
     -- Final pixel tweaks for where head is on cart
     local function pixel_tweaks(): Vector
         if side == "up" then
-            return geometry.new_vector(0, 1)
+            return vectors.new(0, 1)
         elseif side == "right" then
-            return geometry.new_vector(1, 3)
+            return vectors.new(1, 3)
         elseif side == "left" then
-            return geometry.new_vector(0, 3)
+            return vectors.new(0, 3)
         elseif side == "down" then
-            return geometry.new_vector(0, 0)
+            return vectors.new(0, 0)
         end
     end
 
-    local cart_half_size = geometry.new_vector(
+    local cart_half_size = vectors.new(
         animation.width, animation.height
     ):minus(total_padding()):scale(1/2)
-    local head_pos = geometry.new_point(
+    local head_pos = points.new(
         cart_pos.x + cart_half_size.x - head_image:getWidth() / 2,
         cart_pos.y + cart_paddings.y - head_image:getHeight() / 2
     ):move(pixel_tweaks())
@@ -290,7 +290,7 @@ function PlayerCart:draw()
         -- Note, special case for the right hand side. This is because
         -- the right/left cart sprites are not centered with equal padding
         -- on both sides. 
-        head_pos = head_pos:move(geometry.new_vector(cart_paddings.x, 0))
+        head_pos = head_pos:move(vectors.new(cart_paddings.x, 0))
     end
     lutro.graphics.draw(head_image, head_pos.x, head_pos.y)
 end
@@ -311,11 +311,11 @@ function PlayerCart:fire_cannon(): Point, integer
     -- Adjust so we shoot from inside player area if 'down' or 'right'
     -- Also adjust for the cart position being its center for 'up' and 'down'
     if side == "down" then
-        shoot_from = shoot_from:move(geometry.new_vector(-const.BLOCK_SIZE / 2, -const.BLOCK_SIZE))
+        shoot_from = shoot_from:move(vectors.new(-const.BLOCK_SIZE / 2, -const.BLOCK_SIZE))
     elseif side == "up" then
-        shoot_from = shoot_from:move(geometry.new_vector(-const.BLOCK_SIZE / 2, 0))
+        shoot_from = shoot_from:move(vectors.new(-const.BLOCK_SIZE / 2, 0))
     elseif side == "right" then
-        shoot_from = shoot_from:move(geometry.new_vector(-const.BLOCK_SIZE, 0))
+        shoot_from = shoot_from:move(vectors.new(-const.BLOCK_SIZE, 0))
     end
     shoot_from = level_map.snap_to_closest_grid_tile(shoot_from)
 

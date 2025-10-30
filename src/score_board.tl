@@ -1,7 +1,8 @@
 local character_sprites = require("character_sprites")
 local const = require("const")
 local fonts = require("fonts")
-local geometry = require("geometry")
+local points = require("geometry.points")
+local vectors = require("geometry.vectors")
 
 
 local score_font: ShadedFont
@@ -45,13 +46,13 @@ local function get_avatar_position(avatar_num: number, num_avatars: number): Poi
 	local total_space = const.MAP_WIDTH - x_start - avatar_space_padding
 	local padding = (total_space - space_for_avatar * num_avatars) / (num_avatars + 1)
 	local x_pos = x_start + padding * avatar_num + space_for_avatar * (avatar_num - 1)
-	return geometry.new_point(x_pos, y_start)
+	return points.new(x_pos, y_start)
 end
 
 function ScoreBoard:draw()
     for _, player in ipairs(self.players) do
 		local avatar_pos = get_avatar_position(player.id, #self.players)
-		local score_pos = avatar_pos:move(geometry.new_vector(18, 5))
+		local score_pos = avatar_pos:move(vectors.new(18, 5))
 		lutro.graphics.draw(avatar_images[player.avatar], avatar_pos.x, avatar_pos.y)
 		score_font:draw(tostring(player.score), score_pos)
 	end

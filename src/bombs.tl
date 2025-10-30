@@ -1,11 +1,11 @@
 local animations = require("animations")
 local const = require("const")
 local explosions = require("explosions")
-local geometry = require("geometry")
 local hitboxes = require("hitboxes")
 local itertools = require("itertools")
 local level_map = require("level_map")
 local physics = require("physics")
+local vectors = require("geometry.vectors")
 
 -- Bomb --
 
@@ -25,7 +25,7 @@ end
 function Bomb.new(position: Point, range: integer, owner_id: integer): Bomb
    local self: Bomb = setmetatable({}, { __index = Bomb })
    self.position = position
-   self.velocity = geometry.new_vector(0, 0)
+   self.velocity = vectors.new(0, 0)
    self.range = range
    self.timer = 2.5
    self.owner_id = owner_id
@@ -129,7 +129,7 @@ function Bomb:update(dt: number, occupies: {BlocksBombs})
             self.position = new_position
         else
             -- If bomb can't move stop it and snap to grid
-            self.velocity = geometry.new_vector(0, 0)
+            self.velocity = vectors.new(0, 0)
             self.position = level_map.snap_to_closest_grid_tile(self.position)
         end
 
@@ -169,7 +169,7 @@ function ThrownBomb:_set_trajectory(start_height: number, throw_height: number, 
 	)
 	self.gravity = physics.calc_gravity(self.fall_velocity, throw_height)
 	
-    local throw_vector = geometry.new_vector(
+    local throw_vector = vectors.new(
         self.target.x - self.delegate.position.x,
         self.target.y - self.delegate.position.y
     )
@@ -200,7 +200,7 @@ function ThrownBomb:draw()
     lutro.graphics.draw(bomb_shadow, position.x - 1, position.y - 8)
 
     -- Bomb is drawn in the air
-    local draw_position = position:move(geometry.new_vector(0, -self.height))
+    local draw_position = position:move(vectors.new(0, -self.height))
     self.delegate.animation:draw(draw_position.x, draw_position.y)
 end
 
