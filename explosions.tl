@@ -1,8 +1,8 @@
-local const = require("const")
 local animations = require("animations")
+local const = require("const")
 local geometry = require("geometry")
-local level_map = require("level_map")
 local hitboxes = require("hitboxes")
+local level_map = require("level_map")
 
 local END_ANIMATION_DURATION: number = 0.6
 local FRAME_DURATION = END_ANIMATION_DURATION / 4

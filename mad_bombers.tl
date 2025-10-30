@@ -1,10 +1,10 @@
 require("bombs")
+local animations = require("animations")
+local character_sprites = require("character_sprites")
 local const = require("const")
 local geometry = require("geometry")
-local character_sprites = require("character_sprites")
-local joysticks = require("joysticks")
 local hitboxes = require("hitboxes")
-local animations = require("animations")
+local joysticks = require("joysticks")
 local level_map = require("level_map")
 
 

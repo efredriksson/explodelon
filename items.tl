@@ -1,6 +1,6 @@
+require("entity")
 require("geometry")
 require("players")
-require("entity")
 local animations = require("animations")
 local const = require("const")
 local itertools = require("itertools")

@@ -1,11 +1,11 @@
-local const = require("const")
 local animations = require("animations")
-local geometry = require("geometry")
-local itertools = require("itertools")
+local const = require("const")
 local explosions = require("explosions")
-local physics = require("physics")
+local geometry = require("geometry")
 local hitboxes = require("hitboxes")
+local itertools = require("itertools")
 local level_map = require("level_map")
+local physics = require("physics")
 
 -- Bomb --
 

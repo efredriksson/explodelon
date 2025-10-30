@@ -1,7 +1,8 @@
-local const = require("const")
-local geometry = require("geometry")
-local fonts = require("fonts")
 local character_sprites = require("character_sprites")
+local const = require("const")
+local fonts = require("fonts")
+local geometry = require("geometry")
+
 
 local score_font: ShadedFont
 local avatar_images: {CharacterSprite: Image}

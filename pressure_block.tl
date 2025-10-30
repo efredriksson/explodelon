@@ -1,9 +1,9 @@
 require("entity")
 local const = require("const")
 local geometry = require("geometry")
+local hitboxes = require("hitboxes")
 local itertools = require("itertools")
 local level_map = require("level_map")
-local hitboxes = require("hitboxes")
 
 
 global record PressureBlock is Entity, ExplosionBlocking

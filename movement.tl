@@ -2,9 +2,10 @@ require("players")
 require("bombs")
 local const = require("const")
 local geometry = require("geometry")
-local level_map = require("level_map")
 local hitboxes = require("hitboxes")
 local joysticks = require("joysticks")
+local level_map = require("level_map")
+
 
 local JOYPAD = joysticks.buttons()
 
