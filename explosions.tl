@@ -51,7 +51,7 @@ function ExplosionTile.new(position: Point, reduction: number, is_last: boolean,
     return self
 end
 
-function ExplosionTile:hit_box(): Rectangle
+function ExplosionTile:hitbox(): Rectangle
     return hitboxes.new(self.position):shrink(self.reduction)
 end
 
@@ -227,7 +227,7 @@ function Explosion:collides_with(position: Point): boolean
     local hitbox = hitboxes.new(position):shrink(2)
 
     for _, tile in ipairs(self.tiles) do
-        if hitbox:overlap(tile:hit_box()) then
+        if hitbox:overlap(tile:hitbox()) then
             return true
         end
     end
@@ -243,7 +243,7 @@ function Explosion:draw()
     for _, tile in ipairs(self.tiles) do
         local animation = self:get_tile_animation(tile)
         animation:draw(tile.position.x, tile.position.y)
-        hitboxes.draw(tile:hit_box())
+        hitboxes.draw(tile:hitbox())
     end
 end
 

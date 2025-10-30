@@ -73,27 +73,27 @@ end
 
 function Bomb:can_move(direction: Vector, occupies: {BlocksBombs}): boolean
     local test_position = self.position:move(direction)
-    local test_hit_box = hitboxes.new(test_position)
-    local old_hit_box = hitboxes.new(self.position)
+    local test_hitbox = hitboxes.new(test_position)
+    local old_hitbox = hitboxes.new(self.position)
     
     local bomb_in_goal = false
     for _, goal in ipairs(level_map.get_possible_goals()) do
-        if test_hit_box:overlap(goal:get_hitbox()) then
+        if test_hitbox:overlap(goal:get_hitbox()) then
             bomb_in_goal = true
         end
     end
 
-    if not level_map.player_area():contains(test_hit_box) and not bomb_in_goal then
+    if not level_map.player_area():contains(test_hitbox) and not bomb_in_goal then
         return false
     end
 
     local function move_further_into_occupied(block: Rectangle): boolean
-		if not test_hit_box:overlap(block) then
+		if not test_hitbox:overlap(block) then
 			return false
 		end
 
-		local new_dist_to_1_ton_block = block:center_distance(test_hit_box)
-		local old_dist_to_1_ton_block = block:center_distance(old_hit_box)
+		local new_dist_to_1_ton_block = block:center_distance(test_hitbox)
+		local old_dist_to_1_ton_block = block:center_distance(old_hitbox)
 		return new_dist_to_1_ton_block < old_dist_to_1_ton_block
 	end
     
@@ -111,7 +111,7 @@ function Bomb:can_move(direction: Vector, occupies: {BlocksBombs}): boolean
             return false
         end
 
-        if not conflict(occupied, old_hit_box) and conflict(occupied, test_hit_box) then
+        if not conflict(occupied, old_hitbox) and conflict(occupied, test_hitbox) then
             -- Do not allow bomb move so its hitbox conflicts when it did not before
             return false
         end
