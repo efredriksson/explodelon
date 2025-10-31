@@ -103,18 +103,16 @@ function Game:get_available_spots(): {Point}
 	return available_spots
 end
 
-function Game:clear_items_and_eggs(destroys: {Entity})
-	-- This is for things that directly removes items and eggs (no animations or such)
-	for _, entity in ipairs(destroys) do
-		local position = entity:get_position()
-		for j, item in ipairs(self.items.on_ground) do
-			if position:in_radius_of(item.position, const.BLOCK_SIZE / 2) then
-				table.remove(self.items.on_ground, j)
-			end
-		end
-		for j, egg in ipairs(self.eggs.on_ground) do
-			if position:in_radius_of(egg.position, const.BLOCK_SIZE / 2) then
-				table.remove(self.eggs.on_ground, j)
+function Game:clear_entities(destroys: {Entity}, ...: {Entity})
+	-- This is for things that directly removes an entity (no animations or such)
+	for _, destroyer in ipairs(destroys) do
+		local position = destroyer:get_position()
+		
+		for _, entity_list in ipairs({...}) do
+			for j, entity in ipairs(entity_list) do
+				if position:in_radius_of(entity:get_position(), const.BLOCK_SIZE / 2) then
+					table.remove(entity_list, j)
+				end
 			end
 		end
 	end
@@ -216,8 +214,9 @@ function Game:update(dt: number)
 	local dead_players = itertools.filter(self.players, is_dead)
 	self.items:drop_items_of(dead_players, self:get_available_spots())
 
-	local remove_items: {Entity} = itertools.combine(hitting_ground, self.bombs.on_ground)
-	self:clear_items_and_eggs(remove_items)
+	local removes_items: {Entity} = itertools.combine(hitting_ground, self.bombs.on_ground)
+	self:clear_entities(removes_items, self.eggs.on_ground, self.items.on_ground)
+	self:clear_entities(hitting_ground, self.bombs.on_ground)
 	
 	self.player_animations:update(dt)
 	self.soft_blocks:update(dt)
