@@ -149,7 +149,8 @@ function Game:update(dt: number)
 		self.soft_blocks.on_ground,
 		level_map.get_hard_blocks(),
 		itertools.filter(self.players, is_alive),
-		self.bombs.on_ground
+		self.bombs.on_ground,
+		self.pressure_blocks.on_ground
 	)
 	local blockers: {ExplosionBlocking} = itertools.combine(
 		self.eggs.on_ground,

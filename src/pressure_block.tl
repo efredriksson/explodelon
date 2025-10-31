@@ -6,7 +6,7 @@ local itertools = require("itertools")
 local level_map = require("level_map")
 
 
-global record PressureBlock is Entity, ExplosionBlocking
+global record PressureBlock is Entity, ExplosionBlocking, BlocksBombs
 	falling_position: Point
     position: Point
     in_explosion: boolean
