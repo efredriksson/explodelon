@@ -53,10 +53,11 @@ function players.new(id: integer, sprite: CharacterSprite, position: Point): Pla
 	self.direction = "down"
 	self.action = "idle"
 	self.state = "foot"
-	self.speed = settings.start_speed
+	local player_settings = settings.game_rules.players
+	self.speed = player_settings.start_speed
+	self.has_kick = player_settings.start_with_kick
 	self.bombs = 1
 	self.fire = 2
-	self.has_kick = settings.start_with_kick
 	self.invulnerable_for = 0
 	self.stunned_for = 0
 	self.dino = nil

@@ -5,26 +5,26 @@ global enum ItemType
    "fire"
 end
 
-local record Settings
-    number_of_players: integer
-    player_selection: boolean
-    draw_hitboxes: boolean
+local record TimingRules
+    battle: number
+    sudden_death: number
+end
+
+function TimingRules.new(): TimingRules
+    local self: TimingRules = setmetatable({}, { __index = TimingRules })
+    self.battle = 180
+    self.sudden_death = 60
+    return self
+end
+
+local record ItemRules
     nbr_soft_blocks: integer
     nbr_of_eggs: integer
     nbr_of_items: {ItemType: integer}
-    start_position_shuffle: boolean
-    mad_bombers: boolean
-    start_speed: integer
-    start_with_kick: boolean
-    battle_time: number
-    sudden_death_time: number
 end
 
-function Settings.new(): Settings
-    local self: Settings = setmetatable({}, { __index = Settings })
-    self.number_of_players = 2
-    self.player_selection = true
-    self.draw_hitboxes = false
+function ItemRules.new(): ItemRules
+    local self: ItemRules = setmetatable({}, { __index = ItemRules })
     self.nbr_soft_blocks = 105
     self.nbr_of_eggs = 4
     self.nbr_of_items = {
@@ -33,13 +33,62 @@ function Settings.new(): Settings
         speed = 4,
         kick = 8,
     }
+    return self
+end
+
+local record PlayerRules
+    start_position_shuffle: boolean
+    mad_bombers: boolean
+    start_speed: integer
+    start_with_kick: boolean
+end
+
+function PlayerRules.new(): PlayerRules
+    local self: PlayerRules = setmetatable({}, { __index = PlayerRules })
     self.start_position_shuffle = true
     self.mad_bombers = true
     self.start_speed = 60
     self.start_with_kick = false
-    self.battle_time = 180
-    self.sudden_death_time = 60
+    return self
+end
 
+local record GameRules
+    players: PlayerRules
+    items: ItemRules
+    timings: TimingRules
+end
+
+function GameRules.new(): GameRules
+    local self: GameRules = setmetatable({}, { __index = GameRules })
+    self.players = PlayerRules.new()
+    self.items = ItemRules.new()
+    self.timings = TimingRules.new()
+    return self
+end
+
+local record Debug
+    draw_hitboxes: boolean
+end
+
+function Debug.new(): Debug
+    local self: Debug = setmetatable({}, { __index = Debug })
+    self.draw_hitboxes = false
+    return self
+end
+
+local record Settings
+    number_of_players: integer
+    player_selection: boolean
+    game_rules: GameRules
+    debug: Debug
+end
+
+function Settings.new(): Settings
+    local self: Settings = setmetatable({}, { __index = Settings })
+    self.number_of_players = 2
+    self.player_selection = true
+    self.game_rules = GameRules.new()
+    self.debug = Debug.new()
     return self
 end
 
@@ -50,7 +99,7 @@ function Settings.set_player_selection(value: boolean)
 end
 
 function Settings.set_draw_hitboxs(value: boolean)
-    settings.draw_hitboxes = value
+    settings.debug.draw_hitboxes = value
 end
 
 function Settings.set_number_of_players(value: integer)
@@ -58,51 +107,51 @@ function Settings.set_number_of_players(value: integer)
 end
 
 function Settings.set_nbr_soft_blocks(value: integer)
-    settings.nbr_soft_blocks = value
+    settings.game_rules.items.nbr_soft_blocks = value
 end
 
 function Settings.set_nbr_of_eggs(value: integer)
-    settings.nbr_of_eggs = value
+    settings.game_rules.items.nbr_of_eggs = value
 end
 
 function Settings.set_nbr_of_bombs(value: integer)
-    settings.nbr_of_items.bomb = value
+    settings.game_rules.items.nbr_of_items.bomb = value
 end
 
 function Settings.set_nbr_of_fire(value: integer)
-    settings.nbr_of_items.fire = value
+    settings.game_rules.items.nbr_of_items.fire = value
 end
 
 function Settings.set_nbr_of_speed(value: integer)
-    settings.nbr_of_items.speed = value
+    settings.game_rules.items.nbr_of_items.speed = value
 end
 
 function Settings.set_nbr_of_kick(value: integer)
-    settings.nbr_of_items.kick = value
+    settings.game_rules.items.nbr_of_items.kick = value
 end
 
 function Settings.set_start_position_shuffle(value: boolean)
-    settings.start_position_shuffle = value
+    settings.game_rules.players.start_position_shuffle = value
 end
 
 function Settings.set_mad_bombers(value: boolean)
-    settings.mad_bombers = value
+    settings.game_rules.players.mad_bombers = value
 end
 
 function Settings.set_start_speed(value: integer)
-    settings.start_speed = value
+    settings.game_rules.players.start_speed = value
 end
 
 function Settings.set_start_with_kick(value: boolean)
-    settings.start_with_kick = value
+    settings.game_rules.players.start_with_kick = value
 end
 
 function Settings.set_battle_time(value: number)
-    settings.battle_time = value
+    settings.game_rules.timings.battle = value
 end
 
 function Settings.set_sudden_death_time(value: number)
-    settings.sudden_death_time = value
+    settings.game_rules.timings.sudden_death = value
 end
 
 return settings

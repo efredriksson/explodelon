@@ -13,7 +13,7 @@ function hitboxes.new(position: Point): Rectangle
 end
 
 function hitboxes.draw(rectangle: Rectangle)
-    if settings.draw_hitboxes then
+    if settings.debug.draw_hitboxes then
         lutro.graphics.setColor(255, 255, 255)
         lutro.graphics.rectangle(
             "line", rectangle.x, rectangle.y, rectangle.width, rectangle.height

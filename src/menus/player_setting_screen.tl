@@ -11,19 +11,20 @@ function player_settings_screen.new(previous_screen: Scene): MenuScreen
         scenes.set(previous_screen)
     end
 
-    local start_speed_selected = items.new_integer_selection(settings.start_speed, 20, 100)
+    local player_settings = settings.game_rules.players
+    local start_speed_selected = items.new_integer_selection(player_settings.start_speed, 20, 100)
     return srceens.new({
         choices.new_boolean(
-            "start position random", 50, settings.start_position_shuffle, settings.set_start_position_shuffle
+            "start position random", 50, player_settings.start_position_shuffle, settings.set_start_position_shuffle
         ),
         choices.new_boolean(
-            "mad bombers", 70, settings.mad_bombers, settings.set_mad_bombers
+            "mad bombers", 70, player_settings.mad_bombers, settings.set_mad_bombers
         ),
         choices.new_integer(
             "start speed", 90, start_speed_selected, settings.set_start_speed
         ),
         choices.new_boolean(
-            "start with kick", 110, settings.start_with_kick, settings.set_start_with_kick
+            "start with kick", 110, player_settings.start_with_kick, settings.set_start_with_kick
         ),
         choices.new_done("back", 180, done)
     })
