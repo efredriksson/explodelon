@@ -17,7 +17,7 @@ end
 
 function lutro.update(dt: number)
 	scenes.get():update(dt)
-	joysticks.update()
+	joysticks.update(dt)
 end
 
 function lutro.draw()
