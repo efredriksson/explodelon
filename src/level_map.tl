@@ -179,25 +179,17 @@ local function get_soft_block_positions(occupies: {Entity}): {Point}
 	return soft_blocks
 end
 
-local NBR_OF_EGGS = 4
-local NBR_OF_ITMES: {ItemType: integer} = {
-	bomb = 8,
-	fire = 6,
-	speed = 4,
-	kick = 8,
-}
-
 function level_map.get_soft_blocks(occupied: {Entity}): {SoftBlockConfig}
 	local soft_blocks: {SoftBlockConfig} = {}
 
 	local blocks_positions = get_soft_block_positions(occupied)
-	for item_type, quantity in pairs(NBR_OF_ITMES) do
+	for item_type, quantity in pairs(settings.nbr_of_items) do
 		for _=1, math.min(quantity, #blocks_positions) do
 			local pos = table.remove(blocks_positions, 1)
 			table.insert(soft_blocks, SoftBlockConfig.new(pos, item_type, false))
 		end
 	end
-	for _=1, math.min(NBR_OF_EGGS, #blocks_positions) do
+	for _=1, math.min(settings.nbr_of_eggs, #blocks_positions) do
 		local pos = table.remove(blocks_positions, 1)
 		table.insert(soft_blocks, SoftBlockConfig.new(pos, nil, true))
 	end
@@ -238,7 +230,11 @@ function level_map.get_player_start_positions(number_of_players: integer): {Poin
 		end
 	end
 
-	return itertools.shuffle(get_positions())
+	if settings.start_position_shuffle then
+		return itertools.shuffle(get_positions())
+	else
+		return get_positions()
+	end
 end
 
 global record Goal

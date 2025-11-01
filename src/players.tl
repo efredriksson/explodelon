@@ -53,7 +53,7 @@ function players.new(id: integer, sprite: CharacterSprite, position: Point): Pla
 	self.direction = "down"
 	self.action = "idle"
 	self.state = "foot"
-	self.speed = const.PLAYER_SPEED
+	self.speed = settings.start_speed
 	self.bombs = 1
 	self.fire = 2
 	self.has_kick = settings.start_with_kick

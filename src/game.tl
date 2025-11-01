@@ -16,6 +16,7 @@ local player_animations = require("player_animations")
 local players = require("players")
 local pressure_blocks = require("pressure_block")
 local score_board = require("score_board")
+local settings = require("settings")
 local soft_blocks = require("soft_blocks")
 
 
@@ -199,7 +200,9 @@ function Game:update(dt: number)
 		end
 	end
 	for _, player in ipairs(itertools.filter(self.players, is_dead)) do
-		self.mad_bombers:ensure_exist_for(player.id, player.sprite)
+		if settings.mad_bombers then
+			self.mad_bombers:ensure_exist_for(player.id, player.sprite)
+		end
 	end
 
 	if self.game_timer:sudden_death() then

@@ -5,13 +5,6 @@ local animations = require("animations")
 local const = require("const")
 local itertools = require("itertools")
 
-global enum ItemType
-   "speed"
-   "bomb"
-   "kick"
-   "fire"
-end
-
 local take_item_sound: Source
 local frame_animation: Animation
 local item_shadow: Image
