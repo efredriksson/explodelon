@@ -5,6 +5,7 @@ require("entity")
 local const = require("const")
 local physics = require("physics")
 local vectors = require("geometry.vectors")
+local settings = require("settings")
 
 
 global type Action = enum
@@ -55,7 +56,7 @@ function players.new(id: integer, sprite: CharacterSprite, position: Point): Pla
 	self.speed = const.PLAYER_SPEED
 	self.bombs = 1
 	self.fire = 2
-	self.has_kick = false
+	self.has_kick = settings.start_with_kick
 	self.invulnerable_for = 0
 	self.stunned_for = 0
 	self.dino = nil
