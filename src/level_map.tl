@@ -71,8 +71,8 @@ local function get_random_block(): Point
 	return get_block_point(lutro.math.random(17) - 1, lutro.math.random(11) - 1)
 end
 
-local function is_hard_block_at(position: Point): boolean
-	for _, hard_block in ipairs(level_map.get_hard_blocks()) do
+local function is_hard_block_at(position: Point, hard_blocks: {HardBlock}): boolean
+	for _, hard_block in ipairs(hard_blocks) do
 		if hard_block.position:equal(position) then
 			return true
 		end
@@ -83,10 +83,11 @@ end
 
 function level_map.get_non_hard_block_positions(): {Point}
 	local positions: {Point} = {}
+	local hard_blocks = level_map.get_hard_blocks()
 
 	for i, j in itertools.double_loop_inner_loopback({0, 16}, {0, 10}) do
 		local block = get_block_point(i, j)
-		if not is_hard_block_at(block) then
+		if not is_hard_block_at(block, hard_blocks) then
 			table.insert(positions, block)
 		end
 	end
