@@ -15,7 +15,7 @@ local game_timer = {}
 
 function game_timer.new(): GameTimer
    local self: GameTimer = setmetatable({}, { __index = GameTimer })
-   self.time_left = settings.battle_time
+   self.time_left = settings.game_rules.timings.battle
    return self
 end
 
@@ -42,7 +42,7 @@ function GameTimer:finished(): boolean
 end
 
 function GameTimer:sudden_death(): boolean
-	return self.time_left <= settings.sudden_death_time
+	return self.time_left <= settings.game_rules.timings.sudden_death
 end
 
 return game_timer

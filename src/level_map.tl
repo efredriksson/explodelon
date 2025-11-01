@@ -168,7 +168,7 @@ local function get_soft_block_positions(occupies: {Entity}): {Point}
 		end
 	end
 
-	while #soft_blocks < settings.nbr_soft_blocks do
+	while #soft_blocks < settings.game_rules.items.nbr_soft_blocks do
 		local occupied = itertools.combine(hard_blocks, close_to_entity, soft_blocks)
 		local random_block = get_random_block()
 		if not contains_position(occupied, random_block) then
@@ -180,16 +180,17 @@ local function get_soft_block_positions(occupies: {Entity}): {Point}
 end
 
 function level_map.get_soft_blocks(occupied: {Entity}): {SoftBlockConfig}
+	local item_settings = settings.game_rules.items
 	local soft_blocks: {SoftBlockConfig} = {}
 
 	local blocks_positions = get_soft_block_positions(occupied)
-	for item_type, quantity in pairs(settings.nbr_of_items) do
+	for item_type, quantity in pairs(item_settings.nbr_of_items) do
 		for _=1, math.min(quantity, #blocks_positions) do
 			local pos = table.remove(blocks_positions, 1)
 			table.insert(soft_blocks, SoftBlockConfig.new(pos, item_type, false))
 		end
 	end
-	for _=1, math.min(settings.nbr_of_eggs, #blocks_positions) do
+	for _=1, math.min(item_settings.nbr_of_eggs, #blocks_positions) do
 		local pos = table.remove(blocks_positions, 1)
 		table.insert(soft_blocks, SoftBlockConfig.new(pos, nil, true))
 	end
@@ -230,7 +231,7 @@ function level_map.get_player_start_positions(number_of_players: integer): {Poin
 		end
 	end
 
-	if settings.start_position_shuffle then
+	if settings.game_rules.players.start_position_shuffle then
 		return itertools.shuffle(get_positions())
 	else
 		return get_positions()

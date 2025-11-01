@@ -200,7 +200,7 @@ function Game:update(dt: number)
 		end
 	end
 	for _, player in ipairs(itertools.filter(self.players, is_dead)) do
-		if settings.mad_bombers then
+		if settings.game_rules.players.mad_bombers then
 			self.mad_bombers:ensure_exist_for(player.id, player.sprite)
 		end
 	end
