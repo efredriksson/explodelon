@@ -1,9 +1,13 @@
+local settings = require("settings")
+
 local scenes = {}
 
 global type Scene = interface
     load: function(self)
     update: function(self, dt: number)
     draw: function(self)
+    -- Implementation outside this file should not have this:
+    is_internal: boolean
 end
 
 local record WrapperScene is Scene
@@ -11,11 +15,13 @@ local record WrapperScene is Scene
     load: function(self)
     update: function(self, dt: number)
     draw: function(self)
+    is_internal: boolean
 end
 
 function WrapperScene.new(to_wrap: Scene): WrapperScene
    local self: WrapperScene = setmetatable({}, { __index = WrapperScene })
    self.to_wrap = to_wrap
+   self.is_internal = true
    return self
 end
 
@@ -37,6 +43,46 @@ function WrapperScene:draw()
     end
 end
 
+local record CheckPerformanceOfScene is Scene
+    to_wrap: Scene
+    load: function(self)
+    update: function(self, dt: number)
+    draw: function(self)
+    is_internal: boolean
+end
+
+function CheckPerformanceOfScene.new(to_wrap: Scene): CheckPerformanceOfScene
+   local self: CheckPerformanceOfScene = setmetatable({}, { __index = CheckPerformanceOfScene })
+   self.to_wrap = to_wrap
+   self.is_internal = true
+   return self
+end
+
+function CheckPerformanceOfScene:load()
+    self.to_wrap:load()
+end
+
+local function warn_if_took_too_long(start_time: number, ctx: string)
+    local end_time = os.clock()
+    local elapsed_time = end_time - start_time
+    local limit_to_log_time = 0.01
+    if elapsed_time > limit_to_log_time then
+        print("WARNING: The '" .. ctx .. "' took " .. elapsed_time .. "s")
+    end
+end
+
+function CheckPerformanceOfScene:update(dt: number)
+    local start_time = os.clock()
+    self.to_wrap:update(dt)
+    warn_if_took_too_long(start_time, "update")
+end
+
+function CheckPerformanceOfScene:draw()
+    local start_time = os.clock()
+    self.to_wrap:draw()
+    warn_if_took_too_long(start_time, "draw")
+end
+
 local current_scene: Scene
 
 function scenes.get(): Scene
@@ -44,7 +90,14 @@ function scenes.get(): Scene
 end
 
 function scenes.set(scene: Scene)
-    current_scene = WrapperScene.new(scene)
+    if not scene.is_internal then
+        scene = WrapperScene.new(scene)
+        if settings.debug.log_scene_perf then
+            scene = CheckPerformanceOfScene.new(scene)
+        end
+    end
+
+    current_scene = scene
     current_scene:load()
 end
 

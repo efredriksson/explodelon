@@ -75,11 +75,13 @@ end
 
 local record Debug
     draw_hitboxes: boolean
+    log_scene_perf: boolean
 end
 
 function Debug.new(): Debug
     local self: Debug = setmetatable({}, { __index = Debug })
     self.draw_hitboxes = false
+    self.log_scene_perf = false
     return self
 end
 
@@ -107,6 +109,10 @@ end
 
 function Settings.set_draw_hitboxs(value: boolean)
     settings.debug.draw_hitboxes = value
+end
+
+function Settings.set_log_scene_perf(value: boolean)
+    settings.debug.log_scene_perf = value
 end
 
 function Settings.set_number_of_players(value: integer)
