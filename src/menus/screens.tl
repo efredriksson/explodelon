@@ -37,7 +37,7 @@ function MenuScreen:update(_: number)
 
     for line_idx, line in ipairs(self.menu_choices) do
         if self.menu_selection.value == line_idx then
-            ok_action = line:update()
+            ok_action = line:update(self)
         end
     end
     
