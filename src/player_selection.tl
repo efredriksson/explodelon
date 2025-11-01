@@ -73,7 +73,7 @@ local record PlayerSelection is Scene
     number_players_selecting: integer
     idle_images: {integer: Image}
     slow_walk_animations: {CharacterSprite: Animation}
-    selector: MenuSelection
+    selector: MenuSelection<integer>
     selected_characters: {Character}
     selectable_characters: {Character}
 end
@@ -89,7 +89,7 @@ function PlayerSelection.new(number_players_selecting: integer): PlayerSelection
         self.slow_walk_animations[sprite] = get_walk_down_animation(sprite)
         self.selectable_characters[idx] = Character.new(sprite, idx)
     end
-    self.selector = menu_items.new_selection(1, 1, 10)
+    self.selector = menu_items.new_integer_selection(1, 1, 10)
     self.selected_characters = {}
     return self
 end
@@ -117,7 +117,7 @@ function PlayerSelection:handle_player_input()
     elseif (joysticks.is_pressed(self.player_selecting, JOYPAD.B) or 
             joysticks.is_pressed(self.player_selecting, JOYPAD.R)) then
 
-        local selected = table.remove(self.selectable_characters, self.selector.value)
+        local selected = table.remove(self.selectable_characters, self.selector:get_value())
         table.insert(self.selected_characters, selected)
         self.selector:reduce_max_val()
 
@@ -167,7 +167,7 @@ function PlayerSelection:draw()
         self:draw_slow_walking(char)
     end
 
-    local character = self.selectable_characters[self.selector.value]
+    local character = self.selectable_characters[self.selector:get_value()]
     local indicator_offset = vectors.new(4, -5)
     local indicator_pos = character:get_position():move(indicator_offset)
     lutro.graphics.draw(selector_indicator, indicator_pos.x, indicator_pos.y)

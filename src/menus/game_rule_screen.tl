@@ -3,6 +3,7 @@ local choices = require("menus.choices")
 local srceens = require("menus.screens")
 local item_setting_screen = require("menus.item_setting_screen")
 local player_setting_screen = require("menus.player_setting_screen")
+local timing_settings_screen = require("menus.timing_settings_screen")
 
 local game_rule_screen = {}
 
@@ -16,6 +17,9 @@ function game_rule_screen.new(previous_screen: Scene): MenuScreen
     local function enter_player_settings_screen(ctx: Scene)
         scenes.set(player_setting_screen.new(ctx))
     end
+    local function enter_timing_settings_screen(ctx: Scene)
+        scenes.set(timing_settings_screen.new(ctx))
+    end
 
     return srceens.new({
         choices.new_done(
@@ -23,6 +27,9 @@ function game_rule_screen.new(previous_screen: Scene): MenuScreen
         ),
         choices.new_done(
             "player rules", 70, enter_player_settings_screen
+        ),
+        choices.new_done(
+            "timing rules", 90, enter_timing_settings_screen
         ),
         choices.new_done("back", 180, done)
     })

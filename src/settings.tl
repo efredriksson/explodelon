@@ -16,6 +16,8 @@ local record Settings
     mad_bombers: boolean
     start_speed: integer
     start_with_kick: boolean
+    battle_time: number
+    sudden_death_time: number
 end
 
 function Settings.new(): Settings
@@ -35,6 +37,8 @@ function Settings.new(): Settings
     self.mad_bombers = true
     self.start_speed = 60
     self.start_with_kick = false
+    self.battle_time = 180
+    self.sudden_death_time = 60
 
     return self
 end
@@ -91,6 +95,14 @@ end
 
 function Settings.set_start_with_kick(value: boolean)
     settings.start_with_kick = value
+end
+
+function Settings.set_battle_time(value: number)
+    settings.battle_time = value
+end
+
+function Settings.set_sudden_death_time(value: number)
+    settings.sudden_death_time = value
 end
 
 return settings

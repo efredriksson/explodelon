@@ -14,7 +14,7 @@ local ok_sound: Source
 
 global record MenuScreen is Scene
     menu_choices: {MenuChoice}
-    menu_selection: MenuSelection
+    menu_selection: MenuSelection<integer>
 end
 
 local screens = {}
@@ -22,7 +22,7 @@ local screens = {}
 function screens.new(menu_choices: {MenuChoice}): MenuScreen
     local self: MenuScreen = setmetatable({}, { __index = MenuScreen })
     self.menu_choices = menu_choices
-    self.menu_selection = items.new_selection(1, 1, #self.menu_choices)
+    self.menu_selection = items.new_integer_selection(1, 1, #self.menu_choices)
     return self
 end
 
@@ -36,7 +36,7 @@ function MenuScreen:update(_: number)
     local ok_action = false
 
     for line_idx, line in ipairs(self.menu_choices) do
-        if self.menu_selection.value == line_idx then
+        if self.menu_selection:get_value() == line_idx then
             ok_action = line:update(self)
         end
     end
@@ -57,7 +57,7 @@ function MenuScreen:draw()
 	lutro.graphics.rectangle("fill", 0, 0, const.MAP_WIDTH, const.MAP_HEIGHT)
 
     local function get_font(line_idx): MenuFont
-        if line_idx == self.menu_selection.value then
+        if line_idx == self.menu_selection:get_value() then
             return white_font
         else
             return black_font
