@@ -158,4 +158,10 @@ function Settings.set_game_rules_default()
     settings.game_rules = GameRules.new()
 end
 
+function Settings.set_game_rules_kick_debug()
+    settings.game_rules = GameRules.new()
+    settings.game_rules.players.start_with_kick = true
+    settings.game_rules.items.nbr_soft_blocks = 0
+end
+
 return settings
