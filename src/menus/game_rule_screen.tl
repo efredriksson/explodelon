@@ -1,8 +1,8 @@
 local scenes = require("scenes")
-local settings = require("settings")
 local choices = require("menus.choices")
-local items = require("menus.items")
 local srceens = require("menus.screens")
+local item_setting_screen = require("menus.item_setting_screen")
+local player_setting_screen = require("menus.player_setting_screen")
 
 local game_rule_screen = {}
 
@@ -10,14 +10,19 @@ function game_rule_screen.new(previous_screen: Scene): MenuScreen
     local function done(_: Scene)
         scenes.set(previous_screen)
     end
+    local function enter_item_settings_screen(ctx: Scene)
+        scenes.set(item_setting_screen.new(ctx))
+    end
+    local function enter_player_settings_screen(ctx: Scene)
+        scenes.set(player_setting_screen.new(ctx))
+    end
 
-    local nbr_soft_blocks_selected = items.new_selection(settings.nbr_soft_blocks, 0, 120)
     return srceens.new({
-        choices.new_integer(
-            "nbr. soft blocks", 50, nbr_soft_blocks_selected, settings.set_nbr_soft_blocks
+        choices.new_done(
+            "item rules", 50, enter_item_settings_screen
         ),
-        choices.new_boolean(
-            "start with kick", 70, settings.start_with_kick, settings.set_start_with_kick
+        choices.new_done(
+            "player rules", 70, enter_player_settings_screen
         ),
         choices.new_done("back", 180, done)
     })
