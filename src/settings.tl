@@ -154,4 +154,8 @@ function Settings.set_sudden_death_time(value: number)
     settings.game_rules.timings.sudden_death = value
 end
 
+function Settings.set_game_rules_default()
+    settings.game_rules = GameRules.new()
+end
+
 return settings
