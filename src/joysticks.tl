@@ -1,6 +1,7 @@
 local const = require("const")
 
 local previous_states: {integer: {integer: boolean}} = {}
+local down_for_states: {integer: {integer: number}} = {}
 local joysticks = {}
 
 function joysticks.buttons(): {string: integer}
@@ -40,19 +41,33 @@ function joysticks.is_released(player_id: integer, button: integer): boolean
     return not is_currently_down and was_previously_down
 end
 
+-- Used to check if a button has been pressed down 
+function joysticks.is_down_for(player_id: integer, button: integer, time: number): boolean
+    return down_for_states[player_id][button] >= time
+end
+
 function joysticks.setup()
     for player_id = 1, const.MAX_PLAYERS do
         previous_states[player_id] = {}
+        down_for_states[player_id] = {}
         for button = 1, const.MAX_BUTTONS do
             previous_states[player_id][button] = false
+            down_for_states[player_id][button] = 0
         end
     end
 end
 
-function joysticks.update()
+function joysticks.update(dt: number)
     for player_id, previous_state in pairs(previous_states) do
         for button, _ in pairs(previous_state) do
-            previous_state[button] = lutro.joystick.isDown(player_id, button)
+            local down_for_state = down_for_states[player_id]
+            if lutro.joystick.isDown(player_id, button) then
+                previous_state[button] = true
+                down_for_state[button] = down_for_state[button] + dt
+            else
+                previous_state[button] = false
+                down_for_state[button] = 0
+            end
         end
     end
 end

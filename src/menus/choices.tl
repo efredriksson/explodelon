@@ -88,10 +88,16 @@ end
 
 function IntegerMenuChoice:update(_: Scene): boolean
     local ok_action = false
-    
-    if joysticks.is_pressed(1, JOYPAD.RIGHT) then
+
+    local function active_button(button: integer): boolean
+        local time_until_fast_change = 0.3
+        return joysticks.is_pressed(1, button) or
+            joysticks.is_down_for(1, button, time_until_fast_change)
+    end
+
+    if active_button(JOYPAD.RIGHT) then
         ok_action = self.selection:increment()
-    elseif joysticks.is_pressed(1, JOYPAD.LEFT) then
+    elseif active_button(JOYPAD.LEFT) then
         ok_action = self.selection:decrement()
     end
 
