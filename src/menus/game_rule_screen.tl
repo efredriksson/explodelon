@@ -22,22 +22,23 @@ function game_rule_screen.new(previous_screen: Scene): MenuScreen
         scenes.set(timing_settings_screen.new(ctx))
     end
     local function enter_load_rules_screen(ctx: Scene)
-        scenes.set(load_rules_screen.new(ctx))
+        scenes.set(load_rules_screen.new(ctx, previous_screen))
     end
 
     return srceens.new({
         choices.new_done(
-            "item rules", 50, enter_item_settings_screen
+            "load ruleset", 50, enter_load_rules_screen
         ),
         choices.new_done(
-            "player rules", 70, enter_player_settings_screen
+            "item rules", 70, enter_item_settings_screen
         ),
         choices.new_done(
-            "timing rules", 90, enter_timing_settings_screen
+            "player rules", 90, enter_player_settings_screen
         ),
         choices.new_done(
-            "load ruleset", 110, enter_load_rules_screen
+            "timing rules", 110, enter_timing_settings_screen
         ),
+
         choices.new_done("back", 180, done)
     })
 end

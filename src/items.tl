@@ -4,6 +4,7 @@ require("players")
 local animations = require("animations")
 local const = require("const")
 local itertools = require("itertools")
+local settings = require("settings")
 
 local take_item_sound: Source
 local frame_animation: Animation
@@ -65,9 +66,29 @@ function items.new(): Items
    return self
 end
 
-global function get_random_item(): ItemType
-    local items_that_can_drop: {ItemType} = {"speed", "bomb", "kick", "fire"}
-    return items_that_can_drop[lutro.math.random(#items_that_can_drop)]
+function Items:possible_drop(available_spots: {Point})
+    if #available_spots == 0 then
+        return
+    end
+    local item_spawns: {ItemType} = {}
+    local spawn_rates = settings.game_rules.items.spawn_rates
+    if lutro.math.random() < spawn_rates.speed then
+        table.insert(item_spawns, "speed")
+    end
+    if lutro.math.random() < spawn_rates.bomb then
+        table.insert(item_spawns, "bomb")
+    end
+    if lutro.math.random() < spawn_rates.fire then
+        table.insert(item_spawns, "fire")
+    end
+    if lutro.math.random() < spawn_rates.kick then
+        table.insert(item_spawns, "kick")
+    end
+
+    for _, item_spawn in ipairs(item_spawns) do
+        local spot_to_drop = available_spots[lutro.math.random(#available_spots)]
+        table.insert(self.on_ground, Item.new(item_spawn, spot_to_drop))
+    end
 end
 
 function Items:drop_at(position: Point, item: ItemType)

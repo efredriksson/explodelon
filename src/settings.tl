@@ -21,6 +21,7 @@ local record ItemRules
     nbr_soft_blocks: integer
     nbr_of_eggs: integer
     nbr_of_items: {ItemType: integer}
+    spawn_rates: {ItemType: number}
 end
 
 function ItemRules.new(): ItemRules
@@ -32,6 +33,12 @@ function ItemRules.new(): ItemRules
         fire = 6,
         speed = 4,
         kick = 8,
+    }
+    self.spawn_rates = {
+        bomb = 0,
+        fire = 0,
+        speed = 0,
+        kick = 0,
     }
     return self
 end
@@ -162,6 +169,18 @@ function Settings.set_game_rules_kick_debug()
     settings.game_rules = GameRules.new()
     settings.game_rules.players.start_with_kick = true
     settings.game_rules.items.nbr_soft_blocks = 0
+end
+
+function Settings.set_game_rules_insanity()
+    settings.game_rules = GameRules.new()
+    settings.game_rules.items.nbr_soft_blocks = 30
+    settings.game_rules.timings.battle = 80
+    settings.game_rules.timings.sudden_death = 50
+    settings.game_rules.items.spawn_rates.speed = 0.3
+    settings.game_rules.items.spawn_rates.bomb = 0.3
+    settings.game_rules.items.spawn_rates.fire = 0.5
+    settings.game_rules.items.spawn_rates.kick = 0.07
+    settings.game_rules.players.mad_bombers = false
 end
 
 return settings
