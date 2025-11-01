@@ -39,6 +39,7 @@ local record Game is Scene
 	time_of_1_alive_player: number
 	game_countdown: GameCountdown
 	pressure_blocks: PressureBlocks
+	tic_counter: integer
 end
 
 function Game:load()
@@ -59,6 +60,7 @@ function Game:load()
 	self.time_of_1_alive_player = 0.0
 	self.game_countdown = game_countdown.new()
 	self.pressure_blocks = pressure_blocks.new()
+	self.tic_counter = 0
 end
 
 function Game.new(character_sprites: {CharacterSprite}): Game
@@ -213,6 +215,12 @@ function Game:update(dt: number)
 	self.mad_bombers:update(dt)
 	self.items:update(dt)
 	self.eggs:update(dt)
+
+	self.tic_counter = self.tic_counter + 1
+	if self.tic_counter % 120 == 0 then
+		-- Only consider generating these every 120 tic (2 seconds)
+		self.items:possible_drop(self:get_available_spots())
+	end
 
 	local dead_players = itertools.filter(self.players, is_dead)
 	self.items:drop_items_of(dead_players, self:get_available_spots())
