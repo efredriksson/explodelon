@@ -10,7 +10,7 @@ local JOYPAD = joysticks.buttons()
 local choices = {}
 
 global type MenuChoice = interface
-    update: function(self): boolean
+    update: function(self, ctx: Scene): boolean
     draw: function(self, font: MenuFont)
 end
 
@@ -33,7 +33,7 @@ function choices.new_boolean(menu_text: string, y_pos: integer, on_by_default: b
     return self
 end
 
-function BooleanMenuChoice:update(): boolean
+function BooleanMenuChoice:update(_: Scene): boolean
     local ok_action = false
     if joysticks.is_pressed(1, JOYPAD.RIGHT) then
         ok_action = self.selection:increment()
@@ -86,7 +86,7 @@ function choices.new_integer(menu_text: string, y_pos: integer, selection: MenuS
     return self
 end
 
-function IntegerMenuChoice:update(): boolean
+function IntegerMenuChoice:update(_: Scene): boolean
     local ok_action = false
     
     if joysticks.is_pressed(1, JOYPAD.RIGHT) then
@@ -118,10 +118,10 @@ end
 local record MenuDoneChoice is MenuChoice
     y_pos: integer
     menu_text: string
-    callback: function()
+    callback: function(ctx: Scene)
 end
 
-function choices.new_done(menu_text: string, y_pos: integer, callback: function()): MenuDoneChoice
+function choices.new_done(menu_text: string, y_pos: integer, callback: function(ctx: Scene)): MenuDoneChoice
     local self: MenuDoneChoice = setmetatable({}, { __index = MenuDoneChoice })
     self.y_pos = y_pos
     self.menu_text = menu_text
@@ -129,10 +129,10 @@ function choices.new_done(menu_text: string, y_pos: integer, callback: function(
     return self
 end
 
-function MenuDoneChoice:update(): boolean
+function MenuDoneChoice:update(ctx: Scene): boolean
     local done = joysticks.is_pressed(1, JOYPAD.B)
     if done then
-        self.callback()
+        self.callback(ctx)
     end
 
     return done

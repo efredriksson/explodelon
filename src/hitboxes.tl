@@ -3,9 +3,9 @@ require("geometry.points")
 local const = require("const")
 local itertools = require("itertools")
 local rectangles = require("geometry.rectangles")
+local settings = require("settings")
 
 
-local DRAW_HITBOXES = false
 local hitboxes = {}
 
 function hitboxes.new(position: Point): Rectangle
@@ -13,7 +13,7 @@ function hitboxes.new(position: Point): Rectangle
 end
 
 function hitboxes.draw(rectangle: Rectangle)
-    if DRAW_HITBOXES then
+    if settings.draw_hitboxes then
         lutro.graphics.setColor(255, 255, 255)
         lutro.graphics.rectangle(
             "line", rectangle.x, rectangle.y, rectangle.width, rectangle.height
