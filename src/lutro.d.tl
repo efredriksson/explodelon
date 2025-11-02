@@ -51,6 +51,11 @@ end
 global type Source = interface
    is Object
    setVolume: function(self: Source, volume: number)
+   play: function(self: Source)
+   pause: function(self: Source)
+   stop: function(self: Source)
+   isPlaying: function(self: Source): boolean
+   isPaused: function(self: Source): boolean
 end
 
 global type GamepadButton = enum

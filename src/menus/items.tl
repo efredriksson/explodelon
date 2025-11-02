@@ -1,3 +1,4 @@
+local audio = require("audio")
 local clock_text = require("clock_text")
 
 
@@ -103,7 +104,7 @@ function menu_items.new_time_selection(start_idx: integer, times: {number}): Men
 end
 
 function menu_items.ok_sound(): Source
-    return lutro.audio.newSource("assets/menu_good.wav", "static")
+    return audio.new_source("assets/menu_good.wav", "static")
 end
 
 return menu_items

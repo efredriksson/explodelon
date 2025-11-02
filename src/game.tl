@@ -1,10 +1,11 @@
 require("character_sprites")
-require("scenes")
+local audio = require("audio")
 local bombs = require("bombs")
 local const = require("const")
 local eggs = require("eggs")
 local game_countdown = require("game_countdown")
 local game_timer = require("game_timer")
+local game_pause = require("game_pause")
 local hitboxes = require("hitboxes")
 local items = require("items")
 local itertools = require("itertools")
@@ -15,6 +16,7 @@ local movement = require("movement")
 local player_animations = require("player_animations")
 local players = require("players")
 local pressure_blocks = require("pressure_block")
+local scenes = require("scenes")
 local score_board = require("score_board")
 local settings = require("settings")
 local soft_blocks = require("soft_blocks")
@@ -127,6 +129,15 @@ function Game:handle_bomb_drop_input(player: Player)
 	end
 end
 
+function Game:handle_pause_input()
+	for player_id=1, const.MAX_PLAYERS do
+		if joysticks.is_pressed(player_id, JOYPAD.START) then
+			audio.pause()
+			scenes.set(game_pause.new(self, player_id))
+		end
+	end
+end
+
 local is_alive = function(player: Player): boolean
 	return player:is_alive()
 end
@@ -136,6 +147,7 @@ local is_dead = function(player: Player): boolean
 end
 
 function Game:update(dt: number)
+	self:handle_pause_input()
 	self.game_countdown:update(dt)
 	if not self.game_countdown:finished() then
 		return
@@ -326,6 +338,7 @@ function game.setup(selected_sprites: {CharacterSprite}): Scene
 	MadBombers.load_assets()
 	GameCountdown.load_assets()
 	ScoreBoard.load_assets()
+	game_pause.load_assets()
 
 	return Game.new(selected_sprites)
 end
