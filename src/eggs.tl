@@ -1,13 +1,15 @@
 require("entity")
+require("players")
 local animations = require("animations")
 local const = require("const")
 local dinos = require("dinos")
+local hitboxes = require("hitboxes")
 local points = require("geometry.points")
 
 local egg_shake_image: Image
 local egg_open_image: Image
 
-global record Egg is Entity, ExplosionBlocking, Explodable
+global record Egg is Entity, ExplosionBlocking, Explodable, Entity
     position: Point
     breaking: boolean
     hatched: boolean
@@ -45,6 +47,11 @@ end
 
 function Egg:blow_up()
     self.is_exploding = true
+end
+
+function Egg:hitbox(): Rectangle
+    local padding = 4
+	return hitboxes.new_block(self.position, padding)
 end
 
 function Egg:draw()
@@ -93,12 +100,12 @@ function Eggs:spawn_at(position: Point)
     table.insert(self.on_ground, Egg.new(position))
 end
 
-function Eggs:possible_hatcher_at(player_position: Point, player_dir: Direction): Dino
+function Eggs:possible_hatcher(player: Player): Dino
     for _, egg in ipairs(self.on_ground) do
-        if egg.position:in_radius_of(player_position, const.BLOCK_SIZE / 2) then
+        if player:hitbox():overlap(egg:hitbox()) then
 			if not egg.breaking and not egg.is_exploding then
 				egg:open()
-                return dinos.new(egg.position, player_dir)
+                return dinos.new(egg.position, player.direction)
 			end
         end
     end

@@ -1,5 +1,6 @@
 require("geometry.points")
 require("geometry.vectors")
+local hitboxes = require("hitboxes")
 
 
 global type DinoColor = enum
@@ -43,6 +44,11 @@ end
 
 function Dino:level_up()
     self.level = math.min(self.level + 1, 3)
+end
+
+function Dino:hitbox(): Rectangle
+    local padding = 4
+    return hitboxes.new_block(self.position, padding)
 end
 
 return dinos

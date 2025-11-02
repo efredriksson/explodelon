@@ -6,6 +6,7 @@ local hitboxes = require("hitboxes")
 local joysticks = require("joysticks")
 local level_map = require("level_map")
 local points = require("geometry.points")
+local rectangles = require("geometry.rectangles")
 local vectors = require("geometry.vectors")
 
 local JOYPAD = joysticks.buttons()
@@ -115,7 +116,7 @@ local function get_cart_animations(): CartAnimations, CartAnimations, CartAnimat
     return ready_animations, loading_animations, firing_animations
 end
 
-global record PlayerCart
+global record PlayerCart is Entity
     id: integer
     position: number -- 1D position on cart rail 
     state: CartState
@@ -242,6 +243,16 @@ function PlayerCart:_get_x_y_draw_position(): Point
     ):move(self:_get_cart_image_padding())
 end
 
+function PlayerCart:get_position(): Point
+    return self:get_x_y_position()
+end
+
+function PlayerCart:hitbox(): Rectangle
+    local animation = self:_get_animation()
+    local cart_pos = self:_get_x_y_draw_position()
+    return rectangles.new(cart_pos.x, cart_pos.y, animation.width, animation.height)
+end
+
 function PlayerCart:draw()
     local cart_pos = self:_get_x_y_draw_position()
     local animation = self:_get_animation()
@@ -319,7 +330,7 @@ function PlayerCart:fire_cannon(): Point, integer
     end
     shoot_from = level_map.snap_to_closest_grid_tile(shoot_from)
 
-    local fired_bomb = hitboxes.new(shoot_from)
+    local fired_bomb = hitboxes.new_block(shoot_from)
     if self.cannon ~= "ready" or not PLAYER_AREA:contains(fired_bomb) then
         return nil, nil
     end

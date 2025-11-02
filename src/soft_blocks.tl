@@ -37,6 +37,10 @@ function SoftBlock:hit_with_bomb()
 	-- Does nothing
 end
 
+function SoftBlock:hitbox(): Rectangle
+	return hitboxes.new_block(self.position)
+end
+
 function SoftBlock:update(dt: number)
     if self.breaking_animation then
         self.breaking_animation:update(dt)
@@ -102,7 +106,7 @@ end
 
 function SoftBlocks:hitboxes(): {Rectangle}
     local function hitbox_map_f(block: SoftBlock): Rectangle
-        return hitboxes.new(block.position)
+        return hitboxes.new_block(block.position)
     end
     return itertools.map(self.on_ground, hitbox_map_f)
 end

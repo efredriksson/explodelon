@@ -122,11 +122,9 @@ end
 function Game:clear_entities(destroys: {Entity}, ...: {Entity})
 	-- This is for things that directly removes an entity (no animations or such)
 	for _, destroyer in ipairs(destroys) do
-		local position = destroyer:get_position()
-		
 		for _, entity_list in ipairs({...}) do
 			for j, entity in ipairs(entity_list) do
-				if position:in_radius_of(entity:get_position(), const.BLOCK_SIZE / 2) then
+				if destroyer:hitbox():overlap(entity:hitbox()) then
 					table.remove(entity_list, j)
 				end
 			end
@@ -272,16 +270,14 @@ function Game:update(dt: number)
 
 		self.items:possible_pickup_by(player)
 
-		local hatching_dino = self.eggs:possible_hatcher_at(player.position, player.direction)
+		local hatching_dino = self.eggs:possible_hatcher(player)
 		if hatching_dino then
 			player:jumps_onto(hatching_dino)
 			self.player_animations.dinos:add_for(hatching_dino)
 		end
 
-		local player_hitbox = hitboxes.new(player.position)
 		for _, block in ipairs(hitting_ground) do
-			local block_hitbox = hitboxes.new(block.position)
-			if player_hitbox:center_distance(block_hitbox) < const.BLOCK_SIZE / 2 then
+			if player:hitbox():overlap(block:hitbox()) then
 				player:kill()
 			end
 		end
@@ -353,6 +349,7 @@ function Game:draw()
 	lutro.graphics.draw(self.background)
 	for _, block in ipairs(self.soft_blocks:not_exploding()) do
 		block:draw()
+		hitboxes.draw(block:hitbox())
 	end
 
 	self.game_timer:draw()
@@ -363,11 +360,9 @@ function Game:draw()
 		-- but their shadows have to be behind anything
 		block:draw_shadow()
 	end
-	for _, block in ipairs(self.pressure_blocks.on_ground) do
-		block:draw()
-	end
 
 	self.score_board:draw()
+	self.bombs.explosions:draw()
 
 	local entities_to_draw: {Entity} = itertools.combine(
 		self.player_animations:get_all(),
@@ -380,21 +375,19 @@ function Game:draw()
 	-- Need to render entities in the front last so they are on top of any other entity
 	sort_entities_by_y_cord(entities_to_draw)
 
-	-- Drawing this outside "entities_to_draw" so that bombs are always drawn
-	-- underneath players
-	self.bombs:draw()
+	entities_to_draw = itertools.combine(
+		-- Drawing bombs first so they are always drawn underneath players	
+		self.bombs.on_ground,
+		self.pressure_blocks.on_ground,
+		entities_to_draw,
+		-- Draw soft blocks exploding last, revealing possible item under
+		self.soft_blocks:exploding(),
+		self.mad_bombers:to_draw()
+	)
 
 	for _, entity in ipairs(entities_to_draw) do
 		entity:draw()
-	end
-
-	-- Draw soft blocks exploding last, revealing possible item under
-	for _, block in ipairs(self.soft_blocks:exploding()) do
-		block:draw()
-	end
-
-	for _, cart in ipairs(self.mad_bombers:to_draw()) do
-		cart:draw()
+		hitboxes.draw(entity:hitbox())
 	end
 end
 

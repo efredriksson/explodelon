@@ -38,6 +38,10 @@ function HardBlock:hit_with_bomb()
 	-- Does nothing
 end
 
+function HardBlock:hitbox(): Rectangle
+	return hitboxes.new_block(self.position)
+end
+
 function level_map.get_hard_blocks(): {HardBlock}
 	local blocks: {HardBlock} = {}
 
@@ -152,7 +156,7 @@ function SoftBlockConfig.new(position: Point, item: ItemType, egg: boolean): Sof
     return self
 end
 
-local function get_soft_block_positions(occupies: {Entity}): {Point}
+local function get_soft_block_positions(occupies: {Locatable}): {Point}
 	local soft_blocks: {Point} = {}
 	local close_to_entity: {Point} = {}
 	local get_point = function (h: HardBlock): Point return h.position end
@@ -180,7 +184,7 @@ local function get_soft_block_positions(occupies: {Entity}): {Point}
 	return soft_blocks
 end
 
-function level_map.get_soft_blocks(occupied: {Entity}): {SoftBlockConfig}
+function level_map.get_soft_blocks(occupied: {Locatable}): {SoftBlockConfig}
 	local item_settings = settings.game_rules.items
 	local soft_blocks: {SoftBlockConfig} = {}
 
@@ -252,7 +256,7 @@ function Goal.new(position: Point, pair: Point): Goal
 end
 
 function Goal:get_hitbox(): Rectangle
-	return hitboxes.new(self.position)
+	return hitboxes.new_block(self.position)
 end
 
 function level_map.get_possible_goals(): {Goal}

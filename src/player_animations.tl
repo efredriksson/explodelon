@@ -3,7 +3,6 @@ local animations = require("animations")
 local const = require("const")
 local dino_animations = require("dino_animations")
 local points = require("geometry.points")
-local hitboxes = require("hitboxes")
 
 
 --- Scale 0-1 represent how far from current to max to increase color component 
@@ -130,6 +129,10 @@ function PlayerAnimation:get_position(): Point
     return self.player.position
 end
 
+function PlayerAnimation:hitbox(): Rectangle
+    return self.player:hitbox()
+end
+
 local function block_to_anim_draw_pos(animation: Animation, pos: Point): Point
 	-- y: +1 is because of the sprite, look over when doing animations
 	return points.new(
@@ -140,7 +143,6 @@ end
 function PlayerAnimation:draw()
 	local draw_pos = block_to_anim_draw_pos(self.animation, self.draw_position)
 	self.animation:draw(draw_pos.x, draw_pos.y)
-	hitboxes.draw(hitboxes.new(self.player.position))
 end
 
 local record MountAnimation is Entity
@@ -159,10 +161,13 @@ function MountAnimation:get_position(): Point
     return self.dino.position
 end
 
+function MountAnimation:hitbox(): Rectangle
+    return self.dino:hitbox()
+end
+
 function MountAnimation:draw()
 	local draw_pos = block_to_anim_draw_pos(self.animation, self.dino.position)
 	self.animation:draw(draw_pos.x, draw_pos.y)
-	hitboxes.draw(hitboxes.new(self.dino.position))
 end
 
 local record MountedPlayerAnimation is Entity
@@ -187,6 +192,11 @@ function MountedPlayerAnimation:get_position(): Point
     return self.player.position
 end
 
+function MountedPlayerAnimation:hitbox(): Rectangle
+    return self.player:hitbox()
+end
+
+
 function MountedPlayerAnimation:draw()
 	if not self.player:is_alive() then
 		return
@@ -206,7 +216,6 @@ function MountedPlayerAnimation:draw()
 		draw(self.dino_animation, self.player.position)
 		draw(self.player_animation, self.draw_position)
 	end
-	hitboxes.draw(hitboxes.new(self.player.position))
 end
 
 global record PlayerAnimations

@@ -37,12 +37,12 @@ end
 
 local record ExplosionTile
     position: Point
-    reduction: number
+    reduction: integer
     is_last: boolean
     type: ExplosionTileType
 end
 
-function ExplosionTile.new(position: Point, reduction: number, is_last: boolean, explosion_type: ExplosionTileType): ExplosionTile
+function ExplosionTile.new(position: Point, reduction: integer, is_last: boolean, explosion_type: ExplosionTileType): ExplosionTile
     local self: ExplosionTile = setmetatable({}, { __index = ExplosionTile })
     self.position = position
     self.reduction = reduction
@@ -52,10 +52,10 @@ function ExplosionTile.new(position: Point, reduction: number, is_last: boolean,
 end
 
 function ExplosionTile:hitbox(): Rectangle
-    return hitboxes.new(self.position):shrink(self.reduction)
+    return hitboxes.new_block(self.position, self.reduction)
 end
 
-global record Explosion is Entity
+global record Explosion
     position: Point
     range: number
     duration: number
@@ -126,7 +126,7 @@ function Explosion:_update_active_tiles(blockers: {ExplosionBlocking})
 
     local function is_blocked(pos: Point): BlockingResult
         -- is out of bounds
-        if not level_map.player_area():contains(hitboxes.new(pos)) then
+        if not level_map.player_area():contains(hitboxes.new_block(pos)) then
             return "now"
         end
 
@@ -221,13 +221,9 @@ function Explosion:get_tile_animation(tile: ExplosionTile): Animation
     return self.animations.middle_vertical
 end
 
-function Explosion:collides_with(position: Point): boolean
-    -- This should reflect on player hitbox, not same as
-    -- hitbox stopping you from moving into wall.
-    local hitbox = hitboxes.new(position):shrink(4)
-
+function Explosion:collides_with(explodable: Explodable): boolean
     for _, tile in ipairs(self.tiles) do
-        if hitbox:overlap(tile:hitbox()) then
+        if explodable:hitbox():overlap(tile:hitbox()) then
             return true
         end
     end
@@ -304,7 +300,7 @@ function Explosions:update(dt: number, blockers: {ExplosionBlocking}, explodable
         explosion:update(dt, blockers)
 
         for _, explodable in ipairs(explodables) do
-            if explosion:collides_with(explodable:get_position()) then
+            if explosion:collides_with(explodable) then
                 explodable:blow_up()
             end
         end

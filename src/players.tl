@@ -3,6 +3,7 @@ require("character_sprites")
 require("dinos")
 require("entity")
 local const = require("const")
+local hitboxes = require("hitboxes")
 local physics = require("physics")
 local vectors = require("geometry.vectors")
 local settings = require("settings")
@@ -22,7 +23,7 @@ global type PlayerState = enum
 	"mounted"
 end
 
-global record Player is Entity, Explodable, BlocksBombs
+global record Player is Explodable, BlocksBombs, Locatable
 	id: integer
 	sprite: CharacterSprite
    	position: Point
@@ -105,6 +106,12 @@ function Player:hit_with_bomb()
 	self:set_action("stunned")
 	self.stunned_for = 1
 	self.direction = "down"
+end
+
+function Player:hitbox(): Rectangle
+	-- This hitbox is not for movement
+	local padding = 4
+	return hitboxes.new_block(self.position, padding)
 end
 
 local function get_player_position_on_mount(original_pos: Point, direction: Direction): Point
