@@ -62,7 +62,7 @@ end
 function GamePause:update(_: number)
 	if joysticks.is_pressed(self.player_id, JOYPAD.START) then
         audio.unpause()
-		scenes.set(self.paused_scene, false)
+		scenes.set(self.paused_scene, true)
 	end
 end
 
