@@ -18,7 +18,7 @@ function start_screen.new(): MenuScreen
             scenes.set(player_selection.setup())
         else
             local new_scene = game.setup(nil)
-            new_scene:update_players(character_sprites.get(settings.number_of_players))
+            new_scene:update_players(character_sprites.get_selections(settings.number_of_players))
             scenes.set(new_scene)
         end
     end
