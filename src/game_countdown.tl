@@ -1,4 +1,5 @@
 local animations = require("animations")
+local audio = require("audio")
 local const = require("const")
 local points = require("geometry.points")
 local vectors = require("geometry.vectors")
@@ -18,7 +19,7 @@ local ready_set_go_sound: Source
 
 function GameCountdown.load_assets()
 	ready_set_go_image = lutro.graphics.newImage("assets/ready_set_go.png")
-	ready_set_go_sound = lutro.audio.newSource("assets/ready_set_go.wav", "static")
+	ready_set_go_sound = audio.new_source("assets/ready_set_go.wav", "static")
 end
 
 local game_countdown = {}
@@ -42,7 +43,7 @@ function GameCountdown:update(dt: number)
 	    self.animation:update(dt)
 	end
 	if not self.have_played_sound then
-		lutro.audio.play(ready_set_go_sound)
+		ready_set_go_sound:play()
 		self.have_played_sound = true
 	end
 	if self:finished() then

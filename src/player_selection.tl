@@ -126,7 +126,7 @@ function PlayerSelection:handle_player_input()
     end
 
     if ok_action then
-        lutro.audio.play(ok_sound)
+        ok_sound:play()
     end
 
     if self.player_selecting > self.number_players_selecting then

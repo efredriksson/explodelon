@@ -2,6 +2,7 @@ require("entity")
 require("geometry.points")
 require("players")
 local animations = require("animations")
+local audio = require("audio")
 local const = require("const")
 local itertools = require("itertools")
 local settings = require("settings")
@@ -122,7 +123,7 @@ function Items:drop_items_of(players: {Player}, available_spots: {Point})
 end
 
 function Items:consumed_by_player(player: Player, index: integer)
-    lutro.audio.play(take_item_sound)
+    take_item_sound:play()
 
     local item = table.remove(self.on_ground, index)
     if self.by_players[player.id] == nil then
@@ -152,7 +153,7 @@ end
 
 
 function Items:load_assets()
-    take_item_sound = lutro.audio.newSource("assets/take_item.wav", "static")
+    take_item_sound = audio.new_source("assets/take_item.wav", "static")
     take_item_sound:setVolume(0.25)
     frame_animation = animations.new(lutro.graphics.newImage("assets/items/frame.png"), 18, 18, 1, 30)
 	item_shadow = lutro.graphics.newImage("assets/items/shadow.png")

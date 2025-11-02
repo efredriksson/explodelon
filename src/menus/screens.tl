@@ -48,7 +48,7 @@ function MenuScreen:update(_: number)
     end
 
     if ok_action then
-        lutro.audio.play(ok_sound)
+        ok_sound:play()
     end
 end
 
