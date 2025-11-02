@@ -15,9 +15,11 @@ local start_screen = {}
 function start_screen.new(): MenuScreen
     local function done(_: Scene)
         if settings.player_selection then
-            scenes.set(player_selection.setup(settings.number_of_players))
+            scenes.set(player_selection.setup())
         else
-            scenes.set(game.setup(character_sprites.get(settings.number_of_players)))
+            local new_scene = game.setup(nil)
+            new_scene:update_players(character_sprites.get(settings.number_of_players))
+            scenes.set(new_scene)
         end
     end
     local function enter_debug_screen(ctx: Scene)
