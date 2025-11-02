@@ -1,4 +1,5 @@
 local animations = require("animations")
+local audio = require("audio")
 local character_sprites = require("character_sprites")
 local fonts = require("fonts")
 local game = require("game")
@@ -7,6 +8,7 @@ local menu_items = require("menus.items")
 local scenes = require("scenes")
 local vectors = require("geometry.vectors")
 local points = require("geometry.points")
+local settings = require("settings")
 
 
 local record Character
@@ -69,8 +71,9 @@ local function get_walk_down_animation(character_name: CharacterSprite): Animati
 end
 
 local record PlayerSelection is Scene
+    game: Game
+    going_back_to_game: boolean
     player_selecting: integer
-    number_players_selecting: integer
     idle_images: {integer: Image}
     slow_walk_animations: {CharacterSprite: Animation}
     selector: MenuSelection<integer>
@@ -78,10 +81,11 @@ local record PlayerSelection is Scene
     selectable_characters: {Character}
 end
 
-function PlayerSelection.new(number_players_selecting: integer): PlayerSelection
+function PlayerSelection.new(): PlayerSelection
     local self: PlayerSelection = setmetatable({}, { __index = PlayerSelection })
+    self.game = game.setup(self)
+    self.going_back_to_game = false
     self.player_selecting = 1
-    self.number_players_selecting = number_players_selecting
     self.idle_images = {}
     self.slow_walk_animations = {}
     self.selectable_characters = {}
@@ -129,12 +133,19 @@ function PlayerSelection:handle_player_input()
         ok_sound:play()
     end
 
-    if self.player_selecting > self.number_players_selecting then
+    if self.player_selecting > settings.number_of_players then
         local selected_sprites: {CharacterSprite} = {}
         for _, selected in ipairs(self.selected_characters) do
             table.insert(selected_sprites, selected.sprite)
         end 
-        scenes.set(game.setup(selected_sprites))
+        self.game:update_players(selected_sprites)
+        scenes.set(self.game, self.going_back_to_game)
+        if self.going_back_to_game then
+            -- The game might have paused audio, make sure to unpause:
+            audio.unpause()
+        end
+        -- Game started, keep track on that state:
+        self.going_back_to_game = true
     end
 end
 
@@ -181,9 +192,9 @@ end
 
 local player_selection = {}
 
-function player_selection.setup(number_players: integer): Scene
+function player_selection.setup(): Scene
     load_assets()
-	return PlayerSelection.new(number_players)
+	return PlayerSelection.new()
 end
 
 return player_selection

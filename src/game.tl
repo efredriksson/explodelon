@@ -1,6 +1,6 @@
-require("character_sprites")
 local audio = require("audio")
 local bombs = require("bombs")
+local character_sprites = require("character_sprites")
 local const = require("const")
 local eggs = require("eggs")
 local game_countdown = require("game_countdown")
@@ -24,9 +24,10 @@ local soft_blocks = require("soft_blocks")
 
 local JOYPAD = joysticks.buttons()
 
-local record Game is Scene
+global record Game is Scene
 	score_board: ScoreBoard
 	character_sprites: {CharacterSprite}
+	player_selection: Scene
 
 	bombs: Bombs
 	background: Image
@@ -65,10 +66,11 @@ function Game:load()
 	self.tic_counter = 0
 end
 
-function Game.new(character_sprites: {CharacterSprite}): Game
+function Game.new(player_selection: Scene): Game
    	local self: Game = setmetatable({}, { __index = Game })
-	self.character_sprites = character_sprites
-	self.score_board = score_board.new(character_sprites)
+	self.character_sprites = {}
+	self.player_selection = player_selection
+	self.score_board = score_board.new(self.character_sprites)
 	self.background = lutro.graphics.newImage("assets/footboll-map.png")
 	self:load()
    	return self
@@ -129,11 +131,42 @@ function Game:handle_bomb_drop_input(player: Player)
 	end
 end
 
+function Game:update_players(sprites: {CharacterSprite})
+	self.character_sprites = sprites
+	self.score_board:update_avatars(self.character_sprites)
+end
+
 function Game:handle_pause_input()
+	local function is_playing(player_id: integer): boolean
+		for _, player in ipairs(self.players) do
+			if player_id == player.id then
+				return true
+			end
+		end
+
+		return false
+	end
+
+	local function toggle_if_playing(player_id: integer)
+		if not is_playing(player_id) then
+			settings.number_of_players = settings.number_of_players + 1
+			if self.player_selection then
+				scenes.set(self.player_selection)
+			else
+				self:update_players(character_sprites.get(settings.number_of_players))
+				scenes.set(self)
+			end
+		else
+			assert(false, "NOT IMPLELEMTED")
+		end
+	end
+
 	for player_id=1, const.MAX_PLAYERS do
 		if joysticks.is_pressed(player_id, JOYPAD.START) then
 			audio.pause()
-			scenes.set(game_pause.new(self, player_id))
+			scenes.set(game_pause.new(
+				self, player_id, is_playing(player_id), toggle_if_playing)
+			)
 		end
 	end
 end
@@ -327,7 +360,7 @@ end
 
 local game = {}
 
-function game.setup(selected_sprites: {CharacterSprite}): Scene
+function game.setup(player_selection: Scene): Game
 	Eggs.load_assets()
 	Items:load_assets()
 	GameTimer.load_assets()
@@ -340,7 +373,7 @@ function game.setup(selected_sprites: {CharacterSprite}): Scene
 	ScoreBoard.load_assets()
 	game_pause.load_assets()
 
-	return Game.new(selected_sprites)
+	return Game.new(player_selection)
 end
 
 return game

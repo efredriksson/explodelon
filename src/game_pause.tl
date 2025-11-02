@@ -1,10 +1,10 @@
 local audio = require("audio")
 local const = require("const")
 local fonts = require("fonts")
+local joysticks = require("joysticks")
 local points = require("geometry.points")
 local rectangles = require("geometry.rectangles")
 local scenes = require("scenes")
-local joysticks = require("joysticks")
 
 
 local JOYPAD = joysticks.buttons()
@@ -15,6 +15,8 @@ local game_pause = {}
 local record GamePause is Scene
     paused_scene: Scene
     player_id: integer
+    is_playing: boolean
+    toggle_if_playing: function(integer)
 end
 
 local function get_pause_square(): Rectangle
@@ -28,10 +30,17 @@ local function get_pause_square(): Rectangle
     )
 end
 
-function game_pause.new(paused_scene: Scene, player_id: integer): GamePause
+function game_pause.new(
+    paused_scene: Scene,
+    player_id: integer,
+    is_playing: boolean,
+    toggle_if_playing: function(integer)
+): GamePause
     local self: GamePause = setmetatable({}, { __index = GamePause })
     self.paused_scene = paused_scene
     self.player_id = player_id
+    self.is_playing = is_playing
+    self.toggle_if_playing = toggle_if_playing
     return self
 end
 
@@ -55,8 +64,14 @@ function GamePause:draw()
 	self.paused_scene:draw()
     local window = get_pause_square()
     lutro.graphics.draw(pause_menu_image, window.x, window.y)
-    local text_pos = points.new(window.x, window.y + 10)
-    white_font:print_centered("game paused by player " .. self.player_id, window.width, text_pos)
+    local header_pos = points.new(window.x, window.y + 10)
+    white_font:print_centered(
+        "game paused by player " .. self.player_id, window.width, header_pos
+    )
+    if not self.is_playing then
+        local join_pos = points.new(window.x, window.y + 25)
+        white_font:print_centered("press l1 to join", window.width, join_pos)
+    end
 end
 
 function GamePause:update(_: number)
@@ -64,6 +79,9 @@ function GamePause:update(_: number)
         audio.unpause()
 		scenes.set(self.paused_scene, true)
 	end
+    if joysticks.is_pressed(self.player_id, JOYPAD.L) and not self.is_playing then
+        self.toggle_if_playing(self.player_id)
+    end
 end
 
 return game_pause

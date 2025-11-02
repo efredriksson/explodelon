@@ -69,6 +69,21 @@ function ScoreBoard:add_point(player_id: integer)
     assert(false, "Trying to set score for missing player!")
 end
 
+function ScoreBoard:update_avatars(new_sprites: {CharacterSprite})
+    local old_data = self.players
+    self.players = {}
+    for id, sprite in ipairs(new_sprites) do
+        local new_player = PlayerScore.new(id, sprite)
+        for _, old_player in ipairs(old_data) do
+            if old_player.avatar == new_player.avatar then
+                new_player.score = old_player.score
+            end
+        end
+
+        table.insert(self.players, new_player)
+    end
+end
+
 function ScoreBoard.load_assets()
     score_font = fonts.new_shaded_numbers()
     avatar_images = {}
