@@ -8,8 +8,12 @@ local settings = require("settings")
 
 local hitboxes = {}
 
-function hitboxes.new(position: Point): Rectangle
-    return rectangles.new(position.x, position.y, const.BLOCK_SIZE, const.BLOCK_SIZE)
+function hitboxes.new_block(position: Point, padding?: integer): Rectangle
+    local hitbox = rectangles.new(position.x, position.y, const.BLOCK_SIZE, const.BLOCK_SIZE)
+    if padding then
+        hitbox = hitbox:shrink(padding)
+    end
+    return hitbox
 end
 
 function hitboxes.draw(rectangle: Rectangle)
@@ -23,7 +27,7 @@ end
 
 function hitboxes.get_for_blocks(blocks: {ExplosionBlocking}): {Rectangle}
     local function hitbox_map_f(block: ExplosionBlocking): Rectangle
-        return hitboxes.new(block:get_position())
+        return hitboxes.new_block(block:get_position())
     end
     return itertools.map(blocks, hitbox_map_f)
 end

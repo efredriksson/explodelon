@@ -6,7 +6,7 @@ local itertools = require("itertools")
 local level_map = require("level_map")
 
 
-global record PressureBlock is Entity, ExplosionBlocking, BlocksBombs
+global record PressureBlock is Entity, ExplosionBlocking, BlocksBombs, Entity
 	falling_position: Point
     position: Point
     in_explosion: boolean
@@ -39,6 +39,12 @@ end
 
 function PressureBlock:blow_up()
     -- Does nothing
+end
+
+function PressureBlock:hitbox(): Rectangle
+    -- Not for movement blocking but hitting entities 
+    local padding = 4
+	return hitboxes.new_block(self.position, padding)
 end
 
 function PressureBlock:update(dt: number)
@@ -152,7 +158,7 @@ end
 
 function PressureBlocks:hitboxes(): {Rectangle}
     local function hitbox_map_f(block: PressureBlock): Rectangle
-        return hitboxes.new(block.position) 
+        return hitboxes.new_block(block.position) 
     end
     return itertools.map(self.on_ground, hitbox_map_f)
 end

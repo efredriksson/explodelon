@@ -7,12 +7,13 @@ local level_map = require("level_map")
 local physics = require("physics")
 local vectors = require("geometry.vectors")
 
+
 -- Bomb --
 
 local bomb_shadow: Image
 local bomb_image: Image
 
-global record Bomb is Entity, BlocksBombs
+global record Bomb is Entity, BlocksBombs, Explodable
     position: Point
     velocity: Vector
     timer: number
@@ -38,7 +39,11 @@ function Bomb:get_position(): Point
     return self.position
 end
 
-function Bomb:detonate()
+function Bomb:hitbox(): Rectangle
+    return hitboxes.new_block(self.position)
+end
+
+function Bomb:blow_up()
     self.timer = 0
 end
 
@@ -73,8 +78,8 @@ end
 
 function Bomb:can_move(direction: Vector, occupies: {BlocksBombs}): boolean
     local test_position = self.position:move(direction)
-    local test_hitbox = hitboxes.new(test_position)
-    local old_hitbox = hitboxes.new(self.position)
+    local test_hitbox = hitboxes.new_block(test_position)
+    local old_hitbox = self:hitbox()
     
     local bomb_in_goal = false
     for _, goal in ipairs(level_map.get_possible_goals()) do
@@ -99,7 +104,7 @@ function Bomb:can_move(direction: Vector, occupies: {BlocksBombs}): boolean
     
     local function conflict(occupied: BlocksBombs, hitbox: Rectangle): boolean
         -- Bomb must always be one block away from player
-        return occupied:get_position():distance_to(hitbox:top_left()) < const.BLOCK_SIZE
+        return occupied:hitbox():overlap(hitbox)
     end
 
     local function not_this_bomb(occupied: BlocksBombs): boolean
@@ -107,7 +112,7 @@ function Bomb:can_move(direction: Vector, occupies: {BlocksBombs}): boolean
     end
 
     for _, occupied in ipairs(itertools.filter(occupies, not_this_bomb)) do
-        if move_further_into_occupied(hitboxes.new(occupied:get_position())) then
+        if move_further_into_occupied(hitboxes.new_block(occupied:get_position())) then
             return false
         end
 
@@ -189,6 +194,10 @@ end
 function ThrownBomb:bounce()
     self.target = self:get_position():move(self.direction:scale(const.BLOCK_SIZE))
     self:_set_trajectory(0, const.BLOCK_SIZE * 0.8, 0.25)
+end
+
+function ThrownBomb:hitbox(): Rectangle
+    return hitboxes.new_block(self:get_position())
 end
 
 function ThrownBomb:get_position(): Point
@@ -301,7 +310,7 @@ function Bombs:update(dt: number, blockers: {ExplosionBlocking}, explodables: {E
         if bomb:has_landed() then
             local space_is_occupied = false
             for _, occupied in ipairs(occupies) do
-                if occupied:get_position():distance_to(bomb.target) < const.BLOCK_SIZE / 2 then
+                if occupied:hitbox():overlap(bomb:hitbox()) then
                     space_is_occupied = true
                     occupied:hit_with_bomb()
                 end
@@ -315,16 +324,8 @@ function Bombs:update(dt: number, blockers: {ExplosionBlocking}, explodables: {E
             end
         end
     end
-    
-    for _, explosion in ipairs(self.explosions.on_ground) do
-        for _, bomb in ipairs(self.on_ground) do
-            if explosion:collides_with(bomb.position) then
-                bomb:detonate()
-            end
-        end
-    end
 
-    self.explosions:update(dt, blockers, explodables)
+    self.explosions:update(dt, blockers, itertools.combine(self.on_ground, explodables))
 end
 
 function Bombs:draw()

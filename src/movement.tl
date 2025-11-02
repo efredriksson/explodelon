@@ -127,7 +127,7 @@ local function restrict_player_movement(
 ): CheckedMovement
 	local margin_for_corner_assist = 8
 	local new_position = player.position:move(movement)
-	local new_hitbox = hitboxes.new(new_position)
+	local new_hitbox = hitboxes.new_block(new_position)
 
 	local function move_against_block(
 		movement_len: number,
@@ -150,7 +150,7 @@ local function restrict_player_movement(
 		return CheckedMovement.new(new_position:move(along_wall), true, true)
 	end
 
-	local old_hitbox = hitboxes.new(player.position)
+	local old_hitbox = hitboxes.new_block(player.position)
 	local function walking_further_into_block(block: Rectangle): boolean
 		if not new_hitbox:overlap(block) then
 			return false
@@ -162,7 +162,7 @@ local function restrict_player_movement(
 	end
 
 	for _, bomb in ipairs(bombs.on_ground) do
-		local bomb_hitbox = hitboxes.new(bomb.position)
+		local bomb_hitbox = hitboxes.new_block(bomb.position)
 		if walking_further_into_block(bomb_hitbox) then
 			if bomb.position:distance_to(player.position) > const.BLOCK_SIZE * (3 / 4) or bomb.has_been_kicked then
 				-- If a bomb has been kicked then it is no longer to move

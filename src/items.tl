@@ -3,8 +3,8 @@ require("geometry.points")
 require("players")
 local animations = require("animations")
 local audio = require("audio")
-local const = require("const")
 local itertools = require("itertools")
+local hitboxes = require("hitboxes")
 local settings = require("settings")
 
 local take_item_sound: Source
@@ -12,7 +12,7 @@ local frame_animation: Animation
 local item_shadow: Image
 local item_icons: {ItemType: Image}
 
-global record Item is Entity, ExplosionBlocking, Explodable
+global record Item is Entity, ExplosionBlocking, Explodable, Entity
     type: ItemType
     position: Point
     is_exploding: boolean
@@ -34,6 +34,11 @@ end
 
 function Item:blow_up()
     self.is_exploding = true
+end
+
+function Item:hitbox(): Rectangle
+    local padding = 4
+	return hitboxes.new_block(self.position, padding)
 end
 
 function Item:draw()
@@ -145,7 +150,7 @@ end
 
 function Items:possible_pickup_by(player: Player)
     for i, item in ipairs(self.on_ground) do
-        if item.position:in_radius_of(player.position, const.BLOCK_SIZE / 2) and not item.is_exploding then
+        if player:hitbox():overlap(item:hitbox()) then
             self:consumed_by_player(player, i)
         end
     end
