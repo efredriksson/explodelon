@@ -28,11 +28,11 @@ end
 
 local score_board = {}
 
-function score_board.new(avatars: {CharacterSprite}): ScoreBoard
+function score_board.new(avatars: {CharacterSelection}): ScoreBoard
     local self: ScoreBoard = setmetatable({}, { __index = ScoreBoard })
     self.players = {}
-    for id, avatar in ipairs(avatars) do
-        table.insert(self.players, PlayerScore.new(id, avatar))
+    for _, avatar in ipairs(avatars) do
+        table.insert(self.players, PlayerScore.new(avatar.player_id, avatar.sprite))
     end
     return self
 end
@@ -50,8 +50,8 @@ local function get_avatar_position(avatar_num: number, num_avatars: number): Poi
 end
 
 function ScoreBoard:draw()
-    for _, player in ipairs(self.players) do
-		local avatar_pos = get_avatar_position(player.id, #self.players)
+    for nbr, player in ipairs(self.players) do
+		local avatar_pos = get_avatar_position(nbr, #self.players)
 		local score_pos = avatar_pos:move(vectors.new(18, 5))
 		lutro.graphics.draw(avatar_images[player.avatar], avatar_pos.x, avatar_pos.y)
 		score_font:draw(tostring(player.score), score_pos)
@@ -69,13 +69,13 @@ function ScoreBoard:add_point(player_id: integer)
     assert(false, "Trying to set score for missing player!")
 end
 
-function ScoreBoard:update_avatars(new_sprites: {CharacterSprite})
+function ScoreBoard:update_avatars(new_characters: {CharacterSelection})
     local old_data = self.players
     self.players = {}
-    for id, sprite in ipairs(new_sprites) do
-        local new_player = PlayerScore.new(id, sprite)
+    for _, char in ipairs(new_characters) do
+        local new_player = PlayerScore.new(char.player_id, char.sprite)
         for _, old_player in ipairs(old_data) do
-            if old_player.avatar == new_player.avatar then
+            if old_player.id == new_player.id then
                 new_player.score = old_player.score
             end
         end

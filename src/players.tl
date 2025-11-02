@@ -29,6 +29,7 @@ global record Player is Entity, Explodable, BlocksBombs
 	direction: Direction
 	action: Action
 	state: PlayerState
+	is_removed: boolean
 	speed: integer
 	bombs: integer
 	fire: integer
@@ -53,6 +54,7 @@ function players.new(id: integer, sprite: CharacterSprite, position: Point): Pla
 	self.direction = "down"
 	self.action = "idle"
 	self.state = "foot"
+	self.is_removed = false
 	local player_settings = settings.game_rules.players
 	self.speed = player_settings.start_speed
 	self.has_kick = player_settings.start_with_kick
@@ -199,6 +201,11 @@ function Player:kill()
 	end
 
 	self:set_action("dying")
+end
+
+function Player:remove()
+	self.is_removed = true
+	self.action = "dying"
 end
 
 function Player:blow_up()

@@ -8,7 +8,6 @@ local menu_items = require("menus.items")
 local scenes = require("scenes")
 local vectors = require("geometry.vectors")
 local points = require("geometry.points")
-local settings = require("settings")
 
 
 local record Character
@@ -77,25 +76,48 @@ local record PlayerSelection is Scene
     idle_images: {integer: Image}
     slow_walk_animations: {CharacterSprite: Animation}
     selector: MenuSelection<integer>
-    selected_characters: {Character}
     selectable_characters: {Character}
+    walking_characters: {Character}
 end
 
 function PlayerSelection.new(): PlayerSelection
     local self: PlayerSelection = setmetatable({}, { __index = PlayerSelection })
     self.game = game.setup(self)
     self.going_back_to_game = false
-    self.player_selecting = 1
     self.idle_images = {}
     self.slow_walk_animations = {}
     self.selectable_characters = {}
-    for idx, sprite in ipairs(character_sprites.get()) do
-        self.slow_walk_animations[sprite] = get_walk_down_animation(sprite)
-        self.selectable_characters[idx] = Character.new(sprite, idx)
-    end
-    self.selector = menu_items.new_integer_selection(1, 1, 10)
-    self.selected_characters = {}
+    self.walking_characters = {}
     return self
+end
+
+function PlayerSelection:load()
+    -- Entering scene we need to re-calculate these from game state
+    self.player_selecting = self.game:pop_player_joining()
+    assert(self.player_selecting, "Joined player selection scene but no is joining?")
+    self.slow_walk_animations = {}
+    self.selectable_characters = {}
+    local previous_walk_state = self.walking_characters
+    self.walking_characters = {}
+    for idx, sprite in ipairs(character_sprites.get()) do
+        local character = Character.new(sprite, idx)
+        if character_sprites.is_unused(sprite, self.game.character_selections) then
+            table.insert(self.selectable_characters, character)
+        else
+            table.insert(self.walking_characters, character)
+        end
+        self.slow_walk_animations[sprite] = get_walk_down_animation(sprite)
+    end
+
+    for _, old_walking in ipairs(previous_walk_state) do
+        for _, new_walking in ipairs(self.walking_characters) do
+            if old_walking.number == new_walking.number then
+                new_walking.y_shift = old_walking.y_shift
+            end
+        end
+    end
+
+    self.selector = menu_items.new_integer_selection(1, 1, #self.selectable_characters)
 end
 
 local function load_assets()
@@ -111,7 +133,7 @@ local function load_assets()
     black_font = fonts.new_menu_black()
 end
 
-function PlayerSelection:handle_player_input()
+function PlayerSelection:handle_player_input()    
     local ok_action = false
     
     if joysticks.is_pressed(self.player_selecting, JOYPAD.RIGHT) then
@@ -122,23 +144,23 @@ function PlayerSelection:handle_player_input()
             joysticks.is_pressed(self.player_selecting, JOYPAD.R)) then
 
         local selected = table.remove(self.selectable_characters, self.selector:get_value())
-        table.insert(self.selected_characters, selected)
+        table.insert(self.walking_characters, selected)
+        table.insert(
+            self.game.character_selections,
+            character_sprites.new_selection(self.player_selecting, selected.sprite)
+        )
         self.selector:reduce_max_val()
 
         ok_action = true
-        self.player_selecting = self.player_selecting + 1
+        self.player_selecting = self.game:pop_player_joining()
     end
 
     if ok_action then
         ok_sound:play()
     end
 
-    if self.player_selecting > settings.number_of_players then
-        local selected_sprites: {CharacterSprite} = {}
-        for _, selected in ipairs(self.selected_characters) do
-            table.insert(selected_sprites, selected.sprite)
-        end 
-        self.game:update_players(selected_sprites)
+    if not self.player_selecting then
+        self.game:update_players(self.game.character_selections)
         scenes.set(self.game, self.going_back_to_game)
         if self.going_back_to_game then
             -- The game might have paused audio, make sure to unpause:
@@ -152,7 +174,7 @@ end
 function PlayerSelection:update(dt: number)
     self:handle_player_input()
 
-    for _, selected in ipairs(self.selected_characters) do
+    for _, selected in ipairs(self.walking_characters) do
         selected:walk(dt)
         self.slow_walk_animations[selected.sprite]:update(dt)
     end
@@ -174,7 +196,7 @@ function PlayerSelection:draw()
     for _, char in ipairs(self.selectable_characters) do
         self:draw_idle(char)
     end
-    for _, char in ipairs(self.selected_characters) do
+    for _, char in ipairs(self.walking_characters) do
         self:draw_slow_walking(char)
     end
 

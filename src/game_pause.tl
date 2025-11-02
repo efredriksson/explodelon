@@ -68,9 +68,11 @@ function GamePause:draw()
     white_font:print_centered(
         "game paused by player " .. self.player_id, window.width, header_pos
     )
+    local toggle_msg_pos = points.new(window.x, window.y + 25)
     if not self.is_playing then
-        local join_pos = points.new(window.x, window.y + 25)
-        white_font:print_centered("press l1 to join", window.width, join_pos)
+        white_font:print_centered("press l1 to join", window.width, toggle_msg_pos)
+    else
+        white_font:print_centered("press l1 to leave", window.width, toggle_msg_pos)
     end
 end
 
@@ -79,7 +81,7 @@ function GamePause:update(_: number)
         audio.unpause()
 		scenes.set(self.paused_scene, true)
 	end
-    if joysticks.is_pressed(self.player_id, JOYPAD.L) and not self.is_playing then
+    if joysticks.is_pressed(self.player_id, JOYPAD.L) then
         self.toggle_if_playing(self.player_id)
     end
 end

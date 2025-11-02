@@ -26,7 +26,7 @@ local JOYPAD = joysticks.buttons()
 
 global record Game is Scene
 	score_board: ScoreBoard
-	character_sprites: {CharacterSprite}
+	character_selections: {CharacterSelection}
 	player_selection: Scene
 
 	bombs: Bombs
@@ -37,6 +37,7 @@ global record Game is Scene
 	items: Items
 	game_timer: GameTimer
 	players: {Player}
+	joining: {integer} -- IDs of players that want to join
 	player_animations: PlayerAnimations
 	time_to_wait_to_end_game: number
 	time_of_1_alive_player: number
@@ -47,9 +48,13 @@ end
 
 function Game:load()
 	self.players = {}
-	local start_positions = level_map.get_player_start_positions(#self.character_sprites)
-	for i, sprite in ipairs(self.character_sprites) do
-		table.insert(self.players, players.new(i, sprite, start_positions[i]))
+	local start_positions = level_map.get_player_start_positions(#self.character_selections)
+	for i, character_selection in ipairs(self.character_selections) do
+		table.insert(self.players, players.new(
+			character_selection.player_id,
+			character_selection.sprite,
+			start_positions[i])
+		)
 	end
 
 	self.bombs = bombs.new()
@@ -68,9 +73,13 @@ end
 
 function Game.new(player_selection: Scene): Game
    	local self: Game = setmetatable({}, { __index = Game })
-	self.character_sprites = {}
+	self.character_selections = {}
+	self.joining = {}
+	for player_id=1, settings.number_of_players do
+		table.insert(self.joining, player_id)
+	end
 	self.player_selection = player_selection
-	self.score_board = score_board.new(self.character_sprites)
+	self.score_board = score_board.new(self.character_selections)
 	self.background = lutro.graphics.newImage("assets/footboll-map.png")
 	self:load()
    	return self
@@ -131,33 +140,64 @@ function Game:handle_bomb_drop_input(player: Player)
 	end
 end
 
-function Game:update_players(sprites: {CharacterSprite})
-	self.character_sprites = sprites
-	self.score_board:update_avatars(self.character_sprites)
+function Game:update_players(sprites: {CharacterSelection})
+	self.character_selections = sprites
+	self.score_board:update_avatars(self.character_selections)
+end
+
+function Game:get_player(player_id: integer): Player
+	for _, player in ipairs(self.players) do
+		if player_id == player.id then
+			return player
+		end
+	end
+
+	return nil
+end
+
+function Game:pop_player_joining(): integer
+	for i, player_joining in ipairs(self.joining) do
+		table.remove(self.joining, i)
+		return player_joining
+	end
+
+	return nil
+end
+
+function Game:join_with_next_free_sprite(player_id: integer)
+	local new_sprite = character_sprites.get_unused(self.character_selections)
+	local new_selection = character_sprites.new_selection(player_id, new_sprite)
+	table.insert(self.character_selections, new_selection)
+	self:update_players(self.character_selections)
 end
 
 function Game:handle_pause_input()
 	local function is_playing(player_id: integer): boolean
-		for _, player in ipairs(self.players) do
-			if player_id == player.id then
-				return true
-			end
-		end
-
-		return false
+		return self:get_player(player_id) ~= nil
 	end
 
 	local function toggle_if_playing(player_id: integer)
 		if not is_playing(player_id) then
 			settings.number_of_players = settings.number_of_players + 1
 			if self.player_selection then
+				table.insert(self.joining, player_id)
 				scenes.set(self.player_selection)
 			else
-				self:update_players(character_sprites.get(settings.number_of_players))
-				scenes.set(self)
+				self:join_with_next_free_sprite(player_id)
+				scenes.set(self, true)
+				audio.unpause()
 			end
 		else
-			assert(false, "NOT IMPLELEMTED")
+			settings.number_of_players = settings.number_of_players - 1
+			for i, selection in ipairs(self.character_selections) do
+				if selection.player_id == player_id then
+					table.remove(self.character_selections, i)
+				end
+			end
+			self.score_board:update_avatars(self.character_selections)
+			self:get_player(player_id):remove()
+			scenes.set(self, true)
+			audio.unpause()
 		end
 	end
 
@@ -214,7 +254,7 @@ function Game:update(dt: number)
 
 	self.bombs:update(dt, blockers, explodables, blocks_bombs)
 	for _, bomb in ipairs(self.bombs:to_hand_back()) do
-		local player = self.players[bomb.owner_id]
+		local player = self:get_player(bomb.owner_id)
 		player.bombs = player.bombs + 1
 	end
 
@@ -247,7 +287,7 @@ function Game:update(dt: number)
 		end
 	end
 	for _, player in ipairs(itertools.filter(self.players, is_dead)) do
-		if settings.game_rules.players.mad_bombers then
+		if settings.game_rules.players.mad_bombers and not player.is_removed then
 			self.mad_bombers:ensure_exist_for(player.id, player.sprite)
 		end
 	end
