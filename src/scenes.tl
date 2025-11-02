@@ -89,7 +89,7 @@ function scenes.get(): Scene
     return current_scene
 end
 
-function scenes.set(scene: Scene, load_scene?: boolean)
+function scenes.set(scene: Scene, skip_loading?: boolean)
     if not scene.is_internal then
         scene = WrapperScene.new(scene)
         if settings.debug.log_scene_perf then
@@ -98,7 +98,7 @@ function scenes.set(scene: Scene, load_scene?: boolean)
     end
 
     current_scene = scene
-    if load_scene then
+    if not skip_loading then
         current_scene:load()
     end
 end
