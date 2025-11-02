@@ -6,13 +6,15 @@ jobs:
       contents: write # to be able to publish a GitHub release
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 15
       - uses: actions/setup-node@v4
       - name: Setup Lua/Teal
         run: sudo apt install luarocks make zip && sudo luarocks install tl
       - name: Setup release bot
-        run: npm install -g semantic-release @semantic-release/release-notes-generator @semantic-release/exec
+        run: npm install -g semantic-release @semantic-release/release-notes-generator @semantic-release/exec @commitlint/cli @commitlint/config-conventional
       - name: Lint
-        run: make lint
+        run: make lint && commitlint --from=HEAD~10
       - name: Create dist
         run: make package
       - name: release
