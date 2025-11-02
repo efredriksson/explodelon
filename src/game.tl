@@ -312,7 +312,7 @@ function Game:update(dt: number)
 
 	local removes_items: {Entity} = itertools.combine(hitting_ground, self.bombs.on_ground)
 	self:clear_entities(removes_items, self.eggs.on_ground, self.items.on_ground)
-	self:clear_entities(hitting_ground, self.bombs.on_ground)
+	self:clear_entities(hitting_ground, self.bombs.on_ground, self.soft_blocks.on_ground)
 	
 	self.player_animations:update(dt)
 	self.soft_blocks:update(dt)
