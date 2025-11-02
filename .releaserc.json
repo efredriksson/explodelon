@@ -1,0 +1,23 @@
+{
+  "plugins": [
+    "@semantic-release/release-notes-generator",
+    "@semantic-release/commit-analyzer",
+    [
+      "@semantic-release/github",
+      {
+        "assets": [
+          {
+            "path": "explodelon-*.lutro",
+            "label": "explodelon.lutro"
+          }
+        ]
+      }
+    ],
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "make package LUTRO_DIST_NAME=explodelon-${nextRelease.version}.lutro"
+      }
+    ]
+  ]
+}

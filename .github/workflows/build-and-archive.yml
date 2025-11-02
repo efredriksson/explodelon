@@ -2,16 +2,20 @@ on: push
 jobs:
   build-and-archive:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # to be able to publish a GitHub release
     steps:
       - uses: actions/checkout@v4
-      - name: Setup
+      - uses: actions/setup-node@v4
+      - name: Setup Lua/Teal
         run: sudo apt install luarocks make zip && sudo luarocks install tl
+      - name: Setup release bot
+        run: npm install -g semantic-release @semantic-release/release-notes-generator @semantic-release/exec
       - name: Lint
         run: make lint
       - name: Create dist
         run: make package
-      - name: Archive dist
-        uses: actions/upload-artifact@v4
-        with:
-          name: game
-          path: dist/explodelon.lutro
+      - name: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: semantic-release
