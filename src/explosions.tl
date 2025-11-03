@@ -224,7 +224,7 @@ end
 function Explosion:collides_with(position: Point): boolean
     -- This should reflect on player hitbox, not same as
     -- hitbox stopping you from moving into wall.
-    local hitbox = hitboxes.new(position):shrink(2)
+    local hitbox = hitboxes.new(position):shrink(4)
 
     for _, tile in ipairs(self.tiles) do
         if hitbox:overlap(tile:hitbox()) then
