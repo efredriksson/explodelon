@@ -13,7 +13,7 @@ local vectors = require("geometry.vectors")
 local bomb_shadow: Image
 local bomb_image: Image
 
-global record Bomb is Entity, BlocksBombs, Explodable
+global record Bomb is Entity, Kinematic, Explodable
     position: Point
     velocity: Vector
     timer: number
@@ -40,7 +40,12 @@ function Bomb:get_position(): Point
 end
 
 function Bomb:hitbox(): Rectangle
-    return hitboxes.new_block(self.position)
+    local padding = 4
+    return hitboxes.new_block(self.position, padding)
+end
+
+function Bomb:movementbox(): Rectangle
+	return hitboxes.new_block(self.position)
 end
 
 function Bomb:blow_up()
@@ -76,10 +81,9 @@ function Bomb:draw()
     self.animation:draw(self.position.x, self.position.y)
 end
 
-function Bomb:can_move(direction: Vector, occupies: {BlocksBombs}): boolean
-    local test_position = self.position:move(direction)
-    local test_hitbox = hitboxes.new_block(test_position)
-    local old_hitbox = self:hitbox()
+function Bomb:can_move(direction: Vector, occupies: {Kinematic}): boolean
+    local test_hitbox =  self:movementbox():shift(direction)
+    local old_hitbox = self:movementbox()
     
     local bomb_in_goal = false
     for _, goal in ipairs(level_map.get_possible_goals()) do
@@ -102,17 +106,17 @@ function Bomb:can_move(direction: Vector, occupies: {BlocksBombs}): boolean
 		return new_dist_to_1_ton_block < old_dist_to_1_ton_block
 	end
     
-    local function conflict(occupied: BlocksBombs, hitbox: Rectangle): boolean
+    local function conflict(occupied: Kinematic, hitbox: Rectangle): boolean
         -- Bomb must always be one block away from player
-        return occupied:hitbox():overlap(hitbox)
+        return occupied:movementbox():overlap(hitbox)
     end
 
-    local function not_this_bomb(occupied: BlocksBombs): boolean
+    local function not_this_bomb(occupied: Kinematic): boolean
         return occupied ~= self
     end
 
     for _, occupied in ipairs(itertools.filter(occupies, not_this_bomb)) do
-        if move_further_into_occupied(hitboxes.new_block(occupied:get_position())) then
+        if move_further_into_occupied(occupied:movementbox()) then
             return false
         end
 
@@ -125,7 +129,7 @@ function Bomb:can_move(direction: Vector, occupies: {BlocksBombs}): boolean
     return true
 end
 
-function Bomb:update(dt: number, occupies: {BlocksBombs})
+function Bomb:update(dt: number, occupies: {Kinematic})
     self.timer = self.timer - dt
     
     if self.velocity:length() > 0 then
@@ -287,7 +291,7 @@ function Bombs:throw_bomb(from: Point, to: Point, by_id: integer): Bomb
     return bomb
 end
 
-function Bombs:update(dt: number, blockers: {ExplosionBlocking}, explodables: {Explodable}, occupies: {BlocksBombs})
+function Bombs:update(dt: number, blockers: {ExplosionBlocking}, explodables: {Explodable}, occupies: {Kinematic})
     for i = #self.on_ground, 1, -1 do
         local bomb = self.on_ground[i]
         bomb:update(dt, occupies)

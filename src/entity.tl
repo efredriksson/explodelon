@@ -24,8 +24,9 @@ global type Explodable = interface
     hitbox: function(self): Rectangle
 end
 
-global type BlocksBombs = interface
+global type Kinematic = interface
     get_position: function(self): Point
     hit_with_bomb: function(self)
     hitbox: function(self): Rectangle
+    movementbox: function(self): Rectangle
 end

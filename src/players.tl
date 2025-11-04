@@ -23,7 +23,7 @@ global type PlayerState = enum
 	"mounted"
 end
 
-global record Player is Explodable, BlocksBombs, Locatable
+global record Player is Explodable, Kinematic, Locatable
 	id: integer
 	sprite: CharacterSprite
    	position: Point
@@ -112,6 +112,10 @@ function Player:hitbox(): Rectangle
 	-- This hitbox is not for movement
 	local padding = 4
 	return hitboxes.new_block(self.position, padding)
+end
+
+function Player:movementbox(): Rectangle
+	return hitboxes.new_block(self.position)
 end
 
 local function get_player_position_on_mount(original_pos: Point, direction: Direction): Point

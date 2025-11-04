@@ -28,6 +28,7 @@ global record Game is Scene
 	score_board: ScoreBoard
 	character_selections: {CharacterSelection}
 	player_selection: Scene
+	hard_blocks: {HardBlock}
 
 	bombs: Bombs
 	background: Image
@@ -81,6 +82,7 @@ function Game.new(player_selection: Scene): Game
 	self.player_selection = player_selection
 	self.score_board = score_board.new(self.character_selections)
 	self.background = lutro.graphics.newImage("assets/footboll-map.png")
+	self.hard_blocks = level_map.get_hard_blocks()
 	self:load()
    	return self
 end
@@ -229,9 +231,9 @@ function Game:update(dt: number)
 
 	local hitting_ground = self.pressure_blocks:update(dt)
 	local alive_players = itertools.filter(self.players, is_alive)
-	local blocks_bombs: {BlocksBombs} = itertools.combine(
+	local blocks_bombs: {Kinematic} = itertools.combine(
 		self.soft_blocks.on_ground,
-		level_map.get_hard_blocks(),
+		self.hard_blocks,
 		itertools.filter(self.players, is_alive),
 		self.bombs.on_ground,
 		self.pressure_blocks.on_ground
@@ -241,7 +243,7 @@ function Game:update(dt: number)
 		self.items.on_ground,
 		self.soft_blocks.on_ground,
 		self.pressure_blocks.on_ground,
-		level_map.get_hard_blocks()
+		self.hard_blocks
 	)
 	local explodables: {Explodable} = itertools.combine(
 		self.players,
@@ -260,11 +262,11 @@ function Game:update(dt: number)
 		player:update(dt)
 		if player:accepts_input() then
 			self:handle_bomb_drop_input(player)
-			local blocking_blocks = hitboxes.get_for_blocks(
-				itertools.combine(self.soft_blocks.on_ground, self.pressure_blocks.on_ground)
+			local blocking_blocks: {Kinematic} = itertools.combine(
+				self.soft_blocks.on_ground, self.pressure_blocks.on_ground
 			)
 			movement.set_position_and_dir_from_input(
-				player, dt, blocking_blocks, self.bombs, blocks_bombs
+				player, dt, blocking_blocks, self.hard_blocks, self.bombs, blocks_bombs
 			)
 		end
 
@@ -388,6 +390,17 @@ function Game:draw()
 	for _, entity in ipairs(entities_to_draw) do
 		entity:draw()
 		hitboxes.draw(entity:hitbox())
+	end
+
+	local mobility_related: {Kinematic} = itertools.combine(
+		self.bombs.on_ground,
+		self.pressure_blocks.on_ground,
+		itertools.filter(self.players, is_alive),
+		self.hard_blocks,
+		self.soft_blocks:not_exploding()
+	)
+	for _, entity in ipairs(mobility_related) do
+		hitboxes.draw_movement(entity:movementbox())
 	end
 end
 

@@ -10,7 +10,7 @@ local itertools = require("itertools")
 local soft_block_image: Image
 local soft_block_breaking_image: Image
 
-global record SoftBlock is Entity, Explodable, ExplosionBlocking, BlocksBombs
+global record SoftBlock is Entity, Explodable, ExplosionBlocking, Kinematic
 	position: Point
     is_exploding: boolean
     in_explosion: boolean
@@ -38,6 +38,11 @@ function SoftBlock:hit_with_bomb()
 end
 
 function SoftBlock:hitbox(): Rectangle
+    local padding = 4
+	return hitboxes.new_block(self.position, padding)
+end
+
+function SoftBlock:movementbox(): Rectangle
 	return hitboxes.new_block(self.position)
 end
 
