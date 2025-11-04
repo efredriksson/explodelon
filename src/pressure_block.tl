@@ -40,6 +40,10 @@ function PressureBlock:blow_up()
     -- Does nothing
 end
 
+function PressureBlock:hit_with_bomb()
+	-- Does nothing
+end
+
 function PressureBlock:hitbox(): Rectangle
     -- Not for movement blocking but hitting entities 
 	return hitboxes.new_block(self.position):shrink(4)

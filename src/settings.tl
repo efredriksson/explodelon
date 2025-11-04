@@ -43,9 +43,21 @@ function ItemRules.new(): ItemRules
     return self
 end
 
+local record MadBombers
+    enabled: boolean
+    after_sudden_death: boolean
+end
+
+function MadBombers.new(): MadBombers
+    local self: MadBombers = setmetatable({}, { __index = MadBombers })
+    self.enabled = true
+    self.after_sudden_death = false
+    return self
+end
+
 local record PlayerRules
     start_position_shuffle: boolean
-    mad_bombers: boolean
+    mad_bombers: MadBombers
     start_speed: integer
     start_with_kick: boolean
 end
@@ -53,7 +65,7 @@ end
 function PlayerRules.new(): PlayerRules
     local self: PlayerRules = setmetatable({}, { __index = PlayerRules })
     self.start_position_shuffle = true
-    self.mad_bombers = true
+    self.mad_bombers = MadBombers.new()
     self.start_speed = 60
     self.start_with_kick = false
     return self
@@ -148,7 +160,17 @@ function Settings.set_start_position_shuffle(value: boolean)
 end
 
 function Settings.set_mad_bombers(value: boolean)
-    settings.game_rules.players.mad_bombers = value
+    settings.game_rules.players.mad_bombers.enabled = value
+end
+
+function Settings.set_mad_bombers_after_sudden_death(value: boolean)
+    settings.game_rules.players.mad_bombers.after_sudden_death = value
+end
+
+function Settings.clear_mad_bombers(is_suddent_death: boolean): boolean
+    local mad_bombers = settings.game_rules.players.mad_bombers
+	local clear_bombers = is_suddent_death and not mad_bombers.after_sudden_death
+	return not mad_bombers.enabled or clear_bombers
 end
 
 function Settings.set_start_speed(value: integer)
@@ -186,7 +208,7 @@ function Settings.set_game_rules_insanity()
     settings.game_rules.items.spawn_rates.bomb = 0.3
     settings.game_rules.items.spawn_rates.fire = 0.5
     settings.game_rules.items.spawn_rates.kick = 0.07
-    settings.game_rules.players.mad_bombers = false
+    settings.game_rules.players.mad_bombers.enabled = false
 end
 
 return settings
