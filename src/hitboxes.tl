@@ -7,12 +7,8 @@ local settings = require("settings")
 
 local hitboxes = {}
 
-function hitboxes.new_block(position: Point, padding?: integer): Rectangle
-    local hitbox = rectangles.new(position.x, position.y, const.BLOCK_SIZE, const.BLOCK_SIZE)
-    if padding then
-        hitbox = hitbox:shrink(padding)
-    end
-    return hitbox
+function hitboxes.new_block(position: Point): Rectangle
+    return rectangles.new(position.x, position.y, const.BLOCK_SIZE, const.BLOCK_SIZE)
 end
 
 function hitboxes.draw(rectangle: Rectangle)

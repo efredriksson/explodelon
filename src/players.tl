@@ -110,8 +110,7 @@ end
 
 function Player:hitbox(): Rectangle
 	-- This hitbox is not for movement
-	local padding = 4
-	return hitboxes.new_block(self.position, padding)
+	return hitboxes.new_block(self.position):shrink(4)
 end
 
 function Player:movementbox(): Rectangle

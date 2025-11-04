@@ -43,8 +43,7 @@ end
 
 function PressureBlock:hitbox(): Rectangle
     -- Not for movement blocking but hitting entities 
-    local padding = 4
-	return hitboxes.new_block(self.position, padding)
+	return hitboxes.new_block(self.position):shrink(4)
 end
 
 function PressureBlock:movementbox(): Rectangle

@@ -52,7 +52,7 @@ function ExplosionTile.new(position: Point, reduction: integer, is_last: boolean
 end
 
 function ExplosionTile:hitbox(): Rectangle
-    return hitboxes.new_block(self.position, self.reduction)
+    return hitboxes.new_block(self.position):shrink(self.reduction)
 end
 
 global record Explosion
