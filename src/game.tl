@@ -173,7 +173,13 @@ end
 
 function Game:handle_pause_input()
 	local function is_playing(player_id: integer): boolean
-		return self:get_player(player_id) ~= nil
+		for _, selection in ipairs(self.character_selections) do
+			if selection.player_id == player_id then
+				return true
+			end
+		end
+
+		return false
 	end
 
 	local function toggle_if_playing(player_id: integer)
@@ -195,7 +201,10 @@ function Game:handle_pause_input()
 				end
 			end
 			self.score_board:update_avatars(self.character_selections)
-			self:get_player(player_id):remove()
+			local possible_player = self:get_player(player_id)
+			if possible_player then
+				possible_player:remove()
+			end
 			scenes.set(self, true)
 			audio.unpause()
 		end
