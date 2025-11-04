@@ -108,13 +108,6 @@ function SoftBlocks:update(dt: number)
     end
 end
 
-function SoftBlocks:hitboxes(): {Rectangle}
-    local function hitbox_map_f(block: SoftBlock): Rectangle
-        return hitboxes.new_block(block.position)
-    end
-    return itertools.map(self.on_ground, hitbox_map_f)
-end
-
 local is_exploding = function(block: SoftBlock): boolean
     return block.is_exploding
 end
