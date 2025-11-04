@@ -8,10 +8,6 @@ global type Entity = interface
     hitbox: function(self): Rectangle
 end
 
-global type Locatable = interface
-    get_position: function(self): Point
-end
-
 global type ExplosionBlocking = interface
     get_position: function(self): Point
     in_explosion: boolean

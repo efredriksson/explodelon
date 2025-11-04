@@ -160,7 +160,7 @@ function SoftBlockConfig.new(position: Point, item: ItemType, egg: boolean): Sof
     return self
 end
 
-local function get_soft_block_positions(occupies: {Locatable}): {Point}
+local function get_soft_block_positions(occupies: {Kinematic}): {Point}
 	local soft_blocks: {Point} = {}
 	local close_to_entity: {Point} = {}
 	local get_point = function (h: HardBlock): Point return h.position end
@@ -188,7 +188,7 @@ local function get_soft_block_positions(occupies: {Locatable}): {Point}
 	return soft_blocks
 end
 
-function level_map.get_soft_blocks(occupied: {Locatable}): {SoftBlockConfig}
+function level_map.get_soft_blocks(occupied: {Kinematic}): {SoftBlockConfig}
 	local item_settings = settings.game_rules.items
 	local soft_blocks: {SoftBlockConfig} = {}
 
