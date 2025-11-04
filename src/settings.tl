@@ -208,7 +208,8 @@ function Settings.set_game_rules_insanity()
     settings.game_rules.items.spawn_rates.bomb = 0.3
     settings.game_rules.items.spawn_rates.fire = 0.5
     settings.game_rules.items.spawn_rates.kick = 0.07
-    settings.game_rules.players.mad_bombers.enabled = false
+    settings.game_rules.players.mad_bombers.enabled = true
+    settings.game_rules.players.mad_bombers.after_sudden_death = true
 end
 
 return settings
