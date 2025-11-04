@@ -2,7 +2,6 @@ require("entity")
 local const = require("const")
 local points = require("geometry.points")
 local hitboxes = require("hitboxes")
-local itertools = require("itertools")
 local level_map = require("level_map")
 
 
@@ -157,13 +156,6 @@ function PressureBlocks:update(dt: number): {PressureBlock}
     end
 
     return blocks_hitting_ground
-end
-
-function PressureBlocks:hitboxes(): {Rectangle}
-    local function hitbox_map_f(block: PressureBlock): Rectangle
-        return hitboxes.new_block(block.position) 
-    end
-    return itertools.map(self.on_ground, hitbox_map_f)
 end
 
 function PressureBlocks.load_assets()
