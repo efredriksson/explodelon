@@ -47,8 +47,7 @@ function Dino:level_up()
 end
 
 function Dino:hitbox(): Rectangle
-    local padding = 4
-    return hitboxes.new_block(self.position, padding)
+    return hitboxes.new_block(self.position):shrink(4)
 end
 
 return dinos
