@@ -180,8 +180,8 @@ end
 function Settings.set_game_rules_insanity()
     settings.game_rules = GameRules.new()
     settings.game_rules.items.nbr_soft_blocks = 30
-    settings.game_rules.timings.battle = 80
-    settings.game_rules.timings.sudden_death = 50
+    settings.game_rules.timings.battle = 120
+    settings.game_rules.timings.sudden_death = 100
     settings.game_rules.items.spawn_rates.speed = 0.3
     settings.game_rules.items.spawn_rates.bomb = 0.3
     settings.game_rules.items.spawn_rates.fire = 0.5
