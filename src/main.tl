@@ -12,7 +12,7 @@ end
 function lutro.load()
 	joysticks.setup()
 	screens.load_assets()
-	scenes.set(start_screen.new())
+	scenes.set_start(start_screen.new())
 end
 
 function lutro.update(dt: number)
