@@ -1,7 +1,6 @@
 require("entity")
 require("geometry.points")
 local const = require("const")
-local itertools = require("itertools")
 local rectangles = require("geometry.rectangles")
 local settings = require("settings")
 
@@ -18,18 +17,20 @@ end
 
 function hitboxes.draw(rectangle: Rectangle)
     if settings.debug.draw_hitboxes then
-        lutro.graphics.setColor(255, 255, 255)
+        lutro.graphics.setColor(137, 242, 250)
         lutro.graphics.rectangle(
             "line", rectangle.x, rectangle.y, rectangle.width, rectangle.height
         )
     end
 end
 
-function hitboxes.get_for_blocks(blocks: {ExplosionBlocking}): {Rectangle}
-    local function hitbox_map_f(block: ExplosionBlocking): Rectangle
-        return hitboxes.new_block(block:get_position())
+function hitboxes.draw_movement(rectangle: Rectangle)
+    if settings.debug.draw_hitboxes then
+        lutro.graphics.setColor(247, 105, 250)
+        lutro.graphics.rectangle(
+            "line", rectangle.x, rectangle.y, rectangle.width, rectangle.height
+        )
     end
-    return itertools.map(blocks, hitbox_map_f)
 end
 
 return hitboxes

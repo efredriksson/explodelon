@@ -75,4 +75,14 @@ function Rectangle:shrink(shrink: number): Rectangle
    )
 end
 
+function Rectangle:shift(movement: Vector): Rectangle
+   local new_top_left = self:top_left():move(movement)
+   return rectangles.new(
+      new_top_left.x,
+      new_top_left.y,
+      self.width,
+      self.height
+   )
+end
+
 return rectangles

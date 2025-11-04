@@ -14,7 +14,7 @@ function level_map.player_area(): Rectangle
 	return PLAYER_AREA
 end
 
-global record HardBlock is ExplosionBlocking, BlocksBombs
+global record HardBlock is ExplosionBlocking, Kinematic
 	position: Point
 	in_explosion: boolean
 end
@@ -39,6 +39,11 @@ function HardBlock:hit_with_bomb()
 end
 
 function HardBlock:hitbox(): Rectangle
+	local padding = 4
+	return hitboxes.new_block(self.position, padding)
+end
+
+function HardBlock:movementbox(): Rectangle
 	return hitboxes.new_block(self.position)
 end
 
