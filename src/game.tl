@@ -299,8 +299,8 @@ function Game:update(dt: number)
 		end
 	end
 
-	if self.game_timer:sudden_death() then
-		-- Remove all mad bombers when sudden death
+	if settings.clear_mad_bombers(self.game_timer:sudden_death()) then
+		-- Remove all mad bombers
 		self.mad_bombers.by_player = {}
 	end
 	
