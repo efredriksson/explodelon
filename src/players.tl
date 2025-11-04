@@ -23,7 +23,7 @@ global type PlayerState = enum
 	"mounted"
 end
 
-global record Player is Explodable, Kinematic, Locatable
+global record Player is Explodable, Kinematic
 	id: integer
 	sprite: CharacterSprite
    	position: Point
