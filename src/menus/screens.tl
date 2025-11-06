@@ -1,5 +1,6 @@
 require("scenes")
 require("menus.choices")
+local audio = require("audio")
 local const = require("const")
 local fonts = require("fonts")
 local joysticks = require("joysticks")
@@ -9,6 +10,7 @@ local items = require("menus.items")
 local JOYPAD = joysticks.buttons()
 local black_font: MenuFont
 local white_font: MenuFont
+local music: Source
 local ok_sound: Source
 
 
@@ -30,9 +32,16 @@ function screens.load_assets()
     white_font = fonts.new_menu_white()
     black_font = fonts.new_menu_black()
     ok_sound = items.ok_sound()
+    music = audio.new_source("assets/music/menus.ogg", "static")
+    music:setLooping(true)
+    music:setVolume(0.75)
 end
 
 function MenuScreen:update(_: number)
+    if not music:isPlaying() then
+        music:play()
+    end
+
     local ok_action = false
 
     for line_idx, line in ipairs(self.menu_choices) do

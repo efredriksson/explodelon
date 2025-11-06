@@ -105,7 +105,7 @@ function GamePause:update(dt: number)
         self.exit_counter = 0
     end
     if self:_time_to_exit() == 0 then
-        audio.unpause()
+        audio.stop()
         scenes.return_to_start()
     end
 end

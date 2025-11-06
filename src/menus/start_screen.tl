@@ -1,3 +1,4 @@
+local audio = require("audio")
 local character_sprites = require("character_sprites")
 local const = require("const")
 local game = require("game")
@@ -12,8 +13,10 @@ local game_rule_screen = require("menus.game_rule_screen")
 
 local start_screen = {}
 
+
 function start_screen.new(): MenuScreen
     local function done(_: Scene)
+        audio.stop()
         if settings.player_selection then
             scenes.set(player_selection.setup())
         else
