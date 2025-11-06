@@ -1,4 +1,5 @@
 local animations = require("animations")
+local audio = require("audio")
 local const = require("const")
 local hitboxes = require("hitboxes")
 local level_map = require("level_map")
@@ -14,6 +15,10 @@ local explosion_end_bottom_image: Image
 local explosion_horizontal_image: Image
 local explosion_vertical_image: Image
 local explosion_center_image: Image
+local explosion_small: Source
+local explosion_medium: Source
+local explosion_large: Source
+
 
 -- Explosion --
 
@@ -67,25 +72,35 @@ global record Explosion
 end
 
 function Explosion.new(position: Point, range: number, delay?: number): Explosion
-   local self: Explosion = setmetatable({}, { __index = Explosion })
-   self.position = position
-   self.blocked_at = {}
-   self.range = range
-   self.tiles = {}
-   self.duration = 0
-   self.delay = delay or 0
-   self.speed = 28
-   self.animations = {
-       right_end = animations.new(explosion_end_right_image, 16, 16, FRAME_DURATION, 1),
-       left_end = animations.new(explosion_end_left_image, 16, 16, FRAME_DURATION, 1),
-       top_end = animations.new(explosion_end_top_image, 16, 16, FRAME_DURATION, 1),
-       bottom_end = animations.new(explosion_end_bottom_image, 16, 16, FRAME_DURATION, 1),
-       middle_horizontal = animations.new(explosion_horizontal_image, 16, 16, FRAME_DURATION, 1),
-       middle_vertical = animations.new(explosion_vertical_image, 16, 16, FRAME_DURATION, 1),
-       center = animations.new(explosion_center_image, 16, 16, FRAME_DURATION, 1)
-   }
+    local self: Explosion = setmetatable({}, { __index = Explosion })
+    self.position = position
+    self.blocked_at = {}
+    self.range = range
+    self.tiles = {}
+    self.duration = 0
+    self.delay = delay or 0
+    self.speed = 28
+    self.animations = {
+        right_end = animations.new(explosion_end_right_image, 16, 16, FRAME_DURATION, 1),
+        left_end = animations.new(explosion_end_left_image, 16, 16, FRAME_DURATION, 1),
+        top_end = animations.new(explosion_end_top_image, 16, 16, FRAME_DURATION, 1),
+        bottom_end = animations.new(explosion_end_bottom_image, 16, 16, FRAME_DURATION, 1),
+        middle_horizontal = animations.new(explosion_horizontal_image, 16, 16, FRAME_DURATION, 1),
+        middle_vertical = animations.new(explosion_vertical_image, 16, 16, FRAME_DURATION, 1),
+        center = animations.new(explosion_center_image, 16, 16, FRAME_DURATION, 1)
+    }
 
-   return self
+    return self
+end
+
+function Explosion:play()
+    if self.range <= 3 then
+        explosion_small:play()
+    elseif self.range <= 5 then
+        explosion_medium:play()
+    else
+        explosion_large:play()
+    end
 end
 
 function Explosion:get_position(): Point
@@ -273,13 +288,28 @@ global record Explosions
 end
 
 function Explosions.load_assets()
-    explosion_end_right_image = lutro.graphics.newImage("assets/bomb/explosion/explosion_end_right.png")
-    explosion_end_left_image = lutro.graphics.newImage("assets/bomb/explosion/explosion_end_left.png")
-    explosion_end_top_image = lutro.graphics.newImage("assets/bomb/explosion/explosion_end_top.png")
-    explosion_end_bottom_image = lutro.graphics.newImage("assets/bomb/explosion/explosion_end_bottom.png")
-    explosion_horizontal_image = lutro.graphics.newImage("assets/bomb/explosion/explosion_horizontal.png")
-    explosion_vertical_image = lutro.graphics.newImage("assets/bomb/explosion/explosion_vertical.png")
-    explosion_center_image = lutro.graphics.newImage("assets/bomb/explosion/explosion_center.png")
+    local function get_explosion_image(tile: string): Image
+        return lutro.graphics.newImage("assets/bomb/explosion/explosion_" .. tile .. ".png")
+    end
+
+    explosion_end_right_image = get_explosion_image("end_right")
+    explosion_end_left_image = get_explosion_image("end_left")
+    explosion_end_top_image = get_explosion_image("end_top")
+    explosion_end_bottom_image = get_explosion_image("end_bottom")
+    explosion_horizontal_image = get_explosion_image("horizontal")
+    explosion_vertical_image = get_explosion_image("vertical")
+    explosion_center_image = get_explosion_image("center")
+
+    local function get_explosion_audio(size: string): Source
+        local explosion_audio = audio.new_source("assets/bomb/explosion/" .. size .. ".wav", "static")
+        explosion_audio:setVolume(0.4)
+        explosion_audio:setPitch(0.25)
+        return explosion_audio
+    end
+
+    explosion_small = get_explosion_audio("small")
+    explosion_medium = get_explosion_audio("medium")
+    explosion_large = get_explosion_audio("large")
 end
 
 local explosions = {}
@@ -292,6 +322,7 @@ end
 
 function Explosions:place_explosion(position: Point, range: number, delay?: number)
     local explosion = Explosion.new(position, range, delay)
+    explosion:play()
     table.insert(self.on_ground, explosion)
 end
 
