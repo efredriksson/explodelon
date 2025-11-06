@@ -52,6 +52,7 @@ global type Source = interface
    is Object
    setVolume: function(self: Source, volume: number)
    setLooping: function(self: Source, loop: boolean)
+   setPitch: function(self: Source, pitch: number)
    play: function(self: Source)
    pause: function(self: Source)
    stop: function(self: Source)
