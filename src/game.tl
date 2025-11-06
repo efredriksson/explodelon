@@ -23,6 +23,7 @@ local soft_blocks = require("soft_blocks")
 
 
 local JOYPAD = joysticks.buttons()
+local music: Source
 
 global record Game is Scene
 	score_board: ScoreBoard
@@ -45,6 +46,7 @@ global record Game is Scene
 	game_countdown: GameCountdown
 	pressure_blocks: PressureBlocks
 	tic_counter: integer
+	have_started_music: boolean
 end
 
 function Game:load()
@@ -70,6 +72,8 @@ function Game:load()
 	self.game_countdown = game_countdown.new()
 	self.pressure_blocks = pressure_blocks.new()
 	self.tic_counter = 0
+	self.have_started_music = false
+	music:stop()
 end
 
 function Game.new(player_selection: Scene): Game
@@ -233,6 +237,10 @@ function Game:update(dt: number)
 	self.game_countdown:update(dt)
 	if not self.game_countdown:finished() then
 		return
+	end
+	if not self.have_started_music then
+		self.have_started_music = true
+		music:play()
 	end
 
 	self.game_timer:update(dt)
@@ -427,6 +435,13 @@ function game.setup(player_selection: Scene): Game
 	GameCountdown.load_assets()
 	ScoreBoard.load_assets()
 	game_pause.load_assets()
+	if not music then
+		-- TODO audio should handle only keeping references to audio
+		-- sources that are of use (will need copy for playing same multi-times)
+		music = audio.new_source("assets/music/battle.ogg", "static")
+	end
+	music:setLooping(true)
+	music:setVolume(0.75)
 
 	return Game.new(player_selection)
 end

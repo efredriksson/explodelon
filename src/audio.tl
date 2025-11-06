@@ -23,4 +23,12 @@ function audio.unpause()
     end
 end
 
+function audio.stop()
+    for _, source in ipairs(loaded_audio_sources) do
+        if source:isPlaying() then
+            source:stop()
+        end
+    end
+end
+
 return audio
