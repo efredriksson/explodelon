@@ -419,6 +419,7 @@ function Game:draw()
 	for _, entity in ipairs(mobility_related) do
 		hitboxes.draw_movement(entity:movementbox())
 	end
+	self.game_timer:draw_hurry_text()
 end
 
 local game = {}
