@@ -82,7 +82,7 @@ end
 
 function PlayerSelection.new(): PlayerSelection
     local self: PlayerSelection = setmetatable({}, { __index = PlayerSelection })
-    self.game = game.setup(self)
+    self.game = game.new(self)
     self.going_back_to_game = false
     self.idle_images = {}
     self.slow_walk_animations = {}
@@ -120,7 +120,9 @@ function PlayerSelection:load()
     self.selector = menu_items.new_integer_selection(1, 1, #self.selectable_characters)
 end
 
-local function load_assets()
+local player_selection = {}
+
+function player_selection.load_assets()
     for _, sprite in ipairs(character_sprites.get()) do
         idle_down_images[sprite] = get_idle_down_png(sprite)
         walk_down_images[sprite] = get_walk_down_png(sprite)
@@ -212,10 +214,7 @@ function PlayerSelection:draw()
     black_font:print_centered(indicator_text, text_box, text_pos)
 end
 
-local player_selection = {}
-
 function player_selection.setup(): Scene
-    load_assets()
 	return PlayerSelection.new()
 end
 
