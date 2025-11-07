@@ -301,7 +301,7 @@ function Explosions.load_assets()
     explosion_center_image = get_explosion_image("center")
 
     local function get_explosion_audio(size: string): Source
-        local explosion_audio = audio.new_source("assets/bomb/explosion/" .. size .. ".wav", "static")
+        local explosion_audio = audio.new_source_pool("assets/bomb/explosion/" .. size .. ".wav", "static", 5)
         explosion_audio:setVolume(0.4)
         explosion_audio:setPitch(0.25)
         return explosion_audio
