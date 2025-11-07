@@ -3,6 +3,8 @@ local joysticks = require("joysticks")
 local scenes = require("scenes")
 local screens = require("menus.screens")
 local start_screen = require("menus.start_screen")
+local player_selection = require("player_selection")
+local game = require("game")
 
 function lutro.conf(t: Configuration)
 	t.width  = const.MAP_WIDTH
@@ -12,6 +14,8 @@ end
 function lutro.load()
 	joysticks.setup()
 	screens.load_assets()
+	player_selection.load_assets()
+	game.load_assets()
 	scenes.set_start(start_screen.new())
 end
 

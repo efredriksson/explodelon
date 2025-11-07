@@ -423,7 +423,7 @@ end
 
 local game = {}
 
-function game.setup(player_selection: Scene): Game
+function game.load_assets()
 	Eggs.load_assets()
 	Items:load_assets()
 	GameTimer.load_assets()
@@ -435,14 +435,13 @@ function game.setup(player_selection: Scene): Game
 	GameCountdown.load_assets()
 	ScoreBoard.load_assets()
 	game_pause.load_assets()
-	if not music then
-		-- TODO audio should handle only keeping references to audio
-		-- sources that are of use (will need copy for playing same multi-times)
-		music = audio.new_source("assets/music/battle.ogg", "static")
-	end
+
+	music = audio.new_source("assets/music/battle.ogg", "static")
 	music:setLooping(true)
 	music:setVolume(0.75)
+end
 
+function game.new(player_selection: Scene): Game
 	return Game.new(player_selection)
 end
 
