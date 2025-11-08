@@ -1,6 +1,6 @@
 
 
-global type CharacterSprite = enum
+global type CharacterName = enum
     "kotetsu"
     "honey"
     "kinu" 
@@ -13,7 +13,7 @@ global type CharacterSprite = enum
     "bonks" 
 end
 
-local ALL_SPRITES: {CharacterSprite} = {
+local ALL_SPRITES: {CharacterName} = {
     "kotetsu",
     "honey",
     "kinu",
@@ -26,17 +26,17 @@ local ALL_SPRITES: {CharacterSprite} = {
     "bonks",
 }
 
-local character_sprites = {}
+local characters = {}
 
 global record CharacterSelection
     player_id: integer
-    sprite: CharacterSprite
+    sprite: CharacterName
 end
 
 
-function character_sprites.new_selection(
+function characters.new_selection(
     player_id: integer,
-    sprite: CharacterSprite
+    sprite: CharacterName
 ): CharacterSelection
     local self: CharacterSelection = setmetatable({}, { __index = CharacterSelection })
     self.player_id = player_id
@@ -45,8 +45,8 @@ function character_sprites.new_selection(
 end
 
 
-function character_sprites.get(nbr_to_get?: integer): {CharacterSprite}
-    local sprites: {CharacterSprite} = {}
+function characters.get_names(nbr_to_get?: integer): {CharacterName}
+    local sprites: {CharacterName} = {}
     for i, sprite in ipairs(ALL_SPRITES) do
         if not nbr_to_get or i <= nbr_to_get then
             table.insert(sprites, sprite)
@@ -56,16 +56,16 @@ function character_sprites.get(nbr_to_get?: integer): {CharacterSprite}
     return sprites
 end
 
-function character_sprites.get_selections(nbr_to_get?: integer): {CharacterSelection}
+function characters.get_selections(nbr_to_get?: integer): {CharacterSelection}
     local selections: {CharacterSelection} = {}
-    for i, sprite in ipairs(character_sprites.get(nbr_to_get)) do
-        table.insert(selections, character_sprites.new_selection(i, sprite))
+    for i, sprite in ipairs(characters.get_names(nbr_to_get)) do
+        table.insert(selections, characters.new_selection(i, sprite))
     end
 
     return selections
 end
 
-function character_sprites.is_unused(sprite: CharacterSprite, already_selected: {CharacterSelection}): boolean
+function characters.is_unused(sprite: CharacterName, already_selected: {CharacterSelection}): boolean
     assert(#already_selected < #ALL_SPRITES, "All sprites are selected!")
     for _, selected in ipairs(already_selected) do
         if sprite == selected.sprite then
@@ -76,14 +76,14 @@ function character_sprites.is_unused(sprite: CharacterSprite, already_selected: 
     return true
 end
 
-function character_sprites.get_unused(already_selected: {CharacterSelection}): CharacterSprite
+function characters.get_unused(already_selected: {CharacterSelection}): CharacterName
     assert(#already_selected < #ALL_SPRITES, "All sprites are selected!")
 
-    for _, sprite in ipairs(character_sprites.get()) do
-		if character_sprites.is_unused(sprite, already_selected) then
+    for _, sprite in ipairs(characters.get_names()) do
+		if characters.is_unused(sprite, already_selected) then
 			return sprite
-		end     
+		end
     end
 end
 
-return character_sprites
+return characters

@@ -1,6 +1,6 @@
 local audio = require("audio")
 local bombs = require("bombs")
-local character_sprites = require("character_sprites")
+local characters = require("characters")
 local const = require("const")
 local eggs = require("eggs")
 local game_countdown = require("game_countdown")
@@ -174,8 +174,8 @@ function Game:pop_player_joining(): integer
 end
 
 function Game:join_with_next_free_sprite(player_id: integer)
-	local new_sprite = character_sprites.get_unused(self.character_selections)
-	local new_selection = character_sprites.new_selection(player_id, new_sprite)
+	local new_sprite = characters.get_unused(self.character_selections)
+	local new_selection = characters.new_selection(player_id, new_sprite)
 	table.insert(self.character_selections, new_selection)
 	self:update_players(self.character_selections)
 end

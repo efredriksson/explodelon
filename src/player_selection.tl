@@ -1,6 +1,6 @@
 local animations = require("animations")
 local audio = require("audio")
-local character_sprites = require("character_sprites")
+local characters = require("characters")
 local fonts = require("fonts")
 local game = require("game")
 local joysticks = require("joysticks")
@@ -11,12 +11,12 @@ local points = require("geometry.points")
 
 
 local record Character
-   sprite: CharacterSprite
+   sprite: CharacterName
    number: integer
    y_shift: number
 end
 
-function Character.new(sprite: CharacterSprite, number: integer): Character
+function Character.new(sprite: CharacterName, number: integer): Character
     local self: Character = setmetatable({}, { __index = Character })
     self.sprite = sprite
     self.number = number
@@ -52,18 +52,18 @@ local selector_indicator: Image
 local background: Image
 local black_font: MenuFont
 local music: Source
-local idle_down_images: {CharacterSprite: Image} = {}
-local walk_down_images: {CharacterSprite: Image} = {}
+local idle_down_images: {CharacterName: Image} = {}
+local walk_down_images: {CharacterName: Image} = {}
 
-local function get_idle_down_png(character_name: CharacterSprite): Image
+local function get_idle_down_png(character_name: CharacterName): Image
     return lutro.graphics.newImage("assets/" .. character_name .. "/foot/idle_down.png")
 end
 
-local function get_walk_down_png(character_name: CharacterSprite): Image
+local function get_walk_down_png(character_name: CharacterName): Image
     return lutro.graphics.newImage("assets/" .. character_name .. "/foot/walk_down.png")
 end
 
-local function get_walk_down_animation(character_name: CharacterSprite): Animation
+local function get_walk_down_animation(character_name: CharacterName): Animation
     local image = walk_down_images[character_name]
     local animation = animations.new(image, 18, 34, 3, 6)
     animation.steps = animation.steps - 1 -- Skip final step when walking slowly
@@ -75,7 +75,7 @@ local record PlayerSelection is Scene
     going_back_to_game: boolean
     player_selecting: integer
     idle_images: {integer: Image}
-    slow_walk_animations: {CharacterSprite: Animation}
+    slow_walk_animations: {CharacterName: Animation}
     selector: MenuSelection<integer>
     selectable_characters: {Character}
     walking_characters: {Character}
@@ -100,9 +100,9 @@ function PlayerSelection:load()
     self.selectable_characters = {}
     local previous_walk_state = self.walking_characters
     self.walking_characters = {}
-    for idx, sprite in ipairs(character_sprites.get()) do
+    for idx, sprite in ipairs(characters.get_names()) do
         local character = Character.new(sprite, idx)
-        if character_sprites.is_unused(sprite, self.game.character_selections) then
+        if characters.is_unused(sprite, self.game.character_selections) then
             table.insert(self.selectable_characters, character)
         else
             table.insert(self.walking_characters, character)
@@ -124,7 +124,7 @@ end
 local player_selection = {}
 
 function player_selection.load_assets()
-    for _, sprite in ipairs(character_sprites.get()) do
+    for _, sprite in ipairs(characters.get_names()) do
         idle_down_images[sprite] = get_idle_down_png(sprite)
         walk_down_images[sprite] = get_walk_down_png(sprite)
     end
@@ -152,7 +152,7 @@ function PlayerSelection:handle_player_input()
         table.insert(self.walking_characters, selected)
         table.insert(
             self.game.character_selections,
-            character_sprites.new_selection(self.player_selecting, selected.sprite)
+            characters.new_selection(self.player_selecting, selected.sprite)
         )
         self.selector:reduce_max_val()
 

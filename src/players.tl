@@ -1,5 +1,5 @@
 require("animations")
-require("character_sprites")
+require("characters")
 require("dinos")
 require("entity")
 local const = require("const")
@@ -25,7 +25,7 @@ end
 
 global record Player is Explodable, Kinematic
 	id: integer
-	sprite: CharacterSprite
+	sprite: CharacterName
    	position: Point
 	direction: Direction
 	action: Action
@@ -47,7 +47,7 @@ end
 
 local players = {}
 
-function players.new(id: integer, sprite: CharacterSprite, position: Point): Player
+function players.new(id: integer, sprite: CharacterName, position: Point): Player
 	local self: Player = setmetatable({}, { __index = Player })
 	self.id = id
 	self.sprite = sprite

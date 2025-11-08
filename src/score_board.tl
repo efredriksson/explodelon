@@ -1,4 +1,4 @@
-local character_sprites = require("character_sprites")
+local characters = require("characters")
 local const = require("const")
 local fonts = require("fonts")
 local points = require("geometry.points")
@@ -6,15 +6,15 @@ local vectors = require("geometry.vectors")
 
 
 local score_font: ShadedFont
-local avatar_images: {CharacterSprite: Image}
+local avatar_images: {CharacterName: Image}
 
 global record PlayerScore
     id: integer
     score: integer
-    avatar: CharacterSprite
+    avatar: CharacterName
 end
 
-function PlayerScore.new(id: integer, avatar: CharacterSprite): PlayerScore
+function PlayerScore.new(id: integer, avatar: CharacterName): PlayerScore
     local self: PlayerScore = setmetatable({}, { __index = PlayerScore })
     self.id = id
     self.score = 0
@@ -87,7 +87,7 @@ end
 function ScoreBoard.load_assets()
     score_font = fonts.new_shaded_numbers()
     avatar_images = {}
-    for _, sprite in ipairs(character_sprites.get()) do
+    for _, sprite in ipairs(characters.get_names()) do
         avatar_images[sprite] = lutro.graphics.newImage(
             "assets/" .. sprite .. "/head_down.png"
         )
