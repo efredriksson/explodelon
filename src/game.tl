@@ -39,7 +39,6 @@ global record Game is Scene
 	items: Items
 	game_timer: GameTimer
 	players: {Player}
-	joining: {integer} -- IDs of players that want to join
 	player_animations: PlayerAnimations
 	time_to_wait_to_end_game: number
 	time_of_1_alive_player: number
@@ -83,10 +82,6 @@ end
 
 function Game.new(player_selection: Scene): Game
    	local self: Game = setmetatable({}, { __index = Game })
-	self.joining = {}
-	for player_id=1, settings.number_of_players do
-		table.insert(self.joining, player_id)
-	end
 	self.player_selection = player_selection
 	self.score_board = score_board.new(characters.get_selections())
 	self.background = lutro.graphics.newImage("assets/footboll-map.png")
@@ -162,15 +157,6 @@ function Game:get_player(player_id: integer): Player
 	return nil
 end
 
-function Game:pop_player_joining(): integer
-	for i, player_joining in ipairs(self.joining) do
-		table.remove(self.joining, i)
-		return player_joining
-	end
-
-	return nil
-end
-
 function Game:join_with_next_free_sprite(player_id: integer)
 	characters.new_selection(player_id)
 	self:update_players()
@@ -181,7 +167,7 @@ function Game:handle_pause_input(): boolean
 		if not characters.exist_selection_for(player_id) then
 			settings.number_of_players = settings.number_of_players + 1
 			if self.player_selection then
-				table.insert(self.joining, player_id)
+				characters.queue_selection_for(player_id)
 				scenes.set(self.player_selection)
 			else
 				self:join_with_next_free_sprite(player_id)

@@ -29,6 +29,8 @@ local ALL_SPRITES: {CharacterName} = {
 local characters = {}
 -- Global state on what characters have been selected:
 local character_selections: {CharacterSelection} = {}
+-- Global state on players (IDs) that should choose a character:
+local in_queue_to_join: {integer} = {}
 
 global record CharacterSelection
     player_id: integer
@@ -117,6 +119,26 @@ function characters.remove_selection_for(player_id: integer)
             table.remove(character_selections, i)
         end
     end
+end
+
+function characters.queue_selection_for_total(number_of_players: integer)
+	in_queue_to_join = {}
+	for player_id=1, number_of_players do
+		table.insert(in_queue_to_join, player_id)
+	end
+end
+
+function characters.queue_selection_for(player_id: integer)
+    table.insert(in_queue_to_join, player_id)
+end
+
+function characters.next_player_selecting(): integer
+	for i, player_joining in ipairs(in_queue_to_join) do
+		table.remove(in_queue_to_join, i)
+		return player_joining
+	end
+
+	return nil
 end
 
 return characters
