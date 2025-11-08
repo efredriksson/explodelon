@@ -98,6 +98,15 @@ function choices.new_time(menu_text: string, y_pos: integer, selection: MenuSele
     return self
 end
 
+function choices.new_enum<T>(menu_text: string, y_pos: integer, selection: MenuSelection<T>, callback: function(T)): MenuChoiceImpl<T>
+    local self: MenuChoiceImpl<T> = setmetatable({}, { __index = MenuChoiceImpl })
+    self.y_pos = y_pos
+    self.selection = selection
+    self.menu_text = menu_text
+    self.value_change = callback
+    return self
+end
+
 function choices.new_done(menu_text: string, y_pos: integer, callback: function(ctx: Scene)): MenuChoiceImpl<boolean>
     local self: MenuChoiceImpl<boolean> = setmetatable({}, { __index = MenuChoiceImpl })
     self.y_pos = y_pos

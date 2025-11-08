@@ -97,9 +97,15 @@ function Debug.new(): Debug
     return self
 end
 
+global type PlayerSelectionChoices = enum
+   "on"
+   "off"
+   "keep"
+end
+
 local record Settings
     number_of_players: integer
-    player_selection: boolean
+    player_selection: PlayerSelectionChoices
     game_rules: GameRules
     debug: Debug
 end
@@ -107,7 +113,7 @@ end
 function Settings.new(): Settings
     local self: Settings = setmetatable({}, { __index = Settings })
     self.number_of_players = 2
-    self.player_selection = true
+    self.player_selection = "on"
     self.game_rules = GameRules.new()
     self.debug = Debug.new()
     return self
@@ -115,7 +121,7 @@ end
 
 local settings = Settings.new()
 
-function Settings.set_player_selection(value: boolean)
+function Settings.set_player_selection(value: PlayerSelectionChoices)
     settings.player_selection = value
 end
 
