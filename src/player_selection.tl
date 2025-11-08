@@ -94,7 +94,7 @@ end
 
 function PlayerSelection:load()
     -- Entering scene we need to re-calculate these from game state
-    self.player_selecting = self.game:pop_player_joining()
+    self.player_selecting = characters.next_player_selecting()
     assert(self.player_selecting, "Joined player selection scene but no is joining?")
     self.slow_walk_animations = {}
     self.selectable_characters = {}
@@ -154,7 +154,7 @@ function PlayerSelection:handle_player_input()
         self.selector:reduce_max_val()
 
         ok_action = true
-        self.player_selecting = self.game:pop_player_joining()
+        self.player_selecting = characters.next_player_selecting()
     end
 
     if ok_action then
