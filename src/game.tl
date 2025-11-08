@@ -28,7 +28,6 @@ local music: Source
 
 global record Game is Scene
 	score_board: ScoreBoard
-	character_selections: {CharacterSelection}
 	player_selection: Scene
 	hard_blocks: {HardBlock}
 
@@ -54,8 +53,9 @@ end
 
 function Game:load()
 	self.players = {}
-	local start_positions = level_map.get_player_start_positions(#self.character_selections)
-	for i, character_selection in ipairs(self.character_selections) do
+	local character_selections = characters.get_selections()
+	local start_positions = level_map.get_player_start_positions(#character_selections)
+	for i, character_selection in ipairs(character_selections) do
 		table.insert(self.players, players.new(
 			character_selection.player_id,
 			character_selection.sprite,
@@ -83,13 +83,12 @@ end
 
 function Game.new(player_selection: Scene): Game
    	local self: Game = setmetatable({}, { __index = Game })
-	self.character_selections = {}
 	self.joining = {}
 	for player_id=1, settings.number_of_players do
 		table.insert(self.joining, player_id)
 	end
 	self.player_selection = player_selection
-	self.score_board = score_board.new(self.character_selections)
+	self.score_board = score_board.new(characters.get_selections())
 	self.background = lutro.graphics.newImage("assets/footboll-map.png")
 	self.hard_blocks = level_map.get_hard_blocks()
 	self:load()
@@ -149,9 +148,8 @@ function Game:handle_bomb_drop_input(player: Player)
 	end
 end
 
-function Game:update_players(sprites: {CharacterSelection})
-	self.character_selections = sprites
-	self.score_board:update_avatars(self.character_selections)
+function Game:update_players()
+	self.score_board:update_avatars(characters.get_selections())
 end
 
 function Game:get_player(player_id: integer): Player
@@ -174,25 +172,13 @@ function Game:pop_player_joining(): integer
 end
 
 function Game:join_with_next_free_sprite(player_id: integer)
-	local new_sprite = characters.get_unused(self.character_selections)
-	local new_selection = characters.new_selection(player_id, new_sprite)
-	table.insert(self.character_selections, new_selection)
-	self:update_players(self.character_selections)
+	characters.new_selection(player_id)
+	self:update_players()
 end
 
 function Game:handle_pause_input(): boolean
-	local function is_playing(player_id: integer): boolean
-		for _, selection in ipairs(self.character_selections) do
-			if selection.player_id == player_id then
-				return true
-			end
-		end
-
-		return false
-	end
-
 	local function toggle_if_playing(player_id: integer)
-		if not is_playing(player_id) then
+		if not characters.exist_selection_for(player_id) then
 			settings.number_of_players = settings.number_of_players + 1
 			if self.player_selection then
 				table.insert(self.joining, player_id)
@@ -203,12 +189,8 @@ function Game:handle_pause_input(): boolean
 			end
 		else
 			settings.number_of_players = settings.number_of_players - 1
-			for i, selection in ipairs(self.character_selections) do
-				if selection.player_id == player_id then
-					table.remove(self.character_selections, i)
-				end
-			end
-			self.score_board:update_avatars(self.character_selections)
+			characters.remove_selection_for(player_id)
+			self:update_players()
 			local possible_player = self:get_player(player_id)
 			if possible_player then
 				possible_player:remove()
@@ -223,7 +205,7 @@ function Game:handle_pause_input(): boolean
 			self.audio_paused = true
 			audio.pause()
 			scenes.set(game_pause.new(
-				self, player_id, is_playing(player_id), toggle_if_playing)
+				self, player_id, characters.exist_selection_for(player_id), toggle_if_playing)
 			)
 			return true
 		end

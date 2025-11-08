@@ -102,7 +102,7 @@ function PlayerSelection:load()
     self.walking_characters = {}
     for idx, sprite in ipairs(characters.get_names()) do
         local character = Character.new(sprite, idx)
-        if characters.is_unused(sprite, self.game.character_selections) then
+        if characters.is_unused(sprite) then
             table.insert(self.selectable_characters, character)
         else
             table.insert(self.walking_characters, character)
@@ -150,10 +150,7 @@ function PlayerSelection:handle_player_input()
 
         local selected = table.remove(self.selectable_characters, self.selector:get_value())
         table.insert(self.walking_characters, selected)
-        table.insert(
-            self.game.character_selections,
-            characters.new_selection(self.player_selecting, selected.sprite)
-        )
+        characters.new_selection(self.player_selecting, selected.sprite)
         self.selector:reduce_max_val()
 
         ok_action = true
@@ -166,7 +163,7 @@ function PlayerSelection:handle_player_input()
 
     if not self.player_selecting then
         music:stop()
-        self.game:update_players(self.game.character_selections)
+        self.game:update_players()
         scenes.set(self.game, self.going_back_to_game)
         if self.going_back_to_game then
             -- The game might have paused audio, make sure to unpause:
