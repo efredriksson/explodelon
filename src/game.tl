@@ -25,7 +25,6 @@ local soft_blocks = require("soft_blocks")
 
 local JOYPAD = joysticks.buttons()
 local music: Source
-local start_sound: Source
 
 global record Game is Scene
 	score_board: ScoreBoard
@@ -49,8 +48,8 @@ global record Game is Scene
 	game_countdown: GameCountdown
 	pressure_blocks: PressureBlocks
 	tic_counter: integer
+	audio_paused: boolean
 	have_started_music: boolean
-	have_played_start_sound: boolean
 end
 
 function Game:load()
@@ -77,8 +76,8 @@ function Game:load()
 	self.game_countdown = game_countdown.new()
 	self.pressure_blocks = pressure_blocks.new()
 	self.tic_counter = 0
+	self.audio_paused = false 
 	self.have_started_music = false
-	self.have_played_start_sound = false
 	music:stop()
 end
 
@@ -181,7 +180,7 @@ function Game:join_with_next_free_sprite(player_id: integer)
 	self:update_players(self.character_selections)
 end
 
-function Game:handle_pause_input()
+function Game:handle_pause_input(): boolean
 	local function is_playing(player_id: integer): boolean
 		for _, selection in ipairs(self.character_selections) do
 			if selection.player_id == player_id then
@@ -201,7 +200,6 @@ function Game:handle_pause_input()
 			else
 				self:join_with_next_free_sprite(player_id)
 				scenes.set(self, true)
-				audio.unpause()
 			end
 		else
 			settings.number_of_players = settings.number_of_players - 1
@@ -216,18 +214,22 @@ function Game:handle_pause_input()
 				possible_player:remove()
 			end
 			scenes.set(self, true)
-			audio.unpause()
 		end
 	end
 
 	for player_id=1, const.MAX_PLAYERS do
 		if joysticks.is_pressed(player_id, JOYPAD.START) then
+			self.game_countdown = game_countdown.new()
+			self.audio_paused = true
 			audio.pause()
 			scenes.set(game_pause.new(
 				self, player_id, is_playing(player_id), toggle_if_playing)
 			)
+			return true
 		end
 	end
+
+	return false
 end
 
 local is_alive = function(player: Player): boolean
@@ -266,12 +268,11 @@ function Game:check_if_finished(dt: number, alive_players: {Player})
 end
 
 function Game:update(dt: number)
-	if not self.have_played_start_sound then
-		self.have_played_start_sound = true
-		start_sound:play()
+	local is_paused = self:handle_pause_input()
+	if is_paused then
+		return
 	end
 
-	self:handle_pause_input()
 	self.game_countdown:update(dt)
 	if not self.game_countdown:finished() then
 		return
@@ -279,6 +280,10 @@ function Game:update(dt: number)
 	if not self.have_started_music then
 		self.have_started_music = true
 		music:play()
+	end
+	if self.audio_paused then
+		self.audio_paused = false
+		audio.unpause()
 	end
 
 	self.game_timer:update(dt)
@@ -397,7 +402,6 @@ function Game:draw()
 	end
 
 	self.game_timer:draw()
-	self.game_countdown:draw()
 
 	for _, block in ipairs(self.pressure_blocks:falling()) do
 		-- falling blocks are rendered last on top of everything,
@@ -444,6 +448,8 @@ function Game:draw()
 	for _, entity in ipairs(mobility_related) do
 		hitboxes.draw_movement(entity:movementbox())
 	end
+
+	self.game_countdown:draw()
 	self.game_timer:draw_hurry_text()
 end
 
@@ -463,8 +469,6 @@ function game.load_assets()
 	game_pause.load_assets()
 	game_end.load_assets()
 
-	start_sound = audio.new_source("assets/battle-start.ogg", "static")
-	start_sound:setVolume(0.35)
 	music = audio.new_source("assets/music/battle.ogg", "static")
 	music:setLooping(true)
 	music:setVolume(0.75)

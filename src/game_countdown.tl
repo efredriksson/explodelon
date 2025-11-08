@@ -16,10 +16,13 @@ end
 
 local ready_set_go_image: Image
 local ready_set_go_sound: Source
+local start_jingle: Source
 
 function GameCountdown.load_assets()
 	ready_set_go_image = lutro.graphics.newImage("assets/ready_set_go.png")
 	ready_set_go_sound = audio.new_source("assets/ready_set_go.wav", "static")
+	start_jingle = audio.new_source("assets/battle-start.ogg", "static")
+	start_jingle:setVolume(0.35)
 end
 
 local game_countdown = {}
@@ -30,6 +33,8 @@ function game_countdown.new(): GameCountdown
 	self.have_played_sound = false
 	self.position = points.new((const.MAP_WIDTH - 45) / 2, START_Y_POSITION)
 	self.waited_for = 0.0
+	ready_set_go_sound:stop()
+	start_jingle:stop()
     return self
 end
 
@@ -43,6 +48,7 @@ function GameCountdown:update(dt: number)
 	    self.animation:update(dt)
 	end
 	if not self.have_played_sound then
+		start_jingle:play()
 		ready_set_go_sound:play()
 		self.have_played_sound = true
 	end
