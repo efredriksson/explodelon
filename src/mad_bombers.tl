@@ -1,6 +1,6 @@
 require("bombs")
 local animations = require("animations")
-local character_sprites = require("character_sprites")
+local characters = require("characters")
 local const = require("const")
 local hitboxes = require("hitboxes")
 local joysticks = require("joysticks")
@@ -74,7 +74,7 @@ local CANNON_PRE_FIRE_TIME = 0.3
 local cart_images: {Direction: {CartState: Image}} = {}
 local cart_loading_images: {Direction: {CartState: Image}} = {}
 local cart_firing_images: {Direction: Image} = {}
-local cart_heads: {CharacterSprite: {Direction: Image}} = {}
+local cart_heads: {CharacterName: {Direction: Image}} = {}
 
 local function cart_animation(image: Image): Animation
 	local nbr_steps = 2
@@ -123,7 +123,7 @@ global record PlayerCart is Entity
     previous_direction: CartState
     cannon: CannonState
     cannon_powerup_for: number
-    head: CharacterSprite
+    head: CharacterName
     turbo: boolean
     reload_countdown: number
     animations: CartAnimations
@@ -132,7 +132,7 @@ global record PlayerCart is Entity
 end
 
 function PlayerCart.new(
-    id: integer, position: number, head: CharacterSprite
+    id: integer, position: number, head: CharacterName
 ): PlayerCart
     local self: PlayerCart = setmetatable({}, { __index = PlayerCart })
     self.id = id
@@ -360,7 +360,7 @@ function mad_bombers.new(bombs: Bombs): MadBombers
     return self
 end
 
-function MadBombers:ensure_exist_for(player_id: integer, player_sprite: CharacterSprite)
+function MadBombers:ensure_exist_for(player_id: integer, player_sprite: CharacterName)
     if not self.by_player[player_id] then
         self.by_player[player_id] = PlayerCart.new(player_id, 50, player_sprite)
     end
@@ -459,7 +459,7 @@ function MadBombers.load_assets()
             )
         end
     end
-    for _, sprite in ipairs(character_sprites.get()) do
+    for _, sprite in ipairs(characters.get_names()) do
         cart_heads[sprite] = {}
         for _, dir in ipairs(SIDES) do
             local asset_file = "assets/" .. sprite .. "/head_" .. dir .. ".png"

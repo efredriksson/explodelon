@@ -1,5 +1,5 @@
 local audio = require("audio")
-local character_sprites = require("character_sprites")
+local characters = require("characters")
 local const = require("const")
 local game = require("game")
 local items = require("menus.items")
@@ -21,7 +21,7 @@ function start_screen.new(): MenuScreen
             scenes.set(player_selection.setup())
         else
             local new_game = game.new(nil)
-            new_game:update_players(character_sprites.get_selections(settings.number_of_players))
+            new_game:update_players(characters.get_selections(settings.number_of_players))
             scenes.set(new_game)
         end
     end
