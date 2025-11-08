@@ -75,7 +75,7 @@ function Animation:draw(x: number, y: number)
     lutro.graphics.draw(
         self.image,
         q,
-        math.floor(x), math.floor(y)
+        x, y
     )
 end
 
