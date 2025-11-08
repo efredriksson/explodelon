@@ -8,7 +8,7 @@ local scenes = require("scenes")
 
 
 local JOYPAD = joysticks.buttons()
-local GAME_EXIT_TIME = 5
+local GAME_EXIT_TIME = 3.5
 local pause_menu_image: Image
 local pause_menu_sound: Source
 local white_font: MenuFont
