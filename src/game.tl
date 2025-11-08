@@ -4,6 +4,7 @@ local character_sprites = require("character_sprites")
 local const = require("const")
 local eggs = require("eggs")
 local game_countdown = require("game_countdown")
+local game_end = require("game_end")
 local game_timer = require("game_timer")
 local game_pause = require("game_pause")
 local hitboxes = require("hitboxes")
@@ -44,6 +45,7 @@ global record Game is Scene
 	player_animations: PlayerAnimations
 	time_to_wait_to_end_game: number
 	time_of_1_alive_player: number
+	have_finished: boolean
 	game_countdown: GameCountdown
 	pressure_blocks: PressureBlocks
 	tic_counter: integer
@@ -71,6 +73,7 @@ function Game:load()
 	self.player_animations = player_animations.new(self.players)
 	self.time_to_wait_to_end_game = 2.0
 	self.time_of_1_alive_player = 0.0
+	self.have_finished = false
 	self.game_countdown = game_countdown.new()
 	self.pressure_blocks = pressure_blocks.new()
 	self.tic_counter = 0
@@ -235,6 +238,33 @@ local is_dead = function(player: Player): boolean
 	return not player:is_alive()
 end
 
+function Game:check_if_finished(dt: number, alive_players: {Player})
+	if self.have_finished then
+		return
+	end
+
+	if #alive_players <= 1 then
+		self.time_of_1_alive_player = self.time_of_1_alive_player + dt
+	elseif self.game_timer:out_of_time() then
+		self.have_finished = true
+		-- Many alive and time out => draw
+		music:stop()
+		scenes.set(game_end.new_for_timeout(self))
+	end
+
+	if self.time_of_1_alive_player > self.time_to_wait_to_end_game then
+		self.have_finished = true
+		if #alive_players == 1 then
+			self.score_board:add_point(alive_players[1].id)
+			music:stop()
+			scenes.set(game_end.new_for_winner(self))
+		else
+			music:stop()
+			scenes.set(game_end.new_for_draw(self))
+		end
+	end
+end
+
 function Game:update(dt: number)
 	if not self.have_played_start_sound then
 		self.have_played_start_sound = true
@@ -349,20 +379,7 @@ function Game:update(dt: number)
 		end
 	end
 
-	if #alive_players <= 1 then
-		self.time_of_1_alive_player = self.time_of_1_alive_player + dt
-	elseif self.game_timer:out_of_time() then
-		self:load() -- Many alive and time out => draw
-	end
-
-	if self.time_of_1_alive_player > self.time_to_wait_to_end_game then
-		if #alive_players == 1 then
-			self.score_board:add_point(alive_players[1].id)
-			self:load()
-		else
-			self:load()
-		end
-	end
+	self:check_if_finished(dt, alive_players)
 end
 
 local function sort_entities_by_y_cord(players_to_sort: {Entity})
@@ -444,6 +461,7 @@ function game.load_assets()
 	GameCountdown.load_assets()
 	ScoreBoard.load_assets()
 	game_pause.load_assets()
+	game_end.load_assets()
 
 	start_sound = audio.new_source("assets/battle-start.ogg", "static")
 	start_sound:setVolume(0.35)
