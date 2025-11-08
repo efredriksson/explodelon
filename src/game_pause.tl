@@ -10,6 +10,7 @@ local scenes = require("scenes")
 local JOYPAD = joysticks.buttons()
 local GAME_EXIT_TIME = 5
 local pause_menu_image: Image
+local pause_menu_sound: Source
 local white_font: MenuFont
 local game_pause = {}
 
@@ -44,6 +45,8 @@ function game_pause.new(
     self.is_playing = is_playing
     self.exit_counter = 0
     self.toggle_if_playing = toggle_if_playing
+
+    pause_menu_sound:play()
     return self
 end
 
@@ -60,6 +63,7 @@ end
 function game_pause.load_assets()
     white_font = fonts.new_menu_white()
     pause_menu_image = lutro.graphics.newImage("assets/pause-menu.png")
+    pause_menu_sound = audio.new_source("assets/pause.wav", "static")
     set_alpha_for_image(pause_menu_image, 225)
 end
 
