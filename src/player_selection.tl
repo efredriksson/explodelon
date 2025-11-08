@@ -51,6 +51,7 @@ local ok_sound: Source
 local selector_indicator: Image
 local background: Image
 local black_font: MenuFont
+local music: Source
 local idle_down_images: {CharacterSprite: Image} = {}
 local walk_down_images: {CharacterSprite: Image} = {}
 
@@ -133,6 +134,8 @@ function player_selection.load_assets()
 
     ok_sound = menu_items.ok_sound()
     black_font = fonts.new_menu_black()
+    music = audio.new_source("assets/music/player-selection.ogg", "static")
+    music:setVolume(0.75)
 end
 
 function PlayerSelection:handle_player_input()    
@@ -162,6 +165,7 @@ function PlayerSelection:handle_player_input()
     end
 
     if not self.player_selecting then
+        music:stop()
         self.game:update_players(self.game.character_selections)
         scenes.set(self.game, self.going_back_to_game)
         if self.going_back_to_game then
@@ -174,6 +178,10 @@ function PlayerSelection:handle_player_input()
 end
 
 function PlayerSelection:update(dt: number)
+    if not music:isPlaying() then
+        music:play()
+    end
+
     self:handle_player_input()
 
     for _, selected in ipairs(self.walking_characters) do
