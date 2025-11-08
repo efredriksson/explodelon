@@ -24,6 +24,7 @@ local soft_blocks = require("soft_blocks")
 
 local JOYPAD = joysticks.buttons()
 local music: Source
+local start_sound: Source
 
 global record Game is Scene
 	score_board: ScoreBoard
@@ -47,6 +48,7 @@ global record Game is Scene
 	pressure_blocks: PressureBlocks
 	tic_counter: integer
 	have_started_music: boolean
+	have_played_start_sound: boolean
 end
 
 function Game:load()
@@ -73,6 +75,7 @@ function Game:load()
 	self.pressure_blocks = pressure_blocks.new()
 	self.tic_counter = 0
 	self.have_started_music = false
+	self.have_played_start_sound = false
 	music:stop()
 end
 
@@ -233,6 +236,11 @@ local is_dead = function(player: Player): boolean
 end
 
 function Game:update(dt: number)
+	if not self.have_played_start_sound then
+		self.have_played_start_sound = true
+		start_sound:play()
+	end
+
 	self:handle_pause_input()
 	self.game_countdown:update(dt)
 	if not self.game_countdown:finished() then
@@ -437,6 +445,8 @@ function game.load_assets()
 	ScoreBoard.load_assets()
 	game_pause.load_assets()
 
+	start_sound = audio.new_source("assets/battle-start.ogg", "static")
+	start_sound:setVolume(0.35)
 	music = audio.new_source("assets/music/battle.ogg", "static")
 	music:setLooping(true)
 	music:setVolume(0.75)
