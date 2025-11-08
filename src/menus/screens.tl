@@ -8,10 +8,11 @@ local items = require("menus.items")
 
 
 local JOYPAD = joysticks.buttons()
-local black_font: MenuFont
+local gray_font: MenuFont
 local white_font: MenuFont
 local music: Source
 local ok_sound: Source
+local background: Image
 
 
 global record MenuScreen is Scene
@@ -29,8 +30,9 @@ function screens.new(menu_choices: {MenuChoice}): MenuScreen
 end
 
 function screens.load_assets()
-    white_font = fonts.new_menu_white()
-    black_font = fonts.new_menu_black()
+    white_font = fonts.new_menu_white_outlined()
+    gray_font = fonts.new_menu_gray_outlined()
+    background = lutro.graphics.newImage("assets/menu-background.png")
     ok_sound = items.ok_sound()
     music = audio.new_source("assets/music/menus.ogg", "static")
     music:setLooping(true)
@@ -62,14 +64,19 @@ function MenuScreen:update(_: number)
 end
 
 function MenuScreen:draw()
-    lutro.graphics.setColor(200, 200, 200)
-	lutro.graphics.rectangle("fill", 0, 0, const.MAP_WIDTH, const.MAP_HEIGHT)
+    lutro.graphics.draw(background)
+    lutro.graphics.setColor(200, 200, 200, 175)
+    local x_pad = 20
+    local y_pad = 10
+	lutro.graphics.rectangle(
+        "fill", x_pad, y_pad, const.MAP_WIDTH - 2*x_pad, const.MAP_HEIGHT - 2*y_pad
+    )
 
     local function get_font(line_idx): MenuFont
         if line_idx == self.menu_selection:get_value() then
             return white_font
         else
-            return black_font
+            return gray_font
         end
     end
 

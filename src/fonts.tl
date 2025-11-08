@@ -34,12 +34,14 @@ function fonts.new_shaded_numbers(): ShadedFont
 end
 
 global record MenuFont
-   image_font: Font
+   main: Font
+   outline: Font
 end
 
-function MenuFont.new(image_font: Font): MenuFont
+function MenuFont.new(main: Font, outline: Font): MenuFont
    local self: MenuFont = setmetatable({}, { __index = MenuFont })
-   self.image_font = image_font
+   self.main = main
+   self.outline = outline
    return self
 end
 
@@ -47,16 +49,37 @@ local FONT_SYMBOLS = " abcdefghijklmnopqrstuvwxyz0123456789.!'-:*"
 
 function fonts.new_menu_white(): MenuFont
     local white_font = lutro.graphics.newImageFont("assets/imgfont/white.png", FONT_SYMBOLS)
-    return MenuFont.new(white_font)
+    return MenuFont.new(white_font, nil)
 end
 
 function fonts.new_menu_black(): MenuFont
     local black_font = lutro.graphics.newImageFont("assets/imgfont/black.png", FONT_SYMBOLS)
-    return MenuFont.new(black_font)
+    return MenuFont.new(black_font, nil)
+end
+
+function fonts.new_menu_white_outlined(): MenuFont
+    local white_font = lutro.graphics.newImageFont("assets/imgfont/white.png", FONT_SYMBOLS)
+    local black_font = lutro.graphics.newImageFont("assets/imgfont/black.png", FONT_SYMBOLS)
+    return MenuFont.new(white_font, black_font)
+end
+
+function fonts.new_menu_gray_outlined(): MenuFont
+    local gray_font = lutro.graphics.newImageFont("assets/imgfont/gray.png", FONT_SYMBOLS)
+    local black_font = lutro.graphics.newImageFont("assets/imgfont/black.png", FONT_SYMBOLS)
+    return MenuFont.new(gray_font, black_font)
 end
 
 function MenuFont:print_centered(text: string, box_width: number, position: Point)
-	lutro.graphics.setFont(self.image_font)
+    if self.outline then
+        lutro.graphics.setFont(self.outline)
+        for dx=-1, 1 do
+            for dy=-1, 1 do
+                lutro.graphics.printf(text, position.x + dx, position.y + dy, box_width, "center")
+            end
+        end
+    end
+
+    lutro.graphics.setFont(self.main)
 	lutro.graphics.printf(text, position.x, position.y, box_width, "center")
 end
 
