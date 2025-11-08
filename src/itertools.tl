@@ -63,6 +63,16 @@ function itertools.combine<T>(...: {T}): {T}
    	return combined_list
 end
 
+function itertools.find<T>(value: T, list: {T}): integer
+	for index, elem in ipairs(list) do
+		if elem == value then
+			return index
+		end
+	end
+
+	assert(false, "Missing in list!")
+end
+
 function itertools.map<T, V>(iterator: {T}, f: function(T): V): {V}
     local result = {}
     for _, args in ipairs(iterator) do

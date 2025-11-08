@@ -89,6 +89,19 @@ function menu_items.new_boolean_selection(on_by_default: boolean): MenuSelection
     return self
 end
 
+function menu_items.new_enum<T>(choices: {T}): MenuSelection<T>
+    local function value_as_enum(value: integer): string
+        return tostring(choices[value])
+    end
+    local self: MenuSelection<T> = setmetatable({}, { __index = MenuSelection })
+    self.value = 1
+    self.min = 1
+    self.max = #choices
+    self.tostring = value_as_enum
+    self.convert = function(v: integer): T return choices[v] end
+    return self
+end
+
 function menu_items.new_time_selection(start_idx: integer, times: {number}): MenuSelection<number>
     local function value_as_clock_time(index: integer): string
         local time = times[index]
