@@ -18,11 +18,11 @@ function start_screen.new(): MenuScreen
     local function done(_: Scene)
         audio.stop()
         if settings.player_selection then
+            characters.clear_selections()
             scenes.set(player_selection.setup())
         else
-            local new_game = game.new(nil)
-            new_game:update_players(characters.get_selections(settings.number_of_players))
-            scenes.set(new_game)
+            characters.auto_select_for(settings.number_of_players)
+            scenes.set(game.new(nil))
         end
     end
     local function enter_debug_screen(ctx: Scene)

@@ -27,14 +27,15 @@ local ALL_SPRITES: {CharacterName} = {
 }
 
 local characters = {}
+-- Global state on what characters have been selected:
+local character_selections: {CharacterSelection} = {}
 
 global record CharacterSelection
     player_id: integer
     sprite: CharacterName
 end
 
-
-function characters.new_selection(
+function CharacterSelection.new(
     player_id: integer,
     sprite: CharacterName
 ): CharacterSelection
@@ -43,7 +44,6 @@ function characters.new_selection(
     self.sprite = sprite
     return self
 end
-
 
 function characters.get_names(nbr_to_get?: integer): {CharacterName}
     local sprites: {CharacterName} = {}
@@ -56,18 +56,9 @@ function characters.get_names(nbr_to_get?: integer): {CharacterName}
     return sprites
 end
 
-function characters.get_selections(nbr_to_get?: integer): {CharacterSelection}
-    local selections: {CharacterSelection} = {}
-    for i, sprite in ipairs(characters.get_names(nbr_to_get)) do
-        table.insert(selections, characters.new_selection(i, sprite))
-    end
-
-    return selections
-end
-
-function characters.is_unused(sprite: CharacterName, already_selected: {CharacterSelection}): boolean
-    assert(#already_selected < #ALL_SPRITES, "All sprites are selected!")
-    for _, selected in ipairs(already_selected) do
+function characters.is_unused(sprite: CharacterName): boolean
+    assert(#character_selections < #ALL_SPRITES, "All sprites are selected!")
+    for _, selected in ipairs(character_selections) do
         if sprite == selected.sprite then
             return false
         end
@@ -76,13 +67,55 @@ function characters.is_unused(sprite: CharacterName, already_selected: {Characte
     return true
 end
 
-function characters.get_unused(already_selected: {CharacterSelection}): CharacterName
-    assert(#already_selected < #ALL_SPRITES, "All sprites are selected!")
+function characters.get_unused(): CharacterName
+    assert(#character_selections < #ALL_SPRITES, "All sprites are selected!")
 
     for _, sprite in ipairs(characters.get_names()) do
-		if characters.is_unused(sprite, already_selected) then
+		if characters.is_unused(sprite) then
 			return sprite
 		end
+    end
+end
+
+function characters.new_selection(
+    player_id: integer,
+    sprite?: CharacterName
+): CharacterSelection
+    local new_selection = CharacterSelection.new(player_id, sprite or characters.get_unused())
+    table.insert(character_selections, new_selection)
+    return new_selection
+end
+
+function characters.get_selections(): {CharacterSelection}
+    return character_selections
+end
+
+function characters.auto_select_for(nbr_to_select: integer)
+    character_selections = {}
+    for i, sprite in ipairs(characters.get_names(nbr_to_select)) do
+        characters.new_selection(i, sprite)
+    end
+end
+
+function characters.clear_selections()
+    character_selections = {}
+end
+
+function characters.exist_selection_for(player_id: integer): boolean
+    for _, selection in ipairs(character_selections) do
+        if selection.player_id == player_id then
+            return true
+        end
+    end
+
+    return false
+end
+
+function characters.remove_selection_for(player_id: integer)
+    for i, selection in ipairs(character_selections) do
+        if selection.player_id == player_id then
+            table.remove(character_selections, i)
+        end
     end
 end
 
