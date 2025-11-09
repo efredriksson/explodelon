@@ -263,12 +263,72 @@ function Goal:get_hitbox(): Rectangle
 	return hitboxes.new_block(self.position)
 end
 
-function level_map.get_possible_goals(): {Goal}
+function level_map.get_goals(): {Goal}
+	if settings.map ~= "football" then
+		return {}
+	end
+
 	return {
 		Goal.new(get_block_point(-1, 4), get_block_point(-1, 6)),
 		Goal.new(get_block_point(-1, 6), get_block_point(-1, 4)),
 		Goal.new(get_block_point(17, 4), get_block_point(17, 6)),
 		Goal.new(get_block_point(17, 6), get_block_point(17, 4)),
+	}
+end
+
+global record ConveyorBelt
+	position: Point
+	direction: Vector
+end
+
+function ConveyorBelt.new(position: Point, direction: Vector): ConveyorBelt
+   local self: ConveyorBelt = setmetatable({}, { __index = ConveyorBelt })
+   self.position = position
+   self.direction = direction
+   return self
+end
+
+function ConveyorBelt:get_hitbox(): Rectangle
+	return hitboxes.new_block(self.position)
+end
+
+function level_map.get_conveyor_belts(): {ConveyorBelt}
+	if settings.map ~= "factory" then
+		return {}
+	end
+
+	local x_min = 0
+	local x_max = 16
+	local y_min = 0
+	local y_max = 10
+	local down = vectors.new(0, 1)
+	local up = vectors.new(0, -1)
+	local left = vectors.new(-1, 0)
+	local right = vectors.new(1, 0)
+
+	local function create_belt(i: integer, j: integer, dir: Vector): ConveyorBelt
+		return ConveyorBelt.new(get_block_point(i, j), dir)
+	end
+
+	return {
+		-- Outer ring
+		create_belt(x_min, y_min, down),
+		create_belt(x_max, y_max, up),
+		create_belt(x_max, y_min, left),
+		create_belt(x_min, y_max, right),
+		-- Middle ring
+		create_belt(x_min + 4, y_min + 2, right),
+		create_belt(x_max - 4, y_max - 2, left),
+		create_belt(x_max - 4, y_min + 2, down),
+		create_belt(x_min + 4, y_max - 2, up),
+		-- Inner ring
+		create_belt(x_min + 6, y_min + 4, down),
+		create_belt(x_max - 6, y_max - 4, up),
+		create_belt(x_max - 6, y_min + 4, left),
+		create_belt(x_min + 6, y_max - 4, right),
+		-- Middle up/down
+		create_belt(8, y_min, down),
+		create_belt(8, y_max, up),
 	}
 end
 
