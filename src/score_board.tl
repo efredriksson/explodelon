@@ -58,11 +58,11 @@ function ScoreBoard:draw()
 	end
 end
 
-function ScoreBoard:add_point(player_id: integer)
+function ScoreBoard:add_point(player_id: integer): integer
     for _, player in ipairs(self.players) do
         if player.id == player_id then
             player.score = player.score + 1
-            return
+            return player.score
         end
     end
 
