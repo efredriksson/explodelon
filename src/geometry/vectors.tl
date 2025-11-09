@@ -52,4 +52,12 @@ function Vector:plus(other: Vector): Vector
    return vectors.new(self.x + other.x, self.y + other.y)
 end
 
+function Vector:same_direction(other: Vector): boolean
+   local function same_sign(x: number, y: number): boolean
+      return x == y or x * y > 0
+   end
+
+   return same_sign(self.x, other.x) and same_sign(self.y, other.y)
+end
+
 return vectors

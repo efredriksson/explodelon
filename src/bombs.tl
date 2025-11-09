@@ -56,7 +56,7 @@ function Bomb:hit_with_bomb()
 end
 
 function Bomb:get_goal(): Goal
-    for _, goal in ipairs(level_map.get_possible_goals()) do
+    for _, goal in ipairs(level_map.get_goals()) do
         if self.position:distance_to(goal.position) < 3 then
             return goal
         end
@@ -80,12 +80,34 @@ function Bomb:draw()
     self.animation:draw(self.position.x, self.position.y)
 end
 
+function Bomb:_trigger_belt(direction?: Vector): ConveyorBelt | nil
+    local bomb_move_dir = direction or self.velocity
+
+    local function bomb_on(belt: ConveyorBelt): boolean
+        return belt:get_hitbox():overlap(self:movementbox())
+    end
+    local belts = itertools.filter(level_map.get_conveyor_belts(), bomb_on)
+    for _, belt in ipairs(belts) do
+        if self.position:distance_to(level_map.snap_to_closest_grid_tile(self.position)) <= 3 then
+            local snap_pos = level_map.snap_to_closest_grid_tile(self.position)
+            if snap_pos:equal(belt.position) and not belt.direction:same_direction(bomb_move_dir) then
+                return belt
+            end
+        end
+    end
+end
+
 function Bomb:can_move(direction: Vector, occupies: {Kinematic}): boolean
+    local belt_trigger = self:_trigger_belt(direction)
+    if not belt_trigger is nil then
+        direction = belt_trigger.direction:scale(direction:length())
+    end
+    
     local test_hitbox =  self:movementbox():shift(direction)
     local old_hitbox = self:movementbox()
     
     local bomb_in_goal = false
-    for _, goal in ipairs(level_map.get_possible_goals()) do
+    for _, goal in ipairs(level_map.get_goals()) do
         if test_hitbox:overlap(goal:get_hitbox()) then
             bomb_in_goal = true
         end
@@ -132,6 +154,12 @@ function Bomb:update(dt: number, occupies: {Kinematic})
     self.timer = self.timer - dt
     
     if self.velocity:length() > 0 then
+        local belt_trigger = self:_trigger_belt()
+        if not belt_trigger is nil then
+            self.position = belt_trigger.position
+            self.velocity = belt_trigger.direction:scale(self.velocity:length())
+        end
+
         local new_position = self.position:move(self.velocity:scale(dt))
         if self:can_move(self.velocity:scale(dt), occupies) then
             self.position = new_position

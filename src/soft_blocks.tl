@@ -5,10 +5,11 @@ local const = require("const")
 local points = require("geometry.points")
 local hitboxes = require("hitboxes")
 local itertools = require("itertools")
+local settings = require("settings")
 
 
-local soft_block_image: Image
-local soft_block_breaking_image: Image
+local soft_block_animation: {Map: Animation} = {}
+local soft_block_breaking_image: {Map: Image} = {}
 
 global record SoftBlock is Entity, Explodable, ExplosionBlocking, Kinematic
 	position: Point
@@ -65,7 +66,7 @@ function SoftBlock:draw()
         )
         self.breaking_animation:draw(position.x, position.y)
     else
-        lutro.graphics.draw(soft_block_image, self.position.x, self.position.y)
+        soft_block_animation[settings.map]:draw(self.position.x, self.position.y)
     end
 end
 
@@ -75,7 +76,7 @@ function SoftBlock:blow_up()
     end
 
     self.is_exploding = true
-    self.breaking_animation = animations.new(soft_block_breaking_image, 24, 24, 3, 18)
+    self.breaking_animation = animations.new(soft_block_breaking_image[settings.map], 24, 24, 3, 18)
 end
 
 function SoftBlock:is_destroyed(): boolean
@@ -99,6 +100,9 @@ function soft_blocks.new(configs: {SoftBlockConfig}): SoftBlocks
 end
 
 function SoftBlocks:update(dt: number)
+    -- All soft blocks share animations that are in sync
+    soft_block_animation[settings.map]:update(dt)
+
     for i, soft_block in ipairs(self.on_ground) do
         soft_block:update(dt)
         
@@ -124,8 +128,16 @@ function SoftBlocks:not_exploding(): {SoftBlock}
 end
 
 function SoftBlocks.load_assets()
-    soft_block_image = lutro.graphics.newImage("assets/soft-block.png")
-    soft_block_breaking_image = lutro.graphics.newImage("assets/soft-block-breaking.png")
+    local maps: {Map} = {"football", "factory"}
+    for _, map in ipairs(maps) do
+        local asset_dir = "assets/" .. map
+        soft_block_animation[map] = animations.new(
+            lutro.graphics.newImage(asset_dir .. "/soft-block.png"), 16, 16, 1, 10
+        )
+        soft_block_breaking_image[map] = lutro.graphics.newImage(
+            asset_dir .. "/soft-block-breaking.png"
+        )
+    end
 end
 
 return soft_blocks

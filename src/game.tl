@@ -84,7 +84,7 @@ function Game.new(player_selection: Scene): Game
    	local self: Game = setmetatable({}, { __index = Game })
 	self.player_selection = player_selection
 	self.score_board = score_board.new(characters.get_selections())
-	self.background = lutro.graphics.newImage("assets/footboll-map.png")
+	self.background = lutro.graphics.newImage("assets/" .. settings.map .. "/background.png")
 	self.hard_blocks = level_map.get_hard_blocks()
 	self:load()
    	return self

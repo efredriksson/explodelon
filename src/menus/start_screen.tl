@@ -17,8 +17,9 @@ local start_screen = {}
 
 function start_screen.new(): MenuScreen
     local nbr_player_selected = items.new_integer_selection(4, 2, const.MAX_PLAYERS)
-    local choices_values: {PlayerSelectionChoices} = {"on", "off", "keep"}
+    local choices_values: {PlayerSelectionMethod} = {"on", "off", "keep"}
     local player_selection_choice = items.new_enum(choices_values)
+    local map_selection_choice = items.new_enum({"football", "factory"})
 
     local function done(_: Scene)
         audio.stop()
@@ -60,8 +61,9 @@ function start_screen.new(): MenuScreen
     return srceens.new({
         choices.new_integer("number of players", 50, nbr_player_selected, set_number_of_players),
         choices.new_enum("player selection", 70, player_selection_choice, settings.set_player_selection),
-        choices.new_done("game rules", 90, enter_game_rules_screen),
-        choices.new_done("debug settings", 110, enter_debug_screen),
+        choices.new_enum("map", 90, map_selection_choice, settings.set_map),
+        choices.new_done("game rules", 110, enter_game_rules_screen),
+        choices.new_done("debug settings", 130, enter_debug_screen),
         choices.new_done("start game", 180, done)
     })
 end
