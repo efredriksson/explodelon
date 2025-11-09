@@ -52,9 +52,9 @@ function MenuScreen:update(_: number)
         end
     end
     
-    if joysticks.is_pressed(1, JOYPAD.DOWN) then
+    if joysticks.is_pressed_any(JOYPAD.DOWN) then
         ok_action = self.menu_selection:increment()
-    elseif joysticks.is_pressed(1, JOYPAD.UP) then
+    elseif joysticks.is_pressed_any(JOYPAD.UP) then
         ok_action = self.menu_selection:decrement()
     end
 

@@ -33,6 +33,17 @@ function joysticks.is_pressed(player_id: integer, button: integer): boolean
     return is_currently_down and not was_previously_down
 end
 
+-- Used to check if a button was just pressed this frame (not held) by any player
+function joysticks.is_pressed_any(button: integer): boolean
+    for player_id=1, const.MAX_PLAYERS do
+        if joysticks.is_pressed(player_id, button) then
+            return true
+        end
+    end
+    
+    return false
+end
+
 -- Used to check if a button was released this frame
 function joysticks.is_released(player_id: integer, button: integer): boolean
     local is_currently_down = lutro.joystick.isDown(player_id, button)
@@ -44,6 +55,17 @@ end
 -- Used to check if a button has been pressed down 
 function joysticks.is_down_for(player_id: integer, button: integer, time: number): boolean
     return down_for_states[player_id][button] >= time
+end
+
+-- Used to check if a button has been pressed down by any player
+function joysticks.is_down_for_any(button: integer, time: number): boolean
+    for player_id=1, const.MAX_PLAYERS do
+        if joysticks.is_down_for(player_id, button, time) then
+            return true
+        end
+    end
+    
+    return false
 end
 
 function joysticks.setup()
