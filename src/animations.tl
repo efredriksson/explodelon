@@ -59,6 +59,9 @@ function Animation:_get_frame(): integer
         end
         clamped_time = clamped_time - frame_duration
     end
+
+    print("WARNING: could not find frame for time, using last frame") 
+    return #self.frame_durations
 end
 
 function Animation:update(dt: number)
