@@ -1,5 +1,8 @@
+require("characters")
 local audio = require("audio")
 local scenes = require("scenes")
+local game_winner = require("game_winner")
+local settings = require("settings")
 
 
 local winner_sound: Source
@@ -9,6 +12,7 @@ local game_end = {}
 
 local record GameEnd is Scene
     game_scene: Scene
+    next_scene: Scene
     played_sound: boolean
     sound: Source
     scene_lenght: number
@@ -16,10 +20,11 @@ local record GameEnd is Scene
 end
 
 function GameEnd.new(
-    game_scene: Scene, sound: Source, scene_lenght: number
+    game_scene: Scene, next_scene: Scene, sound: Source, scene_lenght: number
 ): GameEnd
     local self: GameEnd = setmetatable({}, { __index = GameEnd })
     self.game_scene = game_scene
+    self.next_scene = next_scene
     self.played_sound = false
     self.sound = sound
     self.time = 0
@@ -28,27 +33,35 @@ function GameEnd.new(
 end
 
 function game_end.new_for_winner(
-    game_scene: Scene
+    game_scene: Scene, name: CharacterName, score: integer
 ): GameEnd
-    return GameEnd.new(game_scene, winner_sound, 3)
+    local function get_next_scene(): Scene
+        if score < settings.game_rules.timings.nbr_battles then
+            return game_scene
+        else
+            return game_winner.new(name)
+        end
+    end
+    return GameEnd.new(game_scene, get_next_scene(), winner_sound, 3)
 end
 
 function game_end.new_for_draw(
     game_scene: Scene
 ): GameEnd
-    return GameEnd.new(game_scene, draw_sound, 4)
+    return GameEnd.new(game_scene, game_scene, draw_sound, 4)
 end
 
 function game_end.new_for_timeout(
     game_scene: Scene
 ): GameEnd
-    return GameEnd.new(game_scene, time_up_sound, 2)
+    return GameEnd.new(game_scene, game_scene, time_up_sound, 2)
 end
 
 function game_end.load_assets()
     winner_sound = audio.new_source("assets/battle-end.ogg", "static")
     draw_sound = audio.new_source("assets/battle-draw.ogg", "static")
     time_up_sound = audio.new_source("assets/battle-time-up.wav", "static")
+    game_winner.load_assets()
 end
 
 function GameEnd:draw()
@@ -65,7 +78,7 @@ function GameEnd:update(dt: number)
 
     self.time = self.time + dt
     if self.time > self.scene_lenght then
-        scenes.set(self.game_scene)
+        scenes.set(self.next_scene)
     end
 end
 

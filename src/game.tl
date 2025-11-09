@@ -225,9 +225,10 @@ function Game:check_if_finished(dt: number, alive_players: {Player})
 	if self.time_of_1_alive_player > self.time_to_wait_to_end_game then
 		self.have_finished = true
 		if #alive_players == 1 then
-			self.score_board:add_point(alive_players[1].id)
+			local winner = alive_players[1]
+			local score = self.score_board:add_point(winner.id)
 			music:stop()
-			scenes.set(game_end.new_for_winner(self))
+			scenes.set(game_end.new_for_winner(self, winner.sprite, score))
 		else
 			music:stop()
 			scenes.set(game_end.new_for_draw(self))

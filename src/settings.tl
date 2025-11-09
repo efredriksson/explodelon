@@ -6,12 +6,14 @@ global enum ItemType
 end
 
 local record TimingRules
+    nbr_battles: integer
     battle: number
     sudden_death: number
 end
 
 function TimingRules.new(): TimingRules
     local self: TimingRules = setmetatable({}, { __index = TimingRules })
+    self.nbr_battles = 3
     self.battle = 180
     self.sudden_death = 60
     return self
@@ -185,6 +187,10 @@ end
 
 function Settings.set_start_with_kick(value: boolean)
     settings.game_rules.players.start_with_kick = value
+end
+
+function Settings.set_nbr_battles(value: integer)
+    settings.game_rules.timings.nbr_battles = value
 end
 
 function Settings.set_battle_time(value: number)
