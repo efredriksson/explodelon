@@ -7,37 +7,58 @@ global record Animation
 	width: number
     height: number
     playing: boolean
-    period: number
-    speed: number
+    frame_durations: {number}
+    total_time: number
     steps: number
-    idle_time: number
-    idle_timer: number
     loops: number
 end
 
 local animations = {}
 
-function animations.new(image: Image, width: number, height: number, period: number, speed: number, idle_time?: number): Animation
+function animations.new_with_frames(image: Image, frame_durations: {number}): Animation
     local self: Animation = setmetatable({}, { __index = Animation })
     self.image = image
     self.timer = 0
-    self.width = width
-    self.height = height
+    self.width = image:getWidth() / #frame_durations
+    self.height = image:getHeight()
     self.playing = true
-    self.speed = speed
-    self.period = period
+    self.frame_durations = frame_durations
     self.steps = self.image:getWidth() / self.width
-    self.idle_time = idle_time or 0
-    self.idle_timer = self.idle_time
     self.loops = 0
+
+    self.total_time = 0
+    for _, frame_duration in ipairs(self.frame_durations) do
+        self.total_time = self.total_time + frame_duration
+    end
+
     return self
+end
+
+function animations.new(image: Image, width: number, _: number, period: number, speed: number, idle_time?: number): Animation
+    local steps = image:getWidth() / width
+    
+    local frame_durations: {number} = {}
+    for _=1, steps do
+        table.insert(frame_durations, period / speed)
+    end
+    frame_durations[1] = frame_durations[1] + (idle_time or 0)
+    return animations.new_with_frames(image, frame_durations)
 end
 
 function Animation:reset()
     self.timer = 0
     self.playing = true
     self.loops = 0
-    self.idle_timer = self.idle_time
+end
+
+function Animation:_get_frame(): integer
+    local clamped_time = self.timer
+    for frame, frame_duration in ipairs(self.frame_durations) do
+        if clamped_time <= frame_duration then
+            return frame
+        end
+        clamped_time = clamped_time - frame_duration
+    end
 end
 
 function Animation:update(dt: number)
@@ -45,22 +66,15 @@ function Animation:update(dt: number)
         return
     end
 
-    if self.idle_timer >= 0 then
-        self.idle_timer = self.idle_timer - dt
-        return
-    end
-
-    self.timer = self.timer + dt * self.speed
-
-    if self.timer > self.steps * self.period then
+    self.timer = self.timer + dt
+    if self.timer > self.total_time then
         self.timer = 0
-        self.idle_timer = self.idle_time
         self.loops = self.loops + 1
     end
 end
 
 function Animation:draw(x: number, y: number)
-    local id = math.floor(self.timer / self.period + 1)
+    local id = self:_get_frame()
     local tw = self.width
     local th = self.height
     local sw = self.image:getWidth()
