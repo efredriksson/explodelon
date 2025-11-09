@@ -20,6 +20,7 @@ function start_screen.new(): MenuScreen
     local choices_values: {PlayerSelectionMethod} = {"on", "off", "keep"}
     local player_selection_choice = items.new_enum(choices_values)
     local map_selection_choice = items.new_enum({"football", "factory"})
+    local menu_screen: MenuScreen
 
     local function done(_: Scene)
         audio.stop()
@@ -33,6 +34,9 @@ function start_screen.new(): MenuScreen
         else
             scenes.set(game.new(player_selection.setup()))
         end
+
+        -- Reset main menu selection screen when done:
+        menu_screen.menu_selection.value = 1
 
         -- Set default as 'keep' if there is a selection for nbr of players:
         settings.player_selection = "keep"
@@ -58,7 +62,7 @@ function start_screen.new(): MenuScreen
         return settings.set_number_of_players(val)
     end
 
-    return srceens.new({
+    menu_screen = srceens.new({
         choices.new_integer("number of players", 50, nbr_player_selected, set_number_of_players),
         choices.new_enum("player selection", 70, player_selection_choice, settings.set_player_selection),
         choices.new_enum("map", 90, map_selection_choice, settings.set_map),
@@ -66,6 +70,7 @@ function start_screen.new(): MenuScreen
         choices.new_done("debug settings", 130, enter_debug_screen),
         choices.new_done("start game", 180, done)
     })
+    return menu_screen
 end
 
 return start_screen
