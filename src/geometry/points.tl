@@ -3,12 +3,17 @@ require("geometry.vectors")
 global record Point
    x: number
    y: number
+   metamethod __tostring: function(Point): string
 end
 
 local points = {}
 
+local function point_to_string(p: Point): string
+   return tostring(p.x) .. ":" .. tostring(p.y)
+end
+
 function points.new(x: number, y: number): Point
-   local self: Point = setmetatable({}, { __index = Point })
+   local self: Point = setmetatable({}, { __index = Point, __tostring = point_to_string })
    self.x = x or 0
    self.y = y or 0
    return self
