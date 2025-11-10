@@ -62,6 +62,7 @@ local record PlayerRules
     mad_bombers: MadBombers
     start_speed: integer
     start_with_kick: boolean
+    start_with_bombs: integer
 end
 
 function PlayerRules.new(): PlayerRules
@@ -70,6 +71,7 @@ function PlayerRules.new(): PlayerRules
     self.mad_bombers = MadBombers.new()
     self.start_speed = 60
     self.start_with_kick = false
+    self.start_with_bombs = 1
     return self
 end
 
@@ -198,6 +200,10 @@ end
 
 function Settings.set_start_with_kick(value: boolean)
     settings.game_rules.players.start_with_kick = value
+end
+
+function Settings.set_start_with_bombs(value: integer)
+    settings.game_rules.players.start_with_bombs = value
 end
 
 function Settings.set_nbr_battles(value: integer)
