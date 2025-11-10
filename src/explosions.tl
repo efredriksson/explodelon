@@ -132,7 +132,23 @@ local enum BlockingResult
     "nil"
 end
 
-function Explosion:_update_active_tiles(blockers: {ExplosionBlocking})
+local type GetBlocker = function(Point): ExplosionBlocking | nil
+
+local function get_cached_blocker_lookup(blockers: {ExplosionBlocking}): GetBlocker
+    local cache: {string: ExplosionBlocking} = {}
+    for _, block in ipairs(blockers) do
+        cache[tostring(block:get_position())] = block
+    end
+
+    local function get_possible_blocker(position: Point): ExplosionBlocking | nil
+        return cache[tostring(position)]
+    end
+
+    return get_possible_blocker
+end
+
+
+function Explosion:_update_active_tiles(get_possible_blocker: GetBlocker)
     self.tiles = {}
 
     -- Calculate how far the explosion should expanded
@@ -152,15 +168,14 @@ function Explosion:_update_active_tiles(blockers: {ExplosionBlocking})
             end
         end
 
-        for _, blocker in ipairs(blockers) do
-            if blocker:get_position():equal(pos) then
-                if blocker.in_explosion then
-                    return "next"
-                else
-                    blocker:blow_up()
-                    table.insert(self.blocked_at, pos)
-                    return "now"
-                end
+        local blocker = get_possible_blocker(pos)
+        if not blocker is nil then
+            if blocker.in_explosion then
+                return "next"
+            else
+                blocker:blow_up()
+                table.insert(self.blocked_at, pos)
+                return "now"
             end
         end
 
@@ -268,14 +283,14 @@ function Explosion:update_end_animation(dt: number)
     self.animations.center:update(dt)
 end
 
-function Explosion:update(dt: number, blockers: {ExplosionBlocking})
+function Explosion:update(dt: number, get_possible_blocker: GetBlocker)
     if self.delay > 0 then
         self.delay = self.delay - dt
         return
     end
 
     self.duration = self.duration + dt
-    self:_update_active_tiles(blockers)
+    self:_update_active_tiles(get_possible_blocker)
 
     if self:has_reached_max_range() then
         self:update_end_animation(dt)
@@ -327,8 +342,12 @@ function Explosions:place_explosion(position: Point, range: number, delay?: numb
 end
 
 function Explosions:update(dt: number, blockers: {ExplosionBlocking}, explodables: {Explodable})
+    -- Create a lookup of possible blockers given position, avoids getting
+    -- O(n^2) due to nested loops checking all possible combinations.
+    local get_possible_blocker = get_cached_blocker_lookup(blockers)
+
     for i, explosion in ipairs(self.on_ground) do
-        explosion:update(dt, blockers)
+        explosion:update(dt, get_possible_blocker)
 
         for _, explodable in ipairs(explodables) do
             if explosion:collides_with(explodable) then
