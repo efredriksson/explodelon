@@ -210,7 +210,7 @@ function Player:kill()
 		return
 	end
 
-	self:set_action("dying")
+	self.action = "dying"
 end
 
 function Player:remove()
