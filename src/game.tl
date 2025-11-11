@@ -370,6 +370,7 @@ function Game:draw()
 	end
 
 	self.game_timer:draw()
+	self.game_countdown:draw()
 
 	for _, block in ipairs(self.pressure_blocks:falling()) do
 		-- falling blocks are rendered last on top of everything,
@@ -417,7 +418,6 @@ function Game:draw()
 		hitboxes.draw_movement(entity:movementbox())
 	end
 
-	self.game_countdown:draw()
 	self.game_timer:draw_hurry_text()
 end
 
