@@ -276,7 +276,6 @@ function Game:update(dt: number)
 	)
 	local explodables: {Explodable} = itertools.combine(
 		self.players,
-		self.soft_blocks.on_ground,
 		self.eggs.on_ground,
 		self.items.on_ground
 	)
