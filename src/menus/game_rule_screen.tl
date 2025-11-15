@@ -1,6 +1,7 @@
 local scenes = require("scenes")
 local choices = require("menus.choices")
 local srceens = require("menus.screens")
+local item_spawn_screen = require("menus.item_drops_screen")
 local item_setting_screen = require("menus.item_setting_screen")
 local player_setting_screen = require("menus.player_setting_screen")
 local timing_settings_screen = require("menus.timing_settings_screen")
@@ -14,6 +15,9 @@ function game_rule_screen.new(previous_screen: Scene): MenuScreen
     end
     local function enter_item_settings_screen(ctx: Scene)
         scenes.set(item_setting_screen.new(ctx))
+    end
+    local function enter_item_spawn_screen(ctx: Scene)
+        scenes.set(item_spawn_screen.new(ctx))
     end
     local function enter_player_settings_screen(ctx: Scene)
         scenes.set(player_setting_screen.new(ctx))
@@ -33,10 +37,13 @@ function game_rule_screen.new(previous_screen: Scene): MenuScreen
             "item rules", 70, enter_item_settings_screen
         ),
         choices.new_done(
-            "player rules", 90, enter_player_settings_screen
+            "item drop rules", 90, enter_item_spawn_screen
         ),
         choices.new_done(
-            "timing rules", 110, enter_timing_settings_screen
+            "player rules", 110, enter_player_settings_screen
+        ),
+        choices.new_done(
+            "timing rules", 130, enter_timing_settings_screen
         ),
 
         choices.new_done("back", 180, done)

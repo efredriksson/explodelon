@@ -63,6 +63,7 @@ local record PlayerRules
     start_speed: integer
     start_with_kick: boolean
     start_with_bombs: integer
+    start_with_fire: integer
 end
 
 function PlayerRules.new(): PlayerRules
@@ -72,6 +73,7 @@ function PlayerRules.new(): PlayerRules
     self.start_speed = 60
     self.start_with_kick = false
     self.start_with_bombs = 1
+    self.start_with_fire = 2
     return self
 end
 
@@ -176,6 +178,22 @@ function Settings.set_nbr_of_kick(value: integer)
     settings.game_rules.items.nbr_of_items.kick = value
 end
 
+function Settings.set_spawn_of_bombs(value: number)
+    settings.game_rules.items.spawn_rates.bomb = value
+end
+
+function Settings.set_spawn_of_fire(value: number)
+    settings.game_rules.items.spawn_rates.fire = value
+end
+
+function Settings.set_spawn_of_speed(value: number)
+    settings.game_rules.items.spawn_rates.speed = value
+end
+
+function Settings.set_spawn_of_kick(value: number)
+    settings.game_rules.items.spawn_rates.kick = value
+end
+
 function Settings.set_start_position_shuffle(value: boolean)
     settings.game_rules.players.start_position_shuffle = value
 end
@@ -204,6 +222,10 @@ end
 
 function Settings.set_start_with_bombs(value: integer)
     settings.game_rules.players.start_with_bombs = value
+end
+
+function Settings.set_start_with_fire(value: integer)
+    settings.game_rules.players.start_with_fire = value
 end
 
 function Settings.set_nbr_battles(value: integer)

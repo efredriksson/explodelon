@@ -60,7 +60,7 @@ function players.new(id: integer, sprite: CharacterName, position: Point): Playe
 	self.speed = player_settings.start_speed
 	self.has_kick = player_settings.start_with_kick
 	self.bombs = player_settings.start_with_bombs
-	self.fire = 2
+	self.fire = player_settings.start_with_fire
 	self.invulnerable_for = 0
 	self.stunned_for = 0
 	self.dino = nil
