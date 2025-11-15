@@ -33,6 +33,7 @@ global record Game is Scene
 	score_board: ScoreBoard
 	player_selection: Scene
 	hard_blocks: {HardBlock}
+	non_hard_block_positions: {Point}
 
 	bombs: Bombs
 	lightning_bombs: LightningBombs
@@ -91,11 +92,12 @@ function Game.new(player_selection: Scene): Game
 	self.score_board = score_board.new(characters.get_selections())
 	self.background = lutro.graphics.newImage("assets/" .. settings.map .. "/background.png")
 	self.hard_blocks = level_map.get_hard_blocks()
+	self.non_hard_block_positions = level_map.get_non_hard_block_positions()
 	self:load()
    	return self
 end
 
-function Game:get_available_spots(): {Point}
+function Game:get_available_spots(alive_players: {Player}): {Point}
 	-- Return places an item/egg can drop. The spot needs to
 	-- be free and not too close to a player
 	local available_spots: {Point} = {}
@@ -107,21 +109,23 @@ function Game:get_available_spots(): {Point}
 		self.pressure_blocks.on_ground
 	)
 
-	for _, pos in ipairs(level_map.get_non_hard_block_positions()) do
-		local invalid_position = false
-		for _, player in ipairs(self.players) do
+	local function valid_position(pos: Point): boolean
+		for _, player in ipairs(alive_players) do
 			if player.position:distance_to(pos) < const.BLOCK_SIZE * 2 then
-				invalid_position = true
+				return false
 			end
 		end
 
 		for _, entity in ipairs(occupied) do
 			if entity:get_position():equal(pos) then
-				invalid_position = true
+				return false
 			end
 		end
+		return true
+	end
 
-		if not invalid_position then
+	for _, pos in ipairs(self.non_hard_block_positions) do
+		if valid_position(pos) then
 			table.insert(available_spots, pos)
 		end
 	end
@@ -279,10 +283,11 @@ function Game:update(dt: number)
 
 	self.pressure_blocks:update(dt)
 	local alive_players = itertools.filter(self.players, is_alive)
+	local dead_players = itertools.filter(self.players, is_dead)
 	local blocks_bombs: {Kinematic} = itertools.combine(
 		self.soft_blocks.on_ground,
 		self.hard_blocks,
-		itertools.filter(self.players, is_alive),
+		alive_players,
 		self.bombs.on_ground,
 		self.lightning_bombs.on_ground,
 		self.pressure_blocks.on_ground
@@ -332,7 +337,7 @@ function Game:update(dt: number)
 			end
 		end
 	end
-	for _, player in ipairs(itertools.filter(self.players, is_dead)) do
+	for _, player in ipairs(dead_players) do
 		if settings.game_rules.players.mad_bombers and not player.is_removed then
 			self.mad_bombers:ensure_exist_for(player.id, player.sprite)
 		end
@@ -350,11 +355,11 @@ function Game:update(dt: number)
 	self.tic_counter = self.tic_counter + 1
 	if self.tic_counter % 120 == 0 then
 		-- Only consider generating these every 120 tic (2 seconds)
-		self.items:possible_drop(self:get_available_spots())
+		-- This also helps with performance!
+		local available_spots = self:get_available_spots(alive_players)
+		self.items:possible_drop(available_spots)	
+		self.items:drop_items_of(dead_players, available_spots)
 	end
-
-	local dead_players = itertools.filter(self.players, is_dead)
-	self.items:drop_items_of(dead_players, self:get_available_spots())
 
 	local removes_items: {Entity} = itertools.combine(self.pressure_blocks.on_ground, self.bombs.on_ground)
 	self:clear_entities(removes_items, self.eggs.on_ground, self.items.on_ground)
