@@ -33,6 +33,7 @@ global record Player is Explodable, Kinematic
 	is_removed: boolean
 	speed: integer
 	bombs: integer
+	lighting_bomb: integer
 	fire: integer
 	has_kick: boolean
 	invulnerable_for: number
@@ -60,6 +61,7 @@ function players.new(id: integer, sprite: CharacterName, position: Point): Playe
 	self.speed = player_settings.start_speed
 	self.has_kick = player_settings.start_with_kick
 	self.bombs = player_settings.start_with_bombs
+	self.lighting_bomb = player_settings.start_with_lighting_bombs
 	self.fire = player_settings.start_with_fire
 	self.invulnerable_for = 0
 	self.stunned_for = 0
@@ -102,10 +104,14 @@ function Player:set_action(action: Action)
 	end
 end
 
-function Player:hit_with_bomb()
+function Player:stun_for(duration: integer)
 	self:set_action("stunned")
-	self.stunned_for = 1
+	self.stunned_for = duration
 	self.direction = "down"
+end
+
+function Player:hit_with_bomb()
+	self:stun_for(1)
 end
 
 function Player:hitbox(): Rectangle

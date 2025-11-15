@@ -61,6 +61,15 @@ function audio.new_source(filename: string, source_type: SourceType): Source
     return new_source
 end
 
+function audio.clear(to_clear: Source)
+    to_clear:stop()
+    for i, source in ipairs(loaded_audio_sources) do
+        if source == to_clear then
+            table.remove(loaded_audio_sources, i)
+        end
+    end
+end
+
 -- For audio that can be played many times at same time.
 -- Should only be used for short audio as memory consumption could be very hight otherwise.
 function audio.new_source_pool(filename: string, source_type: SourceType, pool_size: integer): Source

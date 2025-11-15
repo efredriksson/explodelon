@@ -83,6 +83,9 @@ function Items:possible_drop(available_spots: {Point})
     if lutro.math.random() < spawn_rates.bomb then
         table.insert(item_spawns, "bomb")
     end
+    if lutro.math.random() < spawn_rates.lighting_bomb then
+        table.insert(item_spawns, "lighting_bomb")
+    end
     if lutro.math.random() < spawn_rates.fire then
         table.insert(item_spawns, "fire")
     end
@@ -138,6 +141,8 @@ function Items:consumed_by_player(player: Player, index: integer)
         player.speed = player.speed + 5
     elseif item.type == "bomb" then
         player.bombs = player.bombs + 1
+    elseif item.type == "lighting_bomb" then
+        player.lighting_bomb = player.lighting_bomb + 1
     elseif item.type == "kick" then
         player.has_kick = true
     elseif item.type == "fire" then
@@ -162,10 +167,11 @@ function Items:load_assets()
     frame_animation = animations.new(lutro.graphics.newImage("assets/items/frame.png"), 18, 18, 1, 30)
 	item_shadow = lutro.graphics.newImage("assets/items/shadow.png")
 	item_icons = {
-        ["speed"] = lutro.graphics.newImage("assets/items/speed.png"),
-        ["bomb"] = lutro.graphics.newImage("assets/items/bomb.png"),
-        ["kick"] = lutro.graphics.newImage("assets/items/kick.png"),
-        ["fire"] = lutro.graphics.newImage("assets/items/fire.png"),
+        speed = lutro.graphics.newImage("assets/items/speed.png"),
+        bomb = lutro.graphics.newImage("assets/items/bomb.png"),
+        lighting_bomb = lutro.graphics.newImage("assets/items/lighting-bomb.png"),
+        kick = lutro.graphics.newImage("assets/items/kick.png"),
+        fire = lutro.graphics.newImage("assets/items/fire.png"),
     }
 end
 

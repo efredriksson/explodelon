@@ -13,6 +13,8 @@ local items = require("items")
 local itertools = require("itertools")
 local joysticks = require("joysticks")
 local level_map = require("level_map")
+local lightings = require("lightings")
+local lighting_bombs = require("lighting_bombs")
 local mad_bombers = require("mad_bombers")
 local movement = require("movement")
 local player_animations = require("player_animations")
@@ -33,6 +35,7 @@ global record Game is Scene
 	hard_blocks: {HardBlock}
 
 	bombs: Bombs
+	lighting_bombs: LightingBombs
 	background: Image
 	soft_blocks: SoftBlocks
 	mad_bombers: MadBombers
@@ -64,6 +67,7 @@ function Game:load()
 	end
 
 	self.bombs = bombs.new()
+	self.lighting_bombs = lighting_bombs.new()
 	self.soft_blocks = soft_blocks.new(level_map.get_soft_blocks(self.players))
 	self.mad_bombers = mad_bombers.new(self.bombs)
 	self.eggs = eggs.new()
@@ -142,9 +146,15 @@ function Game:clear_entities(destroys: {Entity}, ...: {Entity})
 end
 
 function Game:handle_bomb_drop_input(player: Player)
-	local placed_bombs: {Entity} = self.bombs.on_ground
+	local placed_bombs: {Entity} = itertools.combine(
+		self.bombs.on_ground, self.lighting_bombs.on_ground
+	)
 	if joysticks.is_pressed(player.id, JOYPAD.R) then
 		self.bombs:place_bomb(player, placed_bombs)
+	end
+
+	if joysticks.is_pressed(player.id, JOYPAD.Y) then
+		self.lighting_bombs:place_lighting_bomb(player, placed_bombs)
 	end
 end
 
@@ -270,6 +280,7 @@ function Game:update(dt: number)
 		self.hard_blocks,
 		itertools.filter(self.players, is_alive),
 		self.bombs.on_ground,
+		self.lighting_bombs.on_ground,
 		self.pressure_blocks.on_ground
 	)
 	local blockers: {ExplosionBlocking} = itertools.combine(
@@ -284,8 +295,12 @@ function Game:update(dt: number)
 		self.eggs.on_ground,
 		self.items.on_ground
 	)
-
+	local lighting_blockers: {ExplosionBlocking} = itertools.combine(
+		self.pressure_blocks.on_ground,
+		self.hard_blocks
+	)
 	self.bombs:update(dt, blockers, explodables, blocks_bombs)
+	self.lighting_bombs:update(dt, lighting_blockers, alive_players)
 
 	for _, player in ipairs(alive_players) do
 		player:update(dt)
@@ -295,7 +310,7 @@ function Game:update(dt: number)
 				self.soft_blocks.on_ground, self.pressure_blocks.on_ground
 			)
 			movement.set_position_and_dir_from_input(
-				player, dt, blocking_blocks, self.hard_blocks, self.bombs, blocks_bombs
+				player, dt, blocking_blocks, self.hard_blocks, self.bombs, self.lighting_bombs, blocks_bombs
 			)
 		end
 
@@ -339,7 +354,7 @@ function Game:update(dt: number)
 
 	local removes_items: {Entity} = itertools.combine(hitting_ground, self.bombs.on_ground)
 	self:clear_entities(removes_items, self.eggs.on_ground, self.items.on_ground)
-	self:clear_entities(hitting_ground, self.bombs.on_ground, self.soft_blocks.on_ground)
+	self:clear_entities(hitting_ground, self.bombs.on_ground, self.lighting_bombs.on_ground, self.soft_blocks.on_ground)
 	
 	self.player_animations:update(dt)
 	self.soft_blocks:update(dt)
@@ -381,6 +396,7 @@ function Game:draw()
 
 	self.score_board:draw()
 	self.bombs.explosions:draw()
+	self.lighting_bombs.lightings:draw()
 
 	local entities_to_draw: {Entity} = itertools.combine(
 		self.player_animations:get_all(),
@@ -396,6 +412,7 @@ function Game:draw()
 	entities_to_draw = itertools.combine(
 		-- Drawing bombs first so they are always drawn underneath players	
 		self.bombs.on_ground,
+		self.lighting_bombs.on_ground,
 		self.pressure_blocks.on_ground,
 		entities_to_draw,
 		-- Draw soft blocks exploding last, revealing possible item under
@@ -410,6 +427,7 @@ function Game:draw()
 
 	local mobility_related: {Kinematic} = itertools.combine(
 		self.bombs.on_ground,
+		self.lighting_bombs.on_ground,
 		self.pressure_blocks.on_ground,
 		itertools.filter(self.players, is_alive),
 		self.hard_blocks,
@@ -430,6 +448,8 @@ function game.load_assets()
 	GameTimer.load_assets()
 	bombs.load_assets()
 	explosions.load_assets()
+	lightings.load_assets()
+	lighting_bombs.load_assets()
 	PressureBlocks.load_assets()
 	SoftBlocks.load_assets()
 	MadBombers.load_assets()
