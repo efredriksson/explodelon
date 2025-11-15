@@ -3,6 +3,7 @@ local bombs = require("bombs")
 local characters = require("characters")
 local const = require("const")
 local eggs = require("eggs")
+local explosions = require("explosions")
 local game_countdown = require("game_countdown")
 local game_end = require("game_end")
 local game_timer = require("game_timer")
@@ -130,6 +131,9 @@ function Game:clear_entities(destroys: {Entity}, ...: {Entity})
 		for _, entity_list in ipairs({...}) do
 			for j, entity in ipairs(entity_list) do
 				if destroyer:hitbox():overlap(entity:hitbox()) then
+					if entity.clear then
+						entity:clear()
+					end
 					table.remove(entity_list, j)
 				end
 			end
@@ -138,8 +142,9 @@ function Game:clear_entities(destroys: {Entity}, ...: {Entity})
 end
 
 function Game:handle_bomb_drop_input(player: Player)
+	local placed_bombs: {Entity} = self.bombs.on_ground
 	if joysticks.is_pressed(player.id, JOYPAD.R) then
-		self.bombs:place_bomb(player)
+		self.bombs:place_bomb(player, placed_bombs)
 	end
 end
 
@@ -281,10 +286,6 @@ function Game:update(dt: number)
 	)
 
 	self.bombs:update(dt, blockers, explodables, blocks_bombs)
-	for _, bomb in ipairs(self.bombs:to_hand_back()) do
-		local player = self:get_player(bomb.owner_id)
-		player.bombs = player.bombs + 1
-	end
 
 	for _, player in ipairs(alive_players) do
 		player:update(dt)
@@ -427,8 +428,8 @@ function game.load_assets()
 	Eggs.load_assets()
 	Items:load_assets()
 	GameTimer.load_assets()
-	Bombs.load_assets()
-	Explosions.load_assets()
+	bombs.load_assets()
+	explosions.load_assets()
 	PressureBlocks.load_assets()
 	SoftBlocks.load_assets()
 	MadBombers.load_assets()

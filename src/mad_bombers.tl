@@ -410,7 +410,7 @@ local function handle_cart_move_input(dt: number, bombs: Bombs, cart: PlayerCart
         if fire_from then
             local fire_dir = THROW_BOMB_DIRECTION_BY_SIDE[side]
             local target = fire_from:move(fire_dir:scale(fire_len * const.BLOCK_SIZE))
-            bombs:throw_bomb(fire_from, target, cart.id)
+            bombs:throw_bomb(fire_from, target)
         end
     end
     cart.turbo = lutro.joystick.isDown(cart.id, JOYPAD.A)

@@ -18,18 +18,18 @@ global record Bomb is Entity, Kinematic, Explodable
     velocity: Vector
     timer: number
     range: number
-    owner_id: integer
+    hand_back: function()
     has_been_kicked: boolean
     animation: Animation
 end
 
-function Bomb.new(position: Point, range: integer, owner_id: integer): Bomb
+function Bomb.new(position: Point, range: integer, hand_back: function()): Bomb
    local self: Bomb = setmetatable({}, { __index = Bomb })
    self.position = position
    self.velocity = vectors.new(0, 0)
    self.range = range
    self.timer = 2.5
-   self.owner_id = owner_id
+   self.hand_back = hand_back
    self.has_been_kicked = false
    self.animation = animations.new(bomb_image, 16, 16, 1, 4)
    return self
@@ -37,6 +37,10 @@ end
 
 function Bomb:get_position(): Point
     return self.position
+end
+
+function Bomb:clear()
+    self.hand_back()
 end
 
 function Bomb:hitbox(): Rectangle
@@ -275,44 +279,51 @@ end
 global record Bombs
     on_ground: {Bomb}
     in_air: {ThrownBomb}
-    exploded: {Bomb}
     explosions: Explosions
 end
 
-function Bombs.load_assets()
+local bombs = {}
+
+function bombs.load_assets()
     bomb_shadow = lutro.graphics.newImage("assets/items/shadow.png")
     bomb_image = lutro.graphics.newImage("assets/bomb/bomb.png")
 end
-
-local bombs = {}
 
 function bombs.new(): Bombs
     local self: Bombs = setmetatable({}, { __index = Bombs })
     self.on_ground = {}
     self.in_air = {}
-    self.exploded = {}
     self.explosions = explosions.new()
     return self
 end
 
-function Bombs:place_bomb(player: Player)
-    local position = level_map.snap_to_closest_grid_tile(player.position)
-    for _, existing_bomb in ipairs(self.on_ground) do
-        if existing_bomb.position:equal(position) then
-            return
+local function is_occupied_by_bomb(position: Point, existing_bombs: {Entity}): boolean
+    for _, existing_bomb in ipairs(existing_bombs) do
+        if existing_bomb:get_position():equal(position) then
+            return true
         end
+    end
+
+    return false
+end
+
+function Bombs:place_bomb(player: Player, occupied: {Entity})
+    local position = level_map.snap_to_closest_grid_tile(player.position)
+    if is_occupied_by_bomb(position, occupied) then
+        return
     end
     if player.bombs == 0 then
         return
     end
     
-    local bomb = Bomb.new(position, player.fire, player.id)
+    local hand_back_bomb = function() player.bombs = player.bombs + 1 end
+    local bomb = Bomb.new(position, player.fire, hand_back_bomb)
     table.insert(self.on_ground, bomb)
     player.bombs = player.bombs - 1
 end
 
-function Bombs:throw_bomb(from: Point, to: Point, by_id: integer): Bomb
-    local bomb = Bomb.new(from, 2, by_id)
+function Bombs:throw_bomb(from: Point, to: Point): Bomb
+    local bomb = Bomb.new(from, 2, function() end)
     local thrown = ThrownBomb.new(bomb, to, const.BLOCK_SIZE, const.BLOCK_SIZE * 2, 0.4)
     table.insert(self.in_air, thrown)
     return bomb
@@ -325,7 +336,7 @@ function Bombs:update(dt: number, blockers: {ExplosionBlocking}, explodables: {E
 
         if bomb:is_complete() then
             table.remove(self.on_ground, i)
-            table.insert(self.exploded, bomb)
+            bomb.hand_back()
             local goal = bomb:get_goal()
             if not goal then
                 self.explosions:place_explosion(bomb.position, bomb.range)
@@ -357,20 +368,6 @@ function Bombs:update(dt: number, blockers: {ExplosionBlocking}, explodables: {E
     end
 
     self.explosions:update(dt, blockers, itertools.combine(self.on_ground, explodables))
-end
-
-function Bombs:draw()
-    for _, bomb in ipairs(self.on_ground) do
-        bomb:draw()
-    end
-
-    self.explosions:draw()
-end
-
-function Bombs:to_hand_back(): {Bomb}
-    local to_hand_back = self.exploded
-    self.exploded = {}
-    return to_hand_back
 end
 
 return bombs

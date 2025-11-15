@@ -302,7 +302,9 @@ global record Explosions
     on_ground: {Explosion}
 end
 
-function Explosions.load_assets()
+local explosions = {}
+
+function explosions.load_assets()
     local function get_explosion_image(tile: string): Image
         return lutro.graphics.newImage("assets/bomb/explosion/explosion_" .. tile .. ".png")
     end
@@ -326,8 +328,6 @@ function Explosions.load_assets()
     explosion_medium = get_explosion_audio("medium")
     explosion_large = get_explosion_audio("large")
 end
-
-local explosions = {}
 
 function explosions.new(): Explosions
    local self: Explosions = setmetatable({}, { __index = Explosions })
