@@ -89,7 +89,7 @@ function choices.new_integer(menu_text: string, y_pos: integer, selection: MenuS
     return self
 end
 
-function choices.new_time(menu_text: string, y_pos: integer, selection: MenuSelection<number>, callback: function(number)): MenuChoiceImpl<number>
+function choices.new_number(menu_text: string, y_pos: integer, selection: MenuSelection<number>, callback: function(number)): MenuChoiceImpl<number>
     local self: MenuChoiceImpl<number> = setmetatable({}, { __index = MenuChoiceImpl })
     self.y_pos = y_pos
     self.selection = selection

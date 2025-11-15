@@ -116,6 +116,20 @@ function menu_items.new_time_selection(start_idx: integer, times: {number}): Men
     return self
 end
 
+function menu_items.new_number_selection(start_idx: integer, choices: {number}): MenuSelection<number>
+    local function value_as_string(index: integer): string
+        local val = choices[index]
+        return tostring(val)
+    end
+    local self: MenuSelection<number> = setmetatable({}, { __index = MenuSelection })
+    self.value = start_idx
+    self.min = 1
+    self.max = #choices
+    self.tostring = value_as_string
+    self.convert = function(i: integer): number return choices[i] end
+    return self
+end
+
 function menu_items.ok_sound(): Source
     return audio.new_source("assets/menu_good.wav", "static")
 end
