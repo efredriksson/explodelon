@@ -268,6 +268,21 @@ function Settings.set_game_rules_kick_debug()
     settings.game_rules.items.nbr_soft_blocks = 0
 end
 
+function Settings.set_game_rules_lighting_bomb_debug()
+    settings.game_rules = GameRules.new()
+    settings.game_rules.players.start_with_kick = true
+    settings.game_rules.players.start_with_lighting_bombs = 1
+    settings.game_rules.timings.sudden_death = 150
+    settings.game_rules.items.nbr_soft_blocks = 5
+    settings.game_rules.items.spawn_rates.lighting_bomb = 0.1
+    settings.game_rules.items.nbr_of_items.lighting_bomb = 3
+    settings.game_rules.items.nbr_of_items.bomb = 2
+    settings.game_rules.items.nbr_of_items.fire = 0
+    settings.game_rules.items.nbr_of_items.kick = 0
+    settings.game_rules.items.nbr_of_items.speed = 0
+    settings.game_rules.items.nbr_of_eggs = 0
+end
+
 function Settings.set_game_rules_insanity()
     settings.game_rules = GameRules.new()
     settings.game_rules.items.nbr_soft_blocks = 30

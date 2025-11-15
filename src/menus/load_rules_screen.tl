@@ -21,11 +21,16 @@ function load_rules_screen.new(previous_screen: Scene, start_screen: Scene): Men
         settings.set_game_rules_kick_debug()
         scenes.set(start_screen)
     end
+    local function load_debug_lighting_bomb_rules()
+        settings.set_game_rules_lighting_bomb_debug()
+        scenes.set(start_screen)
+    end
     
     return srceens.new({
         choices.new_done("insanity", 50, load_insanity_rules),
-        choices.new_done("debug kick", 70, load_debug_kick_rules),
-        choices.new_done("default", 90, load_default_rules),
+        choices.new_done("default", 70, load_default_rules),
+        choices.new_done("debug kick", 90, load_debug_kick_rules),
+        choices.new_done("debug lighting-bomb", 110, load_debug_lighting_bomb_rules),
         choices.new_done("back", 180, done)
     })
 end
