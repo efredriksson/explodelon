@@ -296,4 +296,12 @@ function Settings.set_game_rules_insanity()
     settings.game_rules.players.mad_bombers.after_sudden_death = true
 end
 
+function Settings.set_debug_performance()
+    settings.game_rules = GameRules.new()
+    settings.game_rules.players.start_with_kick = true
+    settings.game_rules.players.start_with_bombs = 10
+    settings.game_rules.timings.sudden_death = 120
+    settings.debug.log_scene_perf = true
+end
+
 return settings
