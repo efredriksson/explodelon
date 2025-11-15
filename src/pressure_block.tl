@@ -134,10 +134,9 @@ function PressureBlocks:falling(): {PressureBlock}
     return falling_blocks
 end
 
-function PressureBlocks:update(dt: number): {PressureBlock}
-    local blocks_hitting_ground: {PressureBlock} = {}
+function PressureBlocks:update(dt: number)
     if self:no_updates() then
-        return blocks_hitting_ground
+        return
     end
 
     self.left_falling:update(dt)
@@ -146,20 +145,16 @@ function PressureBlocks:update(dt: number): {PressureBlock}
     if self.right_falling:is_on_ground() and not self.right_fall_finished then
         self.right_fall_finished = true
         table.insert(self.on_ground, self.right_falling)
-        table.insert(blocks_hitting_ground, self.right_falling)
     end
     if self.left_falling:is_on_ground() and not self.left_fall_finished then
         self.left_fall_finished = true
         table.insert(self.on_ground, self.left_falling)
-        table.insert(blocks_hitting_ground, self.left_falling)
     end
 
     if self.left_fall_finished and self.right_fall_finished then
         self:set_next_right_falling_block()
         self:set_next_left_falling_block()
     end
-
-    return blocks_hitting_ground
 end
 
 function PressureBlocks.load_assets()
