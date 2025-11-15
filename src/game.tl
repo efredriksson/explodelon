@@ -277,7 +277,7 @@ function Game:update(dt: number)
 	self.game_timer:update(dt)
 	self.pressure_blocks.sudden_death = self.game_timer:sudden_death()
 
-	local hitting_ground = self.pressure_blocks:update(dt)
+	self.pressure_blocks:update(dt)
 	local alive_players = itertools.filter(self.players, is_alive)
 	local blocks_bombs: {Kinematic} = itertools.combine(
 		self.soft_blocks.on_ground,
@@ -326,7 +326,7 @@ function Game:update(dt: number)
 			self.player_animations.dinos:add_for(hatching_dino)
 		end
 
-		for _, block in ipairs(hitting_ground) do
+		for _, block in ipairs(self.pressure_blocks.on_ground) do
 			if player:hitbox():overlap(block:hitbox()) then
 				player:kill()
 			end
@@ -356,9 +356,9 @@ function Game:update(dt: number)
 	local dead_players = itertools.filter(self.players, is_dead)
 	self.items:drop_items_of(dead_players, self:get_available_spots())
 
-	local removes_items: {Entity} = itertools.combine(hitting_ground, self.bombs.on_ground)
+	local removes_items: {Entity} = itertools.combine(self.pressure_blocks.on_ground, self.bombs.on_ground)
 	self:clear_entities(removes_items, self.eggs.on_ground, self.items.on_ground)
-	self:clear_entities(hitting_ground, self.bombs.on_ground, self.lightning_bombs.on_ground, self.soft_blocks.on_ground)
+	self:clear_entities(self.pressure_blocks.on_ground, self.bombs.on_ground, self.lightning_bombs.on_ground, self.soft_blocks.on_ground)
 	
 	self.player_animations:update(dt)
 	self.soft_blocks:update(dt)
