@@ -178,6 +178,10 @@ function Game:join_with_next_free_sprite(player_id: integer)
 end
 
 function Game:handle_pause_input(): boolean
+	if self.have_finished then
+		return
+	end
+
 	local function toggle_if_playing(player_id: integer)
 		if not characters.exist_selection_for(player_id) then
 			settings.number_of_players = settings.number_of_players + 1
