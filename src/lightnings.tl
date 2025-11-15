@@ -9,64 +9,64 @@ local points = require("geometry.points")
 local END_ANIMATION_DURATION: number = 0.6
 local FRAME_DURATION = END_ANIMATION_DURATION / 4
 
-local lighting_initial_image: Image
-local lighting_ending_image: Image
-local lighting_sound: Source
+local lightning_initial_image: Image
+local lightning_ending_image: Image
+local lightning_sound: Source
 
-global record LightingAnimations
+global record LightningAnimations
     ending: Animation
     initial: Animation
 end
 
-local record LightingTile
+local record LightningTile
     position: Point
     reduction: integer
 end
 
-function LightingTile.new(position: Point): LightingTile
-    local self: LightingTile = setmetatable({}, { __index = LightingTile })
+function LightningTile.new(position: Point): LightningTile
+    local self: LightningTile = setmetatable({}, { __index = LightningTile })
     self.position = position
     self.reduction = 4
     return self
 end
 
-function LightingTile:hitbox(): Rectangle
+function LightningTile:hitbox(): Rectangle
     return hitboxes.new_block(self.position):shrink(self.reduction)
 end
 
-global record Lighting
+global record Lightning
     position: Point
     range: number
     duration: number
     speed: number
-    tiles: {LightingTile}
-    animations: LightingAnimations
+    tiles: {LightningTile}
+    animations: LightningAnimations
 end
 
-function Lighting.new(position: Point, range: number): Lighting
-    local self: Lighting = setmetatable({}, { __index = Lighting })
+function Lightning.new(position: Point, range: number): Lightning
+    local self: Lightning = setmetatable({}, { __index = Lightning })
     self.position = position
     self.range = range
     self.tiles = {}
     self.duration = 0
     self.speed = 8
     self.animations = {
-        initial = animations.new(lighting_initial_image, 16, 16, FRAME_DURATION, 2),
-        ending = animations.new(lighting_ending_image, 16, 16, FRAME_DURATION, 1)
+        initial = animations.new(lightning_initial_image, 16, 16, FRAME_DURATION, 2),
+        ending = animations.new(lightning_ending_image, 16, 16, FRAME_DURATION, 1)
     }
 
     return self
 end
 
-function Lighting:play_sound()
-    lighting_sound:play()
+function Lightning:play_sound()
+    lightning_sound:play()
 end
 
-function Lighting:get_position(): Point
+function Lightning:get_position(): Point
     return self.position
 end
 
-function Lighting:has_reached_max_range(): boolean
+function Lightning:has_reached_max_range(): boolean
     return self.duration >= self.range / self.speed
 end
 
@@ -89,10 +89,10 @@ local function clamp(val: number, min: number, max: number): number
 	return math.min(math.max(val, min), max)
 end
 
-function Lighting:_update_active_tiles(get_possible_blocker: GetBlocker)
+function Lightning:_update_active_tiles(get_possible_blocker: GetBlocker)
     self.tiles = {}
 
-    -- Calculate how far the lighting have expanded
+    -- Calculate how far the lightning have expanded
     local current_radius = math.floor(clamp(self.duration * self.speed, 1, self.range))
 
     local function generate_manhattan_points(position: Point, radius: integer): {Point}
@@ -128,13 +128,13 @@ function Lighting:_update_active_tiles(get_possible_blocker: GetBlocker)
         return blocker is nil
     end
 
-    local lighting_at = generate_manhattan_points(self.position, current_radius)
-    for _, lighting_pos in ipairs(itertools.filter(lighting_at, is_not_blocked)) do
-        table.insert(self.tiles, LightingTile.new(lighting_pos))
+    local lightning_at = generate_manhattan_points(self.position, current_radius)
+    for _, lightning_pos in ipairs(itertools.filter(lightning_at, is_not_blocked)) do
+        table.insert(self.tiles, LightningTile.new(lightning_pos))
     end
 end
 
-function Lighting:collides_with(explodable: Explodable): boolean
+function Lightning:collides_with(explodable: Explodable): boolean
     for _, tile in ipairs(self.tiles) do
         if explodable:hitbox():overlap(tile:hitbox()) then
             return true
@@ -144,15 +144,15 @@ function Lighting:collides_with(explodable: Explodable): boolean
     return false
 end
 
-function Lighting:is_complete(): boolean
+function Lightning:is_complete(): boolean
     return self.animations.ending.loops > 0
 end
 
-function Lighting:initial_complete(): boolean
+function Lightning:initial_complete(): boolean
     return self.animations.initial.loops > 1
 end
 
-function Lighting:_get_animation(): Animation
+function Lightning:_get_animation(): Animation
     if self.animations.initial.loops > 1 then
         return self.animations.ending
     else
@@ -160,47 +160,47 @@ function Lighting:_get_animation(): Animation
     end
 end
 
-function Lighting:draw()
+function Lightning:draw()
     for _, tile in ipairs(self.tiles) do
         self:_get_animation():draw(tile.position.x, tile.position.y)
         hitboxes.draw(tile:hitbox())
     end
 end
 
-function Lighting:update(dt: number, get_possible_blocker: GetBlocker)
+function Lightning:update(dt: number, get_possible_blocker: GetBlocker)
     self.duration = self.duration + dt
     self:_update_active_tiles(get_possible_blocker)
     self:_get_animation():update(dt)
 end
 
 -- Explosions --
-global record Lightings
-    on_ground: {Lighting}
+global record Lightnings
+    on_ground: {Lightning}
 end
 
-local lightings = {}
+local lightnings = {}
 
-function lightings.load_assets()
-    lighting_initial_image = lutro.graphics.newImage("assets/lighting-bomb/explosion/explosion_center.png")
-    lighting_ending_image = lutro.graphics.newImage("assets/lighting-bomb/explosion/explosion_end.png")
+function lightnings.load_assets()
+    lightning_initial_image = lutro.graphics.newImage("assets/lightning-bomb/explosion/explosion_center.png")
+    lightning_ending_image = lutro.graphics.newImage("assets/lightning-bomb/explosion/explosion_end.png")
 
-    lighting_sound = audio.new_source_pool("assets/lighting-bomb/explosion/detonate.ogg", "static", 5)
-    lighting_sound:setPitch(0.75)
+    lightning_sound = audio.new_source_pool("assets/lightning-bomb/explosion/detonate.ogg", "static", 5)
+    lightning_sound:setPitch(0.75)
 end
 
-function lightings.new(): Lightings
-   local self: Lightings = setmetatable({}, { __index = Lightings })
+function lightnings.new(): Lightnings
+   local self: Lightnings = setmetatable({}, { __index = Lightnings })
    self.on_ground = {}
    return self
 end
 
-function Lightings:place_explosion(position: Point, range: number)
-    local explosion = Lighting.new(position, range)
+function Lightnings:place_explosion(position: Point, range: number)
+    local explosion = Lightning.new(position, range)
     explosion:play_sound()
     table.insert(self.on_ground, explosion)
 end
 
-function Lightings:update(dt: number, blockers: {ExplosionBlocking}, explodables: {Player})
+function Lightnings:update(dt: number, blockers: {ExplosionBlocking}, explodables: {Player})
     -- Create a lookup of possible blockers given position, avoids getting
     -- O(n^2) due to nested loops checking all possible combinations.
     local get_possible_blocker = get_cached_blocker_lookup(blockers)
@@ -220,10 +220,10 @@ function Lightings:update(dt: number, blockers: {ExplosionBlocking}, explodables
     end
 end
 
-function Lightings:draw()
+function Lightnings:draw()
     for _, explosion in ipairs(self.on_ground) do
         explosion:draw()
     end
 end
 
-return lightings
+return lightnings

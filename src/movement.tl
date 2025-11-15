@@ -1,6 +1,6 @@
 require("players")
 require("bombs")
-require("lighting_bombs")
+require("lightning_bombs")
 local const = require("const")
 local joysticks = require("joysticks")
 local level_map = require("level_map")
@@ -124,7 +124,7 @@ local function restrict_player_movement(
 	blocking_blocks: {Kinematic},
 	hard_blocks: {Kinematic},
 	bombs: Bombs,
-	lighting_bombs: LightingBombs,
+	lightning_bombs: LightningBombs,
 	blocks_bombs: {Kinematic}
 ): CheckedMovement
 	local margin_for_corner_assist = 8
@@ -182,7 +182,7 @@ local function restrict_player_movement(
 		end
 	end
 
-	for _, bomb in ipairs(lighting_bombs.on_ground) do
+	for _, bomb in ipairs(lightning_bombs.on_ground) do
 		local bomb_hitbox = bomb:movementbox()
 		if walking_further_into_block(bomb_hitbox) then
 			if bomb.position:distance_to(player.position) > const.BLOCK_SIZE * (3 / 4) then
@@ -238,7 +238,7 @@ local function get_new_player_orientation(
 	blocking_blocks: {Kinematic},
 	hard_blocks: {Kinematic},
 	bombs: Bombs,
-	lighting_bombs: LightingBombs,
+	lightning_bombs: LightningBombs,
 	player: Player,
 	blocks_bombs: {Kinematic}
 ): Direction, Point
@@ -250,7 +250,7 @@ local function get_new_player_orientation(
 	-- directions in a deterministic and expected way.
 	local function movement_prio(movement: Movement): integer
 		local move_if_done = restrict_player_movement(
-			player, movement.dxdy, blocking_blocks, hard_blocks, bombs, lighting_bombs, blocks_bombs
+			player, movement.dxdy, blocking_blocks, hard_blocks, bombs, lightning_bombs, blocks_bombs
 		)
 
 		if in_end_of_corridor_and_walking_out(movement, player.position) then
@@ -277,7 +277,7 @@ local function get_new_player_orientation(
 	sort_directions_by_prio(directions)
 	for _, direction in ipairs(directions) do
 		local movement = restrict_player_movement(
-			player, direction.dxdy, blocking_blocks, hard_blocks, bombs, lighting_bombs, blocks_bombs
+			player, direction.dxdy, blocking_blocks, hard_blocks, bombs, lightning_bombs, blocks_bombs
 		)
 		cur_position = movement.position
 		cur_direction = direction.dir
@@ -297,12 +297,12 @@ function movement.set_position_and_dir_from_input(
 	blocking_blocks: {Kinematic},
 	hard_blocks: {Kinematic},
 	bombs: Bombs,
-	lighting_bombs: LightingBombs,
+	lightning_bombs: LightningBombs,
 	blocks_bombs: {Kinematic}
 )
 	local directions = get_directions_from_input(player, dt)
 	local new_dir, new_pos = get_new_player_orientation(
-		player.direction, directions, blocking_blocks, hard_blocks, bombs, lighting_bombs, player, blocks_bombs
+		player.direction, directions, blocking_blocks, hard_blocks, bombs, lightning_bombs, player, blocks_bombs
 	)
 	player:set_movement(new_pos, new_dir)
 	if #directions == 0 then
