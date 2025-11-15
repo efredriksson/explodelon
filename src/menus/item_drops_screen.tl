@@ -28,6 +28,7 @@ function item_drops_screen.new(previous_screen: Scene): MenuScreen
     local nbr_fires_selected = items.new_number_selection(get_start(spawn_settings.fire), numbers_to_select_from)
     local nbr_speeds_selected = items.new_number_selection(get_start(spawn_settings.speed), numbers_to_select_from)
     local nbr_kicks_selected = items.new_number_selection(get_start(spawn_settings.kick), numbers_to_select_from)
+    local nbr_lighting_bombs_selected = items.new_number_selection(get_start(spawn_settings.lighting_bomb), numbers_to_select_from)
     return srceens.new({
         choices.new_number(
             "drop pct. of bombs", 50, nbr_bombs_selected, settings.set_spawn_of_bombs
@@ -40,6 +41,9 @@ function item_drops_screen.new(previous_screen: Scene): MenuScreen
         ),
         choices.new_number(
             "drop pct. of kicks", 95, nbr_kicks_selected, settings.set_spawn_of_kick
+        ),
+        choices.new_number(
+            "drop pct. of lighting-bombs", 110, nbr_lighting_bombs_selected, settings.set_spawn_of_lighting_bombs
         ),
         choices.new_done("back", 180, done)
     })

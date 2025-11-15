@@ -237,6 +237,10 @@ function Settings.set_start_with_bombs(value: integer)
     settings.game_rules.players.start_with_bombs = value
 end
 
+function Settings.set_start_with_lighting_bombs(value: integer)
+    settings.game_rules.players.start_with_lighting_bombs = value
+end
+
 function Settings.set_start_with_fire(value: integer)
     settings.game_rules.players.start_with_fire = value
 end
