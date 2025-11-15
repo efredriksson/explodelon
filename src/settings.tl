@@ -3,6 +3,7 @@ global enum ItemType
    "bomb"
    "kick"
    "fire"
+   "lighting_bomb"
 end
 
 local record TimingRules
@@ -32,12 +33,14 @@ function ItemRules.new(): ItemRules
     self.nbr_of_eggs = 4
     self.nbr_of_items = {
         bomb = 8,
+        lighting_bomb = 0,
         fire = 6,
         speed = 4,
         kick = 8,
     }
     self.spawn_rates = {
         bomb = 0,
+        lighting_bomb = 0,
         fire = 0,
         speed = 0,
         kick = 0,
@@ -63,6 +66,7 @@ local record PlayerRules
     start_speed: integer
     start_with_kick: boolean
     start_with_bombs: integer
+    start_with_lighting_bombs: integer
     start_with_fire: integer
 end
 
@@ -73,6 +77,7 @@ function PlayerRules.new(): PlayerRules
     self.start_speed = 60
     self.start_with_kick = false
     self.start_with_bombs = 1
+    self.start_with_lighting_bombs = 0
     self.start_with_fire = 2
     return self
 end
@@ -166,6 +171,10 @@ function Settings.set_nbr_of_bombs(value: integer)
     settings.game_rules.items.nbr_of_items.bomb = value
 end
 
+function Settings.set_nbr_of_lighting_bombs(value: integer)
+    settings.game_rules.items.nbr_of_items.lighting_bomb = value
+end
+
 function Settings.set_nbr_of_fire(value: integer)
     settings.game_rules.items.nbr_of_items.fire = value
 end
@@ -180,6 +189,10 @@ end
 
 function Settings.set_spawn_of_bombs(value: number)
     settings.game_rules.items.spawn_rates.bomb = value
+end
+
+function Settings.set_spawn_of_lighting_bombs(value: number)
+    settings.game_rules.items.spawn_rates.lighting_bomb = value
 end
 
 function Settings.set_spawn_of_fire(value: number)

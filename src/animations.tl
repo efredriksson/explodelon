@@ -51,6 +51,14 @@ function Animation:reset()
     self.loops = 0
 end
 
+function Animation:scale_frame_durations(scale: number)
+    self.total_time = 0
+    for i, frame_duration in ipairs(self.frame_durations) do
+        self.frame_durations[i] = frame_duration * scale
+        self.total_time = self.total_time + self.frame_durations[i]
+    end 
+end
+
 function Animation:_get_frame(): integer
     local clamped_time = self.timer
     for frame, frame_duration in ipairs(self.frame_durations) do
