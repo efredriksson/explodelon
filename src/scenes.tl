@@ -63,22 +63,22 @@ function CheckPerformanceOfScene:load()
 end
 
 local function warn_if_took_too_long(start_time: number, ctx: string)
-    local end_time = os.clock()
+    local end_time = lutro.timer.getTime()
     local elapsed_time = end_time - start_time
-    local limit_to_log_time = 0.01
+    local limit_to_log_time = 0.005
     if elapsed_time > limit_to_log_time then
         print("WARNING: The '" .. ctx .. "' took " .. elapsed_time .. "s")
     end
 end
 
 function CheckPerformanceOfScene:update(dt: number)
-    local start_time = os.clock()
+    local start_time = lutro.timer.getTime()
     self.to_wrap:update(dt)
     warn_if_took_too_long(start_time, "update")
 end
 
 function CheckPerformanceOfScene:draw()
-    local start_time = os.clock()
+    local start_time = lutro.timer.getTime()
     self.to_wrap:draw()
     warn_if_took_too_long(start_time, "draw")
 end

@@ -128,6 +128,10 @@ global record lutro
       random: function(min: integer, max: integer): integer
    end
 
+   record timer
+      getTime: function(): number
+   end
+
    gamepadpressed: function(button_nbr: integer, button: GamepadButton)
    gamepadreleased: function(button_nbr: integer, button: GamepadButton)
 end
