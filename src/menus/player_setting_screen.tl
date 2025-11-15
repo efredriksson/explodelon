@@ -14,6 +14,7 @@ function player_settings_screen.new(previous_screen: Scene): MenuScreen
     local player_settings = settings.game_rules.players
     local start_speed_selected = items.new_integer_selection(player_settings.start_speed, 20, 100)
     local start_with_bombs_selected = items.new_integer_selection(player_settings.start_with_bombs, 1, 20)
+    local start_with_lightning_bombs_selected = items.new_integer_selection(player_settings.start_with_lightning_bombs, 1, 20)
     local start_with_fire_selected = items.new_integer_selection(player_settings.start_with_fire, 1, 20)
     return srceens.new({
         choices.new_boolean(
@@ -35,7 +36,10 @@ function player_settings_screen.new(previous_screen: Scene): MenuScreen
             "start with bombs", 125, start_with_bombs_selected, settings.set_start_with_bombs
         ),
         choices.new_integer(
-            "start with fire", 140, start_with_fire_selected, settings.set_start_with_fire
+            "start with lightning-bombs", 140, start_with_lightning_bombs_selected, settings.set_start_with_lightning_bombs
+        ),
+        choices.new_integer(
+            "start with fire", 155, start_with_fire_selected, settings.set_start_with_fire
         ),
         choices.new_done("back", 180, done)
     })

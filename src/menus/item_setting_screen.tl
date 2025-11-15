@@ -18,6 +18,7 @@ function item_settings_screen.new(previous_screen: Scene): MenuScreen
     local nbr_fires_selected = items.new_integer_selection(item_settings.nbr_of_items.fire, 0, 30)
     local nbr_speeds_selected = items.new_integer_selection(item_settings.nbr_of_items.speed, 0, 30)
     local nbr_kicks_selected = items.new_integer_selection(item_settings.nbr_of_items.kick, 0, 30)
+    local nbr_lighting_bombs_selected = items.new_integer_selection(item_settings.nbr_of_items.lighting_bomb, 0, 30)
     return srceens.new({
         choices.new_integer(
             "nbr. of soft blocks", 50, nbr_soft_blocks_selected, settings.set_nbr_soft_blocks
@@ -29,13 +30,16 @@ function item_settings_screen.new(previous_screen: Scene): MenuScreen
             "nbr. of bombs", 80, nbr_bombs_selected, settings.set_nbr_of_bombs
         ),
         choices.new_integer(
-            "nbr. of fire", 95, nbr_fires_selected, settings.set_nbr_of_fire
+            "nbr. of lighting-bombs", 95, nbr_lighting_bombs_selected, settings.set_nbr_of_lighting_bombs
         ),
         choices.new_integer(
-            "nbr. of speed", 110, nbr_speeds_selected, settings.set_nbr_of_speed
+            "nbr. of fire", 110, nbr_fires_selected, settings.set_nbr_of_fire
         ),
         choices.new_integer(
-            "nbr. of kick", 125, nbr_kicks_selected, settings.set_nbr_of_kick
+            "nbr. of speed", 125, nbr_speeds_selected, settings.set_nbr_of_speed
+        ),
+        choices.new_integer(
+            "nbr. of kick", 140, nbr_kicks_selected, settings.set_nbr_of_kick
         ),
         choices.new_done("back", 180, done)
     })
