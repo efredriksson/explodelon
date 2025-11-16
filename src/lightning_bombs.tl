@@ -1,3 +1,4 @@
+require("collision")
 local animations = require("animations")
 local audio = require("audio")
 local hitboxes = require("hitboxes")
@@ -143,7 +144,7 @@ function LightningBombs:place_lightning_bomb(player: Player, occupied: {Entity})
     player.lightning_bomb = player.lightning_bomb - 1
 end
 
-function LightningBombs:update(dt: number, blockers: {ExplosionBlocking}, explodables: {Player})
+function LightningBombs:update(dt: number, blockers: Group<ExplosionBlocking>, explodables: Group<Player>, lookup: Lookup)
     for i, bomb in ipairs(self.on_ground) do
         bomb:update(dt)
 
@@ -154,7 +155,7 @@ function LightningBombs:update(dt: number, blockers: {ExplosionBlocking}, explod
         end
     end
 
-    self.lightnings:update(dt, blockers, explodables)
+    self.lightnings:update(dt, blockers, explodables, lookup)
 end
 
 return lightning_bombs

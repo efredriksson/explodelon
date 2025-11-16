@@ -9,7 +9,7 @@ local points = require("geometry.points")
 local egg_shake_image: Image
 local egg_open_image: Image
 
-global record Egg is Entity, ExplosionBlocking, Explodable, Entity
+global record Egg is Entity, ExplosionBlocking, Explodable
     position: Point
     breaking: boolean
     hatched: boolean

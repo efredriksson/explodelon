@@ -1,8 +1,8 @@
+require("collision")
 local animations = require("animations")
 local audio = require("audio")
 local const = require("const")
 local hitboxes = require("hitboxes")
-local itertools = require("itertools")
 local level_map = require("level_map")
 local points = require("geometry.points")
 
@@ -18,7 +18,7 @@ global record LightningAnimations
     initial: Animation
 end
 
-local record LightningTile
+local record LightningTile is Entity
     position: Point
     reduction: integer
 end
@@ -28,6 +28,14 @@ function LightningTile.new(position: Point): LightningTile
     self.position = position
     self.reduction = 4
     return self
+end
+
+function LightningTile:get_position(): Point
+    return self.position
+end
+
+function LightningTile:draw()
+    assert(false, "Not implemented")
 end
 
 function LightningTile:hitbox(): Rectangle
@@ -70,26 +78,11 @@ function Lightning:has_reached_max_range(): boolean
     return self.duration >= self.range / self.speed
 end
 
-local type GetBlocker = function(Point): ExplosionBlocking | nil
-
-local function get_cached_blocker_lookup(blockers: {ExplosionBlocking}): GetBlocker
-    local cache: {string: ExplosionBlocking} = {}
-    for _, block in ipairs(blockers) do
-        cache[tostring(block:get_position())] = block
-    end
-
-    local function get_possible_blocker(position: Point): ExplosionBlocking | nil
-        return cache[tostring(position)]
-    end
-
-    return get_possible_blocker
-end
-
 local function clamp(val: number, min: number, max: number): number
 	return math.min(math.max(val, min), max)
 end
 
-function Lightning:_update_active_tiles(get_possible_blocker: GetBlocker)
+function Lightning:_update_active_tiles(blockers: Group<ExplosionBlocking>, lookup: Lookup)
     self.tiles = {}
 
     -- Calculate how far the lightning have expanded
@@ -119,18 +112,24 @@ function Lightning:_update_active_tiles(get_possible_blocker: GetBlocker)
         return manhattan_points
     end
 
-    local function is_not_blocked(pos: Point): boolean
-        if not level_map.player_area():contains(hitboxes.new_block(pos)) then
+    local function is_not_blocked(tile: LightningTile): boolean
+        if not level_map.player_area():contains(tile:hitbox()) then
             return false
         end
 
-        local blocker = get_possible_blocker(pos)
-        return blocker is nil
+        for _, _ in pairs(lookup:collisions_between({tile}, blockers)) do
+            return false
+        end
+
+        return true
     end
 
     local lightning_at = generate_manhattan_points(self.position, current_radius)
-    for _, lightning_pos in ipairs(itertools.filter(lightning_at, is_not_blocked)) do
-        table.insert(self.tiles, LightningTile.new(lightning_pos))
+    for _, lightning_pos in ipairs(lightning_at) do
+        local new_tile = LightningTile.new(lightning_pos)
+        if is_not_blocked(new_tile) then
+            table.insert(self.tiles, new_tile)
+        end
     end
 end
 
@@ -167,9 +166,9 @@ function Lightning:draw()
     end
 end
 
-function Lightning:update(dt: number, get_possible_blocker: GetBlocker)
+function Lightning:update(dt: number, blockers: Group<ExplosionBlocking>, lookup: Lookup)
     self.duration = self.duration + dt
-    self:_update_active_tiles(get_possible_blocker)
+    self:_update_active_tiles(blockers, lookup)
     self:_get_animation():update(dt)
 end
 
@@ -200,20 +199,15 @@ function Lightnings:place_explosion(position: Point, range: number)
     table.insert(self.on_ground, explosion)
 end
 
-function Lightnings:update(dt: number, blockers: {ExplosionBlocking}, explodables: {Player})
-    -- Create a lookup of possible blockers given position, avoids getting
-    -- O(n^2) due to nested loops checking all possible combinations.
-    local get_possible_blocker = get_cached_blocker_lookup(blockers)
-
+function Lightnings:update(dt: number, blockers: Group<ExplosionBlocking>, explodables: Group<Player>, lookup: Lookup)
     for i, explosion in ipairs(self.on_ground) do
-        explosion:update(dt, get_possible_blocker)
 
-        for _, explodable in ipairs(explodables) do
-            if explosion:collides_with(explodable) then
-                explodable:stun_for(2)
-            end
+        local collides_with = lookup:collisions_between(explosion.tiles, explodables)
+        for _, collide_with in pairs(collides_with) do
+            collide_with:stun_for(2)
         end
 
+        explosion:update(dt, blockers, lookup)
         if explosion:is_complete() then
             table.remove(self.on_ground, i)
         end
