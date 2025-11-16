@@ -1,3 +1,4 @@
+require("collision")
 local animations = require("animations")
 local audio = require("audio")
 local const = require("const")
@@ -40,7 +41,7 @@ local enum ExplosionTileType
     "down"
 end
 
-local record ExplosionTile
+local record ExplosionTile is Entity
     position: Point
     reduction: integer
     is_last: boolean
@@ -58,6 +59,14 @@ end
 
 function ExplosionTile:hitbox(): Rectangle
     return hitboxes.new_block(self.position):shrink(self.reduction)
+end
+
+function ExplosionTile:get_position(): Point
+    return self.position
+end
+
+function ExplosionTile:draw()
+    assert(false, "Not implemented")
 end
 
 global record Explosion
@@ -132,49 +141,33 @@ local enum BlockingResult
     "nil"
 end
 
-local type GetBlocker = function(Point): ExplosionBlocking | nil
-
-local function get_cached_blocker_lookup(blockers: {ExplosionBlocking}): GetBlocker
-    local cache: {string: ExplosionBlocking} = {}
-    for _, block in ipairs(blockers) do
-        cache[tostring(block:get_position())] = block
-    end
-
-    local function get_possible_blocker(position: Point): ExplosionBlocking | nil
-        return cache[tostring(position)]
-    end
-
-    return get_possible_blocker
-end
-
-
-function Explosion:_update_active_tiles(get_possible_blocker: GetBlocker)
+function Explosion:_update_active_tiles(blockers: Group<ExplosionBlocking>, lookup: Lookup)
     self.tiles = {}
 
     -- Calculate how far the explosion should expanded
     -- based on time elapsed, capped at max range
     local current_radius = math.floor(math.min(self.duration * self.speed, self.range))
 
-    local function is_blocked(pos: Point): BlockingResult
+    local function is_blocked(tile: ExplosionTile): BlockingResult
         -- is out of bounds
-        if not level_map.player_area():contains(hitboxes.new_block(pos)) then
+        if not level_map.player_area():contains(tile:hitbox()) then
             return "now"
         end
 
         -- Once blocked, always blocked for one instance of explosion
         for _, block_at in ipairs(self.blocked_at) do
-            if block_at:equal(pos) then
+            if block_at:equal(tile.position) then
                 return "now"
             end
         end
 
-        local blocker = get_possible_blocker(pos)
-        if not blocker is nil then
+        local colliding_blockers = lookup:collisions_between({tile}, blockers)
+        for _, blocker in pairs(colliding_blockers) do
             if blocker.in_explosion then
                 return "next"
             else
                 blocker:blow_up()
-                table.insert(self.blocked_at, pos)
+                table.insert(self.blocked_at, tile.position)
                 return "now"
             end
         end
@@ -196,13 +189,14 @@ function Explosion:_update_active_tiles(get_possible_blocker: GetBlocker)
         end
 
         local next_pos = pos:move(delta)
+        local next_tile = self:new_tile(next_pos, true, explosion_type)
 
-        local blocked = is_blocked(next_pos)
+        local blocked = is_blocked(next_tile)
         if blocked == "now" then
             return {}
         elseif blocked == "next" then
             table.insert(self.blocked_at, next_pos:move(delta))
-            return {self:new_tile(next_pos, true, explosion_type)}
+            return {next_tile}
         end
 
         local remaining_tiles = propagate(next_pos, delta, distance_traveled + 1, explosion_type)
@@ -251,16 +245,6 @@ function Explosion:get_tile_animation(tile: ExplosionTile): Animation
     return self.animations.middle_vertical
 end
 
-function Explosion:collides_with(explodable: Explodable): boolean
-    for _, tile in ipairs(self.tiles) do
-        if explodable:hitbox():overlap(tile:hitbox()) then
-            return true
-        end
-    end
-
-    return false
-end
-
 function Explosion:is_complete(): boolean
     return self.animations.center.loops > 0
 end
@@ -283,14 +267,14 @@ function Explosion:update_end_animation(dt: number)
     self.animations.center:update(dt)
 end
 
-function Explosion:update(dt: number, get_possible_blocker: GetBlocker)
+function Explosion:update(dt: number, blockers: Group<ExplosionBlocking>, lookup: Lookup)
     if self.delay > 0 then
         self.delay = self.delay - dt
         return
     end
 
     self.duration = self.duration + dt
-    self:_update_active_tiles(get_possible_blocker)
+    self:_update_active_tiles(blockers, lookup)
 
     if self:has_reached_max_range() then
         self:update_end_animation(dt)
@@ -341,18 +325,13 @@ function Explosions:place_explosion(position: Point, range: number, delay?: numb
     table.insert(self.on_ground, explosion)
 end
 
-function Explosions:update(dt: number, blockers: {ExplosionBlocking}, explodables: {Explodable})
-    -- Create a lookup of possible blockers given position, avoids getting
-    -- O(n^2) due to nested loops checking all possible combinations.
-    local get_possible_blocker = get_cached_blocker_lookup(blockers)
-
+function Explosions:update(dt: number, blockers: Group<ExplosionBlocking>, explodables: Group<Explodable>, lookup: Lookup)
     for i, explosion in ipairs(self.on_ground) do
-        explosion:update(dt, get_possible_blocker)
+        explosion:update(dt, blockers, lookup)
 
-        for _, explodable in ipairs(explodables) do
-            if explosion:collides_with(explodable) then
-                explodable:blow_up()
-            end
+        local collides_with = lookup:collisions_between(explosion.tiles, explodables)
+        for _, collide_with in pairs(collides_with) do
+            collide_with:blow_up()
         end
 
         if explosion:is_complete() then

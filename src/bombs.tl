@@ -1,3 +1,4 @@
+require("collision")
 local animations = require("animations")
 local const = require("const")
 local explosions = require("explosions")
@@ -101,7 +102,7 @@ function Bomb:_trigger_belt(direction?: Vector): ConveyorBelt | nil
     end
 end
 
-function Bomb:can_move(direction: Vector, occupies: {Kinematic}): boolean
+function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, lookup: Lookup): boolean
     local belt_trigger = self:_trigger_belt(direction)
     if not belt_trigger is nil then
         direction = belt_trigger.direction:scale(direction:length())
@@ -140,7 +141,8 @@ function Bomb:can_move(direction: Vector, occupies: {Kinematic}): boolean
         return occupied ~= self
     end
 
-    for _, occupied in ipairs(itertools.filter(occupies, not_this_bomb)) do
+    local close_occupies = lookup:in_box_and_group(old_hitbox:expand(const.BLOCK_SIZE), occupies)
+    for _, occupied in ipairs(itertools.filter(close_occupies, not_this_bomb)) do
         if move_further_into_occupied(occupied:movementbox()) then
             return false
         end
@@ -154,7 +156,7 @@ function Bomb:can_move(direction: Vector, occupies: {Kinematic}): boolean
     return true
 end
 
-function Bomb:update(dt: number, occupies: {Kinematic})
+function Bomb:update(dt: number, occupies: Group<Kinematic>, lookup: Lookup)
     self.timer = self.timer - dt
     
     if self.velocity:length() > 0 then
@@ -165,7 +167,7 @@ function Bomb:update(dt: number, occupies: {Kinematic})
         end
 
         local new_position = self.position:move(self.velocity:scale(dt))
-        if self:can_move(self.velocity:scale(dt), occupies) then
+        if self:can_move(self.velocity:scale(dt), occupies, lookup) then
             self.position = new_position
         else
             -- If bomb can't move stop it and snap to grid
@@ -329,10 +331,10 @@ function Bombs:throw_bomb(from: Point, to: Point): Bomb
     return bomb
 end
 
-function Bombs:update(dt: number, blockers: {ExplosionBlocking}, explodables: {Explodable}, occupies: {Kinematic})
+function Bombs:update(dt: number, blockers: Group<ExplosionBlocking>, explodables: Group<Explodable>, occupies: Group<Kinematic>, lookup: Lookup)
     for i = #self.on_ground, 1, -1 do
         local bomb = self.on_ground[i]
-        bomb:update(dt, occupies)
+        bomb:update(dt, occupies, lookup)
 
         if bomb:is_complete() then
             table.remove(self.on_ground, i)
@@ -350,15 +352,14 @@ function Bombs:update(dt: number, blockers: {ExplosionBlocking}, explodables: {E
     for i, bomb in ipairs(self.in_air) do
         bomb:update(dt)
         if bomb:has_landed() then
-            local space_is_occupied = false
-            for _, occupied in ipairs(occupies) do
-                if occupied:hitbox():overlap(bomb:hitbox()) then
-                    space_is_occupied = true
-                    occupied:hit_with_bomb()
-                end
+            local hitting_entities = lookup:collisions_between({bomb}, occupies)
+            local bomb_bouncing = false
+            for _, hitting_entity in pairs(hitting_entities) do
+                hitting_entity:hit_with_bomb()
+                bomb_bouncing = true
             end
             
-            if space_is_occupied then
+            if bomb_bouncing then
                 bomb:bounce()
             else
                 table.remove(self.in_air, i)
@@ -367,7 +368,7 @@ function Bombs:update(dt: number, blockers: {ExplosionBlocking}, explodables: {E
         end
     end
 
-    self.explosions:update(dt, blockers, itertools.combine(self.on_ground, explodables))
+    self.explosions:update(dt, blockers, explodables, lookup)
 end
 
 return bombs

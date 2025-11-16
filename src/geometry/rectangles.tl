@@ -75,6 +75,15 @@ function Rectangle:shrink(shrink: number): Rectangle
    )
 end
 
+function Rectangle:expand(padding: number): Rectangle
+   return rectangles.new(
+      self.x - padding,
+      self.y - padding,
+      self.width + 2 * padding,
+      self.height + 2 * padding
+   )
+end
+
 function Rectangle:shift(movement: Vector): Rectangle
    local new_top_left = self:top_left():move(movement)
    return rectangles.new(

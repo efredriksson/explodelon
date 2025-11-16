@@ -14,7 +14,7 @@ function level_map.player_area(): Rectangle
 	return PLAYER_AREA
 end
 
-global record HardBlock is ExplosionBlocking, Kinematic
+global record HardBlock is ExplosionBlocking, Kinematic, Entity
 	position: Point
 	in_explosion: boolean
 end
@@ -32,6 +32,10 @@ end
 
 function HardBlock:blow_up()
 	-- Does nothing
+end
+
+function HardBlock:draw()
+	assert(false, "Not implemented")
 end
 
 function HardBlock:hit_with_bomb()

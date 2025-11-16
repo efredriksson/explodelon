@@ -23,7 +23,7 @@ global type PlayerState = enum
 	"mounted"
 end
 
-global record Player is Explodable, Kinematic
+global record Player is Explodable, Kinematic, Entity
 	id: integer
 	sprite: CharacterName
    	position: Point
@@ -71,6 +71,10 @@ end
 
 function Player:get_position(): Point
 	return self.position
+end
+
+function Player:draw()
+	assert(false, "Not implemented")
 end
 
 function Player:set_movement(position: Point, direction: Direction)
