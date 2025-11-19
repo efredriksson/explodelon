@@ -32,7 +32,7 @@ function start_screen.new(): MenuScreen
             characters.auto_select_for(settings.number_of_players)
             scenes.set(game.new(nil))
         else
-            scenes.set(game.new(player_selection.setup()))
+            scenes.set(player_selection.setup())
         end
 
         -- Reset main menu selection screen when done:

@@ -95,7 +95,6 @@ end
 function PlayerSelection:load()
     -- Entering scene we need to re-calculate these from game state
     self.player_selecting = characters.next_player_selecting()
-    assert(self.player_selecting, "Joined player selection scene but no is joining?")
     self.slow_walk_animations = {}
     self.selectable_characters = {}
     local previous_walk_state = self.walking_characters
@@ -139,8 +138,21 @@ function player_selection.load_assets()
 end
 
 function PlayerSelection:handle_player_input()    
-    local ok_action = false
+    if not self.player_selecting then
+        music:stop()
+        self.game:update_players()
+        scenes.set(self.game, self.going_back_to_game)
+        if self.going_back_to_game then
+            -- The game might have paused audio, make sure to unpause:
+            audio.unpause()
+        end
+        -- Game started, keep track on that state:
+        self.going_back_to_game = true
+        return
+    end
     
+    local ok_action = false
+
     if joysticks.is_pressed(self.player_selecting, JOYPAD.RIGHT) then
         ok_action = self.selector:increment()
     elseif joysticks.is_pressed(self.player_selecting, JOYPAD.LEFT) then
@@ -159,18 +171,6 @@ function PlayerSelection:handle_player_input()
 
     if ok_action then
         ok_sound:play()
-    end
-
-    if not self.player_selecting then
-        music:stop()
-        self.game:update_players()
-        scenes.set(self.game, self.going_back_to_game)
-        if self.going_back_to_game then
-            -- The game might have paused audio, make sure to unpause:
-            audio.unpause()
-        end
-        -- Game started, keep track on that state:
-        self.going_back_to_game = true
     end
 end
 
@@ -198,6 +198,10 @@ function PlayerSelection:draw_slow_walking(character: Character)
 end
 
 function PlayerSelection:draw()
+    if not self.player_selecting then
+        return
+    end
+
 	lutro.graphics.draw(background)
 
     for _, char in ipairs(self.selectable_characters) do
