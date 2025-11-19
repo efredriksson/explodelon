@@ -78,6 +78,7 @@ function GameEnd:update(dt: number)
 
     self.time = self.time + dt
     if self.time > self.scene_lenght then
+        audio.stop()
         scenes.set(self.next_scene)
     end
 end
