@@ -26,9 +26,15 @@ local score_board = require("score_board")
 local settings = require("settings")
 local soft_blocks = require("soft_blocks")
 
-
 local JOYPAD = joysticks.buttons()
 local music: Source
+
+local type GameState = enum
+   "starting"
+   "ongoing"
+   "restarting"
+   "finished"
+end
 
 global record Game is Scene
 	score_board: ScoreBoard
@@ -49,12 +55,11 @@ global record Game is Scene
 	player_animations: PlayerAnimations
 	time_to_wait_to_end_game: number
 	time_of_1_alive_player: number
-	have_finished: boolean
+	state: GameState
 	game_countdown: GameCountdown
 	pressure_blocks: PressureBlocks
 	tic_counter: integer
 	audio_paused: boolean
-	have_started_music: boolean
 end
 
 function Game:load()
@@ -79,12 +84,11 @@ function Game:load()
 	self.player_animations = player_animations.new(self.players)
 	self.time_to_wait_to_end_game = 2.0
 	self.time_of_1_alive_player = 0.0
-	self.have_finished = false
+	self.state = "starting"
 	self.game_countdown = game_countdown.new()
 	self.pressure_blocks = pressure_blocks.new()
 	self.tic_counter = 0
 	self.audio_paused = false 
-	self.have_started_music = false
 	music:stop()
 end
 
@@ -184,7 +188,7 @@ function Game:join_with_next_free_sprite(player_id: integer)
 end
 
 function Game:handle_pause_input(): boolean
-	if self.have_finished then
+	if self.state == "finished" then
 		return
 	end
 
@@ -197,6 +201,12 @@ function Game:handle_pause_input(): boolean
 			else
 				self:join_with_next_free_sprite(player_id)
 				scenes.set(self, true)
+			end
+
+			if self.state == "starting" then
+				-- If someone joins while game is still starting we restart so
+				-- they can join and play directly.
+				self.state = "restarting"
 			end
 		else
 			settings.number_of_players = settings.number_of_players - 1
@@ -234,21 +244,21 @@ local is_dead = function(player: Player): boolean
 end
 
 function Game:check_if_finished(dt: number, alive_players: {Player})
-	if self.have_finished then
+	if self.state == "finished" then
 		return
 	end
 
 	if #alive_players <= 1 then
 		self.time_of_1_alive_player = self.time_of_1_alive_player + dt
 	elseif self.game_timer:out_of_time() then
-		self.have_finished = true
+		self.state = "finished"
 		-- Many alive and time out => draw
 		music:stop()
 		scenes.set(game_end.new_for_timeout(self))
 	end
 
 	if self.time_of_1_alive_player > self.time_to_wait_to_end_game then
-		self.have_finished = true
+		self.state = "finished"
 		if #alive_players == 1 then
 			local winner = alive_players[1]
 			local score = self.score_board:add_point(winner.id)
@@ -262,6 +272,10 @@ function Game:check_if_finished(dt: number, alive_players: {Player})
 end
 
 function Game:update(dt: number)
+	if self.state == "restarting" then
+		self:load()
+	end
+
 	local is_paused = self:handle_pause_input()
 	if is_paused then
 		return
@@ -271,8 +285,8 @@ function Game:update(dt: number)
 	if not self.game_countdown:finished() then
 		return
 	end
-	if not self.have_started_music then
-		self.have_started_music = true
+	if self.state == "starting" then
+		self.state = "ongoing"
 		music:play()
 	end
 	if self.audio_paused then
