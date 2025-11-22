@@ -129,7 +129,7 @@ end
 
 function Settings.new(): Settings
     local self: Settings = setmetatable({}, { __index = Settings })
-    self.number_of_players = 2
+    self.number_of_players = 4
     self.player_selection = "on"
     self.map = "football"
     self.game_rules = GameRules.new()
