@@ -1,5 +1,6 @@
 local const = require("const")
 local joysticks = require("joysticks")
+local logger = require("logger")
 local scenes = require("scenes")
 local screens = require("menus.screens")
 local start_screen = require("menus.start_screen")
@@ -18,7 +19,7 @@ function lutro.load()
 	player_selection.load_assets()
 	game.load_assets()
 	local load_time = lutro.timer.getTime() - load_start
-    print("INFO: Loading assets at start took " .. load_time .. "s")
+	logger.info("Loading assets at start took " .. load_time .. "s")
 	scenes.set_start(start_screen.new())
 end
 
