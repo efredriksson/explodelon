@@ -18,14 +18,16 @@ local background: Image
 global record MenuScreen is Scene
     menu_choices: {MenuChoice}
     menu_selection: MenuSelection<integer>
+    on_load: function()
 end
 
 local screens = {}
 
-function screens.new(menu_choices: {MenuChoice}): MenuScreen
+function screens.new(menu_choices: {MenuChoice}, on_load?: function()): MenuScreen
     local self: MenuScreen = setmetatable({}, { __index = MenuScreen })
     self.menu_choices = menu_choices
     self.menu_selection = items.new_integer_selection(1, 1, #self.menu_choices)
+    self.on_load = on_load or function() end
     return self
 end
 
@@ -84,6 +86,10 @@ function MenuScreen:draw()
         local font = get_font(line_idx)
         line:draw(font)
     end
+end
+
+function MenuScreen:load()
+    self.on_load()
 end
 
 return screens
