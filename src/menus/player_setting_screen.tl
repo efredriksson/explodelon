@@ -42,7 +42,7 @@ function player_settings_screen.new(previous_screen: Scene): MenuScreen
             "start with fire", 155, start_with_fire_selected, settings.set_start_with_fire
         ),
         choices.new_done("back", 180, done)
-    })
+    }, done)
 end
 
 return player_settings_screen

@@ -46,7 +46,7 @@ function item_drops_screen.new(previous_screen: Scene): MenuScreen
             "drop pct. of lightning-bombs", 110, nbr_lightning_bombs_selected, settings.set_spawn_of_lightning_bombs
         ),
         choices.new_done("back", 180, done)
-    })
+    }, done)
 end
 
 return item_drops_screen

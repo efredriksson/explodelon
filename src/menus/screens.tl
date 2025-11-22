@@ -19,15 +19,17 @@ global record MenuScreen is Scene
     menu_choices: {MenuChoice}
     menu_selection: MenuSelection<integer>
     on_load: function()
+    go_back: function(Scene)
 end
 
 local screens = {}
 
-function screens.new(menu_choices: {MenuChoice}, on_load?: function()): MenuScreen
+function screens.new(menu_choices: {MenuChoice}, go_back?: function(Scene), on_load?: function()): MenuScreen
     local self: MenuScreen = setmetatable({}, { __index = MenuScreen })
     self.menu_choices = menu_choices
     self.menu_selection = items.new_integer_selection(1, 1, #self.menu_choices)
     self.on_load = on_load or function() end
+    self.go_back = go_back or function(_: Scene) end
     return self
 end
 
@@ -58,6 +60,8 @@ function MenuScreen:update(_: number)
         ok_action = self.menu_selection:increment()
     elseif joysticks.is_pressed_any(JOYPAD.UP) then
         ok_action = self.menu_selection:decrement()
+    elseif joysticks.is_pressed_any(JOYPAD.A) then
+        self.go_back(self)
     end
 
     if ok_action then

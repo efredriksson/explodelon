@@ -37,7 +37,7 @@ function timing_settings_screen.new(previous_screen: Scene): MenuScreen
             "sudden death time", 90, sudden_death_time_selection, settings.set_sudden_death_time
         ),
         choices.new_done("back", 180, done)
-    })
+    }, done)
 end
 
 return timing_settings_screen
