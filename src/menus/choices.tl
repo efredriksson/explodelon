@@ -19,7 +19,6 @@ local record MenuChoiceImpl<T> is MenuChoice
     y_pos: integer
     menu_text: string
     value_change: function(T)
-    on_select: function(ctx: Scene)
 end
 
 function choices.new_boolean(menu_text: string, y_pos: integer, on_by_default: boolean, callback: function(boolean)): MenuChoiceImpl<boolean>
@@ -33,7 +32,7 @@ function choices.new_boolean(menu_text: string, y_pos: integer, on_by_default: b
     return self
 end
 
-function MenuChoiceImpl:update(ctx: Scene): boolean
+function MenuChoiceImpl:update(_: Scene): boolean
     local ok_action = false
 
     local function active_button(button: integer): boolean
@@ -42,36 +41,24 @@ function MenuChoiceImpl:update(ctx: Scene): boolean
             joysticks.is_down_for_any(button, time_until_fast_change)
     end
 
-    if self.selection then
-        if active_button(JOYPAD.RIGHT) then
-            ok_action = self.selection:increment()
-        elseif active_button(JOYPAD.LEFT) then
-            ok_action = self.selection:decrement()
-        end
-        self.value_change(self.selection:get_value())
+    if active_button(JOYPAD.RIGHT) then
+        ok_action = self.selection:increment()
+    elseif active_button(JOYPAD.LEFT) then
+        ok_action = self.selection:decrement()
     end
-    
-    if self.on_select then
-        if joysticks.is_pressed_any(JOYPAD.B) then
-            ok_action = true
-            self.on_select(ctx)
-        end
-    end
+    self.value_change(self.selection:get_value())
 
     return ok_action
 end
 
 function MenuChoiceImpl:draw(font: MenuFont)
-    local line = MenuLine.new({MenuLineColumn.new(self.menu_text, const.MAP_WIDTH)}, self.y_pos)
-    if self.selection then
-        line = MenuLine.new({
-            MenuLineColumn.new("", 20),
-            MenuLineColumn.new(self.menu_text, 170),
-            MenuLineColumn.new("-", 30),
-            MenuLineColumn.new(self.selection:as_menu_string(), 50),
-            MenuLineColumn.new("", 50),
-        }, self.y_pos)
-    end
+    local line = MenuLine.new({
+        MenuLineColumn.new("", 20),
+        MenuLineColumn.new(self.menu_text, 170),
+        MenuLineColumn.new("-", 30),
+        MenuLineColumn.new(self.selection:as_menu_string(), 50),
+        MenuLineColumn.new("", 50),
+    }, self.y_pos)
 
     local x_pos = 0.0
     for _, column in ipairs(line.columns) do
@@ -107,11 +94,29 @@ function choices.new_enum<T>(menu_text: string, y_pos: integer, selection: MenuS
     return self
 end
 
-function choices.new_done(menu_text: string, y_pos: integer, callback: function(ctx: Scene)): MenuChoiceImpl<boolean>
-    local self: MenuChoiceImpl<boolean> = setmetatable({}, { __index = MenuChoiceImpl })
+local record MenuAction is MenuChoice
+    y_pos: integer
+    menu_text: string
+    on_select: function(ctx: Scene)
+end
+
+function MenuAction:update(ctx: Scene): boolean
+    if joysticks.is_pressed_any(JOYPAD.B) then
+        self.on_select(ctx)
+        return true
+    end
+
+    return false
+end
+
+function MenuAction:draw(font: MenuFont)
+    font:print_centered(self.menu_text, const.MAP_WIDTH, points.new(0, self.y_pos))
+end
+
+function choices.new_done(menu_text: string, y_pos: integer, callback: function(ctx: Scene)): MenuAction
+    local self: MenuAction = setmetatable({}, { __index = MenuAction })
     self.y_pos = y_pos
     self.menu_text = menu_text
-    self.value_change = function(_: boolean) end
     self.on_select = callback
     return self
 end
