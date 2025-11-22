@@ -37,6 +37,7 @@ function start_screen.new(): MenuScreen
         -- Set default as 'keep' if there is a selection for nbr of players:
         settings.player_selection = "keep"
     end
+    local function go_back(_: Scene) end -- Does nothing at start screen
     local function enter_debug_screen(ctx: Scene)
         scenes.set(debug_screen.new(ctx))
     end
@@ -71,7 +72,7 @@ function start_screen.new(): MenuScreen
         choices.new_done("game rules", 110, enter_game_rules_screen),
         choices.new_done("debug settings", 130, enter_debug_screen),
         choices.new_done("start game", 180, done)
-    }, on_load)
+    }, go_back, on_load)
     return menu_screen
 end
 

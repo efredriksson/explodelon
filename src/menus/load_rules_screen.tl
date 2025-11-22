@@ -37,7 +37,7 @@ function load_rules_screen.new(previous_screen: Scene, start_screen: Scene): Men
         choices.new_done("debug lightning-bomb", 110, load_debug_lightning_bomb_rules),
         choices.new_done("debug performance", 130, load_debug_performance_rules),
         choices.new_done("back", 180, done)
-    })
+    }, done)
 end
 
 return load_rules_screen

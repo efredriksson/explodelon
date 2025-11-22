@@ -47,7 +47,7 @@ function game_rule_screen.new(previous_screen: Scene): MenuScreen
         ),
 
         choices.new_done("back", 180, done)
-    })
+    }, done)
 end
 
 return game_rule_screen

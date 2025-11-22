@@ -42,7 +42,7 @@ function item_settings_screen.new(previous_screen: Scene): MenuScreen
             "nbr. of kick", 140, nbr_kicks_selected, settings.set_nbr_of_kick
         ),
         choices.new_done("back", 180, done)
-    })
+    }, done)
 end
 
 return item_settings_screen

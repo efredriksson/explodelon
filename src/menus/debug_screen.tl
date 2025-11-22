@@ -18,7 +18,7 @@ function debug_screen.new(previous_screen: Scene): MenuScreen
             "log slow game loop", 70, settings.debug.log_scene_perf, settings.set_log_scene_perf
         ),
         choices.new_done("back", 180, done)
-    })
+    }, done)
 end
 
 return debug_screen
