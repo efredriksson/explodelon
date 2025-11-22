@@ -12,10 +12,13 @@ function lutro.conf(t: Configuration)
 end
 
 function lutro.load()
+	local load_start = lutro.timer.getTime()
 	joysticks.setup()
 	screens.load_assets()
 	player_selection.load_assets()
 	game.load_assets()
+	local load_time = lutro.timer.getTime() - load_start
+    print("INFO: Loading assets at start took " .. load_time .. "s")
 	scenes.set_start(start_screen.new())
 end
 
