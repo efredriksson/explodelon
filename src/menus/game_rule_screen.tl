@@ -1,6 +1,6 @@
 local scenes = require("scenes")
 local choices = require("menus.choices")
-local srceens = require("menus.screens")
+local screens = require("menus.screens")
 local item_spawn_screen = require("menus.item_drops_screen")
 local item_setting_screen = require("menus.item_setting_screen")
 local player_setting_screen = require("menus.player_setting_screen")
@@ -29,7 +29,7 @@ function game_rule_screen.new(previous_screen: Scene): MenuScreen
         scenes.set(load_rules_screen.new(ctx, previous_screen))
     end
 
-    return srceens.new({
+    return screens.new({
         choices.new_done(
             "load ruleset", 50, enter_load_rules_screen
         ),
