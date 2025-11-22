@@ -370,8 +370,11 @@ function Game:update(dt: number)
 		player:kill()
 	end
 	for _, player in ipairs(dead_players) do
-		if settings.game_rules.players.mad_bombers and not player.is_removed then
+		if settings.game_rules.players.mad_bombers then
 			self.mad_bombers:ensure_exist_for(player.id, player.sprite)
+		end
+		if player.is_removed then
+			self.mad_bombers.by_player[player.id] = nil
 		end
 	end
 
