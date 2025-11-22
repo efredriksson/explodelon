@@ -26,7 +26,6 @@ function start_screen.new(): MenuScreen
         audio.stop()
         if settings.player_selection == "on" then
             characters.clear_selections()
-            characters.queue_selection_for_total(settings.number_of_players)
             scenes.set(player_selection.setup())
         elseif settings.player_selection == "off" then
             characters.auto_select_for(settings.number_of_players)
