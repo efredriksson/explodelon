@@ -1,11 +1,13 @@
 local animations = require("animations")
 local audio = require("audio")
 local characters = require("characters")
+local const = require("const")
 local fonts = require("fonts")
 local game = require("game")
 local joysticks = require("joysticks")
 local menu_items = require("menus.items")
 local scenes = require("scenes")
+local settings = require("settings")
 local vectors = require("geometry.vectors")
 local points = require("geometry.points")
 
@@ -137,8 +139,22 @@ function player_selection.load_assets()
     music:setVolume(0.75)
 end
 
-function PlayerSelection:handle_player_input()    
-    if not self.player_selecting then
+function PlayerSelection:check_for_new_player_selecting()
+    -- No player is selecting, check if anyone is pressing right or left
+    -- indicating that they want to select a character
+    for player_id=1, const.MAX_PLAYERS do
+        local trying_to_select = joysticks.is_pressed(player_id, JOYPAD.RIGHT) or
+            joysticks.is_pressed(player_id, JOYPAD.LEFT)
+
+        if trying_to_select and characters.have_not_selected(player_id) then
+            self.player_selecting = player_id
+            return
+        end
+    end
+end
+
+function PlayerSelection:handle_player_input()
+    if #characters.get_selections() == settings.number_of_players then
         music:stop()
         self.game:update_players()
         scenes.set(self.game, self.going_back_to_game)
@@ -148,6 +164,11 @@ function PlayerSelection:handle_player_input()
         end
         -- Game started, keep track on that state:
         self.going_back_to_game = true
+        return
+    end
+
+    if not self.player_selecting then
+        self:check_for_new_player_selecting()
         return
     end
     
@@ -198,10 +219,6 @@ function PlayerSelection:draw_slow_walking(character: Character)
 end
 
 function PlayerSelection:draw()
-    if not self.player_selecting then
-        return
-    end
-
 	lutro.graphics.draw(background)
 
     for _, char in ipairs(self.selectable_characters) do
@@ -216,11 +233,18 @@ function PlayerSelection:draw()
     local indicator_pos = character:get_position():move(indicator_offset)
     lutro.graphics.draw(selector_indicator, indicator_pos.x, indicator_pos.y)
 
-    local indicator_text = tostring(self.player_selecting)
+    local function indicator_text(): string
+        if self.player_selecting then
+            return tostring(self.player_selecting)
+        else
+            return "!"
+        end
+    end
+
     local indicator_text_offset = vectors.new(0, 3)
     local text_pos = indicator_pos:move(indicator_text_offset)
     local text_box = selector_indicator:getWidth()
-    black_font:print_centered(indicator_text, text_box, text_pos)
+    black_font:print_centered(indicator_text(), text_box, text_pos)
 end
 
 function player_selection.setup(): Scene

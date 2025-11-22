@@ -92,6 +92,16 @@ function characters.get_selections(): {CharacterSelection}
     return character_selections
 end
 
+function characters.have_not_selected(player_id: integer): boolean
+    for _, selection in ipairs(character_selections) do
+        if selection.player_id == player_id then
+            return false
+        end
+    end
+
+    return true
+end
+
 function characters.auto_select_for(nbr_to_select: integer)
     character_selections = {}
     for i, sprite in ipairs(characters.get_names(nbr_to_select)) do
@@ -119,13 +129,6 @@ function characters.remove_selection_for(player_id: integer)
             table.remove(character_selections, i)
         end
     end
-end
-
-function characters.queue_selection_for_total(number_of_players: integer)
-	in_queue_to_join = {}
-	for player_id=1, number_of_players do
-		table.insert(in_queue_to_join, player_id)
-	end
 end
 
 function characters.queue_selection_for(player_id: integer)
