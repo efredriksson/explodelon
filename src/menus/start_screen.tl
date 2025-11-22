@@ -34,8 +34,6 @@ function start_screen.new(): MenuScreen
             scenes.set(player_selection.setup())
         end
 
-        -- Reset main menu selection screen when done:
-        menu_screen.menu_selection.value = 1
         -- Set default as 'keep' if there is a selection for nbr of players:
         settings.player_selection = "keep"
     end
