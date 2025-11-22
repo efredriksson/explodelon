@@ -2,7 +2,7 @@ local scenes = require("scenes")
 local settings = require("settings")
 local choices = require("menus.choices")
 local items = require("menus.items")
-local srceens = require("menus.screens")
+local screens = require("menus.screens")
 
 local item_drops_screen = {}
 
@@ -29,7 +29,7 @@ function item_drops_screen.new(previous_screen: Scene): MenuScreen
     local nbr_speeds_selected = items.new_number_selection(get_start(spawn_settings.speed), numbers_to_select_from)
     local nbr_kicks_selected = items.new_number_selection(get_start(spawn_settings.kick), numbers_to_select_from)
     local nbr_lightning_bombs_selected = items.new_number_selection(get_start(spawn_settings.lightning_bomb), numbers_to_select_from)
-    return srceens.new({
+    return screens.new({
         choices.new_number(
             "drop pct. of bombs", 50, nbr_bombs_selected, settings.set_spawn_of_bombs
         ),

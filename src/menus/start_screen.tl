@@ -8,7 +8,7 @@ local player_selection = require("player_selection")
 local scenes = require("scenes")
 local settings = require("settings")
 local choices = require("menus.choices")
-local srceens = require("menus.screens")
+local screens = require("menus.screens")
 local debug_screen = require("menus.debug_screen")
 local game_rule_screen = require("menus.game_rule_screen")
 
@@ -64,7 +64,7 @@ function start_screen.new(): MenuScreen
         update_player_selection_choices()
     end
 
-    menu_screen = srceens.new({
+    menu_screen = screens.new({
         choices.new_integer("number of players", 50, nbr_player_selected, set_number_of_players),
         choices.new_enum("player selection", 70, player_selection_choice, settings.set_player_selection),
         choices.new_enum("map", 90, map_selection_choice, settings.set_map),

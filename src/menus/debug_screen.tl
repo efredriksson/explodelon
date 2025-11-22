@@ -1,7 +1,7 @@
 local scenes = require("scenes")
 local settings = require("settings")
 local choices = require("menus.choices")
-local srceens = require("menus.screens")
+local screens = require("menus.screens")
 
 local debug_screen = {}
 
@@ -10,7 +10,7 @@ function debug_screen.new(previous_screen: Scene): MenuScreen
         scenes.set(previous_screen)
     end
 
-    return srceens.new({
+    return screens.new({
         choices.new_boolean(
             "draw hitboxes", 50, settings.debug.draw_hitboxes, settings.set_draw_hitboxs
         ),

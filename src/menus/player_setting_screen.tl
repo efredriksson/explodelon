@@ -2,7 +2,7 @@ local items = require("menus.items")
 local scenes = require("scenes")
 local settings = require("settings")
 local choices = require("menus.choices")
-local srceens = require("menus.screens")
+local screens = require("menus.screens")
 
 local player_settings_screen = {}
 
@@ -16,7 +16,7 @@ function player_settings_screen.new(previous_screen: Scene): MenuScreen
     local start_with_bombs_selected = items.new_integer_selection(player_settings.start_with_bombs, 1, 20)
     local start_with_lightning_bombs_selected = items.new_integer_selection(player_settings.start_with_lightning_bombs, 1, 20)
     local start_with_fire_selected = items.new_integer_selection(player_settings.start_with_fire, 1, 20)
-    return srceens.new({
+    return screens.new({
         choices.new_boolean(
             "start position random", 50, player_settings.start_position_shuffle, settings.set_start_position_shuffle
         ),

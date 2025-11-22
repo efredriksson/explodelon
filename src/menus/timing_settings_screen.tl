@@ -2,7 +2,7 @@ local items = require("menus.items")
 local scenes = require("scenes")
 local settings = require("settings")
 local choices = require("menus.choices")
-local srceens = require("menus.screens")
+local screens = require("menus.screens")
 
 local timing_settings_screen = {}
 
@@ -26,7 +26,7 @@ function timing_settings_screen.new(previous_screen: Scene): MenuScreen
     local battle_time_selection = items.new_time_selection(battle_idx, times_to_select_from)
     local sudden_death_time_selection = items.new_time_selection(sudden_death_idx, times_to_select_from)
 
-    return srceens.new({
+    return screens.new({
         choices.new_integer(
             "nbr. battles", 50, nbr_battles_selection, settings.set_nbr_battles
         ),
