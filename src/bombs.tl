@@ -216,21 +216,19 @@ function Bomb:update(dt: number, occupies: Group<Kinematic>, interacts_with_bomb
             self.velocity = belt_trigger.direction:scale(self.velocity:length())
         end
 
-        local new_position = self.position:move(self.velocity:scale(dt))
-        if self:can_move(self.velocity:scale(dt), occupies, interacts_with_bombs, lookup) then
+        local dx = self.velocity:scale(dt)
+        local new_block = moving_into_new_block(self:movementbox(), dx)
+        local new_position = self.position:move(dx)
+        if self.timer <= 0 and new_block then
+            -- If bomb timer is up and if trying to enter a new block snap to grid instead.
+            -- This is to explode bomb on the grid. Bomb can slide to next intersection!
+            self.position = level_map.snap_to_closest_grid_tile(self.position)
+        elseif self:can_move(self.velocity:scale(dt), occupies, interacts_with_bombs, lookup) then
             self.position = new_position
         else
             -- If bomb can't move stop it and snap to grid
             self.velocity = vectors.new(0, 0)
             self.position = level_map.snap_to_closest_grid_tile(self.position)
-        end
-
-        if self.timer <= 0 then
-            -- If bomb timer is up, snap to closest tile if it is close enough.
-            -- This is to explode bomb on the grid. Bomb can slide to next intersection!
-            if self.position:distance_to(level_map.snap_to_closest_grid_tile(self.position)) <= 3 then
-                self.position = level_map.snap_to_closest_grid_tile(self.position)
-            end
         end
     end
 
