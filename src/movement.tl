@@ -126,6 +126,7 @@ local function restrict_player_movement(
 	bombs: Bombs,
 	lightning_bombs: LightningBombs,
 	blocks_bombs: Group<Kinematic>,
+	interacts_with_bombs: Group<Kinematic>,
 	lookup: Lookup
 ): CheckedMovement
 	local margin_for_corner_assist = 8
@@ -172,7 +173,7 @@ local function restrict_player_movement(
 				-- freely in far inside it. This is to stop moving through
 				-- bombs that are kicked against a player.
 				local kick_direction = movement:normalize()
-				if player.has_kick and bomb:can_move(kick_direction:scale(const.BLOCK_SIZE * 0.9), blocks_bombs, lookup) then
+				if player.has_kick and bomb:can_move(kick_direction:scale(const.BLOCK_SIZE * 0.9), blocks_bombs, interacts_with_bombs, lookup) then
 					-- Walking into bomb and at edge of bomb then kick
 					bomb:kick(kick_direction)
 				else
@@ -242,6 +243,7 @@ local function get_new_player_orientation(
 	lightning_bombs: LightningBombs,
 	player: Player,
 	blocks_bombs: Group<Kinematic>,
+	interacts_with_bombs: Group<Kinematic>,
 	lookup: Lookup
 ): Direction, Point
 
@@ -252,7 +254,7 @@ local function get_new_player_orientation(
 	-- directions in a deterministic and expected way.
 	local function movement_prio(movement: Movement): integer
 		local move_if_done = restrict_player_movement(
-			player, movement.dxdy, blocking_blocks, hard_blocks, bombs, lightning_bombs, blocks_bombs, lookup
+			player, movement.dxdy, blocking_blocks, hard_blocks, bombs, lightning_bombs, blocks_bombs, interacts_with_bombs, lookup
 		)
 
 		if in_end_of_corridor_and_walking_out(movement, player.position) then
@@ -279,7 +281,7 @@ local function get_new_player_orientation(
 	sort_directions_by_prio(directions)
 	for _, direction in ipairs(directions) do
 		local movement = restrict_player_movement(
-			player, direction.dxdy, blocking_blocks, hard_blocks, bombs, lightning_bombs, blocks_bombs, lookup
+			player, direction.dxdy, blocking_blocks, hard_blocks, bombs, lightning_bombs, blocks_bombs, interacts_with_bombs, lookup
 		)
 		cur_position = movement.position
 		cur_direction = direction.dir
@@ -301,11 +303,12 @@ function movement.set_position_and_dir_from_input(
 	bombs: Bombs,
 	lightning_bombs: LightningBombs,
 	blocks_bombs: Group<Kinematic>,
+	interacts_with_bombs: Group<Kinematic>,
 	lookup: Lookup
 )
 	local directions = get_directions_from_input(player, dt)
 	local new_dir, new_pos = get_new_player_orientation(
-		player.direction, directions, blocking_blocks, hard_blocks, bombs, lightning_bombs, player, blocks_bombs, lookup
+		player.direction, directions, blocking_blocks, hard_blocks, bombs, lightning_bombs, player, blocks_bombs, interacts_with_bombs, lookup
 	)
 	player:set_movement(new_pos, new_dir)
 	if #directions == 0 then

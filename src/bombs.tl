@@ -113,7 +113,7 @@ local function moving_outside_of_map(test_hitbox: Rectangle): boolean
     return not level_map.player_area():contains(test_hitbox) and not bomb_in_goal
 end
 
-function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, lookup: Lookup): boolean
+function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, interacts_with_bombs: Group<Kinematic>, lookup: Lookup): boolean
     local test_hitbox =  self:movementbox():shift(direction)
     local old_hitbox = self:movementbox()
 
@@ -146,12 +146,19 @@ function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, lookup: Lo
     end
 
     local close_occupies = lookup:in_box_and_group(old_hitbox:expand(const.BLOCK_SIZE), occupies)
-    for _, occupied in ipairs(itertools.filter(close_occupies, not_this_bomb)) do
+    for _, occupied in ipairs(close_occupies) do
         if move_further_into_occupied(occupied:movementbox()) then
             return false
         end
+    end
 
-        if not conflict(occupied, old_hitbox) and conflict(occupied, test_hitbox) then
+    local close_interacts = lookup:in_box_and_group(old_hitbox:expand(const.BLOCK_SIZE), interacts_with_bombs)
+    for _, interact in ipairs(itertools.filter(close_interacts, not_this_bomb)) do
+        if move_further_into_occupied(interact:movementbox()) then
+            return false
+        end
+
+        if not conflict(interact, old_hitbox) and conflict(interact, test_hitbox) then
             -- Do not allow bomb move so its hitbox conflicts when it did not before
             return false
         end
@@ -160,7 +167,7 @@ function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, lookup: Lo
     return true
 end
 
-function Bomb:update(dt: number, occupies: Group<Kinematic>, lookup: Lookup)
+function Bomb:update(dt: number, occupies: Group<Kinematic>, interacts_with_bombs: Group<Kinematic>, lookup: Lookup)
     self.timer = self.timer - dt
     
     if self.velocity:length() > 0 then
@@ -171,7 +178,7 @@ function Bomb:update(dt: number, occupies: Group<Kinematic>, lookup: Lookup)
         end
 
         local new_position = self.position:move(self.velocity:scale(dt))
-        if self:can_move(self.velocity:scale(dt), occupies, lookup) then
+        if self:can_move(self.velocity:scale(dt), occupies, interacts_with_bombs, lookup) then
             self.position = new_position
         else
             -- If bomb can't move stop it and snap to grid
@@ -335,10 +342,10 @@ function Bombs:throw_bomb(from: Point, to: Point): Bomb
     return bomb
 end
 
-function Bombs:update(dt: number, blockers: Group<ExplosionBlocking>, explodables: Group<Explodable>, occupies: Group<Kinematic>, lookup: Lookup)
+function Bombs:update(dt: number, blockers: Group<ExplosionBlocking>, explodables: Group<Explodable>, occupies: Group<Kinematic>, interacts_with_bombs: Group<Kinematic>, lookup: Lookup)
     for i = #self.on_ground, 1, -1 do
         local bomb = self.on_ground[i]
-        bomb:update(dt, occupies, lookup)
+        bomb:update(dt, occupies, interacts_with_bombs, lookup)
 
         if bomb:is_complete() then
             table.remove(self.on_ground, i)
