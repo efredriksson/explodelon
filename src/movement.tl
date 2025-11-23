@@ -173,9 +173,14 @@ local function restrict_player_movement(
 				-- freely in far inside it. This is to stop moving through
 				-- bombs that are kicked against a player.
 				local kick_direction = movement:normalize()
-				if player.has_kick and bomb:can_move(kick_direction:scale(const.BLOCK_SIZE), blocks_bombs, players, bombs, lookup) then
-					-- Walking into bomb and at edge of bomb then kick
-					bomb:kick(kick_direction)
+				if player.has_kick then
+					local can_move = bomb:can_move(
+						kick_direction:scale(const.BLOCK_SIZE), blocks_bombs, players, bombs, lookup
+					)
+					if can_move.yes then
+						-- Walking into bomb and at edge of bomb then kick
+						bomb:kick(kick_direction)
+					end
 				end
 				-- Not allowed to walk further into bomb if at edge
 				return CheckedMovement.new(player.position, false, false)
