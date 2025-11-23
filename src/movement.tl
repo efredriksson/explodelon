@@ -179,7 +179,7 @@ local function restrict_player_movement(
 					)
 					if can_move.yes then
 						-- Walking into bomb and at edge of bomb then kick
-						bomb:kick(kick_direction)
+						bomb:kick(can_move.in_direction)
 					end
 				end
 				-- Not allowed to walk further into bomb if at edge
