@@ -143,13 +143,15 @@ end
 
 local record CanMoveBomb
     yes: boolean
+    new_position: Point
     will_hit: Bomb | nil
     should_stop: boolean
 end
 
-function CanMoveBomb.new(): CanMoveBomb
+function CanMoveBomb.new(new_position: Point): CanMoveBomb
    local self: CanMoveBomb = setmetatable({}, { __index = CanMoveBomb })
    self.yes = true
+   self.new_position = new_position
    self.will_hit = nil
    self.should_stop = false
    return self
@@ -160,15 +162,14 @@ function CanMoveBomb:no(): CanMoveBomb
    return self
 end
 
-function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, players: Group<Player>, bombs: Group<Bomb>, lookup: Lookup): CanMoveBomb
-    local can_move_bomb = CanMoveBomb.new()
-    
+function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, players: Group<Player>, bombs: Group<Bomb>, lookup: Lookup): CanMoveBomb    
     local function not_this_bomb(occupied: Kinematic): boolean
         return occupied ~= self
     end
     
     local test_hitbox = self:movementbox():shift(direction)
     local old_hitbox = self:movementbox()
+    local can_move_bomb = CanMoveBomb.new(test_hitbox:top_left())
     local close_occupies = lookup:in_box_and_group(old_hitbox:expand(const.BLOCK_SIZE), occupies)
     local close_players = lookup:in_box_and_group(old_hitbox:expand(const.BLOCK_SIZE), players)
     local close_bombs = lookup:in_box_and_group(old_hitbox:expand(const.BLOCK_SIZE), bombs)
@@ -202,6 +203,22 @@ function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, players: G
     )
 
     if self.velocity:length() > 0 and not self.velocity:same_direction(direction) then
+        -- Bomb is getting kicked from the side while moving. If this happen and
+        -- the bomb would otherwise have moved inot new block tile, then we help the
+        -- side kick by snapping the projected position/hitbox to corridor. This means
+        -- a side kick can be done without things aligning exactly!
+        local mock_dt = 1/60 -- TODO: Need to pass in 'dt' in here to properly calculate this
+        local passing = moving_into_new_block(self:movementbox(), self.velocity:scale(mock_dt))
+        if self.velocity:orthogonal(direction) and passing then
+            if direction.x == 0 then
+                test_hitbox.x = level_map.snap_to_closest_x_grid_tile(test_hitbox.x)
+            elseif direction.y == 0 then
+                test_hitbox.y = level_map.snap_to_closest_y_grid_tile(test_hitbox.y)
+            end
+
+            can_move_bomb.new_position = test_hitbox:top_left()
+        end
+
         -- The bomb is moving and is getting kicked in other direction. In this case
         -- we want to make sure it is not moving into something. Regardless if it is
         -- not technically moving into a new block. Consider for example two players
@@ -266,14 +283,13 @@ function Bomb:update(dt: number, occupies: Group<Kinematic>, players: Group<Play
 
         local dx = self.velocity:scale(dt)
         local new_block = moving_into_new_block(self:movementbox(), dx)
-        local new_position = self.position:move(dx)
         local can_move = self:can_move(dx, occupies, players, bombs, lookup)
         if self.timer <= 0 and new_block then
             -- If bomb timer is up and if trying to enter a new block snap to grid instead.
             -- This is to explode bomb on the grid. Bomb can slide to next intersection!
             self.position = level_map.snap_to_closest_grid_tile(self.position)
         elseif can_move.yes then
-            self.position = new_position
+            self.position = can_move.new_position
         else
             -- If bomb can't move stop it and snap to grid
             self.velocity = vectors.new(0, 0)

@@ -60,4 +60,12 @@ function Vector:same_direction(other: Vector): boolean
    return same_sign(self.x, other.x) and same_sign(self.y, other.y)
 end
 
+function Vector:dot_product(other: Vector): number
+   return self.x * other.x + self.y * other.y
+end
+
+function Vector:orthogonal(other: Vector): boolean
+   return self:dot_product(other) == 0
+end
+
 return vectors
