@@ -102,15 +102,7 @@ function Bomb:_trigger_belt(direction?: Vector): ConveyorBelt | nil
     end
 end
 
-function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, lookup: Lookup): boolean
-    local belt_trigger = self:_trigger_belt(direction)
-    if not belt_trigger is nil then
-        direction = belt_trigger.direction:scale(direction:length())
-    end
-    
-    local test_hitbox =  self:movementbox():shift(direction)
-    local old_hitbox = self:movementbox()
-    
+local function moving_outside_of_map(test_hitbox: Rectangle): boolean
     local bomb_in_goal = false
     for _, goal in ipairs(level_map.get_goals()) do
         if test_hitbox:overlap(goal:get_hitbox()) then
@@ -118,7 +110,19 @@ function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, lookup: Lo
         end
     end
 
-    if not level_map.player_area():contains(test_hitbox) and not bomb_in_goal then
+    return not level_map.player_area():contains(test_hitbox) and not bomb_in_goal
+end
+
+function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, lookup: Lookup): boolean
+    local test_hitbox =  self:movementbox():shift(direction)
+    local old_hitbox = self:movementbox()
+
+    local belt_trigger = self:_trigger_belt(direction)
+    if not belt_trigger is nil then
+        direction = belt_trigger.direction:scale(direction:length())
+    end
+
+    if moving_outside_of_map(test_hitbox) then
         return false
     end
 
