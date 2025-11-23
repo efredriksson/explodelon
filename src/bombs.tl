@@ -135,7 +135,34 @@ local function moving_into_new_block(movementbox: Rectangle, direction: Vector):
     return nil
 end
 
-function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, players: Group<Player>, bombs: Group<Bomb>, lookup: Lookup): boolean
+function Bomb:kick(direction: Vector)
+    local slide_speed = 120
+    self.velocity = direction:scale(slide_speed)
+    self.has_been_kicked = true
+end
+
+local record CanMoveBomb
+    yes: boolean
+    will_hit: Bomb | nil
+    should_stop: boolean
+end
+
+function CanMoveBomb.new(): CanMoveBomb
+   local self: CanMoveBomb = setmetatable({}, { __index = CanMoveBomb })
+   self.yes = true
+   self.will_hit = nil
+   self.should_stop = false
+   return self
+end
+
+function CanMoveBomb:no(): CanMoveBomb
+   self.yes = false
+   return self
+end
+
+function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, players: Group<Player>, bombs: Group<Bomb>, lookup: Lookup): CanMoveBomb
+    local can_move_bomb = CanMoveBomb.new()
+    
     local function not_this_bomb(occupied: Kinematic): boolean
         return occupied ~= self
     end
@@ -145,7 +172,8 @@ function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, players: G
     local close_occupies = lookup:in_box_and_group(old_hitbox:expand(const.BLOCK_SIZE), occupies)
     local close_players = lookup:in_box_and_group(old_hitbox:expand(const.BLOCK_SIZE), players)
     local close_bombs = lookup:in_box_and_group(old_hitbox:expand(const.BLOCK_SIZE), bombs)
-    local close_interacts: {Kinematic} = itertools.combine(itertools.filter(close_bombs, not_this_bomb), close_players)
+    close_bombs = itertools.filter(close_bombs, not_this_bomb)
+    local close_interacts: {Kinematic} = itertools.combine(close_bombs, close_players)
 
     local belt_trigger = self:_trigger_belt(direction)
     if not belt_trigger is nil then
@@ -153,19 +181,25 @@ function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, players: G
     end
 
     if moving_outside_of_map(test_hitbox) then
-        return false
+        return can_move_bomb:no()
     end
 
-    local function overlaps_entity_significantly(hitbox: Rectangle): boolean
-        for _, occupied in ipairs(itertools.combine(close_occupies, close_interacts)) do
-            if occupied:hitbox():overlap(hitbox:shrink(3)) then
+    local function overlaps_significantly(entity: Kinematic, hitbox: Rectangle): boolean
+        return entity:hitbox():overlap(hitbox:shrink(3))
+    end
+
+    local function overlaps_entity_significantly(hitbox: Rectangle, entities: {Kinematic}): boolean
+        for _, occupied in ipairs(entities) do
+            if overlaps_significantly(occupied, hitbox) then
                 return true
             end
         end
         return false
     end
 
-    local will_go_into_entity = overlaps_entity_significantly(test_hitbox)
+    local will_go_into_entity = overlaps_entity_significantly(
+        test_hitbox, itertools.combine(close_occupies, close_interacts)
+    )
 
     if self.velocity:length() > 0 and not self.velocity:same_direction(direction) then
         -- The bomb is moving and is getting kicked in other direction. In this case
@@ -173,7 +207,15 @@ function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, players: G
         -- not technically moving into a new block. Consider for example two players
         -- that are both kicking the bomb from opposite sides.
         if will_go_into_entity then
-            return false
+            return can_move_bomb:no()
+        end
+    end
+
+    for _, bomb in ipairs(close_bombs) do
+        if overlaps_significantly(bomb, test_hitbox) then
+            if bomb:can_move(direction, occupies, players, bombs, lookup).yes then
+                can_move_bomb.will_hit = bomb
+            end
         end
     end
 
@@ -181,30 +223,35 @@ function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, players: G
         -- If the bomb is already going into a new block we let it.
         -- But, if there is some collision this will be the last block
         -- it enters before stopping.
-        self.stopping = true
+        can_move_bomb.should_stop = true
     end
 
     local new_block = moving_into_new_block(self:movementbox(), direction)
     if not new_block is nil then
         if self.stopping then
-            self.stopping = false
-            return false
+            return can_move_bomb:no()
         end
         
         for _, occupied in ipairs(close_occupies) do
             if occupied:movementbox():overlap(test_hitbox) then
-                return false
+                return can_move_bomb:no()
             end
         end
 
-        if overlaps_entity_significantly(new_block) then
-            -- If the new block the bomb is about to start entering
-            -- contains bombs/players then don't continue.
-            return false
+        for _, bomb in ipairs(close_bombs) do
+            if overlaps_significantly(bomb, new_block) then
+                if bomb:can_move(direction, occupies, players, bombs, lookup).yes then
+                    can_move_bomb.will_hit = bomb
+                end
+            end
+        end
+
+        if overlaps_entity_significantly(new_block, close_interacts) then
+            return can_move_bomb:no()
         end
     end
 
-    return true
+    return can_move_bomb
 end
 
 function Bomb:update(dt: number, occupies: Group<Kinematic>, players: Group<Player>, bombs: Group<Bomb>, lookup: Lookup)
@@ -220,26 +267,30 @@ function Bomb:update(dt: number, occupies: Group<Kinematic>, players: Group<Play
         local dx = self.velocity:scale(dt)
         local new_block = moving_into_new_block(self:movementbox(), dx)
         local new_position = self.position:move(dx)
+        local can_move = self:can_move(dx, occupies, players, bombs, lookup)
         if self.timer <= 0 and new_block then
             -- If bomb timer is up and if trying to enter a new block snap to grid instead.
             -- This is to explode bomb on the grid. Bomb can slide to next intersection!
             self.position = level_map.snap_to_closest_grid_tile(self.position)
-        elseif self:can_move(self.velocity:scale(dt), occupies, players, bombs, lookup) then
+        elseif can_move.yes then
             self.position = new_position
         else
             -- If bomb can't move stop it and snap to grid
             self.velocity = vectors.new(0, 0)
             self.position = level_map.snap_to_closest_grid_tile(self.position)
+            self.stopping = false
+        end
+
+        local bomb_hit = can_move.will_hit
+        if not bomb_hit is nil then
+            bomb_hit:kick(dx:normalize())
+        end
+        if can_move.should_stop then
+            self.stopping = true
         end
     end
 
     self.animation:update(dt)
-end
-
-function Bomb:kick(direction: Vector)
-    local slide_speed = 120
-    self.velocity = direction:scale(slide_speed)
-    self.has_been_kicked = true
 end
 
 global record ThrownBomb is Entity
