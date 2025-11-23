@@ -144,14 +144,16 @@ end
 local record CanMoveBomb
     yes: boolean
     new_position: Point
+    in_direction: Vector
     will_hit: Bomb | nil
     should_stop: boolean
 end
 
-function CanMoveBomb.new(new_position: Point): CanMoveBomb
+function CanMoveBomb.new(new_position: Point, in_direction: Vector): CanMoveBomb
    local self: CanMoveBomb = setmetatable({}, { __index = CanMoveBomb })
    self.yes = true
    self.new_position = new_position
+   self.in_direction = in_direction
    self.will_hit = nil
    self.should_stop = false
    return self
@@ -169,7 +171,7 @@ function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, players: G
     
     local test_hitbox = self:movementbox():shift(direction)
     local old_hitbox = self:movementbox()
-    local can_move_bomb = CanMoveBomb.new(test_hitbox:top_left())
+    local can_move_bomb = CanMoveBomb.new(test_hitbox:top_left(), direction:normalize())
     local close_occupies = lookup:in_box_and_group(old_hitbox:expand(const.BLOCK_SIZE), occupies)
     local close_players = lookup:in_box_and_group(old_hitbox:expand(const.BLOCK_SIZE), players)
     local close_bombs = lookup:in_box_and_group(old_hitbox:expand(const.BLOCK_SIZE), bombs)
@@ -179,6 +181,7 @@ function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, players: G
     local belt_trigger = self:_trigger_belt(direction)
     if not belt_trigger is nil then
         direction = belt_trigger.direction:scale(direction:length())
+        can_move_bomb.in_direction = direction:normalize()
     end
 
     if moving_outside_of_map(test_hitbox) then
