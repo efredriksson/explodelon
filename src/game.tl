@@ -89,7 +89,7 @@ function Game:load()
 	self.game_countdown = game_countdown.new()
 	self.pressure_blocks = pressure_blocks.new()
 	self.tic_counter = 0
-	self.audio_paused = false 
+	self.audio_paused = false
 	music:stop()
 end
 
@@ -307,10 +307,6 @@ function Game:update(dt: number)
 		self.lightning_bombs.on_ground,
 		self.pressure_blocks.on_ground
 	)
-	local interacts_with_bombs: Group<Kinematic> = collision.new_group(
-		alive_players,
-		self.bombs.on_ground
-	)
 	local blockers: Group<ExplosionBlocking> = collision.new_group(
 		self.eggs.on_ground,
 		self.items.on_ground,
@@ -328,6 +324,10 @@ function Game:update(dt: number)
 		self.pressure_blocks.on_ground,
 		self.hard_blocks
 	)
+	local pressure_blocks_group: Group<Entity> = collision.new_group(self.pressure_blocks.on_ground)
+	local bombs_group: Group<Bomb> = collision.new_group(self.bombs.on_ground)
+	local bomb_entities_group: Group<Entity> = collision.new_group(self.bombs.on_ground)
+	local blocking_blocks_group: Group<Kinematic> = collision.new_group(self.soft_blocks.on_ground, self.pressure_blocks.on_ground)
 	local lookup = collision.new_lookup(
 		self.soft_blocks.on_ground,
 		self.hard_blocks,
@@ -339,12 +339,8 @@ function Game:update(dt: number)
 		self.pressure_blocks.on_ground
 	)
 	local alive_players_group = collision.new_group(alive_players)
-	self.bombs:update(dt, blockers, explodables, blocks_bombs, interacts_with_bombs, lookup)
+	self.bombs:update(dt, blockers, explodables, blocks_bombs, alive_players_group, bombs_group, lookup)
 	self.lightning_bombs:update(dt, lightning_blockers, alive_players_group, lookup)
-
-	local pressure_blocks_group: Group<Entity> = collision.new_group(self.pressure_blocks.on_ground)
-	local bombs_group: Group<Entity> = collision.new_group(self.bombs.on_ground)
-	local blocking_blocks_group: Group<Kinematic> = collision.new_group(self.soft_blocks.on_ground, self.pressure_blocks.on_ground)
 
 	for _, player in ipairs(alive_players) do
 		player:update(dt)
@@ -354,7 +350,7 @@ function Game:update(dt: number)
 			local blocking_blocks = lookup:in_box_and_group(area_close_to_player, blocking_blocks_group)
 			local hard_blocks = lookup:in_box_and_group(area_close_to_player, self.hard_blocks_group)
 			movement.set_position_and_dir_from_input(
-				player, dt, blocking_blocks, hard_blocks, self.bombs, self.lightning_bombs, blocks_bombs, interacts_with_bombs, lookup
+				player, dt, blocking_blocks, hard_blocks, self.lightning_bombs, blocks_bombs, alive_players_group, bombs_group, lookup
 			)
 		end
 
@@ -399,7 +395,7 @@ function Game:update(dt: number)
 	end
 
 	self:clear_entities(lookup, pressure_blocks_group, self.eggs.on_ground, self.items.on_ground, self.bombs.on_ground, self.lightning_bombs.on_ground)
-	self:clear_entities(lookup, bombs_group, self.eggs.on_ground, self.items.on_ground)
+	self:clear_entities(lookup, bomb_entities_group, self.eggs.on_ground, self.items.on_ground)
 	self.player_animations:update(dt)
 	self.soft_blocks:update(dt)
 	for _, soft_block in ipairs(self.soft_blocks:exploding()) do
