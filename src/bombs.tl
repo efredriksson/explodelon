@@ -135,7 +135,7 @@ local function moving_into_new_block(movementbox: Rectangle, direction: Vector):
     return nil
 end
 
-function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, interacts_with_bombs: Group<Kinematic>, lookup: Lookup): boolean
+function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, players: Group<Player>, bombs: Group<Bomb>, lookup: Lookup): boolean
     local function not_this_bomb(occupied: Kinematic): boolean
         return occupied ~= self
     end
@@ -143,8 +143,9 @@ function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, interacts_
     local test_hitbox = self:movementbox():shift(direction)
     local old_hitbox = self:movementbox()
     local close_occupies = lookup:in_box_and_group(old_hitbox:expand(const.BLOCK_SIZE), occupies)
-    local close_interacts = lookup:in_box_and_group(old_hitbox:expand(const.BLOCK_SIZE), interacts_with_bombs)
-    close_interacts = itertools.filter(close_interacts, not_this_bomb)
+    local close_players = lookup:in_box_and_group(old_hitbox:expand(const.BLOCK_SIZE), players)
+    local close_bombs = lookup:in_box_and_group(old_hitbox:expand(const.BLOCK_SIZE), bombs)
+    local close_interacts: {Kinematic} = itertools.combine(itertools.filter(close_bombs, not_this_bomb), close_players)
 
     local belt_trigger = self:_trigger_belt(direction)
     if not belt_trigger is nil then
@@ -206,7 +207,7 @@ function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, interacts_
     return true
 end
 
-function Bomb:update(dt: number, occupies: Group<Kinematic>, interacts_with_bombs: Group<Kinematic>, lookup: Lookup)
+function Bomb:update(dt: number, occupies: Group<Kinematic>, players: Group<Player>, bombs: Group<Bomb>, lookup: Lookup)
     self.timer = self.timer - dt
     
     if self.velocity:length() > 0 then
@@ -223,7 +224,7 @@ function Bomb:update(dt: number, occupies: Group<Kinematic>, interacts_with_bomb
             -- If bomb timer is up and if trying to enter a new block snap to grid instead.
             -- This is to explode bomb on the grid. Bomb can slide to next intersection!
             self.position = level_map.snap_to_closest_grid_tile(self.position)
-        elseif self:can_move(self.velocity:scale(dt), occupies, interacts_with_bombs, lookup) then
+        elseif self:can_move(self.velocity:scale(dt), occupies, players, bombs, lookup) then
             self.position = new_position
         else
             -- If bomb can't move stop it and snap to grid
@@ -379,10 +380,10 @@ function Bombs:throw_bomb(from: Point, to: Point): Bomb
     return bomb
 end
 
-function Bombs:update(dt: number, blockers: Group<ExplosionBlocking>, explodables: Group<Explodable>, occupies: Group<Kinematic>, interacts_with_bombs: Group<Kinematic>, lookup: Lookup)
+function Bombs:update(dt: number, blockers: Group<ExplosionBlocking>, explodables: Group<Explodable>, occupies: Group<Kinematic>, players: Group<Player>, bombs_: Group<Bomb>, lookup: Lookup)
     for i = #self.on_ground, 1, -1 do
         local bomb = self.on_ground[i]
-        bomb:update(dt, occupies, interacts_with_bombs, lookup)
+        bomb:update(dt, occupies, players, bombs_, lookup)
 
         if bomb:is_complete() then
             table.remove(self.on_ground, i)
