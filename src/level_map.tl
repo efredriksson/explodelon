@@ -106,10 +106,19 @@ function level_map.get_non_hard_block_positions(): {Point}
 	return positions
 end
 
+function level_map.snap_to_closest_x_grid_tile(x: number): number
+	return math.floor((x - PLAYER_AREA.x) / const.BLOCK_SIZE + 0.5) * const.BLOCK_SIZE + PLAYER_AREA.x
+end
+
+function level_map.snap_to_closest_y_grid_tile(y: number): number
+	return math.floor((y - PLAYER_AREA.y) / const.BLOCK_SIZE + 0.5) * const.BLOCK_SIZE + PLAYER_AREA.y
+end
+
 function level_map.snap_to_closest_grid_tile(pos: Point): Point
-	local x = math.floor((pos.x - PLAYER_AREA.x) / const.BLOCK_SIZE + 0.5) * const.BLOCK_SIZE + PLAYER_AREA.x
-	local y = math.floor((pos.y - PLAYER_AREA.y) / const.BLOCK_SIZE + 0.5) * const.BLOCK_SIZE + PLAYER_AREA.y
-	return points.new(x, y)
+	return points.new(
+		level_map.snap_to_closest_x_grid_tile(pos.x),
+		level_map.snap_to_closest_y_grid_tile(pos.y)
+	)
 end
 
 function level_map.get_right_side_pressure_blocks(): {Point}
