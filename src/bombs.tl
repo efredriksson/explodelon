@@ -5,6 +5,7 @@ local explosions = require("explosions")
 local hitboxes = require("hitboxes")
 local itertools = require("itertools")
 local level_map = require("level_map")
+local logger = require("logger")
 local physics = require("physics")
 local points = require("geometry.points")
 local vectors = require("geometry.vectors")
@@ -164,11 +165,11 @@ function CanMoveBomb:no(): CanMoveBomb
    return self
 end
 
-function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, players: Group<Player>, bombs: Group<Bomb>, lookup: Lookup): CanMoveBomb    
+function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, players: Group<Player>, bombs: Group<Bomb>, lookup: Lookup, call_level?: integer): CanMoveBomb    
     local function not_this_bomb(occupied: Kinematic): boolean
         return occupied ~= self
     end
-    
+
     local test_hitbox = self:movementbox():shift(direction)
     local old_hitbox = self:movementbox()
     local can_move_bomb = CanMoveBomb.new(test_hitbox:top_left(), direction:normalize())
@@ -177,6 +178,13 @@ function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, players: G
     local close_bombs = lookup:in_box_and_group(old_hitbox:expand(const.BLOCK_SIZE), bombs)
     close_bombs = itertools.filter(close_bombs, not_this_bomb)
     local close_interacts: {Kinematic} = itertools.combine(close_bombs, close_players)
+
+    local next_call_level = (call_level or 1) + 1
+    if next_call_level > 3 then
+        -- Stop when called recursive 3 times, no more chain reactions should be possible.
+        logger.info("Recursive bomb can move calls, aborting")
+        return can_move_bomb:no()
+    end
 
     local belt_trigger = self:_trigger_belt(direction)
     if not belt_trigger is nil then
@@ -233,7 +241,7 @@ function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, players: G
 
     for _, bomb in ipairs(close_bombs) do
         if overlaps_significantly(bomb, test_hitbox) then
-            if bomb:can_move(direction, occupies, players, bombs, lookup).yes then
+            if bomb:can_move(direction, occupies, players, bombs, lookup, next_call_level).yes then
                 can_move_bomb.will_hit = bomb
             end
         end
@@ -260,7 +268,7 @@ function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, players: G
 
         for _, bomb in ipairs(close_bombs) do
             if overlaps_significantly(bomb, new_block) then
-                if bomb:can_move(direction, occupies, players, bombs, lookup).yes then
+                if bomb:can_move(direction, occupies, players, bombs, lookup, next_call_level).yes then
                     can_move_bomb.will_hit = bomb
                 end
             end
