@@ -16,3 +16,6 @@ You can now run the game directly using `./retroarch --verbose -L cores/lutro_li
 > Tip: You can create a .env file and add `LUTRO_DIST_DIR=...` to override where `make package` will put the game.
 
 > Tip: The `--verbose` flag will give you helpful output if the game crashes during development. This is the main reason to use RetroArch over Ludo.
+
+### Installing on recalbox
+If you just want to ensure you have the latest version of the game on your recalbox the see [this script](./custom.sh).
