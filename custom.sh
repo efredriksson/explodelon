@@ -8,6 +8,11 @@ ROM_DIR=/recalbox/share/roms/lutro
 mkdir -p ${ROM_DIR}
 LOG_FILE=${ROM_DIR}/update_log.txt
 
+if [[ ! $1 =~ "start" ]]; then
+    echo "Will do nothing, only do updates at startup" >> $LOG_FILE
+    exit 0
+fi
+
 TIMEOUT=180
 while ! ping -c 1 -W 1 api.github.com; do
     echo "Waiting for api.github.com - network might not be connected" >> $LOG_FILE
