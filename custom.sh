@@ -4,21 +4,25 @@
 # then update explodelon to latest version at startup if it can connect to github.
 # You have to restart recalbox for the new version to end up in the gamelist.xml.
 
+ROM_DIR=/recalbox/share/roms/lutro
+mkdir -p ${ROM_DIR}
+LOG_FILE=${ROM_DIR}/update_log.txt
+
 TIMEOUT=180
 while ! ping -c 1 -W 1 api.github.com; do
-    echo "Waiting for api.github.com - network might not be connected"
+    echo "Waiting for api.github.com - network might not be connected" >> $LOG_FILE
     sleep 1
 
     TIMEOUT=$((TIMEOUT-1))
     if [ $TIMEOUT -eq 0 ]; then
-        echo "timed out waiting for network connection"
+        echo "timed out waiting for network connection" >> $LOG_FILE
         exit 1
     fi
 done
 
-echo "OK, network is up!"
+echo "OK, network is up!" >> $LOG_FILE
 
-ROM_DIR=/recalbox/share/roms/lutro
+
 DOWNLOAD_LINK="$(curl -s https://api.github.com/repos/efredriksson/explodelon/releases/latest \
 | grep "browser_download_url.*lutro" \
 | cut -d : -f 2,3 \
@@ -27,5 +31,6 @@ DOWNLOAD_LINK="$(curl -s https://api.github.com/repos/efredriksson/explodelon/re
 GAME_NAME_AND_VERISON="$(echo ${DOWNLOAD_LINK} | xargs -- basename)"
 
 # Download game to ROM folder:
-mkdir -p ${ROM_DIR}
 wget -O ${ROM_DIR}/${GAME_NAME_AND_VERISON} ${DOWNLOAD_LINK}
+
+echo "Update done!" >> $LOG_FILE
