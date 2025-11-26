@@ -34,8 +34,10 @@ DOWNLOAD_LINK="$(curl -s https://api.github.com/repos/efredriksson/explodelon/re
 | tr -d \" \
 )"
 GAME_NAME_AND_VERISON="$(echo ${DOWNLOAD_LINK} | xargs -- basename)"
+echo "Game filename is ${GAME_NAME_AND_VERISON}" >> $LOG_FILE
 
 # Download game to ROM folder:
+echo "Will download it from ${DOWNLOAD_LINK} to ${ROM_DIR}/${GAME_NAME_AND_VERISON}" >> $LOG_FILE
 wget -O ${ROM_DIR}/${GAME_NAME_AND_VERISON} ${DOWNLOAD_LINK}
 
 echo "Update done!" >> $LOG_FILE
