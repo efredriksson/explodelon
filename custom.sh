@@ -5,6 +5,7 @@
 # You have to restart recalbox for the new version to end up in the gamelist.xml.
 
 ROM_DIR=/recalbox/share/roms/lutro
+GITHUB_LATEST_RELEASE_URL=https://api.github.com/repos/efredriksson/explodelon/releases/latest
 mkdir -p ${ROM_DIR}
 LOG_FILE=${ROM_DIR}/update_log.txt
 
@@ -14,7 +15,7 @@ if [[ ! $1 =~ "start" ]]; then
 fi
 
 TIMEOUT=180
-while ! ping -c 1 -W 1 api.github.com; do
+while ! curl -s ${GITHUB_LATEST_RELEASE_URL}; do
     echo "Waiting for api.github.com - network might not be connected" >> $LOG_FILE
     sleep 1
 
@@ -28,8 +29,8 @@ done
 echo "OK, network is up!" >> $LOG_FILE
 
 
-GITHUB_RELEASE_INFO="$(curl -s https://api.github.com/repos/efredriksson/explodelon/releases/latest)"
-DOWNLOAD_LINK="$(curl -s https://api.github.com/repos/efredriksson/explodelon/releases/latest \
+GITHUB_RELEASE_INFO="$(curl -s ${GITHUB_LATEST_RELEASE_URL})"
+DOWNLOAD_LINK="$(curl -s ${GITHUB_LATEST_RELEASE_URL} \
 | grep "browser_download_url.*lutro" \
 | cut -d : -f 2,3 \
 | tr -d \" \
