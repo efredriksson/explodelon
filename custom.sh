@@ -28,6 +28,7 @@ done
 echo "OK, network is up!" >> $LOG_FILE
 
 
+GITHUB_RELEASE_INFO="$(curl -s https://api.github.com/repos/efredriksson/explodelon/releases/latest)"
 DOWNLOAD_LINK="$(curl -s https://api.github.com/repos/efredriksson/explodelon/releases/latest \
 | grep "browser_download_url.*lutro" \
 | cut -d : -f 2,3 \
@@ -35,6 +36,8 @@ DOWNLOAD_LINK="$(curl -s https://api.github.com/repos/efredriksson/explodelon/re
 )"
 GAME_NAME_AND_VERISON="$(echo ${DOWNLOAD_LINK} | xargs -- basename)"
 echo "Game filename is ${GAME_NAME_AND_VERISON}" >> $LOG_FILE
+
+echo "Github info is ${GITHUB_RELEASE_INFO}" >> $LOG_FILE
 
 # Download game to ROM folder:
 echo "Will download it from ${DOWNLOAD_LINK} to ${ROM_DIR}/${GAME_NAME_AND_VERISON}" >> $LOG_FILE
