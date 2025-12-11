@@ -458,7 +458,16 @@ function Bombs:throw_bomb(from: Point, to: Point): Bomb
     return bomb
 end
 
-function Bombs:update(dt: number, blockers: Group<ExplosionBlocking>, explodables: Group<Explodable>, occupies: Group<Kinematic>, players: Group<Player>, bombs_: Group<Bomb>, lookup: Lookup)
+function Bombs:update(
+    dt: number,
+    blockers: Group<ExplosionBlocking>,
+    explodables: Group<Explodable>,
+    occupies: Group<Kinematic>,
+    players: Group<Player>,
+    bombs_: Group<Bomb>,
+    bombs_bounce_on: Group<Kinematic>,
+    lookup: Lookup
+)
     for i = #self.on_ground, 1, -1 do
         local bomb = self.on_ground[i]
         bomb:update(dt, occupies, players, bombs_, lookup)
@@ -479,7 +488,7 @@ function Bombs:update(dt: number, blockers: Group<ExplosionBlocking>, explodable
     for i, bomb in ipairs(self.in_air) do
         bomb:update(dt)
         if bomb:has_landed() then
-            local hitting_entities = lookup:collisions_between({bomb}, occupies)
+            local hitting_entities = lookup:collisions_between({bomb}, bombs_bounce_on)
             local bomb_bouncing = false
             for _, hitting_entity in pairs(hitting_entities) do
                 hitting_entity:hit_with_bomb()

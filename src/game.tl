@@ -307,6 +307,14 @@ function Game:update(dt: number)
 		self.lightning_bombs.on_ground,
 		self.pressure_blocks.on_ground
 	)
+	local bombs_bounce_on: Group<Kinematic> = collision.new_group(
+		self.soft_blocks.on_ground,
+		self.hard_blocks,
+		self.lightning_bombs.on_ground,
+		self.pressure_blocks.on_ground,
+		self.bombs.on_ground,
+		alive_players
+	)
 	local blockers: Group<ExplosionBlocking> = collision.new_group(
 		self.eggs.on_ground,
 		self.items.on_ground,
@@ -339,7 +347,7 @@ function Game:update(dt: number)
 		self.pressure_blocks.on_ground
 	)
 	local alive_players_group = collision.new_group(alive_players)
-	self.bombs:update(dt, blockers, explodables, blocks_bombs, alive_players_group, bombs_group, lookup)
+	self.bombs:update(dt, blockers, explodables, blocks_bombs, alive_players_group, bombs_group, bombs_bounce_on, lookup)
 	self.lightning_bombs:update(dt, lightning_blockers, alive_players_group, lookup)
 
 	for _, player in ipairs(alive_players) do
