@@ -1,15 +1,7 @@
 require("geometry.points")
 require("geometry.vectors")
 local hitboxes = require("hitboxes")
-
-
-global type DinoColor = enum
-    "blue"
-    "pink"
-    "purple"
-    "green"
-    "yellow"
-end
+local settings = require("settings")
 
 global type DinoAction = enum
     "walk"
@@ -27,8 +19,6 @@ global record Dino
     hatching: boolean
 end
 
-local DINO_COLORS: {DinoColor} = {"blue", "pink", "purple", "green", "yellow"}
-
 local dinos = {}
 
 function dinos.new(position: Point, direction: Direction): Dino
@@ -36,7 +26,8 @@ function dinos.new(position: Point, direction: Direction): Dino
    self.position = position
    self.direction = direction
    self.action = "idle"
-   self.color = DINO_COLORS[lutro.math.random(#DINO_COLORS)]
+   local dino_choices = settings.get_enabled_dinos()
+   self.color = dino_choices[lutro.math.random(#dino_choices)]
    self.level = 1
    self.hatching = true
    return self
