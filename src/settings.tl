@@ -82,10 +82,36 @@ function PlayerRules.new(): PlayerRules
     return self
 end
 
+global type DinoColor = enum
+    "blue"
+    "pink"
+    "purple"
+    "green"
+    "yellow"
+end
+
+local record DinoRules
+    enabled: {DinoColor: boolean}
+end
+
+function DinoRules.new(): DinoRules
+    local self: DinoRules = setmetatable({}, { __index = DinoRules })
+    local enabled <total>: {DinoColor: boolean} = {
+        blue=true,
+        pink=true,
+        purple=true,
+        green=true,
+        yellow=true,
+    }
+    self.enabled = enabled
+    return self
+end
+
 local record GameRules
     players: PlayerRules
     items: ItemRules
     timings: TimingRules
+    dinos: DinoRules
 end
 
 function GameRules.new(): GameRules
@@ -93,6 +119,7 @@ function GameRules.new(): GameRules
     self.players = PlayerRules.new()
     self.items = ItemRules.new()
     self.timings = TimingRules.new()
+    self.dinos = DinoRules.new()
     return self
 end
 
@@ -255,6 +282,24 @@ end
 
 function Settings.set_sudden_death_time(value: number)
     settings.game_rules.timings.sudden_death = value
+end
+
+function Settings.get_enabled_dinos(): {DinoColor}
+    local enabled_dinos: {DinoColor} = {}
+
+    for color, enabled in pairs(settings.game_rules.dinos.enabled) do
+        if enabled then
+            table.insert(enabled_dinos, color)
+        end
+    end
+
+    return enabled_dinos
+end
+
+function Settings.set_dino_enabled(color: DinoColor): function(value: boolean)
+    return function(value: boolean)
+        settings.game_rules.dinos.enabled[color] = value
+    end
 end
 
 function Settings.set_game_rules_default()
