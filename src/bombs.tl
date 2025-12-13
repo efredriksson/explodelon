@@ -322,42 +322,25 @@ end
 
 global record ThrownBomb is Entity
     delegate: Bomb
-    previous_position: Point
     target: Point
-    direction: Vector
-    height: number
-    fall_velocity: number
-    side_velocity: Vector
-    gravity: number
-end
-
-function ThrownBomb:_set_trajectory(start_height: number, throw_height: number, throw_time: number)
-    self.height = start_height
-    self.fall_velocity = physics.calc_init_projectile_velocity(
-		start_height, throw_height, throw_time
-	)
-	self.gravity = physics.calc_gravity(self.fall_velocity, throw_height)
-	
-    local throw_vector = vectors.new(
-        self.target.x - self.delegate.position.x,
-        self.target.y - self.delegate.position.y
-    )
-    self.side_velocity = throw_vector:scale(1 / throw_time)
-    self.direction = throw_vector:normalize()
+    trajectory: ProjectileTrajectory
 end
 
 function ThrownBomb.new(delegate: Bomb, target: Point, start_height: number, throw_height: number, throw_time: number): ThrownBomb
     local self: ThrownBomb = setmetatable({}, { __index = ThrownBomb })
     self.delegate = delegate
-    self.previous_position = self.delegate.position
     self.target = target
-    self:_set_trajectory(start_height, throw_height, throw_time)
+    self.trajectory = physics.calc_trajectory(
+        start_height, 0, throw_height, throw_time, delegate.position, target
+    )
     return self
 end
 
 function ThrownBomb:bounce()
-    self.target = self:get_position():move(self.direction:scale(const.BLOCK_SIZE))
-    self:_set_trajectory(0, const.BLOCK_SIZE * 0.8, 0.25)
+    self.target = self:get_position():move(self.trajectory:get_direction():scale(const.BLOCK_SIZE))
+    self.trajectory = physics.calc_trajectory(
+        0, 0, const.BLOCK_SIZE * 0.8, 0.25, self.delegate.position, self.target
+    )
 end
 
 function ThrownBomb:hitbox(): Rectangle
@@ -373,30 +356,22 @@ function ThrownBomb:draw()
     lutro.graphics.draw(bomb_shadow, position.x - 1, position.y - 8)
 
     -- Bomb is drawn in the air
-    local draw_position = position:move(vectors.new(0, -self.height))
+    local draw_position = self.trajectory:in_air_position(position)
     self.delegate.animation:draw(draw_position.x, draw_position.y)
 end
 
 function ThrownBomb:has_landed(): boolean
-    if self:get_position():equal(self.target) then
-        return true
-    end
-    return self:get_position():distance_to(self.target) > self.previous_position:distance_to(self.target)
+    return self.trajectory:finished()
 end
 
 function ThrownBomb:update(dt: number)
     local bomb = self.delegate
     if not self:has_landed() then
-        self.previous_position = bomb.position
-        bomb.position = bomb.position:move(self.side_velocity:scale(dt))
-        self.height = self.height + self.fall_velocity * dt
-        self.fall_velocity = self.fall_velocity - self.gravity * dt
+        bomb.position = self.trajectory:update(dt, bomb.position)
     end
 
     if self:has_landed() then
         bomb.position = self.target
-        self.previous_position = self.target
-        self.height = 0
     end
 
     -- Don't update bomb as time should not change
