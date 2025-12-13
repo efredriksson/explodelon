@@ -210,10 +210,10 @@ function MountedPlayerAnimation:draw()
 	if self.player.direction == "down" then
 		-- Need to draw dino in front of player walking towards screen
 		draw(self.player_animation, self.draw_position)
-		draw(self.dino_animation, self.player.position)
+		draw(self.dino_animation, self.player.dino.position)
 	else
 		-- And player in front of dino in all other cases
-		draw(self.dino_animation, self.player.position)
+		draw(self.dino_animation, self.player.dino.position)
 		draw(self.player_animation, self.draw_position)
 	end
 end
