@@ -29,13 +29,18 @@ function load_rules_screen.new(previous_screen: Scene, start_screen: Scene): Men
         settings.set_debug_performance()
         scenes.set(start_screen)
     end
+    local function load_debug_dino_rules()
+        settings.set_debug_dinos()
+        scenes.set(start_screen)
+    end
     
     return screens.new({
         choices.new_done("insanity", 50, load_insanity_rules),
         choices.new_done("default", 70, load_default_rules),
-        choices.new_done("debug kick", 90, load_debug_kick_rules),
-        choices.new_done("debug lightning-bomb", 110, load_debug_lightning_bomb_rules),
-        choices.new_done("debug performance", 130, load_debug_performance_rules),
+        choices.new_done("debug dinos", 90, load_debug_dino_rules),
+        choices.new_done("debug kick", 110, load_debug_kick_rules),
+        choices.new_done("debug lightning-bomb", 130, load_debug_lightning_bomb_rules),
+        choices.new_done("debug performance", 150, load_debug_performance_rules),
         choices.new_done("back", 180, done)
     }, done)
 end

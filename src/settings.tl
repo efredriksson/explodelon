@@ -350,4 +350,19 @@ function Settings.set_debug_performance()
     settings.debug.log_scene_perf = true
 end
 
+function Settings.set_debug_dinos()
+    settings.game_rules = GameRules.new()
+    settings.game_rules.items.nbr_of_items.fire = 0
+    settings.game_rules.items.nbr_of_items.kick = 0
+    settings.game_rules.items.nbr_of_items.bomb = 0
+    settings.game_rules.items.nbr_of_items.speed = 0
+    settings.game_rules.items.nbr_soft_blocks = 20
+    settings.game_rules.dinos.nbr_of_eggs = 20
+    settings.game_rules.dinos.enabled.blue = false
+    settings.game_rules.dinos.enabled.pink = true
+    settings.game_rules.dinos.enabled.purple = false
+    settings.game_rules.dinos.enabled.green = false
+    settings.game_rules.dinos.enabled.yellow = false
+end
+
 return settings
