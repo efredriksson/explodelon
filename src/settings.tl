@@ -22,7 +22,6 @@ end
 
 local record ItemRules
     nbr_soft_blocks: integer
-    nbr_of_eggs: integer
     nbr_of_items: {ItemType: integer}
     spawn_rates: {ItemType: number}
 end
@@ -30,7 +29,6 @@ end
 function ItemRules.new(): ItemRules
     local self: ItemRules = setmetatable({}, { __index = ItemRules })
     self.nbr_soft_blocks = 105
-    self.nbr_of_eggs = 4
     self.nbr_of_items = {
         bomb = 8,
         lightning_bomb = 0,
@@ -91,6 +89,7 @@ global type DinoColor = enum
 end
 
 local record DinoRules
+    nbr_of_eggs: integer
     enabled: {DinoColor: boolean}
 end
 
@@ -103,6 +102,8 @@ function DinoRules.new(): DinoRules
         green=true,
         yellow=true,
     }
+
+    self.nbr_of_eggs = 4
     self.enabled = enabled
     return self
 end
@@ -191,7 +192,7 @@ function Settings.set_nbr_soft_blocks(value: integer)
 end
 
 function Settings.set_nbr_of_eggs(value: integer)
-    settings.game_rules.items.nbr_of_eggs = value
+    settings.game_rules.dinos.nbr_of_eggs = value
 end
 
 function Settings.set_nbr_of_bombs(value: integer)
@@ -325,7 +326,7 @@ function Settings.set_game_rules_lightning_bomb_debug()
     settings.game_rules.items.nbr_of_items.fire = 0
     settings.game_rules.items.nbr_of_items.kick = 0
     settings.game_rules.items.nbr_of_items.speed = 0
-    settings.game_rules.items.nbr_of_eggs = 0
+    settings.game_rules.dinos.nbr_of_eggs = 0
 end
 
 function Settings.set_game_rules_insanity()
