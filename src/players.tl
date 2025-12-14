@@ -8,7 +8,7 @@ local physics = require("physics")
 local vectors = require("geometry.vectors")
 local settings = require("settings")
 
-local PLAYER_HEIGHT_ON_DINO = -8 -- How high up from ground player is when on dino
+local CHARACTER_HEIGHT_ON_DINO = 8 -- How high up from ground player is when on dino
 
 global type Action = enum
    "walk"
@@ -41,11 +41,7 @@ global record Player is Explodable, Kinematic, Entity
 	stunned_for: number
 	dino: Dino
 
-	height: number
-	end_height: number
-    fall_velocity: number
-    side_velocity: Vector
-	gravity: number
+	jump_trajectory: ProjectileTrajectory
 	jump_target: Point
 end
 
@@ -69,13 +65,6 @@ function players.new(id: integer, sprite: CharacterName, position: Point): Playe
 	self.invulnerable_for = 0
 	self.stunned_for = 0
 	self.dino = nil
-
-	self.height = 0
-	self.end_height = 0
-    self.fall_velocity = 0
-	self.gravity = 0
-    self.side_velocity = vectors.new(0, 0)
-	self.jump_target = position
 	return self
 end
 
@@ -141,8 +130,7 @@ function Player:movementbox(): Rectangle
 	return hitboxes.new_block(self.position)
 end
 
--- TODO: Better name!
-local function get_player_side_position(original_pos: Point, direction: Direction): Point
+local function get_character_on_dino_ground_position(original_pos: Point, direction: Direction): Point
 	local horizonal_displacements: {Direction: integer} = {
 		right = -5, left = 5, up = 0, down = 0,
 	}
@@ -152,9 +140,9 @@ local function get_player_side_position(original_pos: Point, direction: Directio
 	)
 end
 
-local function get_player_position_on_mount(original_pos: Point, direction: Direction): Point
-	local to_the_side_pos = get_player_side_position(original_pos, direction)
-	return to_the_side_pos:move(vectors.new(0, PLAYER_HEIGHT_ON_DINO))
+local function get_character_position_on_top_of_dino(original_pos: Point, direction: Direction): Point
+	local to_the_side_pos = get_character_on_dino_ground_position(original_pos, direction)
+	return to_the_side_pos:move(vectors.new(0, -CHARACTER_HEIGHT_ON_DINO))
 end
 
 function Player:is_riding_dino(): boolean
@@ -175,40 +163,32 @@ local JUMP_OFF_TIME = 0.9              		 -- Unit: seconds
 local JUMP_ON_HEIGHT = 2 * const.BLOCK_SIZE  -- Unit: pixels (not SI unit!)
 local JUMP_OFF_HEIGHT = 3 * const.BLOCK_SIZE -- Unit: pixels (not SI unit!)
 
-function Player:_set_jump_v_and_g(start_height: number, end_height: number, jump_height: number, jump_time: number)
-	self.height = start_height
-	self.end_height = end_height
-	self.fall_velocity = -physics.calc_init_projectile_velocity(
-		math.abs(end_height - start_height), jump_height, jump_time
-	)
-	self.gravity = -physics.calc_gravity(self.fall_velocity, jump_height)
-	local jump_vector = vectors.new(
-        self.jump_target.x - self.position.x,
-        self.jump_target.y - self.position.y
-    )
-    self.side_velocity = jump_vector:scale(1 / jump_time)
-end
-
 function Player:jumps_onto(dino: Dino)
 	if not self:is_jumping() then
 		self:set_action("jump_on")
 		self.state = "mounted"
+		local character_distance_over_ground = 0.0
 
 		if self.dino then
 			-- Jump in place when upgrading existing dino
 			self.dino.action = "idle"
 			self.dino:level_up()
 			dino.level = 0 -- Dino is consumed into existing dino
-
-			self.jump_target = get_player_side_position(self.dino.position, self.direction)
-			-- Set current position as shifted by riding dino to jump from that position
-			self.position = get_player_side_position(self.position, self.direction)
-			self:_set_jump_v_and_g(PLAYER_HEIGHT_ON_DINO, PLAYER_HEIGHT_ON_DINO, JUMP_ON_HEIGHT, JUMP_ON_TIME)
+			character_distance_over_ground = CHARACTER_HEIGHT_ON_DINO
 		else
 			self.dino = dino
-			self.jump_target = get_player_side_position(self.dino.position, self.direction)
-			self:_set_jump_v_and_g(0, PLAYER_HEIGHT_ON_DINO, JUMP_ON_HEIGHT, JUMP_ON_TIME)
 		end
+
+		local character_ground_pos = get_character_on_dino_ground_position(self.dino.position, self.direction)
+		self.jump_trajectory = physics.calc_trajectory(
+			character_distance_over_ground,
+			CHARACTER_HEIGHT_ON_DINO,
+			JUMP_ON_HEIGHT,
+			JUMP_ON_TIME,
+			self.position,
+			character_ground_pos
+		)
+		self.jump_target = self.dino.position
 	end
 end
 
@@ -219,8 +199,10 @@ function Player:jump_off_dino()
 
 		self.jump_target = self.position
 		-- Set current position as shifted by riding dino to jump from that position
-		self.position = get_player_side_position(self.position, self.direction)
-		self:_set_jump_v_and_g(PLAYER_HEIGHT_ON_DINO, 0, JUMP_OFF_HEIGHT, JUMP_OFF_TIME)
+		self.position = get_character_on_dino_ground_position(self.position, self.direction)
+		self.jump_trajectory = physics.calc_trajectory(
+			CHARACTER_HEIGHT_ON_DINO, 0, JUMP_OFF_HEIGHT, JUMP_OFF_TIME, self.position, self.jump_target
+		)
 	end
 end
 
@@ -256,7 +238,7 @@ function Player:is_alive(): boolean
 end
 
 function Player:_get_jump_position(): Point
- 	return self.position:move(vectors.new(0, self.height))
+	return self.jump_trajectory:in_air_position(self.position)
 end
 
 function Player:update(dt: number)
@@ -267,22 +249,13 @@ function Player:update(dt: number)
 	end
 
 	if self:is_jumping() then
-		local previous_distance = math.abs(self.height - self.end_height)
-		local falling = self.fall_velocity > 0 -- TODO Rename fall velocity
-
-		self.position = self.position:move(self.side_velocity:scale(dt))
-		self.height = self.height + self.fall_velocity * dt
-        self.fall_velocity = self.fall_velocity - self.gravity * dt
-
-		local new_distance = math.abs(self.height - self.end_height)
-		if new_distance >= previous_distance and falling then
+		self.position = self.jump_trajectory:update(dt, self.position)
+		if self.jump_trajectory:finished() then
 			-- When distance from target not decreasing while falling we have landed
 			self:set_action("idle")
+			self.position = self.jump_target
 			if self.dino then
 				self.dino.hatching = false
-				self.position = self.dino.position
-			else
-				self.position = self.jump_target
 			end
 		end
 	end
@@ -293,7 +266,7 @@ function Player:get_draw_position(): Point
 		return self:_get_jump_position()
 	elseif self.state == "mounted" then
 		-- Adjust player sprite for being on top of its mount
-		return get_player_position_on_mount(self.position, self.direction)
+		return get_character_position_on_top_of_dino(self.position, self.direction)
 	end
 
 	return self.position
