@@ -55,23 +55,23 @@ local function set_dino_colors(image: Image, color: DinoColor)
 	end
 end
 
-local function dino_iamge(asset_file: string, color: DinoColor): Image
-	local image = lutro.graphics.newImage(asset_file)
+local function dino_iamge(level: integer, action: DinoAction, direction: Direction, color: DinoColor): Image
+	local png_name = action .. "_" .. direction
+	if action == "dying" or action == "stunned" then
+		png_name = action
+	end
+
+	local image = lutro.graphics.newImage("assets/tirras/level_" .. level .. "/" .. png_name .. ".png")
 	set_dino_colors(image, color)
 	return image
 end
 
 
 local function dino_images_for_level(action: DinoAction, direction: Direction, color: DinoColor): {integer: Image}
-	local png_name = action .. "_" .. direction
-	if action == "dying" or action == "stunned" then
-		png_name = action
-	end
-
 	return {
-		[1] = dino_iamge("assets/tirras/level_1/" .. png_name .. ".png", color),
-		[2] = dino_iamge("assets/tirras/level_2/" .. png_name .. ".png", color),
-		[3] = dino_iamge("assets/tirras/level_3/" .. png_name .. ".png", color),
+		[1] = dino_iamge(1, action, direction, color),
+		[2] = dino_iamge(2, action, direction, color),
+		[3] = dino_iamge(3, action, direction, color),
 	}
 end
 
@@ -81,6 +81,7 @@ local function dino_images_for_dir(direction: Direction, color: DinoColor): {Din
 		idle = dino_images_for_level("idle", direction, color),
 		dying = dino_images_for_level("dying", direction, color),
 		stunned = dino_images_for_level("stunned", direction, color),
+		jump = dino_images_for_level("jump", direction, color)
 	}
 end
 
@@ -96,19 +97,29 @@ end
 global record AnimatedDino
     dino: Dino
 	finished: boolean
+	previous_action: DinoAction
 	animations: {Direction: {DinoAction: {integer: Animation}}}
 end
 
 local function new_dino_animations(color: DinoColor): {Direction: {DinoAction: {integer: Animation}}}
 	local new_animations: {Direction: {DinoAction: {integer: Animation}}} = {}
+
+	local function create_animations(image: Image, action: DinoAction): Animation
+		if action == "jump" then
+			return animations.new_with_frames(image, {0.1, 10000})
+		else
+			return animations.new(image, 34, 34, 3, 18)
+		end
+	end
+
 	for direction, image_by_level_by_action in pairs(dino_images[color]) do
 		new_animations[direction] = {}
 		for action, image_by_level in pairs(image_by_level_by_action) do
 			new_animations[direction][action] = {}
 			for level, image in pairs(image_by_level) do
-				new_animations[direction][action][level] = animations.new(image, 34, 34, 3, 18)
-			end 
-		end 
+				new_animations[direction][action][level] = create_animations(image, action)
+			end
+		end
 	end
 
 	return new_animations
@@ -118,6 +129,7 @@ function AnimatedDino.new(dino: Dino): AnimatedDino
    	local self: AnimatedDino = setmetatable({}, { __index = AnimatedDino })
    	self.dino = dino
 	self.finished = false
+	self.previous_action = "idle"
    	self.animations = new_dino_animations(dino.color)
    	return self
 end
@@ -128,7 +140,13 @@ end
 
 function AnimatedDino:update(dt: number)
 	local animation = self:get_animation()
+	
+	if self.dino.action == "jump" and self.previous_action ~= "jump" then
+		animation:reset()
+	end
+
 	animation:update(dt)
+	self.previous_action = self.dino.action
 
 	if self.dino.action == "dying" and animation.loops > 0 then
 		self.finished = true

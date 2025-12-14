@@ -4,6 +4,7 @@ local const = require("const")
 local dino_animations = require("dino_animations")
 local points = require("geometry.points")
 
+local jump_shadow_image: Image
 
 --- Scale 0-1 represent how far from current to max to increase color component 
 local function increase_color(color: number, scale: number): number
@@ -50,6 +51,9 @@ local function character_animation_for_action(character_asset: string, state: Pl
 	local function action_resolved(): string
 		if action == "jump_on" or action == "jump_off" then
 			return "jump"
+		elseif action == "jump" then
+			-- Same sprite for jump as walk/idle, is always on mount when this happen
+			return "walk"
 		else
 			return action
 		end
@@ -99,6 +103,7 @@ local function character_animations_for_state(character_asset: string, state: Pl
 		idle = character_animation_for_action(character_asset, state, "idle", invulnerable),
 		jump_on = character_animation_for_action(character_asset, state, "jump_on", invulnerable),
 		jump_off = character_animation_for_action(character_asset, state, "jump_off", invulnerable),
+		jump = character_animation_for_action(character_asset, state, "jump", invulnerable),
 		dying = character_animation_for_dying(character_asset),
 		stunned = character_animation_for_stunned(character_asset, state)
 	}
@@ -207,13 +212,21 @@ function MountedPlayerAnimation:draw()
 		animation:draw(draw_pos.x, draw_pos.y)
 	end
 
+	local function dino_position(): Point
+		if self.player.action == "jump" then
+			return self.player:get_jump_position()
+		else
+			return self.player.dino.position
+		end
+	end
+
 	if self.player.direction == "down" then
 		-- Need to draw dino in front of player walking towards screen
 		draw(self.player_animation, self.draw_position)
-		draw(self.dino_animation, self.player.dino.position)
+		draw(self.dino_animation, dino_position())
 	else
 		-- And player in front of dino in all other cases
-		draw(self.dino_animation, self.player.dino.position)
+		draw(self.dino_animation, dino_position())
 		draw(self.player_animation, self.draw_position)
 	end
 end
@@ -232,6 +245,10 @@ function PlayerAnimations:add_new(player: Player)
 end
 
 local player_animations = {}
+
+function player_animations.load_assets()
+	jump_shadow_image = lutro.graphics.newImage("assets/items/shadow.png")
+end
 
 function player_animations.new(players: {Player}): PlayerAnimations
     local self: PlayerAnimations = setmetatable({}, { __index = PlayerAnimations })
@@ -288,6 +305,14 @@ function PlayerAnimations:get_all(): {Entity}
 	end
 
 	return entities_to_draw
+end
+
+function PlayerAnimations:draw_shadows()
+	for _, player in ipairs(self.players) do
+		if player.action == "jump" then
+			lutro.graphics.draw(jump_shadow_image, player.position.x - 1, player.position.y - 10)
+		end
+	end
 end
 
 return player_animations

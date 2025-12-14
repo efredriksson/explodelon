@@ -14,6 +14,7 @@ global type Action = enum
    "walk"
    "jump_on"
    "jump_off"
+   "jump"
    "idle"
    "dying"
    "stunned"
@@ -76,8 +77,12 @@ function Player:draw()
 	assert(false, "Not implemented")
 end
 
-function Player:is_jumping(): boolean
+function Player:is_jumping_on_off_dino(): boolean
 	return self.action == "jump_on" or self.action == "jump_off"
+end
+
+function Player:is_jumping(): boolean
+	return self:is_jumping_on_off_dino() or self.action == "jump"
 end
 
 function Player:set_movement(position: Point, direction: Direction)
@@ -107,6 +112,8 @@ function Player:set_action(action: Action)
 			self.dino.action = "idle"
 		elseif action == "stunned" then
 			self.dino.action = "stunned"
+		elseif action == "jump" then
+			self.dino.action = "jump"
 		end
 	end
 end
@@ -206,6 +213,61 @@ function Player:jump_off_dino()
 	end
 end
 
+local DINO_POWERUP_TIME_INTERVAL = 0.2
+
+function Player:can_jump(): boolean
+	return self.dino and self.dino.color == "pink" and not self:is_jumping()
+end
+
+function Player:get_max_jump_dist(): integer
+	local jump_dist = 2 * (math.floor(self.dino.jump_powerup_for / DINO_POWERUP_TIME_INTERVAL) + 1)
+	-- Clamp max jump dist
+	return math.min(jump_dist, self.dino.level * 2)
+end
+
+function Player:_get_max_jump_powerup_time(): number
+	return self.dino.level * DINO_POWERUP_TIME_INTERVAL
+end
+
+function Player:must_jump(): boolean
+	return self.dino and self.dino.jump_powerup_for > self:_get_max_jump_powerup_time()
+end
+
+function Player:jump_with_dino(jump_to: Point | nil)
+	if self.dino and self.dino.color == "pink" and not self:is_jumping() then
+		self:set_action("jump")
+		
+		self.jump_target = jump_to or self.position
+		local dino_jump_time = {
+			[1] = 0.9,
+			[2] = 1.0,
+			[3] = 1.1,
+			[4] = 1.2,
+			[5] = 1.3,
+			[6] = 1.4,
+		}
+		local dion_jump_height = {
+			[1] = 1.2 * const.BLOCK_SIZE,
+			[2] = 1.4 * const.BLOCK_SIZE,
+			[3] = 1.7 * const.BLOCK_SIZE,
+			[4] = 2.0 * const.BLOCK_SIZE,
+			[5] = 2.3 * const.BLOCK_SIZE,
+			[6] = 2.6 * const.BLOCK_SIZE,
+		}
+		local jump_power = self:get_max_jump_dist()
+		assert(jump_power <= 6 and jump_power >= 1)
+		self.jump_trajectory = physics.calc_trajectory(
+			0,
+			0,
+			dion_jump_height[jump_power],
+			dino_jump_time[jump_power],
+			self.position,
+			self.jump_target
+		)
+		self.dino.jump_powerup_for = 0
+	end
+end
+
 function Player:kill()
 	if self:is_invulnerable() or self:is_jumping() then
 		return
@@ -237,7 +299,7 @@ function Player:is_alive(): boolean
 	return self.action ~= "dying"
 end
 
-function Player:_get_jump_position(): Point
+function Player:get_jump_position(): Point
 	return self.jump_trajectory:in_air_position(self.position)
 end
 
@@ -262,8 +324,11 @@ function Player:update(dt: number)
 end
 
 function Player:get_draw_position(): Point
-	if self:is_jumping() then
-		return self:_get_jump_position()
+	if self:is_jumping_on_off_dino() then
+		return self:get_jump_position()
+	elseif self.action == "jump" then
+		-- Adjust player sprite for jump height and being on top of its mount
+		return get_character_position_on_top_of_dino(self:get_jump_position(), self.direction)
 	elseif self.state == "mounted" then
 		-- Adjust player sprite for being on top of its mount
 		return get_character_position_on_top_of_dino(self.position, self.direction)

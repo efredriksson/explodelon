@@ -8,6 +8,7 @@ global type DinoAction = enum
     "idle"
     "dying"
     "stunned"
+    "jump"
 end
 
 global record Dino
@@ -17,6 +18,7 @@ global record Dino
     color: DinoColor
     level: integer
     hatching: boolean
+    jump_powerup_for: number
 end
 
 local dinos = {}
@@ -30,6 +32,7 @@ function dinos.new(position: Point, direction: Direction): Dino
    self.color = dino_choices[lutro.math.random(#dino_choices)]
    self.level = 1
    self.hatching = true
+   self.jump_powerup_for = 0
    return self
 end
 
