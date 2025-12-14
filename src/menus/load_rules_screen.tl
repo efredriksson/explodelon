@@ -17,6 +17,10 @@ function load_rules_screen.new(previous_screen: Scene, start_screen: Scene): Men
         settings.set_game_rules_insanity()
         scenes.set(start_screen)
     end
+    local function load_dino_madness_rules()
+        settings.set_game_rules_dino_madness()
+        scenes.set(start_screen)
+    end
     local function load_debug_kick_rules()
         settings.set_game_rules_kick_debug()
         scenes.set(start_screen)
@@ -36,11 +40,12 @@ function load_rules_screen.new(previous_screen: Scene, start_screen: Scene): Men
     
     return screens.new({
         choices.new_done("insanity", 50, load_insanity_rules),
-        choices.new_done("default", 70, load_default_rules),
-        choices.new_done("debug dinos", 90, load_debug_dino_rules),
+        choices.new_done("dino madness", 65, load_dino_madness_rules),
+        choices.new_done("default", 80, load_default_rules),
+        choices.new_done("debug dinos", 95, load_debug_dino_rules),
         choices.new_done("debug kick", 110, load_debug_kick_rules),
-        choices.new_done("debug lightning-bomb", 130, load_debug_lightning_bomb_rules),
-        choices.new_done("debug performance", 150, load_debug_performance_rules),
+        choices.new_done("debug lightning-bomb", 125, load_debug_lightning_bomb_rules),
+        choices.new_done("debug performance", 140, load_debug_performance_rules),
         choices.new_done("back", 180, done)
     }, done)
 end
