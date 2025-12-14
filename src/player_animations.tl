@@ -292,9 +292,9 @@ function PlayerAnimations:get_all(): {Entity}
 	for _, player in ipairs(self.players) do
 		local player_animation = self:_get_for(player)
 		if player:is_riding_dino() then
-			local dion_anim = self.dinos:get_from(player.dino)
+			local dino_anim = self.dinos:get_from(player.dino)
 			table.insert(dinos_drawn_with_player, player.dino)
-			table.insert(entities_to_draw, MountedPlayerAnimation.new(player_animation, dion_anim, player))
+			table.insert(entities_to_draw, MountedPlayerAnimation.new(player_animation, dino_anim, player))
 		elseif player_animation then
 			table.insert(entities_to_draw, PlayerAnimation.new(player_animation, player))
 		end

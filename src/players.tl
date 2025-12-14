@@ -246,7 +246,7 @@ function Player:jump_with_dino(jump_to: Point | nil)
 			[5] = 1.3,
 			[6] = 1.4,
 		}
-		local dion_jump_height = {
+		local dino_jump_height = {
 			[1] = 1.2 * const.BLOCK_SIZE,
 			[2] = 1.4 * const.BLOCK_SIZE,
 			[3] = 1.7 * const.BLOCK_SIZE,
@@ -259,7 +259,7 @@ function Player:jump_with_dino(jump_to: Point | nil)
 		self.jump_trajectory = physics.calc_trajectory(
 			0,
 			0,
-			dion_jump_height[jump_power],
+			dino_jump_height[jump_power],
 			dino_jump_time[jump_power],
 			self.position,
 			self.jump_target
