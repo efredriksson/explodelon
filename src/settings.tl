@@ -342,6 +342,16 @@ function Settings.set_game_rules_insanity()
     settings.game_rules.players.mad_bombers.after_sudden_death = true
 end
 
+function Settings.set_game_rules_dino_madness()
+    settings.game_rules = GameRules.new()
+    settings.game_rules.items.nbr_soft_blocks = 60
+    settings.game_rules.timings.battle = 150
+    settings.game_rules.timings.sudden_death = 120
+    settings.game_rules.dinos.nbr_of_eggs = 15
+    settings.game_rules.items.spawn_rates.lightning_bomb = 0.1
+    settings.game_rules.items.spawn_rates.speed = 0.4
+end
+
 function Settings.set_debug_performance()
     settings.game_rules = GameRules.new()
     settings.game_rules.players.start_with_kick = true
