@@ -44,7 +44,7 @@ function game_rule_screen.new(previous_screen: Scene): MenuScreen
             "item drop rules", 90, enter_item_spawn_screen
         ),
         choices.new_done(
-            "dion rules", 110, enter_dino_settings_screen
+            "dino rules", 110, enter_dino_settings_screen
         ),
         choices.new_done(
             "player rules", 130, enter_player_settings_screen
