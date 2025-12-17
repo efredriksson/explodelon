@@ -350,7 +350,7 @@ function Settings.set_game_rules_dino_madness()
     settings.game_rules.dinos.nbr_of_eggs = 15
     settings.game_rules.items.spawn_rates.lightning_bomb = 0.08
     settings.game_rules.items.spawn_rates.bomb = 0.16
-    settings.game_rules.items.spawn_rates.speed = 0.4
+    settings.game_rules.items.spawn_rates.speed = 0.1
 end
 
 function Settings.set_debug_performance()
