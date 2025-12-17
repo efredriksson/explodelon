@@ -51,7 +51,7 @@ local function character_animation_for_action(character_asset: string, state: Pl
 	local function action_resolved(): string
 		if action == "jump_on" or action == "jump_off" then
 			return "jump"
-		elseif action == "jump" then
+		elseif action == "jump" or action == "dash" then
 			-- Same sprite for jump as walk/idle, is always on mount when this happen
 			return "walk"
 		else
@@ -104,6 +104,7 @@ local function character_animations_for_state(character_asset: string, state: Pl
 		jump_on = character_animation_for_action(character_asset, state, "jump_on", invulnerable),
 		jump_off = character_animation_for_action(character_asset, state, "jump_off", invulnerable),
 		jump = character_animation_for_action(character_asset, state, "jump", invulnerable),
+		dash = character_animation_for_action(character_asset, state, "dash", invulnerable),
 		dying = character_animation_for_dying(character_asset),
 		stunned = character_animation_for_stunned(character_asset, state)
 	}

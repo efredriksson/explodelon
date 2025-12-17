@@ -99,7 +99,7 @@ function DinoRules.new(): DinoRules
         blue=false,
         pink=true,
         purple=false,
-        green=false,
+        green=true,
         yellow=false,
     }
 
@@ -370,9 +370,9 @@ function Settings.set_debug_dinos()
     settings.game_rules.items.nbr_soft_blocks = 20
     settings.game_rules.dinos.nbr_of_eggs = 20
     settings.game_rules.dinos.enabled.blue = false
-    settings.game_rules.dinos.enabled.pink = true
+    settings.game_rules.dinos.enabled.pink = false
     settings.game_rules.dinos.enabled.purple = false
-    settings.game_rules.dinos.enabled.green = false
+    settings.game_rules.dinos.enabled.green = true
     settings.game_rules.dinos.enabled.yellow = false
 end
 

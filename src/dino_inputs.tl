@@ -89,8 +89,18 @@ local function handle_jump_input(dt: number, player: Player, blocks_jump: Group<
 	end
 end
 
+local function handle_dash_input(player: Player)
+    if lutro.joystick.isDown(player.id, JOYPAD.B) then
+        player:dash_with_dino()
+    end
+end
+
 function dino_inputs.handle(dt: number, player: Player, blocks_jump: Group<Kinematic>, lookup: Lookup)
-    handle_jump_input(dt, player, blocks_jump, lookup)
+    if player.dino and player.dino.color == "pink" then
+        handle_jump_input(dt, player, blocks_jump, lookup)
+    elseif player.dino and player.dino.color == "green" then
+        handle_dash_input(player)
+    end
 end
 
 return dino_inputs

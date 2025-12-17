@@ -9,6 +9,11 @@ local vectors = require("geometry.vectors")
 local settings = require("settings")
 
 local CHARACTER_HEIGHT_ON_DINO = 8 -- How high up from ground player is when on dino
+local DASH_WITH_DINO_SPEED_BONUS = {
+	[1] = 50,
+	[2] = 70,
+	[3] = 90,
+}
 
 global type Action = enum
    "walk"
@@ -18,6 +23,7 @@ global type Action = enum
    "idle"
    "dying"
    "stunned"
+   "dash"
 end
 
 global type PlayerState = enum
@@ -114,6 +120,8 @@ function Player:set_action(action: Action)
 			self.dino.action = "stunned"
 		elseif action == "jump" then
 			self.dino.action = "jump"
+		elseif action == "dash" then
+			self.dino.action = "dash"
 		end
 	end
 end
@@ -265,6 +273,18 @@ function Player:jump_with_dino(jump_to: Point | nil)
 			self.jump_target
 		)
 		self.dino.jump_powerup_for = 0
+	end
+end
+
+function Player:dash_with_dino()
+	self:set_action("dash")
+end
+
+function Player:get_speed(): number
+	if self.action == "dash" and self.dino then
+		return self.speed + DASH_WITH_DINO_SPEED_BONUS[self.dino.level]
+	else
+		return self.speed
 	end
 end
 

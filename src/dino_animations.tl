@@ -81,7 +81,8 @@ local function dino_images_for_dir(direction: Direction, color: DinoColor): {Din
 		idle = dino_images_for_level("idle", direction, color),
 		dying = dino_images_for_level("dying", direction, color),
 		stunned = dino_images_for_level("stunned", direction, color),
-		jump = dino_images_for_level("jump", direction, color)
+		jump = dino_images_for_level("jump", direction, color),
+		dash = dino_images_for_level("dash", direction, color)
 	}
 end
 
@@ -101,12 +102,22 @@ global record AnimatedDino
 	animations: {Direction: {DinoAction: {integer: Animation}}}
 end
 
+local function get_dash_fames(level: integer): {number}
+	if level == 3 then
+		return {0.1, 0.1}
+	else
+		return {0.1, 0.1, 0.1}
+	end
+end
+
 local function new_dino_animations(color: DinoColor): {Direction: {DinoAction: {integer: Animation}}}
 	local new_animations: {Direction: {DinoAction: {integer: Animation}}} = {}
 
-	local function create_animations(image: Image, action: DinoAction): Animation
+	local function create_animations(image: Image, action: DinoAction, level: integer): Animation
 		if action == "jump" then
 			return animations.new_with_frames(image, {0.1, 10000})
+		elseif action == "dash" then
+			return animations.new_with_frames(image, get_dash_fames(level))
 		else
 			return animations.new(image, 34, 34, 3, 18)
 		end
@@ -117,7 +128,7 @@ local function new_dino_animations(color: DinoColor): {Direction: {DinoAction: {
 		for action, image_by_level in pairs(image_by_level_by_action) do
 			new_animations[direction][action] = {}
 			for level, image in pairs(image_by_level) do
-				new_animations[direction][action][level] = create_animations(image, action)
+				new_animations[direction][action][level] = create_animations(image, action, level)
 			end
 		end
 	end
