@@ -41,16 +41,16 @@ local function get_directions_from_input(player: Player, dt: number): {Movement}
 	local result: {Movement} = {}
 
 	if lutro.joystick.isDown(player.id, JOYPAD.DOWN) then
-		table.insert(result, Movement.new(vectors.new(0, dt * player.speed), "down"))
+		table.insert(result, Movement.new(vectors.new(0, dt * player:get_speed()), "down"))
 	end
 	if lutro.joystick.isDown(player.id, JOYPAD.UP) then
-		table.insert(result, Movement.new(vectors.new(0, -dt * player.speed), "up"))
+		table.insert(result, Movement.new(vectors.new(0, -dt * player:get_speed()), "up"))
 	end
 	if lutro.joystick.isDown(player.id, JOYPAD.RIGHT) then
-		table.insert(result, Movement.new(vectors.new(dt * player.speed, 0), "right"))
+		table.insert(result, Movement.new(vectors.new(dt * player:get_speed(), 0), "right"))
 	end
 	if lutro.joystick.isDown(player.id, JOYPAD.LEFT) then
-		table.insert(result, Movement.new(vectors.new(-dt * player.speed, 0), "left"))
+		table.insert(result, Movement.new(vectors.new(-dt * player:get_speed(), 0), "left"))
 	end
 
 	return result
