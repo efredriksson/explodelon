@@ -34,7 +34,7 @@ local function get_animation(asset_file: string, invulnerable: boolean): Animati
 		make_lighter(image)
 	end
 
-	return animations.new(image, 18, 34, 3, 18)
+	return animations.new(image, 18, 1 / 6)
 end
 
 local function character_animation_for_action(character_asset: string, state: PlayerState, action: Action, invulnerable: boolean): {Direction: Animation}
@@ -71,7 +71,7 @@ end
 local function character_animation_for_dying(character_asset: string): {Direction: Animation}
 	local asset_file = "assets/" .. character_asset .. "/foot/dying.png"
 	local image = lutro.graphics.newImage(asset_file)
-	local animation = animations.new(image, 18, 34, 1, 8)
+	local animation = animations.new(image, 18, 1 / 8)
 	return {
 		up = animation,
 		down = animation,
@@ -88,7 +88,7 @@ local function character_animation_for_stunned(character_asset: string, state: P
 
 	local asset_file = "assets/" .. character_asset .. "/" .. state .. "/stunned.png"
 	local image = lutro.graphics.newImage(asset_file)
-	local animation = animations.new(image, 18, 34, 1, 8)
+	local animation = animations.new(image, 18, 1 / 8)
 	return {
 		up = animation,
 		down = animation,

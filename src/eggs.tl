@@ -25,7 +25,7 @@ function Egg.new(position: Point): Egg
     self.hatched = false
     self.is_exploding = false
     self.in_explosion = true
-    self.animation = animations.new(egg_shake_image, 20, 26, 3, 18, 2)
+    self.animation = animations.new(egg_shake_image, 20, 1 / 6, 2)
     return self
 end
 
@@ -42,7 +42,7 @@ end
 
 function Egg:open()
     self.breaking = true
-    self.animation = animations.new(egg_open_image, 34, 34, 3, 18, 0.5)
+    self.animation = animations.new(egg_open_image, 34, 1 / 6, 0.5)
 end
 
 function Egg:blow_up()

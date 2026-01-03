@@ -30,7 +30,7 @@ local game_countdown = {}
 function game_countdown.new(): GameCountdown
     local self: GameCountdown = setmetatable({}, { __index = GameCountdown })
 	local image_width = 52
-	self.animation = animations.new(ready_set_go_image, image_width, 22, 1, 1)
+	self.animation = animations.new(ready_set_go_image, image_width, 1)
 	self.have_played_sound = false
 	self.waited_for = 0.0
 	ready_set_go_sound:stop()

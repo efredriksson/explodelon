@@ -36,7 +36,7 @@ function Bomb.new(position: Point, range: integer, hand_back: function()): Bomb
    self.hand_back = hand_back
    self.has_been_kicked = false
    self.stopping = false
-   self.animation = animations.new(bomb_image, 16, 16, 1, 4)
+   self.animation = animations.new(bomb_image, 16, 0.25)
    return self
 end
 

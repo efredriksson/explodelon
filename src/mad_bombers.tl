@@ -78,7 +78,7 @@ local cart_heads: {CharacterName: {Direction: Image}} = {}
 
 local function cart_animation(image: Image): Animation
 	local nbr_steps = 2
-	return animations.new(image, image:getWidth() / nbr_steps, image:getHeight(), 1, 20)
+	return animations.new(image, image:getWidth() / nbr_steps, 0.05)
 end
 
 local function get_firing_animation(side: Direction): Animation
@@ -91,9 +91,7 @@ local function get_firing_animation(side: Direction): Animation
     end
 
     local image = cart_firing_images[side]
-    return animations.new(
-        image, image:getWidth() / animation_steps(), image:getHeight(), 1, 10
-    )
+    return animations.new(image, image:getWidth() / animation_steps(), 0.1)
 end
 
 local function get_cart_animations(): CartAnimations, CartAnimations, CartAnimations

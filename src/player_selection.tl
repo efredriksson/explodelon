@@ -67,7 +67,7 @@ end
 
 local function get_walk_down_animation(character_name: CharacterName): Animation
     local image = walk_down_images[character_name]
-    local animation = animations.new(image, 18, 34, 3, 6)
+    local animation = animations.new(image, 18, 0.5)
     animation.steps = animation.steps - 1 -- Skip final step when walking slowly
     return animation
 end
