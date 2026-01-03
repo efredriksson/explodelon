@@ -15,10 +15,30 @@ local record Movement
 end
 
 function Movement.new(dxdy: Vector, dir: Direction): Movement
-   local self: Movement = setmetatable({}, { __index = Movement })
-   self.dir = dir
-   self.dxdy = dxdy
-   return self
+	local self: Movement = setmetatable({}, { __index = Movement })
+	self.dir = dir
+	self.dxdy = dxdy
+	return self
+end
+
+function Movement.new_from_player(dt: number, player: Player): Movement
+   	local self: Movement = setmetatable({}, { __index = Movement })
+   	self.dir = player.direction
+
+	if player.direction == "up" then
+		self.dxdy = vectors.new(0, -1)
+	elseif player.direction == "down" then
+		self.dxdy = vectors.new(0, 1)
+	elseif player.direction == "right" then
+		self.dxdy = vectors.new(1, 0)
+	elseif player.direction == "left" then
+		self.dxdy = vectors.new(-1, 0)
+	else
+		assert(false, "bad player direction")
+	end
+
+	self.dxdy = self.dxdy:scale(dt * player:get_speed())
+	return self
 end
 
 local record CheckedMovement
@@ -310,7 +330,15 @@ function movement.set_position_and_dir_from_input(
 	bombs: Group<Bomb>,
 	lookup: Lookup
 )
-	local directions = get_directions_from_input(player, dt)
+	local function get_directions(): {Movement}
+		if player.action == "dash" then
+			return {Movement.new_from_player(dt, player)}
+		else
+			return get_directions_from_input(player, dt)
+		end
+	end
+	local directions = get_directions()
+
 	local new_dir, new_pos = get_new_player_orientation(
 		player.direction, directions, blocking_blocks, hard_blocks, lightning_bombs, player, blocks_bombs, players, bombs, lookup
 	)

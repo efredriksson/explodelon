@@ -57,6 +57,10 @@ end
 
 local function dino_iamge(level: integer, action: DinoAction, direction: Direction, color: DinoColor): Image
 	local png_name = action .. "_" .. direction
+	if action == "crashed" then
+		level = 1 -- Only possible to crash with level 1 dino
+	end
+	
 	if action == "dying" or action == "stunned" then
 		png_name = action
 	end
@@ -81,6 +85,7 @@ local function dino_images_for_dir(direction: Direction, color: DinoColor): {Din
 		idle = dino_images_for_level("idle", direction, color),
 		dying = dino_images_for_level("dying", direction, color),
 		stunned = dino_images_for_level("stunned", direction, color),
+		crashed = dino_images_for_level("crashed", direction, color),
 		jump = dino_images_for_level("jump", direction, color),
 		dash = dino_images_for_level("dash", direction, color)
 	}
@@ -116,6 +121,8 @@ local function new_dino_animations(color: DinoColor): {Direction: {DinoAction: {
 	local function create_animations(image: Image, action: DinoAction, level: integer): Animation
 		if action == "jump" then
 			return animations.new_with_frames(image, {0.1, 10000})
+		elseif action == "crashed" then
+			return animations.new_with_frames(image, {0.2, 0.4, 0.2, 0.2, 10000})
 		elseif action == "dash" then
 			return animations.new_with_frames(image, get_dash_fames(level))
 		else
@@ -152,8 +159,10 @@ end
 function AnimatedDino:update(dt: number)
 	local animation = self:get_animation()
 	
-	if self.dino.action == "jump" and self.previous_action ~= "jump" then
-		animation:reset()
+	if self.dino.action == "jump" or self.dino.action == "crashed" then
+		if self.previous_action ~= self.dino.action then
+			animation:reset()
+		end
 	end
 
 	animation:update(dt)
