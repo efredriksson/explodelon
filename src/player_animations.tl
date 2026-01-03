@@ -106,7 +106,8 @@ local function character_animations_for_state(character_asset: string, state: Pl
 		jump = character_animation_for_action(character_asset, state, "jump", invulnerable),
 		dash = character_animation_for_action(character_asset, state, "dash", invulnerable),
 		dying = character_animation_for_dying(character_asset),
-		stunned = character_animation_for_stunned(character_asset, state)
+		stunned = character_animation_for_stunned(character_asset, state),
+		crashed = character_animation_for_stunned(character_asset, state)
 	}
 end
 

@@ -24,6 +24,7 @@ global type Action = enum
    "dying"
    "stunned"
    "dash"
+   "crashed"
 end
 
 global type PlayerState = enum
@@ -91,15 +92,6 @@ function Player:is_jumping(): boolean
 	return self:is_jumping_on_off_dino() or self.action == "jump"
 end
 
-function Player:set_movement(position: Point, direction: Direction)
-	self.position = position
-	self.direction = direction
-	if self.dino then
-		self.dino.position = position
-		self.dino.direction = direction
-	end
-end
-
 function Player:is_stunned(): boolean
 	return self.stunned_for > 0
 end
@@ -107,6 +99,11 @@ end
 function Player:set_action(action: Action)
 	if self.action == "dying" or self:is_stunned() then
 		-- Not able to perform new action due to conditions
+		return
+	end
+
+	if self.action == "dash" and (action == "walk" or action == "idle") then
+		-- Not possible to exit dash action into walk or idle
 		return
 	end
 
@@ -122,7 +119,24 @@ function Player:set_action(action: Action)
 			self.dino.action = "jump"
 		elseif action == "dash" then
 			self.dino.action = "dash"
+		elseif action == "crashed" then
+			self.dino.action = "crashed"
 		end
+	end
+end
+
+function Player:set_movement(position: Point, direction: Direction)
+	if self.action == "dash" and self.position:equal(position) then
+		self:set_action("crashed")
+		self.stunned_for = 1.2
+		return
+	end
+
+	self.position = position
+	self.direction = direction
+	if self.dino then
+		self.dino.position = position
+		self.dino.direction = direction
 	end
 end
 
