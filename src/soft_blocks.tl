@@ -76,7 +76,7 @@ function SoftBlock:blow_up()
     end
 
     self.is_exploding = true
-    self.breaking_animation = animations.new(soft_block_breaking_image[settings.map], 24, 24, 3, 18)
+    self.breaking_animation = animations.new(soft_block_breaking_image[settings.map], 24, 1 / 6)
 end
 
 function SoftBlock:is_destroyed(): boolean
@@ -132,7 +132,7 @@ function SoftBlocks.load_assets()
     for _, map in ipairs(maps) do
         local asset_dir = "assets/" .. map
         soft_block_animation[map] = animations.new(
-            lutro.graphics.newImage(asset_dir .. "/soft-block.png"), 16, 16, 1, 10
+            lutro.graphics.newImage(asset_dir .. "/soft-block.png"), 16, 0.1
         )
         soft_block_breaking_image[map] = lutro.graphics.newImage(
             asset_dir .. "/soft-block-breaking.png"

@@ -34,12 +34,12 @@ function animations.new_with_frames(image: Image, frame_durations: {number}): An
     return self
 end
 
-function animations.new(image: Image, width: number, _: number, period: number, speed: number, idle_time?: number): Animation
+function animations.new(image: Image, width: number, frame_duration: number, idle_time?: number): Animation
     local steps = image:getWidth() / width
     
     local frame_durations: {number} = {}
     for _=1, steps do
-        table.insert(frame_durations, period / speed)
+        table.insert(frame_durations, frame_duration)
     end
     frame_durations[1] = frame_durations[1] + (idle_time or 0)
     return animations.new_with_frames(image, frame_durations)

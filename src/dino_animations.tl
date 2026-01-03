@@ -119,7 +119,7 @@ local function new_dino_animations(color: DinoColor): {Direction: {DinoAction: {
 		elseif action == "dash" then
 			return animations.new_with_frames(image, get_dash_fames(level))
 		else
-			return animations.new(image, 34, 34, 3, 18)
+			return animations.new(image, 34, 1 / 6)
 		end
 	end
 

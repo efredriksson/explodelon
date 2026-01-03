@@ -29,10 +29,10 @@ function LightningBomb.new(position: Point, hand_back: function()): LightningBom
     self.range = 6
     self.timer = 5
     self.hand_back = hand_back
-    self.animation = animations.new(lightning_bomb_image, 16, 16, 1, 4)
+    self.animation = animations.new(lightning_bomb_image, 16, 0.25)
     self.buildups = {
-        animations.new(coild_1_effect, 32, 32, 1, 4),
-        animations.new(coild_2_effect, 32, 32, 1, 4),
+        animations.new(coild_1_effect, 32, 0.25),
+        animations.new(coild_2_effect, 32, 0.25),
     }
     self.speedup_at = 4
     self.sound = audio.new_source("assets/lightning-bomb/explosion/load.ogg", "static")

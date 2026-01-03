@@ -90,13 +90,13 @@ function Explosion.new(position: Point, range: number, delay?: number): Explosio
     self.delay = delay or 0
     self.speed = 28
     self.animations = {
-        right_end = animations.new(explosion_end_right_image, 16, 16, FRAME_DURATION, 1),
-        left_end = animations.new(explosion_end_left_image, 16, 16, FRAME_DURATION, 1),
-        top_end = animations.new(explosion_end_top_image, 16, 16, FRAME_DURATION, 1),
-        bottom_end = animations.new(explosion_end_bottom_image, 16, 16, FRAME_DURATION, 1),
-        middle_horizontal = animations.new(explosion_horizontal_image, 16, 16, FRAME_DURATION, 1),
-        middle_vertical = animations.new(explosion_vertical_image, 16, 16, FRAME_DURATION, 1),
-        center = animations.new(explosion_center_image, 16, 16, FRAME_DURATION, 1)
+        right_end = animations.new(explosion_end_right_image, 16, FRAME_DURATION),
+        left_end = animations.new(explosion_end_left_image, 16, FRAME_DURATION),
+        top_end = animations.new(explosion_end_top_image, 16, FRAME_DURATION),
+        bottom_end = animations.new(explosion_end_bottom_image, 16, FRAME_DURATION),
+        middle_horizontal = animations.new(explosion_horizontal_image, 16, FRAME_DURATION),
+        middle_vertical = animations.new(explosion_vertical_image, 16, FRAME_DURATION),
+        center = animations.new(explosion_center_image, 16, FRAME_DURATION)
     }
 
     return self
