@@ -338,7 +338,20 @@ end
 local function get_moves(player: Player, move_inputs: {Movement}, momentum: Movement): {Movement}
 	if player.action == "slide" then
 		return {momentum}
-	elseif player.action == "dash" then		
+	elseif player.action == "dash" then
+		if player.dino and player.dino.level >= 3 then
+			-- For level 3 dinos then check if direction is changed which is
+			-- allowed for highest level dino
+
+			for _, move in ipairs(move_inputs) do
+				if move.dir ~= player.direction then
+					-- Also return move to continue with dash which will be used
+					-- if changing direction does not work
+					return {move, momentum}
+				end
+			end
+		end
+		
 		return {momentum}
 	else
 		return move_inputs
