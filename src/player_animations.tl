@@ -211,6 +211,12 @@ local DINO_SLIDE_CHARACTER_ADJUST = {
 	right = vectors.new(9, 0),
 	left = vectors.new(-9, 0)
 }
+local DINO_AFTERIMGE_SHIFT = {
+	up = vectors.new(0, 1),
+	down = vectors.new(0, -1),
+	right = vectors.new(-1, 0),
+	left = vectors.new(1, 0)
+}
 
 function MountedPlayerAnimation:draw()
 	if not self.player:is_alive() then
@@ -228,6 +234,12 @@ function MountedPlayerAnimation:draw()
 		else
 			return self.player.dino.position
 		end
+	end
+
+	if self.player.action == "dash" and self.player.dino and self.player.dino.level == 3 then
+		local shift_vector = DINO_AFTERIMGE_SHIFT[self.player.direction]:scale(self.player.after_image_shift)
+		-- Draw after image shifted behind when dashing
+		draw(self.dino_animation, dino_position():move(shift_vector))	
 	end
 
 	if self.player.action == "slide" and self.player.dino and self.player.dino.level == 2  then

@@ -50,6 +50,7 @@ global record Player is Explodable, Kinematic, Entity
 	invulnerable_for: number
 	stunned_for: number
 	slide_for: number
+	after_image_shift: number
 	dino: Dino
 
 	jump_trajectory: ProjectileTrajectory
@@ -75,6 +76,7 @@ function players.new(id: integer, sprite: CharacterName, position: Point): Playe
 	self.fire = player_settings.start_with_fire
 	self.invulnerable_for = 0
 	self.stunned_for = 0
+	self.after_image_shift = 0
 	self.slide_for = 0
 	self.dino = nil
 	return self
@@ -366,6 +368,8 @@ function Player:update(dt: number)
 	self.invulnerable_for = self.invulnerable_for - dt
 	self.stunned_for = self.stunned_for - dt
 	self.slide_for = self.slide_for - dt
+	self.after_image_shift = self.after_image_shift + self:get_speed() * dt + lutro.math.random(4)
+	self.after_image_shift = math.fmod(self.after_image_shift, 37)
 
 	if self.action == "stunned" or self.action == "slide" then
 		self:set_action("idle") -- Try to transition from stunned/slide
