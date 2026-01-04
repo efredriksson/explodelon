@@ -57,7 +57,7 @@ function CheckedMovement.new(
    return self
 end
 
-local function get_directions_from_input(player: Player, dt: number): {Movement}
+local function get_moves_from_input(player: Player, dt: number): {Movement}
 	local result: {Movement} = {}
 
 	if lutro.joystick.isDown(player.id, JOYPAD.DOWN) then
@@ -318,6 +318,32 @@ local function get_new_player_orientation(
 end
 
 local movement = {}
+local INVERTED_DIRECTIONS: {Direction: Direction} = {
+	up = "down",
+	down = "up",
+	left = "right",
+	right = "left"
+}
+
+local function inputs_for_sliding(player: Player, move_inputs: {Movement}): boolean
+	for _, move in ipairs(move_inputs) do
+		if move.dir == INVERTED_DIRECTIONS[player.direction] then
+			return true
+		end
+	end
+
+	return false
+end
+
+local function get_moves(player: Player, move_inputs: {Movement}, momentum: Movement): {Movement}
+	if player.action == "slide" then
+		return {momentum}
+	elseif player.action == "dash" then		
+		return {momentum}
+	else
+		return move_inputs
+	end
+end
 
 function movement.set_position_and_dir_from_input(
 	player: Player,
@@ -330,20 +356,20 @@ function movement.set_position_and_dir_from_input(
 	bombs: Group<Bomb>,
 	lookup: Lookup
 )
-	local function get_directions(): {Movement}
-		if player.action == "dash" then
-			return {Movement.new_from_player(dt, player)}
-		else
-			return get_directions_from_input(player, dt)
-		end
+	local move_inputs = get_moves_from_input(player, dt)
+
+	if player:can_slide() and inputs_for_sliding(player, move_inputs) then
+		player:slide_with_dino()
 	end
-	local directions = get_directions()
+
+	local momentum = Movement.new_from_player(dt, player)
+	local moves = get_moves(player, move_inputs, momentum)
 
 	local new_dir, new_pos = get_new_player_orientation(
-		player.direction, directions, blocking_blocks, hard_blocks, lightning_bombs, player, blocks_bombs, players, bombs, lookup
+		player.direction, moves, blocking_blocks, hard_blocks, lightning_bombs, player, blocks_bombs, players, bombs, lookup
 	)
 	player:set_movement(new_pos, new_dir)
-	if #directions == 0 then
+	if #moves == 0 then
 		player:set_action("idle")
 	else
 		player:set_action("walk")

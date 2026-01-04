@@ -3,6 +3,7 @@ local animations = require("animations")
 local const = require("const")
 local dino_animations = require("dino_animations")
 local points = require("geometry.points")
+local vectors = require("geometry.vectors")
 
 local jump_shadow_image: Image
 
@@ -107,7 +108,8 @@ local function character_animations_for_state(character_asset: string, state: Pl
 		dash = character_animation_for_action(character_asset, state, "dash", invulnerable),
 		dying = character_animation_for_dying(character_asset),
 		stunned = character_animation_for_stunned(character_asset, state),
-		crashed = character_animation_for_stunned(character_asset, state)
+		crashed = character_animation_for_stunned(character_asset, state),
+		slide = character_animation_for_stunned(character_asset, state) -- TODO: Should change direction!
 	}
 end
 
@@ -203,6 +205,12 @@ function MountedPlayerAnimation:hitbox(): Rectangle
     return self.player:hitbox()
 end
 
+local DINO_SLIDE_CHARACTER_ADJUST = {
+	up = vectors.new(7, 0),
+	down = vectors.new(-7, 0),
+	right = vectors.new(9, 0),
+	left = vectors.new(-9, 0)
+}
 
 function MountedPlayerAnimation:draw()
 	if not self.player:is_alive() then
@@ -222,7 +230,18 @@ function MountedPlayerAnimation:draw()
 		end
 	end
 
-	if self.player.direction == "down" then
+	if self.player.action == "slide" and self.player.dino and self.player.dino.level == 2  then
+		local character_pos = self.draw_position:move(DINO_SLIDE_CHARACTER_ADJUST[self.player.direction])
+		if self.player.direction == "right" or self.player.direction == "left" then
+			-- Need to draw dino in front of player sliding left or right with level 2 dino
+			draw(self.player_animation, character_pos)
+			draw(self.dino_animation, dino_position())
+		else
+			-- For up and down the player is on front
+			draw(self.dino_animation, dino_position())
+			draw(self.player_animation, character_pos)
+		end
+	elseif self.player.direction == "down" then
 		-- Need to draw dino in front of player walking towards screen
 		draw(self.player_animation, self.draw_position)
 		draw(self.dino_animation, dino_position())
@@ -274,11 +293,29 @@ function PlayerAnimations:update(dt: number)
 	end
 end
 
+local SLIDE_WIHT_DINO_DIR_MAP: {Direction: Direction} = {
+	up = "left",
+	down = "right",
+	left = "down",
+	right = "down"
+}
+
 function PlayerAnimations:_get_for(player: Player): Animation
+	local function get_direction(): Direction
+		if player.dino and player.dino.action == "slide" and player.dino.level == 2 then
+			-- For level 2 dino sliding the character riding it should turn depending
+			-- on the direction sliding for it to look like they bracing sliding to a stop:
+			return SLIDE_WIHT_DINO_DIR_MAP[player.direction]
+		else
+			return player.direction
+		end
+	end
+
+	local resolved_dir = get_direction()
     if player:is_invulnerable() and player.invulnerable_for % 0.3 < 0.15 then
-        return self.invulnerable[player.id][player.state][player.action][player.direction]
+        return self.invulnerable[player.id][player.state][player.action][resolved_dir]
     else
-        local animation = self.regular[player.id][player.state][player.action][player.direction]
+        local animation = self.regular[player.id][player.state][player.action][resolved_dir]
         if player.action == "dying" and animation.loops > 0 then
             -- If dying and the animation have played one loop then don't draw anything:
             return nil

@@ -8,6 +8,7 @@ local physics = require("physics")
 local vectors = require("geometry.vectors")
 local settings = require("settings")
 
+local SLIDE_FOR_TIME = 0.4
 local CHARACTER_HEIGHT_ON_DINO = 8 -- How high up from ground player is when on dino
 local DASH_WITH_DINO_SPEED_BONUS = {
 	[1] = 50,
@@ -25,6 +26,7 @@ global type Action = enum
    "stunned"
    "dash"
    "crashed"
+   "slide"
 end
 
 global type PlayerState = enum
@@ -47,6 +49,7 @@ global record Player is Explodable, Kinematic, Entity
 	has_kick: boolean
 	invulnerable_for: number
 	stunned_for: number
+	slide_for: number
 	dino: Dino
 
 	jump_trajectory: ProjectileTrajectory
@@ -72,6 +75,7 @@ function players.new(id: integer, sprite: CharacterName, position: Point): Playe
 	self.fire = player_settings.start_with_fire
 	self.invulnerable_for = 0
 	self.stunned_for = 0
+	self.slide_for = 0
 	self.dino = nil
 	return self
 end
@@ -96,8 +100,16 @@ function Player:is_stunned(): boolean
 	return self.stunned_for > 0
 end
 
+function Player:can_slide(): boolean
+	return self.action == "dash" and self.dino and self.dino.level >= 2
+end
+
+function Player:is_sliding(): boolean
+	return self.slide_for > 0
+end
+
 function Player:set_action(action: Action)
-	if self.action == "dying" or self:is_stunned() then
+	if self.action == "dying" or self:is_stunned() or self:is_sliding() then
 		-- Not able to perform new action due to conditions
 		return
 	end
@@ -121,14 +133,20 @@ function Player:set_action(action: Action)
 			self.dino.action = "dash"
 		elseif action == "crashed" then
 			self.dino.action = "crashed"
+		elseif action == "slide" then
+			self.dino.action = "slide"
 		end
 	end
 end
 
 function Player:set_movement(position: Point, direction: Direction)
 	if self.action == "dash" and self.position:equal(position) then
+
 		self:set_action("crashed")
-		self.stunned_for = 1.2
+		if self.dino and self.dino.level == 1 then
+			self.stunned_for = 1.2
+		end
+
 		return
 	end
 
@@ -138,6 +156,11 @@ function Player:set_movement(position: Point, direction: Direction)
 		self.dino.position = position
 		self.dino.direction = direction
 	end
+end
+
+function Player:slide_with_dino()
+	self:set_action("slide")
+	self.slide_for = SLIDE_FOR_TIME
 end
 
 function Player:stun_for(duration: integer)
@@ -297,6 +320,8 @@ end
 function Player:get_speed(): number
 	if self.action == "dash" and self.dino then
 		return self.speed + DASH_WITH_DINO_SPEED_BONUS[self.dino.level]
+	elseif self.action == "slide" then
+		return self.speed * (self.slide_for / SLIDE_FOR_TIME)
 	else
 		return self.speed
 	end
@@ -340,8 +365,10 @@ end
 function Player:update(dt: number)
 	self.invulnerable_for = self.invulnerable_for - dt
 	self.stunned_for = self.stunned_for - dt
-	if self.action == "stunned" then
-		self:set_action("idle") -- Try to transition from stunned
+	self.slide_for = self.slide_for - dt
+
+	if self.action == "stunned" or self.action == "slide" then
+		self:set_action("idle") -- Try to transition from stunned/slide
 	end
 
 	if self:is_jumping() then
