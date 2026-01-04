@@ -11,6 +11,7 @@ global type DinoAction = enum
     "jump"
     "dash"
     "crashed"
+    "slide"
 end
 
 global record Dino
