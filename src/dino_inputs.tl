@@ -1,5 +1,6 @@
 require("collision")
 require("players")
+require("bombs")
 local const = require("const")
 local hitboxes = require("hitboxes")
 local joysticks = require("joysticks")
@@ -95,12 +96,63 @@ local function handle_dash_input(player: Player)
     end
 end
 
-function dino_inputs.handle(dt: number, player: Player, blocks_jump: Group<Kinematic>, lookup: Lookup)
-    if player.dino and player.dino.color == "pink" then
-        handle_jump_input(dt, player, blocks_jump, lookup)
-    elseif player.dino and player.dino.color == "green" then
-        handle_dash_input(player)
-    end
+local function handle_throw_input(dt: number, player: Player, bombs: Bombs, bombs_group: Group<Bomb>, lookup: Lookup)
+	local dino = player.dino
+	local powerup_time_interval = 0.1
+	local block_from_player_dir = vectors.from_direction(player.direction):scale(const.BLOCK_SIZE)
+
+	local function get_position_throwing_from(): Point
+		local snaped_pos = level_map.snap_to_closest_grid_tile(player.position)
+		return snaped_pos:move(block_from_player_dir)
+	end
+
+	local function must_throw(): boolean
+		return dino.throw_powerup_for > (dino.level * 2 - 1) * powerup_time_interval
+	end
+
+	local function get_bomb_to_throw(throw_bomb_from: Point): Bomb | nil
+		local area_bomb_can_be_in = hitboxes.new_block(throw_bomb_from)
+		local bombs_to_throw = lookup:in_box_and_group(area_bomb_can_be_in, bombs_group)
+		for _, bomb_to_throw in ipairs(bombs_to_throw) do
+			if bomb_to_throw.velocity:length() == 0 then
+				return bomb_to_throw
+			end
+		end
+
+		return nil
+	end
+
+	if joysticks.is_released(player.id, JOYPAD.B) or must_throw() then
+		local nbr_blocks_to_throw = math.floor(dino.throw_powerup_for / powerup_time_interval) + 2
+		nbr_blocks_to_throw = math.min(nbr_blocks_to_throw, dino.level * 2) -- clamp max throw dist
+
+		local throw_bomb_from = get_position_throwing_from()
+		local bomb_to_throw = get_bomb_to_throw(throw_bomb_from)
+		if not bomb_to_throw is nil then
+			local throw_to = throw_bomb_from:move(block_from_player_dir:scale(nbr_blocks_to_throw))
+			bombs:throw_existing(bomb_to_throw, throw_to)
+		end
+		dino.throw_powerup_for = 0
+	elseif lutro.joystick.isDown(player.id, JOYPAD.B) then
+		local bomb_to_throw = get_bomb_to_throw(get_position_throwing_from())
+		if not bomb_to_throw is nil then
+			dino.throw_powerup_for = dino.throw_powerup_for + dt
+		end
+	else
+		dino.throw_powerup_for = 0
+	end
+end
+
+function dino_inputs.handle(dt: number, player: Player, bombs: Bombs, blocks_jump: Group<Kinematic>, bombs_group: Group<Bomb>, lookup: Lookup)
+    if player.dino then
+		if player.dino.color == "pink" then
+			handle_jump_input(dt, player, blocks_jump, lookup)
+		elseif player.dino.color == "green" then
+			handle_dash_input(player)
+		elseif player.dino.color == "blue" then
+			handle_throw_input(dt, player, bombs, bombs_group, lookup)
+		end
+	end
 end
 
 return dino_inputs

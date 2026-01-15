@@ -24,20 +24,7 @@ end
 function Movement.new_from_player(dt: number, player: Player): Movement
    	local self: Movement = setmetatable({}, { __index = Movement })
    	self.dir = player.direction
-
-	if player.direction == "up" then
-		self.dxdy = vectors.new(0, -1)
-	elseif player.direction == "down" then
-		self.dxdy = vectors.new(0, 1)
-	elseif player.direction == "right" then
-		self.dxdy = vectors.new(1, 0)
-	elseif player.direction == "left" then
-		self.dxdy = vectors.new(-1, 0)
-	else
-		assert(false, "bad player direction")
-	end
-
-	self.dxdy = self.dxdy:scale(dt * player:get_speed())
+	self.dxdy = vectors.from_direction(self.dir):scale(dt * player:get_speed())
 	return self
 end
 

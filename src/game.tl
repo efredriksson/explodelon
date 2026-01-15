@@ -369,7 +369,7 @@ function Game:update(dt: number)
 			movement.set_position_and_dir_from_input(
 				player, dt, blocking_blocks, hard_blocks, self.lightning_bombs, blocks_bombs, alive_players_group, bombs_group, lookup
 			)
-			dino_inputs.handle(dt, player, blocks_jump, lookup)
+			dino_inputs.handle(dt, player, self.bombs, blocks_jump, bombs_group, lookup)
 		end
 
 		self.items:possible_pickup_by(player)
