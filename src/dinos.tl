@@ -22,6 +22,7 @@ global record Dino
     level: integer
     hatching: boolean
     jump_powerup_for: number
+    throw_powerup_for: number
 end
 
 local dinos = {}
@@ -36,6 +37,7 @@ function dinos.new(position: Point, direction: Direction): Dino
    self.level = 1
    self.hatching = true
    self.jump_powerup_for = 0
+   self.throw_powerup_for = 0
    return self
 end
 

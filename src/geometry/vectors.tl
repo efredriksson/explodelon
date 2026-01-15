@@ -20,6 +20,20 @@ function vectors.new(x: number, y: number): Vector
    return self
 end
 
+function vectors.from_direction(direction: Direction): Vector
+   if direction == "up" then
+		return vectors.new(0, -1)
+	elseif direction == "down" then
+		return vectors.new(0, 1)
+	elseif direction == "right" then
+		return vectors.new(1, 0)
+	elseif direction == "left" then
+		return vectors.new(-1, 0)
+	else
+		assert(false, "bad direction")
+	end
+end
+
 function Vector:permutate_if(condition: boolean): Vector
    if condition then
       return vectors.new(self.y, self.x)

@@ -13,6 +13,7 @@ local vectors = require("geometry.vectors")
 
 -- Bomb --
 
+local BOMB_TIMER_START = 2.5
 local bomb_shadow: Image
 local bomb_image: Image
 
@@ -32,7 +33,7 @@ function Bomb.new(position: Point, range: integer, hand_back: function()): Bomb
    self.position = position
    self.velocity = vectors.new(0, 0)
    self.range = range
-   self.timer = 2.5
+   self.timer = BOMB_TIMER_START
    self.hand_back = hand_back
    self.has_been_kicked = false
    self.stopping = false
@@ -431,6 +432,21 @@ function Bombs:throw_bomb(from: Point, to: Point): Bomb
     local thrown = ThrownBomb.new(bomb, to, const.BLOCK_SIZE, const.BLOCK_SIZE * 2, 0.4)
     table.insert(self.in_air, thrown)
     return bomb
+end
+
+function Bombs:throw_existing(bomb: Bomb, to: Point)
+    local throw_len = bomb.position:distance_to(to)
+    local throw_height = const.BLOCK_SIZE + throw_len * 0.1
+    local throw_time = 0.20 + 0.025 * throw_len / const.BLOCK_SIZE
+    for i, on_ground in ipairs(self.on_ground) do
+        if on_ground == bomb then
+            table.remove(self.on_ground, i)
+            bomb.timer = BOMB_TIMER_START -- Reset when thrown
+            local thrown = ThrownBomb.new(bomb, to, 0, throw_height, throw_time)
+            table.insert(self.in_air, thrown)
+            return
+        end
+    end
 end
 
 function Bombs:update(
