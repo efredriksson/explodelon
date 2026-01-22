@@ -1,11 +1,41 @@
 require("players")
 local animations = require("animations")
+local characters = require("characters")
 local const = require("const")
 local dino_animations = require("dino_animations")
 local points = require("geometry.points")
 local vectors = require("geometry.vectors")
 
+
 local jump_shadow_image: Image
+local sprites: {CharacterName: {PlayerState: {Action: {Direction: Image}}}} = {}
+local sprites_invulnerable: {CharacterName: {PlayerState: {Action: {Direction: Image}}}} = {}
+local animation_frame_duration: {PlayerState: {Action: number}} = {
+	foot = {
+		walk = 1/6,
+		idle = 1/6,
+		jump_on = 1/6,
+		jump_off = 1/6,
+		jump = 1/6,
+		dash = 1/6,
+		dying = 1/8,
+		stunned = 1/8,
+		crashed = 1/8,
+		slide = 1/8
+	},
+	mounted = {
+		walk = 1/6,
+		idle = 1/6,
+		jump_on = 1/6,
+		jump_off = 1/6,
+		jump = 1/6,
+		dash = 1/6,
+		dying = 1/8,
+		stunned = 1/6,
+		crashed = 1/6,
+		slide = 1/6
+	}
+}
 
 --- Scale 0-1 represent how far from current to max to increase color component 
 local function increase_color(color: number, scale: number): number
@@ -29,95 +59,31 @@ local function make_lighter(image: Image)
 	end
 end
 
-local function get_animation(asset_file: string, invulnerable: boolean): Animation
-	local image = lutro.graphics.newImage(asset_file)
+local function get_sprite_set(
+	character_asset: CharacterName, invulnerable: boolean
+): {PlayerState: {Action: {Direction: Image}}}
 	if invulnerable then
-		make_lighter(image)
+		return sprites_invulnerable[character_asset]
+	else
+		return sprites[character_asset]
 	end
-
-	return animations.new(image, 18, 1 / 6)
 end
 
-local function character_animation_for_action(character_asset: string, state: PlayerState, action: Action, invulnerable: boolean): {Direction: Animation}
-	if state == "mounted" then
-		if action == "jump_on" or action == "jump_off" then
-			-- Same sprite for 'jump' when on foot as when mounted
-			state = "foot"
-		elseif action == "idle" then
-			-- Same sprite for 'idle' as 'walk' when mounted
-			action = "walk"
+local function character_animation(character_asset: CharacterName, invulnerable: boolean): {PlayerState: {Action: {Direction: Animation}}}
+	local resolved_sprites = get_sprite_set(character_asset, invulnerable)
+	local character_animations: {PlayerState: {Action: {Direction: Animation}}} = {}
+	for state, by_action in pairs(resolved_sprites) do
+		character_animations[state] = {}
+		for action, by_direction in pairs(by_action) do
+			character_animations[state][action] = {}
+			local frame_duration = animation_frame_duration[state][action]
+			for direction, sprite_image in pairs(by_direction) do
+				character_animations[state][action][direction] = animations.new(sprite_image, 18, frame_duration)
+			end
 		end
 	end
 
-	local function action_resolved(): string
-		if action == "jump_on" or action == "jump_off" then
-			return "jump"
-		elseif action == "jump" or action == "dash" then
-			-- Same sprite for jump as walk/idle, is always on mount when this happen
-			return "walk"
-		else
-			return action
-		end
-	end
-
-	local base_path = "assets/" .. character_asset .. "/" .. state .. "/" .. action_resolved()
-	return {
-		up = get_animation(base_path .. "_up.png", invulnerable),
-		down = get_animation(base_path .. "_down.png", invulnerable),
-		right = get_animation(base_path .. "_right.png", invulnerable),
-		left = get_animation(base_path .. "_left.png", invulnerable),
-	}
-end
-
-local function character_animation_for_dying(character_asset: string): {Direction: Animation}
-	local asset_file = "assets/" .. character_asset .. "/foot/dying.png"
-	local image = lutro.graphics.newImage(asset_file)
-	local animation = animations.new(image, 18, 1 / 8)
-	return {
-		up = animation,
-		down = animation,
-		right = animation,
-		left = animation,
-	}
-end
-
-local function character_animation_for_stunned(character_asset: string, state: PlayerState): {Direction: Animation}
-	if state == "mounted" then
-		-- Stunned when mounted has same sprite as for walking
-		return character_animation_for_action(character_asset, state, "walk", false)
-	end
-
-	local asset_file = "assets/" .. character_asset .. "/" .. state .. "/stunned.png"
-	local image = lutro.graphics.newImage(asset_file)
-	local animation = animations.new(image, 18, 1 / 8)
-	return {
-		up = animation,
-		down = animation,
-		right = animation,
-		left = animation,
-	}
-end
-
-local function character_animations_for_state(character_asset: string, state: PlayerState, invulnerable: boolean): {Action: {Direction: Animation}}
-	return {
-		walk = character_animation_for_action(character_asset, state, "walk", invulnerable),
-		idle = character_animation_for_action(character_asset, state, "idle", invulnerable),
-		jump_on = character_animation_for_action(character_asset, state, "jump_on", invulnerable),
-		jump_off = character_animation_for_action(character_asset, state, "jump_off", invulnerable),
-		jump = character_animation_for_action(character_asset, state, "jump", invulnerable),
-		dash = character_animation_for_action(character_asset, state, "dash", invulnerable),
-		dying = character_animation_for_dying(character_asset),
-		stunned = character_animation_for_stunned(character_asset, state),
-		crashed = character_animation_for_stunned(character_asset, state),
-		slide = character_animation_for_stunned(character_asset, state) -- TODO: Should change direction!
-	}
-end
-
-local function character_animation(character_asset: string, invulnerable: boolean): {PlayerState: {Action: {Direction: Animation}}}
-	return {
-		foot = character_animations_for_state(character_asset, "foot", invulnerable),
-		mounted = character_animations_for_state(character_asset, "mounted", invulnerable),
-	}
+	return character_animations
 end
 
 local record PlayerAnimation is Entity
@@ -277,10 +243,104 @@ function PlayerAnimations:add_new(player: Player)
     table.insert(self.players, player)
 end
 
+local function character_sprite_for_action(character_asset: CharacterName, state: PlayerState, action: Action): {Direction: Image}
+	if state == "mounted" then
+		if action == "jump_on" or action == "jump_off" then
+			-- Same sprite for 'jump' when on foot as when mounted
+			state = "foot"
+		elseif action == "idle" then
+			-- Same sprite for 'idle' as 'walk' when mounted
+			action = "walk"
+		end
+	end
+
+	local function action_resolved(): string
+		if action == "jump_on" or action == "jump_off" then
+			return "jump"
+		elseif action == "jump" or action == "dash" then
+			-- Same sprite for jump as walk/idle, is always on mount when this happen
+			return "walk"
+		else
+			return action
+		end
+	end
+
+	local base_path = "assets/" .. character_asset .. "/" .. state .. "/" .. action_resolved()
+	return {
+		up = lutro.graphics.newImage(base_path .. "_up.png"),
+		down = lutro.graphics.newImage(base_path .. "_down.png"),
+		right = lutro.graphics.newImage(base_path .. "_right.png"),
+		left = lutro.graphics.newImage(base_path .. "_left.png"),
+	}
+end
+
+local function character_sprite_for_dying(character_asset: CharacterName): {Direction: Image}
+	local asset_file = "assets/" .. character_asset .. "/foot/dying.png"
+	local image = lutro.graphics.newImage(asset_file)
+	return {
+		up = image,
+		down = image,
+		right = image,
+		left = image,
+	}
+end
+
+local function character_sprite_for_stunned(character_asset: CharacterName, state: PlayerState): {Direction: Image}
+	if state == "mounted" then
+		-- Stunned when mounted has same sprite as for walking
+		return character_sprite_for_action(character_asset, state, "walk")
+	end
+
+	local asset_file = "assets/" .. character_asset .. "/" .. state .. "/stunned.png"
+	local image = lutro.graphics.newImage(asset_file)
+	return {
+		up = image,
+		down = image,
+		right = image,
+		left = image,
+	}
+end
+
+local function character_sprites_for_state(character_asset: CharacterName, state: PlayerState): {Action: {Direction: Image}}
+	return {
+		walk = character_sprite_for_action(character_asset, state, "walk"),
+		idle = character_sprite_for_action(character_asset, state, "idle"),
+		jump_on = character_sprite_for_action(character_asset, state, "jump_on"),
+		jump_off = character_sprite_for_action(character_asset, state, "jump_off"),
+		jump = character_sprite_for_action(character_asset, state, "jump"),
+		dash = character_sprite_for_action(character_asset, state, "dash"),
+		dying = character_sprite_for_dying(character_asset),
+		stunned = character_sprite_for_stunned(character_asset, state),
+		crashed = character_sprite_for_stunned(character_asset, state),
+		slide = character_sprite_for_stunned(character_asset, state) -- TODO: Should change direction!
+	}
+end
+
+local function character_sprites(character_asset: CharacterName): {PlayerState: {Action: {Direction: Image}}}
+	return {
+		foot = character_sprites_for_state(character_asset, "foot"),
+		mounted = character_sprites_for_state(character_asset, "mounted"),
+	}
+end
+
 local player_animations = {}
 
 function player_animations.load_assets()
 	jump_shadow_image = lutro.graphics.newImage("assets/items/shadow.png")
+	for _, sprite_name in ipairs(characters.get_names()) do
+		sprites[sprite_name] = character_sprites(sprite_name)
+		sprites_invulnerable[sprite_name] = character_sprites(sprite_name)
+	end
+
+	for _, by_state in pairs(sprites_invulnerable) do
+		for _, by_action in pairs(by_state) do
+			for _, by_direction in pairs(by_action) do
+				for _, sprite_image in pairs(by_direction) do
+					make_lighter(sprite_image)
+				end
+			end
+		end
+	end
 end
 
 function player_animations.new(players: {Player}): PlayerAnimations
