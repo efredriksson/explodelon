@@ -127,7 +127,7 @@ function SoftBlocks:not_exploding(): {SoftBlock}
     return itertools.filter(self.on_ground, is_not_exploding)
 end
 
-function SoftBlocks.load_assets()
+function soft_blocks.load_assets()
     local maps: {Map} = {"football", "factory"}
     for _, map in ipairs(maps) do
         local asset_dir = "assets/" .. map
