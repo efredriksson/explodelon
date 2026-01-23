@@ -3,6 +3,7 @@ local animations = require("animations")
 local characters = require("characters")
 local const = require("const")
 local dino_animations = require("dino_animations")
+local itertools = require("itertools")
 local points = require("geometry.points")
 local vectors = require("geometry.vectors")
 
@@ -418,12 +419,26 @@ function PlayerAnimations:get_all(): {Entity}
 	return entities_to_draw
 end
 
-function PlayerAnimations:draw_shadows()
-	for _, player in ipairs(self.players) do
-		if player.action == "jump" then
-			lutro.graphics.draw(jump_shadow_image, player.position.x - 1, player.position.y - 10)
-		end
+local function draw_players_shadow(players: {Player})
+	for _, player in ipairs(players) do
+		lutro.graphics.draw(jump_shadow_image, player.position.x - 1, player.position.y - 10)
 	end
+end
+
+function PlayerAnimations:draw_lateral_jump_shadows()
+	local function jumps_lateral(player: Player): boolean
+		return player.action == "jump" and player.jump_trajectory.lateral_velocity:length() > 0
+	end
+
+	draw_players_shadow(itertools.filter(self.players, jumps_lateral))
+end
+
+function PlayerAnimations:draw_vertical_jump_shadows()
+	local function jumps_vertically(player: Player): boolean
+		return player.action == "jump" and player.jump_trajectory.lateral_velocity:length() == 0
+	end
+
+	draw_players_shadow(itertools.filter(self.players, jumps_vertically))
 end
 
 return player_animations

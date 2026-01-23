@@ -14,56 +14,42 @@ function level_map.player_area(): Rectangle
 	return PLAYER_AREA
 end
 
-global record HardBlock is ExplosionBlocking, Kinematic, Entity
+global record HardBlockConfig
 	position: Point
-	in_explosion: boolean
+    tall: boolean
 end
 
-function HardBlock.new(position: Point): HardBlock
-   local self: HardBlock = setmetatable({}, { __index = HardBlock })
-   self.position = position
-   self.in_explosion = false
-   return self
+function HardBlockConfig.new(position: Point, tall: boolean): HardBlockConfig
+    local self: HardBlockConfig = setmetatable({}, { __index = HardBlockConfig })
+    self.position = position
+    self.tall = tall
+    return self
 end
 
-function HardBlock:get_position(): Point
-	return self.position
-end
+function level_map.get_hard_blocks(): {HardBlockConfig}
+	local configs: {HardBlockConfig} = {}
 
-function HardBlock:blow_up()
-	-- Does nothing
-end
-
-function HardBlock:draw()
-	assert(false, "Not implemented")
-end
-
-function HardBlock:hit_with_bomb()
-	-- Does nothing
-end
-
-function HardBlock:hitbox(): Rectangle
-	return hitboxes.new_block(self.position):shrink(4)
-end
-
-function HardBlock:movementbox(): Rectangle
-	return hitboxes.new_block(self.position)
-end
-
-function level_map.get_hard_blocks(): {HardBlock}
-	local blocks: {HardBlock} = {}
-
-	local function hard_block(i: number, j: number): HardBlock
-		return HardBlock.new(points.new(
-		    PLAYER_AREA.x + const.BLOCK_SIZE + i * 2 * const.BLOCK_SIZE,
-			PLAYER_AREA.y + const.BLOCK_SIZE + j * 2 * const.BLOCK_SIZE
-		))
+	local function hard_block_config(i: number, j: number, tall: boolean): HardBlockConfig
+		return HardBlockConfig.new(
+			points.new(
+				PLAYER_AREA.x + const.BLOCK_SIZE + i * 2 * const.BLOCK_SIZE,
+				PLAYER_AREA.y + const.BLOCK_SIZE + j * 2 * const.BLOCK_SIZE
+			),
+			tall
+		)
 	end
 
 	for i, j in itertools.double_loop_inner_loopback({0, 7}, {0, 4}) do
-		table.insert(blocks, hard_block(i, j))
+		local is_tall = (j == 2 and (i == 1 or i == 6))
+		table.insert(configs, hard_block_config(i, j, is_tall))
 	end
-	return blocks
+	return configs
+end
+
+function level_map.get_hard_block_positions(): {Point}
+	local configs = level_map.get_hard_blocks()
+	local get_point = function (c: HardBlockConfig): Point return c.position end
+	return itertools.map(configs, get_point)
 end
 
 local function get_block(i: number, j: number): Rectangle
@@ -83,9 +69,9 @@ local function get_random_block(): Point
 	return get_block_point(lutro.math.random(17) - 1, lutro.math.random(11) - 1)
 end
 
-local function is_hard_block_at(position: Point, hard_blocks: {HardBlock}): boolean
-	for _, hard_block in ipairs(hard_blocks) do
-		if hard_block.position:equal(position) then
+local function is_hard_block_at(position: Point, hard_block_positions: {Point}): boolean
+	for _, hard_block in ipairs(hard_block_positions) do
+		if hard_block:equal(position) then
 			return true
 		end
 	end
@@ -95,11 +81,11 @@ end
 
 function level_map.get_non_hard_block_positions(): {Point}
 	local positions: {Point} = {}
-	local hard_blocks = level_map.get_hard_blocks()
+	local hard_blocks_positions = level_map.get_hard_block_positions()
 
 	for i, j in itertools.double_loop_inner_loopback({0, 16}, {0, 10}) do
 		local block = get_block_point(i, j)
-		if not is_hard_block_at(block, hard_blocks) then
+		if not is_hard_block_at(block, hard_blocks_positions) then
 			table.insert(positions, block)
 		end
 	end
@@ -176,8 +162,7 @@ end
 local function get_soft_block_positions(occupies: {Kinematic}): {Point}
 	local soft_blocks: {Point} = {}
 	local close_to_entity: {Point} = {}
-	local get_point = function (h: HardBlock): Point return h.position end
-	local hard_blocks = itertools.map(level_map.get_hard_blocks(), get_point)
+	local hard_block_positions = level_map.get_hard_block_positions()
 
 	for _, occupied in ipairs(occupies) do
 		-- Do allow some positions close to occupied entity to have soft blocks:
@@ -191,7 +176,7 @@ local function get_soft_block_positions(occupies: {Kinematic}): {Point}
 	end
 
 	while #soft_blocks < settings.game_rules.items.nbr_soft_blocks do
-		local occupied = itertools.combine(hard_blocks, close_to_entity, soft_blocks)
+		local occupied = itertools.combine(hard_block_positions, close_to_entity, soft_blocks)
 		local random_block = get_random_block()
 		if not contains_position(occupied, random_block) then
 			table.insert(soft_blocks, random_block)

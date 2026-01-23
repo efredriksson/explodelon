@@ -11,6 +11,7 @@ local game_countdown = require("game_countdown")
 local game_end = require("game_end")
 local game_timer = require("game_timer")
 local game_pause = require("game_pause")
+local hard_blocks = require("hard_blocks")
 local hitboxes = require("hitboxes")
 local items = require("items")
 local itertools = require("itertools")
@@ -42,10 +43,10 @@ end
 global record Game is Scene
 	score_board: ScoreBoard
 	player_selection: Scene
-	hard_blocks: {HardBlock}
+	
+	hard_blocks: HardBlocks
 	hard_blocks_group: Group<HardBlock>
 	non_hard_block_positions: {Point}
-
 	bombs: Bombs
 	lightning_bombs: LightningBombs
 	background: Image
@@ -90,6 +91,9 @@ function Game:load()
 	self.state = "starting"
 	self.game_countdown = game_countdown.new()
 	self.pressure_blocks = pressure_blocks.new()
+	self.hard_blocks = hard_blocks.new(level_map.get_hard_blocks())
+	self.hard_blocks_group = collision.new_group(self.hard_blocks.on_ground)
+	self.non_hard_block_positions = level_map.get_non_hard_block_positions()
 	self.tic_counter = 0
 	self.audio_paused = false
 	music:stop()
@@ -100,9 +104,6 @@ function Game.new(player_selection: Scene): Game
 	self.player_selection = player_selection
 	self.score_board = score_board.new(characters.get_selections())
 	self.background = lutro.graphics.newImage("assets/" .. settings.map .. "/background.png")
-	self.hard_blocks = level_map.get_hard_blocks()
-	self.hard_blocks_group = collision.new_group(self.hard_blocks)
-	self.non_hard_block_positions = level_map.get_non_hard_block_positions()
 	self:load()
    	return self
 end
@@ -305,13 +306,13 @@ function Game:update(dt: number)
 	local dead_players = itertools.filter(self.players, is_dead)
 	local blocks_bombs: Group<Kinematic> = collision.new_group(
 		self.soft_blocks.on_ground,
-		self.hard_blocks,
+		self.hard_blocks.on_ground,
 		self.lightning_bombs.on_ground,
 		self.pressure_blocks.on_ground
 	)
 	local bombs_bounce_on: Group<Kinematic> = collision.new_group(
 		self.soft_blocks.on_ground,
-		self.hard_blocks,
+		self.hard_blocks.on_ground,
 		self.lightning_bombs.on_ground,
 		self.pressure_blocks.on_ground,
 		self.bombs.on_ground,
@@ -319,7 +320,7 @@ function Game:update(dt: number)
 	)
 	local blocks_jump: Group<Kinematic> = collision.new_group(
 		self.soft_blocks.on_ground,
-		self.hard_blocks,
+		self.hard_blocks.on_ground,
 		self.lightning_bombs.on_ground,
 		self.pressure_blocks.on_ground,
 		self.bombs.on_ground
@@ -329,7 +330,7 @@ function Game:update(dt: number)
 		self.items.on_ground,
 		self.soft_blocks.on_ground,
 		self.pressure_blocks.on_ground,
-		self.hard_blocks
+		self.hard_blocks.on_ground
 	)
 	local explodables: Group<Explodable> = collision.new_group(
 		self.players,
@@ -339,7 +340,7 @@ function Game:update(dt: number)
 	)
 	local lightning_blockers: Group<ExplosionBlocking> = collision.new_group(
 		self.pressure_blocks.on_ground,
-		self.hard_blocks
+		self.hard_blocks.on_ground
 	)
 	local pressure_blocks_group: Group<Entity> = collision.new_group(self.pressure_blocks.on_ground)
 	local bombs_group: Group<Bomb> = collision.new_group(self.bombs.on_ground)
@@ -347,7 +348,7 @@ function Game:update(dt: number)
 	local blocking_blocks_group: Group<Kinematic> = collision.new_group(self.soft_blocks.on_ground, self.pressure_blocks.on_ground)
 	local lookup = collision.new_lookup(
 		self.soft_blocks.on_ground,
-		self.hard_blocks,
+		self.hard_blocks.on_ground,
 		self.eggs.on_ground,
 		self.items.on_ground,
 		alive_players,
@@ -365,9 +366,9 @@ function Game:update(dt: number)
 			self:handle_bomb_drop_input(player)
 			local area_close_to_player = player:movementbox():expand(const.BLOCK_SIZE / 2)
 			local blocking_blocks = lookup:in_box_and_group(area_close_to_player, blocking_blocks_group)
-			local hard_blocks = lookup:in_box_and_group(area_close_to_player, self.hard_blocks_group)
+			local close_hard_blocks = lookup:in_box_and_group(area_close_to_player, self.hard_blocks_group)
 			movement.set_position_and_dir_from_input(
-				player, dt, blocking_blocks, hard_blocks, self.lightning_bombs, blocks_bombs, alive_players_group, bombs_group, lookup
+				player, dt, blocking_blocks, close_hard_blocks, self.lightning_bombs, blocks_bombs, alive_players_group, bombs_group, lookup
 			)
 			dino_inputs.handle(dt, player, self.bombs, blocks_jump, bombs_group, lookup)
 		end
@@ -412,8 +413,22 @@ function Game:update(dt: number)
 		self.items:drop_items_of(dead_players, available_spots)
 	end
 
-	self:clear_entities(lookup, pressure_blocks_group, self.eggs.on_ground, self.items.on_ground, self.bombs.on_ground, self.lightning_bombs.on_ground)
-	self:clear_entities(lookup, bomb_entities_group, self.eggs.on_ground, self.items.on_ground)
+	self:clear_entities(
+		lookup,
+		pressure_blocks_group,
+		self.eggs.on_ground,
+		self.items.on_ground,
+		self.bombs.on_ground,
+		self.lightning_bombs.on_ground,
+		self.soft_blocks.on_ground,
+		self.hard_blocks.on_ground
+	)
+	self:clear_entities(
+		lookup,
+		bomb_entities_group,
+		self.eggs.on_ground,
+		self.items.on_ground
+	)
 	self.player_animations:update(dt)
 	self.soft_blocks:update(dt)
 	for _, soft_block in ipairs(self.soft_blocks:exploding()) do
@@ -438,11 +453,6 @@ end
 
 function Game:draw()
 	lutro.graphics.draw(self.background)
-	for _, block in ipairs(self.soft_blocks:not_exploding()) do
-		block:draw()
-		hitboxes.draw(block:hitbox())
-	end
-
 	self.game_timer:draw()
 	self.game_countdown:draw()
 
@@ -451,8 +461,11 @@ function Game:draw()
 		-- but their shadows have to be behind anything
 		block:draw_shadow()
 	end
-	-- Draw jump shadows under all entities
-	self.player_animations:draw_shadows()
+
+	-- When jumping in place, draw jump shadows under all entities
+	self.player_animations:draw_vertical_jump_shadows()
+	-- Bomb on ground shadows should also be under all entities
+	self.bombs:draw_on_ground_shadows()
 
 	self.score_board:draw()
 	self.bombs.explosions:draw()
@@ -462,6 +475,8 @@ function Game:draw()
 		self.player_animations:get_all(),
 		self.items.on_ground,
 		self.pressure_blocks:falling(),
+		self.hard_blocks.on_ground,
+		self.soft_blocks:not_exploding(),
 		self.eggs.on_ground,
 		self.bombs.in_air
 	)
@@ -485,12 +500,17 @@ function Game:draw()
 		hitboxes.draw(entity:hitbox())
 	end
 
+	-- When jumping some distance, draw jump shadows over all entities
+	self.player_animations:draw_lateral_jump_shadows()
+	-- Bomb thrown in air, draw throw shadows over all entities
+	self.bombs:draw_in_air_shadows()
+
 	local mobility_related: {Kinematic} = itertools.combine(
 		self.bombs.on_ground,
 		self.lightning_bombs.on_ground,
 		self.pressure_blocks.on_ground,
 		itertools.filter(self.players, is_alive),
-		self.hard_blocks,
+		self.hard_blocks.on_ground,
 		self.soft_blocks:not_exploding()
 	)
 	for _, entity in ipairs(mobility_related) do
@@ -511,7 +531,8 @@ function game.load_assets()
 	lightnings.load_assets()
 	lightning_bombs.load_assets()
 	PressureBlocks.load_assets()
-	SoftBlocks.load_assets()
+	soft_blocks.load_assets()
+	hard_blocks.load_assets()
 	MadBombers.load_assets()
 	GameCountdown.load_assets()
 	ScoreBoard.load_assets()

@@ -86,7 +86,6 @@ function Bomb:is_complete(): boolean
 end
 
 function Bomb:draw()
-    lutro.graphics.draw(bomb_shadow, self.position.x - 1, self.position.y - 8)
     self.animation:draw(self.position.x, self.position.y)
 end
 
@@ -496,6 +495,22 @@ function Bombs:update(
     end
 
     self.explosions:update(dt, blockers, explodables, lookup)
+end
+
+local function draw_bomb_shadow(bomb: Bomb)
+    lutro.graphics.draw(bomb_shadow, bomb.position.x - 1, bomb.position.y - 8)
+end
+
+function Bombs:draw_on_ground_shadows()
+    for _, bomb in ipairs(self.on_ground) do
+        draw_bomb_shadow(bomb)
+    end
+end
+
+function Bombs:draw_in_air_shadows()
+    for _, bomb in ipairs(self.in_air) do
+        draw_bomb_shadow(bomb.delegate)
+    end
 end
 
 return bombs
