@@ -2,8 +2,8 @@ require("collision")
 local animations = require("animations")
 local audio = require("audio")
 local const = require("const")
+local grid = require("level_map.grid")
 local hitboxes = require("hitboxes")
-local level_map = require("level_map")
 local vectors = require("geometry.vectors")
 
 local END_ANIMATION_DURATION: number = 0.6
@@ -150,7 +150,7 @@ function Explosion:_update_active_tiles(blockers: Group<ExplosionBlocking>, look
 
     local function is_blocked(tile: ExplosionTile): BlockingResult
         -- is out of bounds
-        if not level_map.player_area():contains(tile:hitbox()) then
+        if not grid.area():contains(tile:hitbox()) then
             return "now"
         end
 

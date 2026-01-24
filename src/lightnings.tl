@@ -1,9 +1,10 @@
 require("collision")
+require("players")
 local animations = require("animations")
 local audio = require("audio")
 local const = require("const")
+local grid = require("level_map.grid")
 local hitboxes = require("hitboxes")
-local level_map = require("level_map")
 local points = require("geometry.points")
 
 local END_ANIMATION_DURATION: number = 0.6
@@ -113,7 +114,7 @@ function Lightning:_update_active_tiles(blockers: Group<ExplosionBlocking>, look
     end
 
     local function is_not_blocked(tile: LightningTile): boolean
-        if not level_map.player_area():contains(tile:hitbox()) then
+        if not grid.area():contains(tile:hitbox()) then
             return false
         end
 

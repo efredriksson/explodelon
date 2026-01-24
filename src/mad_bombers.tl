@@ -2,15 +2,15 @@ require("bombs")
 local animations = require("animations")
 local characters = require("characters")
 local const = require("const")
+local grid = require("level_map.grid")
 local hitboxes = require("hitboxes")
 local joysticks = require("joysticks")
-local level_map = require("level_map")
 local points = require("geometry.points")
 local rectangles = require("geometry.rectangles")
 local vectors = require("geometry.vectors")
 
 local JOYPAD = joysticks.buttons()
-local PLAYER_AREA = level_map.player_area()
+local PLAYER_AREA = grid.area()
 local RAIL_LENGHT = PLAYER_AREA.width * 2 + PLAYER_AREA.height * 2
 local CART_SPEEDS = {
     [false] = 60,
@@ -326,7 +326,7 @@ function PlayerCart:fire_cannon(): Point, integer
     elseif side == "right" then
         shoot_from = shoot_from:move(vectors.new(-const.BLOCK_SIZE, 0))
     end
-    shoot_from = level_map.snap_to_closest_grid_tile(shoot_from)
+    shoot_from = grid.snap_to(shoot_from)
 
     local fired_bomb = hitboxes.new_block(shoot_from)
     if self.cannon ~= "ready" or not PLAYER_AREA:contains(fired_bomb) then
