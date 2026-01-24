@@ -1,4 +1,5 @@
 local audio = require("audio")
+local background = require("level_graphics.background")
 local bombs = require("bombs")
 local characters = require("characters")
 local collision = require("collision")
@@ -17,6 +18,7 @@ local hitboxes = require("hitboxes")
 local items = require("items")
 local itertools = require("itertools")
 local joysticks = require("joysticks")
+local level_graphics = require("level_graphics.init")
 local lightnings = require("lightnings")
 local lightning_bombs = require("lightning_bombs")
 local mad_bombers = require("mad_bombers")
@@ -49,7 +51,6 @@ global record Game is Scene
 	non_hard_block_positions: {Point}
 	bombs: Bombs
 	lightning_bombs: LightningBombs
-	background: Image
 	soft_blocks: SoftBlocks
 	mad_bombers: MadBombers
 	eggs: Eggs
@@ -103,7 +104,6 @@ function Game.new(player_selection: Scene): Game
    	local self: Game = setmetatable({}, { __index = Game })
 	self.player_selection = player_selection
 	self.score_board = score_board.new(characters.get_selections())
-	self.background = lutro.graphics.newImage("assets/" .. settings.map .. "/background.png")
 	self:load()
    	return self
 end
@@ -452,7 +452,7 @@ local function sort_entities_by_y_cord(players_to_sort: {Entity})
 end
 
 function Game:draw()
-	lutro.graphics.draw(self.background)
+	background.draw()
 	self.game_timer:draw()
 	self.game_countdown:draw()
 
@@ -531,8 +531,7 @@ function game.load_assets()
 	lightnings.load_assets()
 	lightning_bombs.load_assets()
 	PressureBlocks.load_assets()
-	soft_blocks.load_assets()
-	hard_blocks.load_assets()
+	level_graphics.load_assets()
 	MadBombers.load_assets()
 	GameCountdown.load_assets()
 	ScoreBoard.load_assets()

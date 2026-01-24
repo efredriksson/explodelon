@@ -15,13 +15,13 @@ local special_layout <total>: {Map: MapLayout} = {
 
 global record HardBlockConfig
 	position: Point
-    tall: boolean
+    is_tall: boolean
 end
 
-function HardBlockConfig.new(position: Point, tall: boolean): HardBlockConfig
+function HardBlockConfig.new(position: Point, is_tall: boolean): HardBlockConfig
     local self: HardBlockConfig = setmetatable({}, { __index = HardBlockConfig })
     self.position = position
-    self.tall = tall
+    self.is_tall = is_tall
     return self
 end
 
@@ -30,8 +30,8 @@ local entity_layout = {}
 function entity_layout.get_hard_blocks(): {HardBlockConfig}
 	local configs: {HardBlockConfig} = {}
 
-	local function hard_block_config(i: number, j: number, tall: boolean): HardBlockConfig
-		return HardBlockConfig.new(grid.get_tile_position(1 + i * 2, 1 + j * 2), tall)
+	local function hard_block_config(i: number, j: number, is_tall: boolean): HardBlockConfig
+		return HardBlockConfig.new(grid.get_tile_position(1 + i * 2, 1 + j * 2), is_tall)
 	end
 
 	for i, j in itertools.double_loop_inner_loopback({0, 7}, {0, 4}) do

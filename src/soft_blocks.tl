@@ -1,28 +1,27 @@
 require("entity")
 require("level_map.entity_layout")
-local animations = require("animations")
 local const = require("const")
 local points = require("geometry.points")
 local hitboxes = require("hitboxes")
 local itertools = require("itertools")
-local settings = require("settings")
+local soft_block_animations = require("level_graphics.soft_block_animations")
 
-
-local soft_block_animation: {Map: Animation} = {}
-local soft_block_breaking_image: {Map: Image} = {}
 
 global record SoftBlock is Entity, Explodable, ExplosionBlocking, Kinematic
 	position: Point
     is_exploding: boolean
     in_explosion: boolean
+    animation: Animation
     breaking_animation: Animation
     item: ItemType
     egg: boolean
 end
 
-function SoftBlock.new(position: Point, item: ItemType, egg: boolean): SoftBlock
+function SoftBlock.new(position: Point, animation: Animation, item: ItemType, egg: boolean): SoftBlock
     local self: SoftBlock = setmetatable({}, { __index = SoftBlock })
     self.position = position
+    self.animation = animation
+    self.breaking_animation = soft_block_animations.get_exploding()
     self.is_exploding = false
     self.in_explosion = false
     self.item = item
@@ -47,7 +46,7 @@ function SoftBlock:movementbox(): Rectangle
 end
 
 function SoftBlock:update(dt: number)
-    if self.breaking_animation then
+    if self.is_exploding then
         self.breaking_animation:update(dt)
     end
 end
@@ -66,25 +65,21 @@ function SoftBlock:draw()
         )
         self.breaking_animation:draw(position.x, position.y)
     else
-        soft_block_animation[settings.map]:draw(self.position.x, self.position.y)
+        self.animation:draw(self.position.x, self.position.y)
     end
 end
 
 function SoftBlock:blow_up()
-    if self.is_exploding then
-        return
-    end
-
     self.is_exploding = true
-    self.breaking_animation = animations.new(soft_block_breaking_image[settings.map], 24, 1 / 6)
 end
 
 function SoftBlock:is_destroyed(): boolean
-    return self.breaking_animation and self.breaking_animation.loops > 0
+    return self.breaking_animation.loops > 0
 end
 
 global record SoftBlocks 
 	on_ground: {SoftBlock}
+    rigid_animation: Animation
 end
 
 local soft_blocks = {}
@@ -92,8 +87,9 @@ local soft_blocks = {}
 function soft_blocks.new(configs: {SoftBlockConfig}): SoftBlocks
     local self: SoftBlocks = setmetatable({}, { __index = SoftBlocks })
     self.on_ground = {}
+    self.rigid_animation = soft_block_animations.get_rigid()
     for _, config in ipairs(configs) do
-        local block = SoftBlock.new(config.position, config.item, config.egg)
+        local block = SoftBlock.new(config.position, self.rigid_animation, config.item, config.egg)
         table.insert(self.on_ground, block)
     end
     return self
@@ -101,7 +97,7 @@ end
 
 function SoftBlocks:update(dt: number)
     -- All soft blocks share animations that are in sync
-    soft_block_animation[settings.map]:update(dt)
+    self.rigid_animation:update(dt)
 
     for i, soft_block in ipairs(self.on_ground) do
         soft_block:update(dt)
@@ -125,19 +121,6 @@ end
 
 function SoftBlocks:not_exploding(): {SoftBlock}
     return itertools.filter(self.on_ground, is_not_exploding)
-end
-
-function soft_blocks.load_assets()
-    local maps: {Map} = {"football", "factory"}
-    for _, map in ipairs(maps) do
-        local asset_dir = "assets/" .. map
-        soft_block_animation[map] = animations.new(
-            lutro.graphics.newImage(asset_dir .. "/soft-block.png"), 16, 0.1
-        )
-        soft_block_breaking_image[map] = lutro.graphics.newImage(
-            asset_dir .. "/soft-block-breaking.png"
-        )
-    end
 end
 
 return soft_blocks
