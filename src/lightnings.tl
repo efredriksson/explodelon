@@ -3,7 +3,7 @@ require("players")
 local animations = require("animations")
 local audio = require("audio")
 local const = require("const")
-local grid = require("level_map.grid")
+local grid = require("level_layout.grid")
 local hitboxes = require("hitboxes")
 local points = require("geometry.points")
 

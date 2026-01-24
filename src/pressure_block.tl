@@ -1,6 +1,6 @@
 require("entity")
 local const = require("const")
-local entity_layout = require("level_map.entity_layout")
+local map_entities = require("level_layout.map_entities")
 local points = require("geometry.points")
 local hitboxes = require("hitboxes")
 
@@ -80,8 +80,8 @@ local pressure_blocks = {}
 
 function pressure_blocks.new(): PressureBlocks
 	local self: PressureBlocks = setmetatable({}, { __index = PressureBlocks })
-    self.left_positions = entity_layout.get_left_side_pressure_blocks()
-    self.right_positions = entity_layout.get_right_side_pressure_blocks()
+    self.left_positions = map_entities.get_left_side_pressure_blocks()
+    self.right_positions = map_entities.get_right_side_pressure_blocks()
     self.on_ground = {}
     self.left_falling = PressureBlock.new(self.left_positions[1])
     self.right_falling = PressureBlock.new(self.right_positions[1])

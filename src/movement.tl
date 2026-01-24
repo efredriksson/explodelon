@@ -2,7 +2,7 @@ require("players")
 require("bombs")
 require("lightning_bombs")
 local const = require("const")
-local grid = require("level_map.grid")
+local grid = require("level_layout.grid")
 local joysticks = require("joysticks")
 local vectors = require("geometry.vectors")
 

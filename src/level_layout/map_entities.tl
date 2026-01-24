@@ -1,17 +1,10 @@
-require("level_map.special_entity_layout")
 local const = require("const")
-local football_entity_layout = require("level_map.football_entity_layout")
-local factory_entity_layout = require("level_map.factory_entity_layout")
-local grid = require("level_map.grid")
+local grid = require("level_layout.grid")
 local itertools = require("itertools")
 local vectors = require("geometry.vectors")
 local settings = require("settings")
+local maps = require("level_layout.maps.init")
 
-
-local special_layout <total>: {Map: MapLayout} = {
-	football = football_entity_layout,
-	factory = factory_entity_layout
-}
 
 global record HardBlockConfig
 	position: Point
@@ -25,9 +18,9 @@ function HardBlockConfig.new(position: Point, is_tall: boolean): HardBlockConfig
     return self
 end
 
-local entity_layout = {}
+local map_entities = {}
 
-function entity_layout.get_hard_blocks(): {HardBlockConfig}
+function map_entities.get_hard_blocks(): {HardBlockConfig}
 	local configs: {HardBlockConfig} = {}
 
 	local function hard_block_config(i: number, j: number, is_tall: boolean): HardBlockConfig
@@ -41,8 +34,8 @@ function entity_layout.get_hard_blocks(): {HardBlockConfig}
 	return configs
 end
 
-function entity_layout.get_hard_block_positions(): {Point}
-	local configs = entity_layout.get_hard_blocks()
+function map_entities.get_hard_block_positions(): {Point}
+	local configs = map_entities.get_hard_blocks()
 	local get_point = function (c: HardBlockConfig): Point return c.position end
 	return itertools.map(configs, get_point)
 end
@@ -57,9 +50,9 @@ local function is_hard_block_at(position: Point, hard_block_positions: {Point}):
 	return false
 end
 
-function entity_layout.get_non_hard_block_positions(): {Point}
+function map_entities.get_non_hard_block_positions(): {Point}
 	local positions: {Point} = {}
-	local hard_blocks_positions = entity_layout.get_hard_block_positions()
+	local hard_blocks_positions = map_entities.get_hard_block_positions()
 
 	for i, j in itertools.double_loop_inner_loopback({0, 16}, {0, 10}) do
 		local block = grid.get_tile_position(i, j)
@@ -71,7 +64,7 @@ function entity_layout.get_non_hard_block_positions(): {Point}
 end
 
 
-function entity_layout.get_right_side_pressure_blocks(): {Point}
+function map_entities.get_right_side_pressure_blocks(): {Point}
 	local blocks: {Point} = {}
 
 	for i, j in itertools.double_loop_inner_loopback({0, 3}, {0, 10}) do
@@ -85,7 +78,7 @@ function entity_layout.get_right_side_pressure_blocks(): {Point}
 	return blocks
 end
 
-function entity_layout.get_left_side_pressure_blocks(): {Point}
+function map_entities.get_left_side_pressure_blocks(): {Point}
 	local blocks: {Point} = {}
 
 	for i, j in itertools.double_loop_inner_loopback({16, 13, -1}, {10, 0, -1}) do
@@ -126,7 +119,7 @@ end
 local function get_soft_block_positions(occupies: {Kinematic}): {Point}
 	local soft_blocks: {Point} = {}
 	local close_to_entity: {Point} = {}
-	local hard_block_positions = entity_layout.get_hard_block_positions()
+	local hard_block_positions = map_entities.get_hard_block_positions()
 
 	for _, occupied in ipairs(occupies) do
 		-- Do allow some positions close to occupied entity to have soft blocks:
@@ -150,7 +143,7 @@ local function get_soft_block_positions(occupies: {Kinematic}): {Point}
 	return soft_blocks
 end
 
-function entity_layout.get_soft_blocks(occupied: {Kinematic}): {SoftBlockConfig}
+function map_entities.get_soft_blocks(occupied: {Kinematic}): {SoftBlockConfig}
 	local item_settings = settings.game_rules.items
 	local soft_blocks: {SoftBlockConfig} = {}
 
@@ -172,7 +165,7 @@ function entity_layout.get_soft_blocks(occupied: {Kinematic}): {SoftBlockConfig}
 	return soft_blocks
 end
 
-function entity_layout.get_player_start_positions(number_of_players: integer): {Point}
+function map_entities.get_player_start_positions(number_of_players: integer): {Point}
 	local x_min = 0
 	local x_max = 16
 	local y_min = 0
@@ -209,12 +202,12 @@ function entity_layout.get_player_start_positions(number_of_players: integer): {
 	end
 end
 
-function entity_layout.get_goals(): {Goal}
-	return special_layout[settings.map]:get_goals()
+function map_entities.get_goals(): {Goal}
+	return maps.get_layout():get_goals()
 end
 
-function entity_layout.get_conveyor_belts(): {ConveyorBelt}
-	return special_layout[settings.map]:get_conveyor_belts()
+function map_entities.get_conveyor_belts(): {ConveyorBelt}
+	return maps.get_layout():get_conveyor_belts()
 end
 
-return entity_layout
+return map_entities
