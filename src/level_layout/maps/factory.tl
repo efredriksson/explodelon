@@ -1,6 +1,6 @@
 
-require("level_map.special_entity_layout")
-local grid = require("level_map.grid")
+require("level_layout.maps.entities")
+local grid = require("level_layout.grid")
 local vectors = require("geometry.vectors")
 
 local record FactoryLayout is MapLayout

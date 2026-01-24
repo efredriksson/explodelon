@@ -1,4 +1,4 @@
-require("level_graphics.interfaces")
+require("level_graphics.maps.interfaces")
 local animations = require("animations")
 
 local factory = {}
@@ -12,7 +12,7 @@ local function load_image(rel_path: string): Image
     return lutro.graphics.newImage("assets/factory/" .. rel_path)
 end
 
-global record FactoryGraphics is Graphics
+global record FactoryGraphics is MapGraphics
 end
 
 function FactoryGraphics:get_soft_block_exploding(): Animation

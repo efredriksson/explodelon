@@ -3,8 +3,8 @@ require("players")
 local animations = require("animations")
 local const = require("const")
 local explosions = require("explosions")
-local entity_layout = require("level_map.entity_layout")
-local grid = require("level_map.grid")
+local map_entities = require("level_layout.map_entities")
+local grid = require("level_layout.grid")
 local hitboxes = require("hitboxes")
 local itertools = require("itertools")
 local logger = require("logger")
@@ -68,7 +68,7 @@ function Bomb:hit_with_bomb()
 end
 
 function Bomb:get_goal(): Goal
-    for _, goal in ipairs(entity_layout.get_goals()) do
+    for _, goal in ipairs(map_entities.get_goals()) do
         if self.position:distance_to(goal.position) < 3 then
             return goal
         end
@@ -95,7 +95,7 @@ function Bomb:_trigger_belt(direction?: Vector): ConveyorBelt | nil
     local function bomb_on(belt: ConveyorBelt): boolean
         return belt:get_hitbox():overlap(self:movementbox())
     end
-    local belts = itertools.filter(entity_layout.get_conveyor_belts(), bomb_on)
+    local belts = itertools.filter(map_entities.get_conveyor_belts(), bomb_on)
     for _, belt in ipairs(belts) do
         if self.position:distance_to(grid.snap_to(self.position)) <= 3 then
             local snap_pos = grid.snap_to(self.position)
@@ -108,7 +108,7 @@ end
 
 local function moving_outside_of_map(test_hitbox: Rectangle): boolean
     local bomb_in_goal = false
-    for _, goal in ipairs(entity_layout.get_goals()) do
+    for _, goal in ipairs(map_entities.get_goals()) do
         if test_hitbox:overlap(goal:get_hitbox()) then
             bomb_in_goal = true
         end

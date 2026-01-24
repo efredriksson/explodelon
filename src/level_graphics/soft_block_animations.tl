@@ -1,4 +1,4 @@
-local init = require("level_graphics.init") 
+local init = require("level_graphics.maps.init") 
 
 
 local soft_block_animations = {}
