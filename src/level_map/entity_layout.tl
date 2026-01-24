@@ -1,11 +1,17 @@
+require("level_map.special_entity_layout")
 local const = require("const")
+local football_entity_layout = require("level_map.football_entity_layout")
+local factory_entity_layout = require("level_map.factory_entity_layout")
 local grid = require("level_map.grid")
-local hitboxes = require("hitboxes")
 local itertools = require("itertools")
 local vectors = require("geometry.vectors")
 local settings = require("settings")
 
-local entity_layout = {}
+
+local special_layout <total>: {Map: MapLayout} = {
+	football = football_entity_layout,
+	factory = factory_entity_layout
+}
 
 global record HardBlockConfig
 	position: Point
@@ -18,6 +24,8 @@ function HardBlockConfig.new(position: Point, tall: boolean): HardBlockConfig
     self.tall = tall
     return self
 end
+
+local entity_layout = {}
 
 function entity_layout.get_hard_blocks(): {HardBlockConfig}
 	local configs: {HardBlockConfig} = {}
@@ -201,81 +209,12 @@ function entity_layout.get_player_start_positions(number_of_players: integer): {
 	end
 end
 
-global record Goal
-	position: Point
-	pair: Point
-end
-
-function Goal.new(position: Point, pair: Point): Goal
-   local self: Goal = setmetatable({}, { __index = Goal })
-   self.position = position
-   self.pair = pair
-   return self
-end
-
-function Goal:get_hitbox(): Rectangle
-	return hitboxes.new_block(self.position)
-end
-
 function entity_layout.get_goals(): {Goal}
-	if settings.map ~= "football" then
-		return {}
-	end
-
-	return {
-		Goal.new(grid.get_tile_position(-1, 4), grid.get_tile_position(-1, 6)),
-		Goal.new(grid.get_tile_position(-1, 6), grid.get_tile_position(-1, 4)),
-		Goal.new(grid.get_tile_position(17, 4), grid.get_tile_position(17, 6)),
-		Goal.new(grid.get_tile_position(17, 6), grid.get_tile_position(17, 4)),
-	}
-end
-
-global record ConveyorBelt
-	position: Point
-	direction: Vector
-end
-
-function ConveyorBelt.new(position: Point, direction: Vector): ConveyorBelt
-   local self: ConveyorBelt = setmetatable({}, { __index = ConveyorBelt })
-   self.position = position
-   self.direction = direction
-   return self
-end
-
-function ConveyorBelt:get_hitbox(): Rectangle
-	return hitboxes.new_block(self.position)
+	return special_layout[settings.map]:get_goals()
 end
 
 function entity_layout.get_conveyor_belts(): {ConveyorBelt}
-	if settings.map ~= "factory" then
-		return {}
-	end
-
-	local function create_belt(i: integer, j: integer, dir: Direction): ConveyorBelt
-		return ConveyorBelt.new(grid.get_tile_position(i, j), vectors.from_direction(dir))
-	end
-
-    local dim = grid.dimensions()
-	return {
-		-- Outer ring
-		create_belt(dim.x_min, dim.y_min, "down"),
-		create_belt(dim.x_max, dim.y_max, "up"),
-		create_belt(dim.x_max, dim.y_min, "left"),
-		create_belt(dim.x_min, dim.y_max, "right"),
-		-- Middle ring
-		create_belt(dim.x_min + 4, dim.y_min + 2, "right"),
-		create_belt(dim.x_max - 4, dim.y_max - 2, "left"),
-		create_belt(dim.x_max - 4, dim.y_min + 2, "down"),
-		create_belt(dim.x_min + 4, dim.y_max - 2, "up"),
-		-- Inner ring
-		create_belt(dim.x_min + 6, dim.y_min + 4, "down"),
-		create_belt(dim.x_max - 6, dim.y_max - 4, "up"),
-		create_belt(dim.x_max - 6, dim.y_min + 4, "left"),
-		create_belt(dim.x_min + 6, dim.y_max - 4, "right"),
-		-- Middle up/down
-		create_belt(math.ceil(dim.x_max / 2), dim.y_min, "down"),
-		create_belt(math.ceil(dim.x_max / 2), dim.y_max, "up"),
-	}
+	return special_layout[settings.map]:get_conveyor_belts()
 end
 
 return entity_layout
