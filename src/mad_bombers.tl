@@ -6,39 +6,14 @@ local grid = require("level_layout.grid")
 local hitboxes = require("hitboxes")
 local joysticks = require("joysticks")
 local points = require("geometry.points")
+local rail = require("level_layout.rail")
 local rectangles = require("geometry.rectangles")
 local vectors = require("geometry.vectors")
 
 local JOYPAD = joysticks.buttons()
-local PLAYER_AREA = grid.area()
-local RAIL_LENGHT = PLAYER_AREA.width * 2 + PLAYER_AREA.height * 2
 local CART_SPEEDS = {
     [false] = 60,
     [true] = 120,
-}
-local DISTANCE_TO_SIDE: {Direction: number} = {
-    up = 0,
-    right = PLAYER_AREA.width,
-    down = PLAYER_AREA.width + PLAYER_AREA.height,
-    left = PLAYER_AREA.width * 2 + PLAYER_AREA.height,
-}
-local START_POSITION_OF_SIDE: {Direction: Point} = {
-    up = PLAYER_AREA:top_left(),
-    right = PLAYER_AREA:top_left():move(
-        vectors.new(PLAYER_AREA.width, 0)
-    ),
-    down = PLAYER_AREA:top_left():move(
-        vectors.new(PLAYER_AREA.width, PLAYER_AREA.height)
-    ),
-    left = PLAYER_AREA:top_left():move(
-        vectors.new(0, PLAYER_AREA.height)
-    ),
-}
-local MOVE_DIRECTION_OF_SIDE: {Direction: Vector} = {
-    up = vectors.new(1, 0),
-    right = vectors.new(0, 1),
-    down = vectors.new(-1, 0),
-    left = vectors.new(0, -1),
 }
 local THROW_BOMB_DIRECTION_BY_SIDE: {Direction: Vector} = {
     up = vectors.new(0, 1),
@@ -146,20 +121,8 @@ function PlayerCart.new(
     return self
 end
 
-function PlayerCart:get_side(): Direction
-    if self.position < PLAYER_AREA.width then
-        return "up"
-    elseif self.position < PLAYER_AREA.width + PLAYER_AREA.height then
-        return "right"
-    elseif self.position < PLAYER_AREA.width * 2 + PLAYER_AREA.height then
-        return "down"
-    else
-        return "left"
-    end
-end
-
 function PlayerCart:_get_animation(): Animation
-    local side = self:get_side()
+    local side = rail.get_side(self.position)
     if self.cannon == "loading" then
         return self.loading_animations[side][self.state]
     elseif self.cannon == "firing" then
@@ -177,9 +140,8 @@ function PlayerCart:update(dt: number)
     elseif self.state == "backward" then
         pos_dt = -dt
     end
-    
-    self.position = self.position + pos_dt * CART_SPEEDS[self.turbo]
-    self.position = self.position % RAIL_LENGHT
+
+    self.position = rail.move_along(self.position, pos_dt * CART_SPEEDS[self.turbo])
     local animation = self:_get_animation()
     animation:update(dt)
 
@@ -195,17 +157,9 @@ function PlayerCart:update(dt: number)
     end
 end
 
-function PlayerCart:get_x_y_position(): Point
-    local side = self:get_side()
-    local side_move_len = self.position - DISTANCE_TO_SIDE[side]
-    local side_start = START_POSITION_OF_SIDE[side]
-    local move_dir = MOVE_DIRECTION_OF_SIDE[side]
-    return side_start:move(move_dir:scale(side_move_len))
-end
-
 -- This is the padding in the cart images
 function PlayerCart:_get_cart_image_padding(): Vector
-    local side = self:get_side()
+    local side = rail.get_side(self.position)
     if side == "up" then
         return vectors.new(0, 5)
     elseif side == "right" then
@@ -218,7 +172,7 @@ function PlayerCart:_get_cart_image_padding(): Vector
 end
 
 function PlayerCart:_get_draw_offset(): Vector
-    local side = self:get_side()
+    local side = rail.get_side(self.position)
     local animation = self:_get_animation()
     local height = animation.height
     local width = animation.width
@@ -236,13 +190,13 @@ function PlayerCart:_get_draw_offset(): Vector
 end
 
 function PlayerCart:_get_x_y_draw_position(): Point
-    return self:get_x_y_position():move(
+    return rail.get_x_y_position(self.position):move(
         self:_get_draw_offset()
     ):move(self:_get_cart_image_padding())
 end
 
 function PlayerCart:get_position(): Point
-    return self:get_x_y_position()
+    return rail.get_x_y_position(self.position)
 end
 
 function PlayerCart:hitbox(): Rectangle
@@ -261,7 +215,7 @@ function PlayerCart:draw()
         return
     end
     
-    local side = self:get_side()
+    local side = rail.get_side(self.position)
     local head_image = cart_heads[self.head][HEAD_DIR_BY_SIDE[side]]
     local cart_paddings = self:_get_cart_image_padding():abs()
 
@@ -315,8 +269,8 @@ function PlayerCart:fire_cannon(): Point, integer
     local fire_lenght = 2 + math.floor(self.cannon_powerup_for * 5)
     self.cannon_powerup_for = 0.0 -- Reset regardless if actually fire or not
 
-    local side = self:get_side()
-    local shoot_from = self:get_x_y_position()
+    local side = rail.get_side(self.position)
+    local shoot_from = rail.get_x_y_position(self.position)
     -- Adjust so we shoot from inside player area if 'down' or 'right'
     -- Also adjust for the cart position being its center for 'up' and 'down'
     if side == "down" then
@@ -329,7 +283,7 @@ function PlayerCart:fire_cannon(): Point, integer
     shoot_from = grid.snap_to(shoot_from)
 
     local fired_bomb = hitboxes.new_block(shoot_from)
-    if self.cannon ~= "ready" or not PLAYER_AREA:contains(fired_bomb) then
+    if self.cannon ~= "ready" or not grid.area():contains(fired_bomb) then
         return nil, nil
     end
 
@@ -378,7 +332,7 @@ local function handle_cart_move_input(dt: number, bombs: Bombs, cart: PlayerCart
     local right = lutro.joystick.isDown(cart.id, JOYPAD.RIGHT)
     local right_or_left = right or left
     local up_or_down = up or down
-    local side = cart:get_side()
+    local side = rail.get_side(cart.position)
 
     if (side == "up" or side == "down") and up_or_down then
         cart:set_state(cart.previous_direction)
@@ -423,7 +377,7 @@ end
 
 local function sort_carts_by_y_cord(carts_to_sort: {PlayerCart})
 	local function compare_cart_y_pos(c1: PlayerCart, c2: PlayerCart): boolean
-		return c1:get_x_y_position().y < c2:get_x_y_position().y
+		return c1:get_position().y < c2:get_position().y
 	end
 	table.sort(carts_to_sort, compare_cart_y_pos)
 end
