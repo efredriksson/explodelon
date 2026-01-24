@@ -1,8 +1,9 @@
 require("collision")
+require("players")
 local animations = require("animations")
 local audio = require("audio")
+local grid = require("level_map.grid")
 local hitboxes = require("hitboxes")
-local level_map = require("level_map")
 local lightnings = require("lightnings")
 local vectors = require("geometry.vectors")
 
@@ -130,7 +131,7 @@ local function is_occupied_by_bomb(position: Point, existing_bombs: {Entity}): b
 end
 
 function LightningBombs:place_lightning_bomb(player: Player, occupied: {Entity})
-    local position = level_map.snap_to_closest_grid_tile(player.position)
+    local position = grid.snap_to(player.position)
     if is_occupied_by_bomb(position, occupied) then
         return
     end

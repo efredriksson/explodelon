@@ -6,6 +6,7 @@ local const = require("const")
 local dino_animations = require("dino_animations")
 local dino_inputs = require("dino_inputs")
 local eggs = require("eggs")
+local entity_layout = require("level_map.entity_layout")
 local explosions = require("explosions")
 local game_countdown = require("game_countdown")
 local game_end = require("game_end")
@@ -16,7 +17,6 @@ local hitboxes = require("hitboxes")
 local items = require("items")
 local itertools = require("itertools")
 local joysticks = require("joysticks")
-local level_map = require("level_map")
 local lightnings = require("lightnings")
 local lightning_bombs = require("lightning_bombs")
 local mad_bombers = require("mad_bombers")
@@ -69,7 +69,7 @@ end
 function Game:load()
 	self.players = {}
 	local character_selections = characters.get_selections()
-	local start_positions = level_map.get_player_start_positions(#character_selections)
+	local start_positions = entity_layout.get_player_start_positions(#character_selections)
 	for i, character_selection in ipairs(character_selections) do
 		table.insert(self.players, players.new(
 			character_selection.player_id,
@@ -80,7 +80,7 @@ function Game:load()
 
 	self.bombs = bombs.new()
 	self.lightning_bombs = lightning_bombs.new()
-	self.soft_blocks = soft_blocks.new(level_map.get_soft_blocks(self.players))
+	self.soft_blocks = soft_blocks.new(entity_layout.get_soft_blocks(self.players))
 	self.mad_bombers = mad_bombers.new(self.bombs)
 	self.eggs = eggs.new()
 	self.items = items.new()
@@ -91,9 +91,9 @@ function Game:load()
 	self.state = "starting"
 	self.game_countdown = game_countdown.new()
 	self.pressure_blocks = pressure_blocks.new()
-	self.hard_blocks = hard_blocks.new(level_map.get_hard_blocks())
+	self.hard_blocks = hard_blocks.new(entity_layout.get_hard_blocks())
 	self.hard_blocks_group = collision.new_group(self.hard_blocks.on_ground)
-	self.non_hard_block_positions = level_map.get_non_hard_block_positions()
+	self.non_hard_block_positions = entity_layout.get_non_hard_block_positions()
 	self.tic_counter = 0
 	self.audio_paused = false
 	music:stop()

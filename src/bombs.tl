@@ -1,10 +1,12 @@
 require("collision")
+require("players")
 local animations = require("animations")
 local const = require("const")
 local explosions = require("explosions")
+local entity_layout = require("level_map.entity_layout")
+local grid = require("level_map.grid")
 local hitboxes = require("hitboxes")
 local itertools = require("itertools")
-local level_map = require("level_map")
 local logger = require("logger")
 local physics = require("physics")
 local points = require("geometry.points")
@@ -66,7 +68,7 @@ function Bomb:hit_with_bomb()
 end
 
 function Bomb:get_goal(): Goal
-    for _, goal in ipairs(level_map.get_goals()) do
+    for _, goal in ipairs(entity_layout.get_goals()) do
         if self.position:distance_to(goal.position) < 3 then
             return goal
         end
@@ -80,9 +82,7 @@ function Bomb:is_complete(): boolean
         return true
     end
 
-    return self.timer <= 0 and self.position:equal(
-        level_map.snap_to_closest_grid_tile(self.position)
-    )
+    return self.timer <= 0 and self.position:equal(grid.snap_to(self.position))
 end
 
 function Bomb:draw()
@@ -95,10 +95,10 @@ function Bomb:_trigger_belt(direction?: Vector): ConveyorBelt | nil
     local function bomb_on(belt: ConveyorBelt): boolean
         return belt:get_hitbox():overlap(self:movementbox())
     end
-    local belts = itertools.filter(level_map.get_conveyor_belts(), bomb_on)
+    local belts = itertools.filter(entity_layout.get_conveyor_belts(), bomb_on)
     for _, belt in ipairs(belts) do
-        if self.position:distance_to(level_map.snap_to_closest_grid_tile(self.position)) <= 3 then
-            local snap_pos = level_map.snap_to_closest_grid_tile(self.position)
+        if self.position:distance_to(grid.snap_to(self.position)) <= 3 then
+            local snap_pos = grid.snap_to(self.position)
             if snap_pos:equal(belt.position) and not belt.direction:same_direction(bomb_move_dir) then
                 return belt
             end
@@ -108,17 +108,17 @@ end
 
 local function moving_outside_of_map(test_hitbox: Rectangle): boolean
     local bomb_in_goal = false
-    for _, goal in ipairs(level_map.get_goals()) do
+    for _, goal in ipairs(entity_layout.get_goals()) do
         if test_hitbox:overlap(goal:get_hitbox()) then
             bomb_in_goal = true
         end
     end
 
-    return not level_map.player_area():contains(test_hitbox) and not bomb_in_goal
+    return not grid.area():contains(test_hitbox) and not bomb_in_goal
 end
 
 local function moving_into_new_block(movementbox: Rectangle, direction: Vector): Rectangle | nil
-    local snaps_to = level_map.snap_to_closest_grid_tile(movementbox:top_left())
+    local snaps_to = grid.snap_to(movementbox:top_left())
     local new_movementbox = movementbox:shift(direction)
 
     for i=-1, 1 do
@@ -222,9 +222,9 @@ function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, players: G
         local passing = moving_into_new_block(self:movementbox(), self.velocity:scale(mock_dt))
         if self.velocity:orthogonal(direction) and passing then
             if direction.x == 0 then
-                test_hitbox.x = level_map.snap_to_closest_x_grid_tile(test_hitbox.x)
+                test_hitbox.x = grid.snap_to_x(test_hitbox.x)
             elseif direction.y == 0 then
-                test_hitbox.y = level_map.snap_to_closest_y_grid_tile(test_hitbox.y)
+                test_hitbox.y = grid.snap_to_y(test_hitbox.y)
             end
 
             can_move_bomb.new_position = test_hitbox:top_left()
@@ -298,13 +298,13 @@ function Bomb:update(dt: number, occupies: Group<Kinematic>, players: Group<Play
         if self.timer <= 0 and new_block then
             -- If bomb timer is up and if trying to enter a new block snap to grid instead.
             -- This is to explode bomb on the grid. Bomb can slide to next intersection!
-            self.position = level_map.snap_to_closest_grid_tile(self.position)
+            self.position = grid.snap_to(self.position)
         elseif can_move.yes then
             self.position = can_move.new_position
         else
             -- If bomb can't move stop it and snap to grid
             self.velocity = vectors.new(0, 0)
-            self.position = level_map.snap_to_closest_grid_tile(self.position)
+            self.position = grid.snap_to(self.position)
             self.stopping = false
         end
 
@@ -412,7 +412,7 @@ local function is_occupied_by_bomb(position: Point, existing_bombs: {Entity}): b
 end
 
 function Bombs:place_bomb(player: Player, occupied: {Entity})
-    local position = level_map.snap_to_closest_grid_tile(player.position)
+    local position = grid.snap_to(player.position)
     if is_occupied_by_bomb(position, occupied) then
         return
     end

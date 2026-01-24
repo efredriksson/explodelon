@@ -1,18 +1,11 @@
-require("items")
 local const = require("const")
-local points = require("geometry.points")
-local itertools = require("itertools")
+local grid = require("level_map.grid")
 local hitboxes = require("hitboxes")
-local rectangles = require("geometry.rectangles")
+local itertools = require("itertools")
 local vectors = require("geometry.vectors")
 local settings = require("settings")
 
-local PLAYER_AREA = rectangles.new(24, 32, 272, 176)
-local level_map = {}
-
-function level_map.player_area(): Rectangle
-	return PLAYER_AREA
-end
+local entity_layout = {}
 
 global record HardBlockConfig
 	position: Point
@@ -26,17 +19,11 @@ function HardBlockConfig.new(position: Point, tall: boolean): HardBlockConfig
     return self
 end
 
-function level_map.get_hard_blocks(): {HardBlockConfig}
+function entity_layout.get_hard_blocks(): {HardBlockConfig}
 	local configs: {HardBlockConfig} = {}
 
 	local function hard_block_config(i: number, j: number, tall: boolean): HardBlockConfig
-		return HardBlockConfig.new(
-			points.new(
-				PLAYER_AREA.x + const.BLOCK_SIZE + i * 2 * const.BLOCK_SIZE,
-				PLAYER_AREA.y + const.BLOCK_SIZE + j * 2 * const.BLOCK_SIZE
-			),
-			tall
-		)
+		return HardBlockConfig.new(grid.get_tile_position(1 + i * 2, 1 + j * 2), tall)
 	end
 
 	for i, j in itertools.double_loop_inner_loopback({0, 7}, {0, 4}) do
@@ -46,27 +33,10 @@ function level_map.get_hard_blocks(): {HardBlockConfig}
 	return configs
 end
 
-function level_map.get_hard_block_positions(): {Point}
-	local configs = level_map.get_hard_blocks()
+function entity_layout.get_hard_block_positions(): {Point}
+	local configs = entity_layout.get_hard_blocks()
 	local get_point = function (c: HardBlockConfig): Point return c.position end
 	return itertools.map(configs, get_point)
-end
-
-local function get_block(i: number, j: number): Rectangle
-	return rectangles.new(
-		PLAYER_AREA.x + i * const.BLOCK_SIZE,
-		PLAYER_AREA.y + j * const.BLOCK_SIZE,
-		const.BLOCK_SIZE,
-		const.BLOCK_SIZE
-	)
-end
-
-local function get_block_point(i: number, j: number): Point
-	return get_block(i, j):top_left()
-end
-
-local function get_random_block(): Point
-	return get_block_point(lutro.math.random(17) - 1, lutro.math.random(11) - 1)
 end
 
 local function is_hard_block_at(position: Point, hard_block_positions: {Point}): boolean
@@ -79,12 +49,12 @@ local function is_hard_block_at(position: Point, hard_block_positions: {Point}):
 	return false
 end
 
-function level_map.get_non_hard_block_positions(): {Point}
+function entity_layout.get_non_hard_block_positions(): {Point}
 	local positions: {Point} = {}
-	local hard_blocks_positions = level_map.get_hard_block_positions()
+	local hard_blocks_positions = entity_layout.get_hard_block_positions()
 
 	for i, j in itertools.double_loop_inner_loopback({0, 16}, {0, 10}) do
-		local block = get_block_point(i, j)
+		local block = grid.get_tile_position(i, j)
 		if not is_hard_block_at(block, hard_blocks_positions) then
 			table.insert(positions, block)
 		end
@@ -92,44 +62,30 @@ function level_map.get_non_hard_block_positions(): {Point}
 	return positions
 end
 
-function level_map.snap_to_closest_x_grid_tile(x: number): number
-	return math.floor((x - PLAYER_AREA.x) / const.BLOCK_SIZE + 0.5) * const.BLOCK_SIZE + PLAYER_AREA.x
-end
 
-function level_map.snap_to_closest_y_grid_tile(y: number): number
-	return math.floor((y - PLAYER_AREA.y) / const.BLOCK_SIZE + 0.5) * const.BLOCK_SIZE + PLAYER_AREA.y
-end
-
-function level_map.snap_to_closest_grid_tile(pos: Point): Point
-	return points.new(
-		level_map.snap_to_closest_x_grid_tile(pos.x),
-		level_map.snap_to_closest_y_grid_tile(pos.y)
-	)
-end
-
-function level_map.get_right_side_pressure_blocks(): {Point}
+function entity_layout.get_right_side_pressure_blocks(): {Point}
 	local blocks: {Point} = {}
 
 	for i, j in itertools.double_loop_inner_loopback({0, 3}, {0, 10}) do
-		table.insert(blocks, get_block_point(i, j))
+		table.insert(blocks, grid.get_tile_position(i, j))
 	end
 
 	for j, i in itertools.double_loop_inner_loopback({0, 1}, {4, 12}) do
-		table.insert(blocks, get_block_point(i, j))
+		table.insert(blocks, grid.get_tile_position(i, j))
 	end
 
 	return blocks
 end
 
-function level_map.get_left_side_pressure_blocks(): {Point}
+function entity_layout.get_left_side_pressure_blocks(): {Point}
 	local blocks: {Point} = {}
 
 	for i, j in itertools.double_loop_inner_loopback({16, 13, -1}, {10, 0, -1}) do
-		table.insert(blocks, get_block_point(i, j))
+		table.insert(blocks, grid.get_tile_position(i, j))
 	end
 
 	for j, i in itertools.double_loop_inner_loopback({10, 9, -1}, {12, 4, -1}) do
-		table.insert(blocks, get_block_point(i, j))
+		table.insert(blocks, grid.get_tile_position(i, j))
 	end
 
 	return blocks
@@ -162,7 +118,7 @@ end
 local function get_soft_block_positions(occupies: {Kinematic}): {Point}
 	local soft_blocks: {Point} = {}
 	local close_to_entity: {Point} = {}
-	local hard_block_positions = level_map.get_hard_block_positions()
+	local hard_block_positions = entity_layout.get_hard_block_positions()
 
 	for _, occupied in ipairs(occupies) do
 		-- Do allow some positions close to occupied entity to have soft blocks:
@@ -177,7 +133,7 @@ local function get_soft_block_positions(occupies: {Kinematic}): {Point}
 
 	while #soft_blocks < settings.game_rules.items.nbr_soft_blocks do
 		local occupied = itertools.combine(hard_block_positions, close_to_entity, soft_blocks)
-		local random_block = get_random_block()
+		local random_block = grid.get_random_tile()
 		if not contains_position(occupied, random_block) then
 			table.insert(soft_blocks, random_block)
 		end
@@ -186,7 +142,7 @@ local function get_soft_block_positions(occupies: {Kinematic}): {Point}
 	return soft_blocks
 end
 
-function level_map.get_soft_blocks(occupied: {Kinematic}): {SoftBlockConfig}
+function entity_layout.get_soft_blocks(occupied: {Kinematic}): {SoftBlockConfig}
 	local item_settings = settings.game_rules.items
 	local soft_blocks: {SoftBlockConfig} = {}
 
@@ -208,24 +164,24 @@ function level_map.get_soft_blocks(occupied: {Kinematic}): {SoftBlockConfig}
 	return soft_blocks
 end
 
-function level_map.get_player_start_positions(number_of_players: integer): {Point}
+function entity_layout.get_player_start_positions(number_of_players: integer): {Point}
 	local x_min = 0
 	local x_max = 16
 	local y_min = 0
 	local y_max = 10
 
 	local corners = {
-		get_block_point(x_min, y_min),
-		get_block_point(x_max, y_max),
-		get_block_point(x_max, y_min),
-		get_block_point(x_min, y_max)
+		grid.get_tile_position(x_min, y_min),
+		grid.get_tile_position(x_max, y_max),
+		grid.get_tile_position(x_max, y_min),
+		grid.get_tile_position(x_min, y_max)
 	}
-	local center = {get_block_point(x_max / 2, y_max / 2)}
+	local center = {grid.get_tile_position(x_max / 2, y_max / 2)}
 	local inner_positions = {
-		get_block_point(x_min + 5, y_min + 2),
-		get_block_point(x_max - 5, y_max - 2),
-		get_block_point(x_max - 5, y_min + 2),
-		get_block_point(x_min + 5, y_max - 2)
+		grid.get_tile_position(x_min + 5, y_min + 2),
+		grid.get_tile_position(x_max - 5, y_max - 2),
+		grid.get_tile_position(x_max - 5, y_min + 2),
+		grid.get_tile_position(x_min + 5, y_max - 2)
 	}
 
 	local function get_positions(): {Point}
@@ -261,16 +217,16 @@ function Goal:get_hitbox(): Rectangle
 	return hitboxes.new_block(self.position)
 end
 
-function level_map.get_goals(): {Goal}
+function entity_layout.get_goals(): {Goal}
 	if settings.map ~= "football" then
 		return {}
 	end
 
 	return {
-		Goal.new(get_block_point(-1, 4), get_block_point(-1, 6)),
-		Goal.new(get_block_point(-1, 6), get_block_point(-1, 4)),
-		Goal.new(get_block_point(17, 4), get_block_point(17, 6)),
-		Goal.new(get_block_point(17, 6), get_block_point(17, 4)),
+		Goal.new(grid.get_tile_position(-1, 4), grid.get_tile_position(-1, 6)),
+		Goal.new(grid.get_tile_position(-1, 6), grid.get_tile_position(-1, 4)),
+		Goal.new(grid.get_tile_position(17, 4), grid.get_tile_position(17, 6)),
+		Goal.new(grid.get_tile_position(17, 6), grid.get_tile_position(17, 4)),
 	}
 end
 
@@ -290,44 +246,36 @@ function ConveyorBelt:get_hitbox(): Rectangle
 	return hitboxes.new_block(self.position)
 end
 
-function level_map.get_conveyor_belts(): {ConveyorBelt}
+function entity_layout.get_conveyor_belts(): {ConveyorBelt}
 	if settings.map ~= "factory" then
 		return {}
 	end
 
-	local x_min = 0
-	local x_max = 16
-	local y_min = 0
-	local y_max = 10
-	local down = vectors.new(0, 1)
-	local up = vectors.new(0, -1)
-	local left = vectors.new(-1, 0)
-	local right = vectors.new(1, 0)
-
-	local function create_belt(i: integer, j: integer, dir: Vector): ConveyorBelt
-		return ConveyorBelt.new(get_block_point(i, j), dir)
+	local function create_belt(i: integer, j: integer, dir: Direction): ConveyorBelt
+		return ConveyorBelt.new(grid.get_tile_position(i, j), vectors.from_direction(dir))
 	end
 
+    local dim = grid.dimensions()
 	return {
 		-- Outer ring
-		create_belt(x_min, y_min, down),
-		create_belt(x_max, y_max, up),
-		create_belt(x_max, y_min, left),
-		create_belt(x_min, y_max, right),
+		create_belt(dim.x_min, dim.y_min, "down"),
+		create_belt(dim.x_max, dim.y_max, "up"),
+		create_belt(dim.x_max, dim.y_min, "left"),
+		create_belt(dim.x_min, dim.y_max, "right"),
 		-- Middle ring
-		create_belt(x_min + 4, y_min + 2, right),
-		create_belt(x_max - 4, y_max - 2, left),
-		create_belt(x_max - 4, y_min + 2, down),
-		create_belt(x_min + 4, y_max - 2, up),
+		create_belt(dim.x_min + 4, dim.y_min + 2, "right"),
+		create_belt(dim.x_max - 4, dim.y_max - 2, "left"),
+		create_belt(dim.x_max - 4, dim.y_min + 2, "down"),
+		create_belt(dim.x_min + 4, dim.y_max - 2, "up"),
 		-- Inner ring
-		create_belt(x_min + 6, y_min + 4, down),
-		create_belt(x_max - 6, y_max - 4, up),
-		create_belt(x_max - 6, y_min + 4, left),
-		create_belt(x_min + 6, y_max - 4, right),
+		create_belt(dim.x_min + 6, dim.y_min + 4, "down"),
+		create_belt(dim.x_max - 6, dim.y_max - 4, "up"),
+		create_belt(dim.x_max - 6, dim.y_min + 4, "left"),
+		create_belt(dim.x_min + 6, dim.y_max - 4, "right"),
 		-- Middle up/down
-		create_belt(8, y_min, down),
-		create_belt(8, y_max, up),
+		create_belt(math.ceil(dim.x_max / 2), dim.y_min, "down"),
+		create_belt(math.ceil(dim.x_max / 2), dim.y_max, "up"),
 	}
 end
 
-return level_map
+return entity_layout

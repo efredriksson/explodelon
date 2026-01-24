@@ -1,4 +1,4 @@
-require("level_map")
+require("level_map.entity_layout")
 local const = require("const")
 local hitboxes = require("hitboxes")
 local settings = require("settings")

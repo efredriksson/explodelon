@@ -2,9 +2,8 @@ require("players")
 require("bombs")
 require("lightning_bombs")
 local const = require("const")
+local grid = require("level_map.grid")
 local joysticks = require("joysticks")
-local level_map = require("level_map")
-local points = require("geometry.points")
 local vectors = require("geometry.vectors")
 
 local JOYPAD = joysticks.buttons()
@@ -68,15 +67,6 @@ local function sign_of(number: number): integer
 	return number > 0 and 1 or (number == 0 and 0 or -1)
 end
 
---- Get local position for point in block, so {x, y} ∈ [0, BLOCK_SIZE).
-local function get_local_position(global_position: Point): Point
-	local player_area = level_map.player_area()
-	return points.new(
-		math.fmod(global_position.x - player_area.x, const.BLOCK_SIZE),
-		math.fmod(global_position.y - player_area.y, const.BLOCK_SIZE)
-	)
-end
-
 --- Split movement that goes against block into parts for walking corner.
 -- If at just the corner the movement length will be split so the returned
 -- vector represents moving up to the corner and then down the corner with
@@ -99,7 +89,7 @@ end
 local function in_corridor_and_walking_against_wall(
 	position: Point, walk_dir: Direction
 ): boolean
-	local local_pos = get_local_position(position)
+	local local_pos = grid.get_local_tile_position(position)
 	local in_vertical_corridor = local_pos.x == 0 and local_pos.y > 0
 	local in_horizontal_corridor = local_pos.y == 0 and local_pos.x > 0
 
@@ -110,7 +100,7 @@ end
 local function in_end_of_corridor_and_walking_out(
 	movement: Movement, player_pos: Point
 ): boolean
-	local local_pos = get_local_position(player_pos)
+	local local_pos = grid.get_local_tile_position(player_pos)
 
 	local function first_half_of_block(val: number): boolean
 		return val < const.BLOCK_SIZE / 2 and val > 0
@@ -235,9 +225,8 @@ local function restrict_player_movement(
 		end
 	end
 
-	local player_area = level_map.player_area()
-	if not player_area:contains(new_hitbox) then
-		local clamped_position = player_area:clamp(new_hitbox):top_left()
+	if not grid.area():contains(new_hitbox) then
+		local clamped_position = grid.area():clamp(new_hitbox):top_left()
 		return CheckedMovement.new(clamped_position, false, false)
 	end
 

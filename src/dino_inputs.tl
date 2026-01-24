@@ -3,8 +3,8 @@ require("players")
 require("bombs")
 local const = require("const")
 local hitboxes = require("hitboxes")
+local grid = require("level_map.grid")
 local joysticks = require("joysticks")
-local level_map = require("level_map")
 local vectors = require("geometry.vectors")
 
 local JOYPAD = joysticks.buttons()
@@ -28,7 +28,7 @@ local function handle_jump_input(dt: number, player: Player, blocks_jump: Group<
 		end
 
 		-- Finally check that jump area is contained in play area
-		return level_map.player_area():contains(jump_landing_area)
+		return grid.area():contains(jump_landing_area)
 	end
 
 	local function try_all_jumps_for(jump_direction: Vector): Point | nil
@@ -38,7 +38,7 @@ local function handle_jump_input(dt: number, player: Player, blocks_jump: Group<
 				jump_direction:scale(const.BLOCK_SIZE * nbr_of_blocks_to_jump)
 			)
 			local jump_candidates = {
-				jump_to, level_map.snap_to_closest_grid_tile(jump_to)
+				jump_to, grid.snap_to(jump_to)
 			}
 
 			for _, jump_candiated in ipairs(jump_candidates) do
@@ -102,7 +102,7 @@ local function handle_throw_input(dt: number, player: Player, bombs: Bombs, bomb
 	local block_from_player_dir = vectors.from_direction(player.direction):scale(const.BLOCK_SIZE)
 
 	local function get_position_throwing_from(): Point
-		local snaped_pos = level_map.snap_to_closest_grid_tile(player.position)
+		local snaped_pos = grid.snap_to(player.position)
 		return snaped_pos:move(block_from_player_dir)
 	end
 
