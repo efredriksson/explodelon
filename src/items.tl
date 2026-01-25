@@ -169,7 +169,7 @@ function Items:possible_pickup_by(player: Player)
 end
 
 
-function Items:load_assets()
+function items.load_assets()
     take_item_sound = audio.new_source_pool("assets/take_item.wav", "static", 5)
     take_item_sound:setVolume(0.75)
     frame_animation = animations.new(lutro.graphics.newImage("assets/items/frame.png"), 18, 1 / 30)

@@ -19,15 +19,15 @@ local ready_set_go_frame_image: Image
 local ready_set_go_sound: Source
 local start_jingle: Source
 
-function GameCountdown.load_assets()
+local countdown = {GameCountdown = GameCountdown}
+
+function countdown.load_assets()
 	ready_set_go_image = lutro.graphics.newImage("assets/ready_set_go.png")
 	ready_set_go_frame_image = lutro.graphics.newImage("assets/ready_set_go_frame.png")
 	ready_set_go_sound = audio.new_source("assets/ready_set_go.wav", "static")
 	start_jingle = audio.new_source("assets/battle-start.ogg", "static")
 	start_jingle:setVolume(0.35)
 end
-
-local countdown = {GameCountdown = GameCountdown}
 
 function countdown.new(): GameCountdown
     local self: GameCountdown = setmetatable({}, { __index = GameCountdown })

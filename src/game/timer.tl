@@ -42,7 +42,7 @@ function timer.new(): GameTimer
    return self
 end
 
-function GameTimer.load_assets()
+function timer.load_assets()
 	clock_font = fonts.new_shaded_numbers()
 	hurry_up_sound = audio.new_source("assets/hurry-up.wav", "static")
 
