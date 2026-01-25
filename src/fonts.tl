@@ -1,11 +1,18 @@
-require("engine.geometry.points")
+local points = require("engine.geometry.points")
 
-global record ShadedFont
+local type Point = points.Point
+
+local record ShadedFont
    main: Font
    shade: Font
 end
 
-local fonts = {}
+local record MenuFont
+   main: Font
+   outline: Font
+end
+
+local fonts = {ShadedFont = ShadedFont, MenuFont = MenuFont}
 
 function fonts.new_shaded(main: Font, shade: Font): ShadedFont
    local self: ShadedFont = setmetatable({}, { __index = ShadedFont })
@@ -31,11 +38,6 @@ function fonts.new_shaded_numbers(): ShadedFont
     local clock_main = lutro.graphics.newImageFont("assets/imgfont/numbers.png", font_symbols)
 	local clock_shade = lutro.graphics.newImageFont("assets/imgfont/numbers_blue_tint.png", font_symbols)
 	return fonts.new_shaded(clock_main, clock_shade)
-end
-
-global record MenuFont
-   main: Font
-   outline: Font
 end
 
 function MenuFont.new(main: Font, outline: Font): MenuFont

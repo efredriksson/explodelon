@@ -1,13 +1,17 @@
 local points = require("engine.geometry.points")
+local vectors = require("engine.geometry.vectors")
 
-global record Rectangle
+local type Vector = vectors.Vector
+local type Point = points.Point
+
+local record Rectangle
 	x: number
 	y: number
 	width: number
 	height: number
 end
 
-local rectangles = {}
+local rectangles = {Rectangle = Rectangle}
 
 function rectangles.new(x: number, y: number, width: number, height: number): Rectangle
    local self: Rectangle = setmetatable({}, { __index = Rectangle })

@@ -13,6 +13,9 @@ local screens = require("menus.screens")
 local settings = require("settings")
 local start_screen = {}
 
+local type Scene = scenes.Scene
+local type MenuScreen = screens.MenuScreen
+local type PlayerSelectionMethod = settings.PlayerSelectionMethod
 
 function start_screen.new(): MenuScreen
     local nbr_player_selected = items.new_integer_selection(settings.number_of_players, 2, joysticks.MAX_PLAYERS)

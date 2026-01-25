@@ -1,8 +1,9 @@
-require("engine.geometry.rectangles")
-require("engine.entity")
 local logger = require("engine.logger")
+local rectangles = require("engine.geometry.rectangles")
 local settings = require("engine.settings")
 
+local type Entity = require("engine.entity")
+local type Rectangle = rectangles.Rectangle
 
 local LIMIT_Y_TILES = 100
 
@@ -29,11 +30,15 @@ local function get_indexes(hitbox: Rectangle): {integer}
     return indexes
 end
 
-local collision = {}
-
-global record Group<T>
+local record Group<T>
     set: {T: T}
 end
+
+local record Lookup
+    map: {integer: {Entity}}
+end
+
+local collision = {Group = Group, Lookup = Lookup}
 
 function Group:get(object: any): T | nil
     return self.set[object as T]
@@ -58,10 +63,6 @@ function collision.new_group<T>(...: {T}): Group<T>
         end
     end
     return self
-end
-
-global record Lookup
-    map: {integer: {Entity}}
 end
 
 function collision.new_lookup(...: {Entity}): Lookup

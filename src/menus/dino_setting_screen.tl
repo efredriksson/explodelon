@@ -4,6 +4,9 @@ local choices = require("menus.choices")
 local items = require("menus.items")
 local screens = require("menus.screens")
 
+local type Scene = scenes.Scene
+local type MenuScreen = screens.MenuScreen
+
 local dino_settings_screen = {}
 
 function dino_settings_screen.new(previous_screen: Scene): MenuScreen

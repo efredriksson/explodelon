@@ -25,12 +25,35 @@ local map_entities = require("level_layout.map_entities")
 local movement = require("movement")
 local player_animations = require("player_animations")
 local players = require("players")
+local points = require("engine.geometry.points")
 local pressure_blocks = require("pressure_block")
 local scenes = require("engine.scenes")
 local score_board = require("game.score_board")
 local settings = require("settings")
 local soft_blocks = require("soft_blocks")
 
+local type Bomb = bombs.Bomb
+local type Bombs = bombs.Bombs
+local type Eggs = eggs.Eggs
+local type Explodable = require("bombs.explodable")
+local type Kinematic = require("kinematic")
+local type Entity = require("engine.entity")
+local type GameCountdown = countdown.GameCountdown
+local type HardBlock = hard_blocks.HardBlock
+local type HardBlocks = hard_blocks.HardBlocks
+local type Items = items.Items
+local type LightningBombs = lightning_bombs.LightningBombs
+local type MadBombers = mad_bombers.MadBombers
+local type PlayerAnimations = player_animations.PlayerAnimations
+local type Player = players.Player
+local type PressureBlocks = pressure_blocks.PressureBlocks
+local type SoftBlocks = soft_blocks.SoftBlocks
+local type Group = collision.Group
+local type Lookup = collision.Lookup
+local type Scene = scenes.Scene
+local type ScoreBoard = score_board.ScoreBoard
+local type GameTimer = timer.GameTimer
+local type Point = points.Point
 
 local music: Source
 
@@ -41,7 +64,7 @@ local type BattleState = enum
    "finished"
 end
 
-global record Battle is Scene
+local record Battle is Scene
 	score_board: ScoreBoard
 	player_selection: Scene
 	
@@ -521,9 +544,9 @@ function Battle:draw()
 	self.timer:draw_hurry_text()
 end
 
-local game = {}
+local battle = {Battle = Battle}
 
-function game.load_assets()
+function battle.load_assets()
 	Eggs.load_assets()
 	Items:load_assets()
 	GameTimer.load_assets()
@@ -546,8 +569,8 @@ function game.load_assets()
 	music:setVolume(0.75)
 end
 
-function game.new(player_selection: Scene): Battle
+function battle.new(player_selection: Scene): Battle
 	return Battle.new(player_selection)
 end
 
-return game
+return battle

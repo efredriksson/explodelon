@@ -1,15 +1,23 @@
-require("bombs.explodable")
-require("engine.entity")
-require("kinematic")
-require("level_layout.map_entities")
+local animations = require("engine.animations")
 local grid = require("level_layout.grid")
 local hitboxes = require("engine.hitboxes")
 local itertools = require("itertools")
+local map_entities = require("level_layout.map_entities")
 local points = require("engine.geometry.points")
+local rectangles = require("engine.geometry.rectangles")
+local settings = require("settings")
 local soft_block_animations = require("level_graphics.soft_block_animations")
 
+local type Animation = animations.Animation
+local type Explodable = require("bombs.explodable")
+local type Entity = require("engine.entity")
+local type Kinematic = require("kinematic")
+local type Point = points.Point
+local type Rectangle = rectangles.Rectangle
+local type SoftBlockConfig = map_entities.SoftBlockConfig
+local type ItemType = settings.ItemType
 
-global record SoftBlock is Entity, Explodable, Kinematic
+local record SoftBlock is Entity, Explodable, Kinematic
 	position: Point
     is_exploding: boolean
     in_explosion: boolean
@@ -79,12 +87,12 @@ function SoftBlock:is_destroyed(): boolean
     return self.breaking_animation.loops > 0
 end
 
-global record SoftBlocks 
+local record SoftBlocks 
 	on_ground: {SoftBlock}
     rigid_animation: Animation
 end
 
-local soft_blocks = {}
+local soft_blocks = {SoftBlocks = SoftBlocks}
 
 function soft_blocks.new(configs: {SoftBlockConfig}): SoftBlocks
     local self: SoftBlocks = setmetatable({}, { __index = SoftBlocks })

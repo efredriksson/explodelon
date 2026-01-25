@@ -4,6 +4,9 @@ local settings = require("settings")
 local choices = require("menus.choices")
 local screens = require("menus.screens")
 
+local type Scene = scenes.Scene
+local type MenuScreen = screens.MenuScreen
+
 local player_settings_screen = {}
 
 function player_settings_screen.new(previous_screen: Scene): MenuScreen

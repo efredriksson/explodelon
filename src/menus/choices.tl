@@ -1,14 +1,17 @@
-require("fonts")
-require("engine.scenes")
+local fonts = require("fonts")
 local points = require("engine.geometry.points")
 local joysticks = require("engine.joysticks")
 local items = require("menus.items")
+local scenes = require("engine.scenes")
 local screen = require("screen")
 
+local type MenuFont = fonts.MenuFont
+local type Scene = scenes.Scene
+local type MenuLineColumn = items.MenuLineColumn
+local type MenuLine = items.MenuLine
+local type MenuSelection = items.MenuSelection
 
-local choices = {}
-
-global type MenuChoice = interface
+local type MenuChoice = interface
     update: function(self, ctx: Scene): boolean
     draw: function(self, font: MenuFont)
 end
@@ -19,6 +22,8 @@ local record MenuChoiceImpl<T> is MenuChoice
     menu_text: string
     value_change: function(T)
 end
+
+local choices = {MenuChoice = MenuChoice}
 
 function choices.new_boolean(menu_text: string, y_pos: integer, on_by_default: boolean, callback: function(boolean)): MenuChoiceImpl<boolean>
     local selection = items.new_boolean_selection(on_by_default)

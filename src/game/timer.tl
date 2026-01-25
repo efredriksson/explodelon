@@ -7,6 +7,9 @@ local vectors = require("engine.geometry.vectors")
 local screen = require("screen")
 local settings = require("settings")
 
+local type ShadedFont = fonts.ShadedFont
+local type Point = points.Point
+
 
 local TIMER_POS = points.new(18, 8)
 local WARNING_MARGIN = 2
@@ -14,7 +17,7 @@ local TEXT_X_SPEED = vectors.new(-200, 0)
 local TEXT_SIN_PERIOD = 9
 local TEXT_SIN_AMPLITUDE = 5
 
-global record GameTimer
+local record GameTimer
    time_left: number
    have_played_hurry_up_sound: boolean
    hurry_text_position: Point
@@ -27,7 +30,7 @@ local hurry_letters: {Image}
 local hurry_letters_mid: number
 local hurry_letters_start: Point
 local hurry_up_sound: Source
-local timer = {}
+local timer = {GameTimer = GameTimer}
 
 function timer.new(): GameTimer
    local self: GameTimer = setmetatable({}, { __index = GameTimer })

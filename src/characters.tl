@@ -1,6 +1,6 @@
 
 
-global type CharacterName = enum
+local type CharacterName = enum
     "kotetsu"
     "honey"
     "kinu" 
@@ -26,16 +26,19 @@ local ALL_SPRITES: {CharacterName} = {
     "bonks",
 }
 
-local characters = {}
+local record CharacterSelection
+    player_id: integer
+    sprite: CharacterName
+end
+
+local characters = {
+    CharacterName = CharacterName,
+    CharacterSelection = CharacterSelection,
+}
 -- Global state on what characters have been selected:
 local character_selections: {CharacterSelection} = {}
 -- Global state on players (IDs) that should choose a character:
 local in_queue_to_join: {integer} = {}
-
-global record CharacterSelection
-    player_id: integer
-    sprite: CharacterName
-end
 
 function CharacterSelection.new(
     player_id: integer,

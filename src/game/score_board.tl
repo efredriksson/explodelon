@@ -4,11 +4,15 @@ local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
 local screen = require("screen")
 
+local type CharacterName = characters.CharacterName
+local type CharacterSelection = characters.CharacterSelection
+local type ShadedFont = fonts.ShadedFont
+local type Point = points.Point
 
 local score_font: ShadedFont
 local avatar_images: {CharacterName: Image}
 
-global record PlayerScore
+local record PlayerScore
     id: integer
     score: integer
     avatar: CharacterName
@@ -22,11 +26,11 @@ function PlayerScore.new(id: integer, avatar: CharacterName): PlayerScore
     return self
 end
 
-global record ScoreBoard
+local record ScoreBoard
     players: {PlayerScore}
 end
 
-local score_board = {}
+local score_board = {ScoreBoard = ScoreBoard}
 
 function score_board.new(avatars: {CharacterSelection}): ScoreBoard
     local self: ScoreBoard = setmetatable({}, { __index = ScoreBoard })

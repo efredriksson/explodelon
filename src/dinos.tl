@@ -1,9 +1,14 @@
-require("engine.geometry.points")
-require("engine.geometry.vectors")
 local hitboxes = require("engine.hitboxes")
+local vectors = require("engine.geometry.vectors")
+local points = require("engine.geometry.points")
+local rectangles = require("engine.geometry.rectangles")
 local settings = require("settings")
 
-global type DinoAction = enum
+local type Direction = vectors.Direction
+local type Point = points.Point
+local type Rectangle = rectangles.Rectangle
+local type DinoColor = settings.DinoColor
+local type DinoAction = enum
     "walk"
     "idle"
     "dying"
@@ -14,7 +19,7 @@ global type DinoAction = enum
     "slide"
 end
 
-global record Dino
+local record Dino
     position: Point
     direction: Direction
     action: DinoAction
@@ -25,7 +30,7 @@ global record Dino
     throw_powerup_for: number
 end
 
-local dinos = {}
+local dinos = {DinoAction = DinoAction, Dino = Dino}
 
 function dinos.new(position: Point, direction: Direction): Dino
    local self: Dino = setmetatable({}, { __index = Dino })

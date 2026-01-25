@@ -3,7 +3,7 @@
 local logging = require("engine.logger")
 
 
-global record Animation
+local record Animation
 	image: Image
     timer: number
 	width: number
@@ -15,7 +15,7 @@ global record Animation
     loops: number
 end
 
-local animations = {}
+local animations = {Animation = Animation}
 
 function animations.new_with_frames(image: Image, frame_durations: {number}): Animation
     local self: Animation = setmetatable({}, { __index = Animation })

@@ -1,10 +1,20 @@
-require("engine.collision")
-require("players")
 local animations = require("engine.animations")
 local audio = require("engine.audio")
+local collision = require("engine.collision")
 local grid = require("level_layout.grid")
 local hitboxes = require("engine.hitboxes")
+local players = require("players")
 local points = require("engine.geometry.points")
+local rectangles = require("engine.geometry.rectangles")
+
+local type Animation = animations.Animation
+local type Explodable = require("bombs.explodable")
+local type Entity = require("engine.entity")
+local type Player = players.Player
+local type Group = collision.Group
+local type Lookup = collision.Lookup
+local type Point = points.Point
+local type Rectangle = rectangles.Rectangle
 
 local END_ANIMATION_DURATION: number = 0.6
 local FRAME_DURATION = END_ANIMATION_DURATION / 4
@@ -13,7 +23,7 @@ local lightning_initial_image: Image
 local lightning_ending_image: Image
 local lightning_sound: Source
 
-global record LightningAnimations
+local record LightningAnimations
     ending: Animation
     initial: Animation
 end
@@ -42,7 +52,7 @@ function LightningTile:hitbox(): Rectangle
     return hitboxes.new_block(self.position):shrink(self.reduction)
 end
 
-global record Lightning
+local record Lightning
     position: Point
     range: number
     duration: number
@@ -173,11 +183,11 @@ function Lightning:update(dt: number, blockers: Group<Explodable>, lookup: Looku
 end
 
 -- Explosions --
-global record Lightnings
+local record Lightnings
     on_ground: {Lightning}
 end
 
-local lightnings = {}
+local lightnings = {Lightnings = Lightnings}
 
 function lightnings.load_assets()
     lightning_initial_image = lutro.graphics.newImage("assets/lightning-bomb/explosion/explosion_center.png")

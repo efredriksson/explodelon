@@ -1,9 +1,10 @@
-require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
+local points = require("engine.geometry.points")
 
-local physics = {}
+local type Vector = vectors.Vector
+local type Point = points.Point
 
-global record ProjectileTrajectory
+local record ProjectileTrajectory
 	height: number
 	end_height: number
     velocity: number
@@ -11,6 +12,8 @@ global record ProjectileTrajectory
     gravity: number
 	duration: number
 end
+
+local physics = {ProjectileTrajectory = ProjectileTrajectory}
 
 function ProjectileTrajectory:in_air_position(ground_pos: Point): Point
 	return ground_pos:move(vectors.new(0, -self.height))

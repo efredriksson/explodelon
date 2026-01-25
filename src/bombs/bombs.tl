@@ -1,7 +1,6 @@
-require("bombs.explodable")
-require("engine.collision")
-require("players")
 local animations = require("engine.animations")
+local collision = require("engine.collision")
+local maps_entities = require("level_layout.maps.entities")
 local explosions = require("bombs.explosions")
 local map_entities = require("level_layout.map_entities")
 local grid = require("level_layout.grid")
@@ -9,9 +8,25 @@ local hitboxes = require("engine.hitboxes")
 local itertools = require("itertools")
 local logger = require("engine.logger")
 local physics = require("engine.physics")
+local players = require("players")
 local points = require("engine.geometry.points")
+local rectangles = require("engine.geometry.rectangles")
 local vectors = require("engine.geometry.vectors")
 
+local type Animation = animations.Animation
+local type Explodable = require("bombs.explodable")
+local type Explosions = explosions.Explosions
+local type Kinematic = require("kinematic")
+local type Entity = require("engine.entity")
+local type Player = players.Player
+local type Group = collision.Group
+local type Lookup = collision.Lookup
+local type ProjectileTrajectory = physics.ProjectileTrajectory
+local type Vector = vectors.Vector
+local type Point = points.Point
+local type Rectangle = rectangles.Rectangle
+local type Goal = maps_entities.Goal
+local type ConveyorBelt = maps_entities.ConveyorBelt
 
 -- Bomb --
 
@@ -19,7 +34,7 @@ local BOMB_TIMER_START = 2.5
 local bomb_shadow: Image
 local bomb_image: Image
 
-global record Bomb is Entity, Kinematic, Explodable
+local record Bomb is Entity, Kinematic, Explodable
     position: Point
     velocity: Vector
     timer: number
@@ -165,7 +180,7 @@ function CanMoveBomb:no(): CanMoveBomb
    return self
 end
 
-function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, players: Group<Player>, bombs: Group<Bomb>, lookup: Lookup, call_level?: integer): CanMoveBomb    
+function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, players_: Group<Player>, bombs: Group<Bomb>, lookup: Lookup, call_level?: integer): CanMoveBomb    
     local function not_this_bomb(occupied: Kinematic): boolean
         return occupied ~= self
     end
@@ -174,7 +189,7 @@ function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, players: G
     local old_hitbox = self:movementbox()
     local can_move_bomb = CanMoveBomb.new(test_hitbox:top_left(), direction:normalize())
     local close_occupies = lookup:in_box_and_group(old_hitbox:expand(grid.TILE_SIZE), occupies)
-    local close_players = lookup:in_box_and_group(old_hitbox:expand(grid.TILE_SIZE), players)
+    local close_players = lookup:in_box_and_group(old_hitbox:expand(grid.TILE_SIZE), players_)
     local close_bombs = lookup:in_box_and_group(old_hitbox:expand(grid.TILE_SIZE), bombs)
     close_bombs = itertools.filter(close_bombs, not_this_bomb)
     local close_interacts: {Kinematic} = itertools.combine(close_bombs, close_players)
@@ -241,7 +256,7 @@ function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, players: G
 
     for _, bomb in ipairs(close_bombs) do
         if overlaps_significantly(bomb, test_hitbox) then
-            if bomb:can_move(direction, occupies, players, bombs, lookup, next_call_level).yes then
+            if bomb:can_move(direction, occupies, players_, bombs, lookup, next_call_level).yes then
                 can_move_bomb.will_hit = bomb
             end
         end
@@ -268,7 +283,7 @@ function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, players: G
 
         for _, bomb in ipairs(close_bombs) do
             if overlaps_significantly(bomb, new_block) then
-                if bomb:can_move(direction, occupies, players, bombs, lookup, next_call_level).yes then
+                if bomb:can_move(direction, occupies, players_, bombs, lookup, next_call_level).yes then
                     can_move_bomb.will_hit = bomb
                 end
             end
@@ -282,7 +297,7 @@ function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, players: G
     return can_move_bomb
 end
 
-function Bomb:update(dt: number, occupies: Group<Kinematic>, players: Group<Player>, bombs: Group<Bomb>, lookup: Lookup)
+function Bomb:update(dt: number, occupies: Group<Kinematic>, players_: Group<Player>, bombs: Group<Bomb>, lookup: Lookup)
     self.timer = self.timer - dt
     
     if self.velocity:length() > 0 then
@@ -294,7 +309,7 @@ function Bomb:update(dt: number, occupies: Group<Kinematic>, players: Group<Play
 
         local dx = self.velocity:scale(dt)
         local new_block = moving_into_new_block(self:movementbox(), dx)
-        local can_move = self:can_move(dx, occupies, players, bombs, lookup)
+        local can_move = self:can_move(dx, occupies, players_, bombs, lookup)
         if self.timer <= 0 and new_block then
             -- If bomb timer is up and if trying to enter a new block snap to grid instead.
             -- This is to explode bomb on the grid. Bomb can slide to next intersection!
@@ -320,7 +335,7 @@ function Bomb:update(dt: number, occupies: Group<Kinematic>, players: Group<Play
     self.animation:update(dt)
 end
 
-global record ThrownBomb is Entity
+local record ThrownBomb is Entity
     delegate: Bomb
     target: Point
     trajectory: ProjectileTrajectory
@@ -380,13 +395,13 @@ end
 
 -- Bombs --
 
-global record Bombs
+local record Bombs
     on_ground: {Bomb}
     in_air: {ThrownBomb}
     explosions: Explosions
 end
 
-local bombs = {}
+local bombs = {Bomb = Bomb, Bombs = Bombs}
 
 function bombs.load_assets()
     bomb_shadow = lutro.graphics.newImage("assets/items/shadow.png")
@@ -453,14 +468,14 @@ function Bombs:update(
     blockers: Group<Explodable>,
     explodables: Group<Explodable>,
     occupies: Group<Kinematic>,
-    players: Group<Player>,
+    players_: Group<Player>,
     bombs_: Group<Bomb>,
     bombs_bounce_on: Group<Kinematic>,
     lookup: Lookup
 )
     for i = #self.on_ground, 1, -1 do
         local bomb = self.on_ground[i]
-        bomb:update(dt, occupies, players, bombs_, lookup)
+        bomb:update(dt, occupies, players_, bombs_, lookup)
 
         if bomb:is_complete() then
             table.remove(self.on_ground, i)

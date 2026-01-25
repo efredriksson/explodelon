@@ -1,11 +1,20 @@
-require("bombs.explodable")
-require("engine.collision")
-require("kinematic")
 local animations = require("engine.animations")
 local audio = require("engine.audio")
+local collision = require("engine.collision")
 local grid = require("level_layout.grid")
 local hitboxes = require("engine.hitboxes")
+local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
+local rectangles = require("engine.geometry.rectangles")
+
+local type Animation = animations.Animation
+local type Explodable = require("bombs.explodable")
+local type Entity = require("engine.entity")
+local type Group = collision.Group
+local type Lookup = collision.Lookup
+local type Vector = vectors.Vector
+local type Point = points.Point
+local type Rectangle = rectangles.Rectangle
 
 local END_ANIMATION_DURATION: number = 0.6
 local FRAME_DURATION = END_ANIMATION_DURATION / 4
@@ -24,7 +33,7 @@ local explosion_large: Source
 
 -- Explosion --
 
-global record ExplosionAnimations
+local record ExplosionAnimations
     right_end: Animation
     left_end: Animation
     top_end: Animation
@@ -70,7 +79,7 @@ function ExplosionTile:draw()
     assert(false, "Not implemented")
 end
 
-global record Explosion
+local record Explosion
     position: Point
     range: number
     duration: number
@@ -283,11 +292,11 @@ function Explosion:update(dt: number, blockers: Group<Explodable>, lookup: Looku
 end
 
 -- Explosions --
-global record Explosions
+local record Explosions
     on_ground: {Explosion}
 end
 
-local explosions = {}
+local explosions = {Explosions = Explosions}
 
 function explosions.load_assets()
     local function get_explosion_image(tile: string): Image

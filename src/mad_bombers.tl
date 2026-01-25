@@ -1,5 +1,5 @@
-require("bombs.bombs")
 local animations = require("engine.animations")
+local bombs = require("bombs.bombs")
 local characters = require("characters")
 local grid = require("level_layout.grid")
 local hitboxes = require("engine.hitboxes")
@@ -9,6 +9,14 @@ local rail = require("level_layout.rail")
 local rectangles = require("engine.geometry.rectangles")
 local vectors = require("engine.geometry.vectors")
 
+local type Animation = animations.Animation
+local type Bombs = bombs.Bombs
+local type CharacterName = characters.CharacterName
+local type Entity = require("engine.entity")
+local type Direction = vectors.Direction
+local type Vector = vectors.Vector
+local type Point = points.Point
+local type Rectangle = rectangles.Rectangle
 
 local CART_SPEEDS = {
     [false] = 60,
@@ -27,13 +35,13 @@ local HEAD_DIR_BY_SIDE: {Direction: Direction} = {
     left = "right",
 }
 
-global type CartState = enum
+local type CartState = enum
    "forward" -- Moving clockwise
    "backward" -- Moving anti-clockwise
    "idle"
 end
 
-global type CannonState = enum
+local type CannonState = enum
    "ready"
    "pre-fire"
    "firing"
@@ -88,7 +96,7 @@ local function get_cart_animations(): CartAnimations, CartAnimations, CartAnimat
     return ready_animations, loading_animations, firing_animations
 end
 
-global record PlayerCart is Entity
+local record PlayerCart is Entity
     id: integer
     position: number -- 1D position on cart rail 
     state: CartState
@@ -297,17 +305,17 @@ function PlayerCart:firing_cannon(): boolean
     return self.cannon == "pre-fire" or self.cannon == "firing"
 end
 
-global record MadBombers
+local record MadBombers
     by_player: {integer: PlayerCart}
     bombs: Bombs
 end
 
-local mad_bombers = {}
+local mad_bombers = {MadBombers = MadBombers}
 
-function mad_bombers.new(bombs: Bombs): MadBombers
+function mad_bombers.new(bombs_: Bombs): MadBombers
     local self: MadBombers = setmetatable({}, { __index = MadBombers })
     self.by_player = {}
-    self.bombs = bombs
+    self.bombs = bombs_
     return self
 end
 
@@ -317,7 +325,7 @@ function MadBombers:ensure_exist_for(player_id: integer, player_sprite: Characte
     end
 end
 
-local function handle_cart_move_input(dt: number, bombs: Bombs, cart: PlayerCart)
+function MadBombers:handle_cart_move_input(dt: number, cart: PlayerCart)
     if cart:firing_cannon() then
         -- Not possible to do anything while firing
         return
@@ -361,7 +369,7 @@ local function handle_cart_move_input(dt: number, bombs: Bombs, cart: PlayerCart
         if fire_from then
             local fire_dir = THROW_BOMB_DIRECTION_BY_SIDE[side]
             local target = fire_from:move(fire_dir:scale(fire_len * grid.TILE_SIZE))
-            bombs:throw_bomb(fire_from, target)
+            self.bombs:throw_bomb(fire_from, target)
         end
     end
     cart.turbo = lutro.joystick.isDown(cart.id, joysticks.BUTTONS.A)
@@ -369,7 +377,7 @@ end
 
 function MadBombers:update(dt: number)
     for _, cart in pairs(self.by_player) do
-		handle_cart_move_input(dt, self.bombs, cart)
+		self:handle_cart_move_input(dt, cart)
 		cart:update(dt)
 	end
 end

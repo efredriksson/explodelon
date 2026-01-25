@@ -1,4 +1,4 @@
-global record LoopIndex
+local record LoopIndex
 	start: integer
 	end_: integer
 	step: integer
