@@ -49,8 +49,10 @@ function images.set_alpha(image: Image, alpha: number)
     local image_data = image:getData()
 	for i = 0, image:getWidth() - 1 do
 		for j = 0, image:getHeight() - 1 do
-			local r, g, b, _ = image_data:getPixel(i, j)	
-            image_data:setPixel(i, j, r, g, b, alpha)
+			local r, g, b, old_alpha = image_data:getPixel(i, j)	
+            if old_alpha ~= 0 then
+				image_data:setPixel(i, j, r, g, b, alpha)
+			end
 		end
 	end
 end

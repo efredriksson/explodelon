@@ -3,6 +3,7 @@ local audio = require("engine.audio")
 local collision = require("engine.collision")
 local grid = require("level_layout.grid")
 local hitboxes = require("engine.hitboxes")
+local images = require("engine.images")
 local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
 local rectangles = require("engine.geometry.rectangles")
@@ -300,7 +301,9 @@ local explosions = {Explosions = Explosions}
 
 function explosions.load_assets()
     local function get_explosion_image(tile: string): Image
-        return lutro.graphics.newImage("assets/bomb/explosion/explosion_" .. tile .. ".png")
+        local image = lutro.graphics.newImage("assets/bomb/explosion/explosion_" .. tile .. ".png")
+        images.set_alpha(image, 175)
+        return image
     end
 
     explosion_end_right_image = get_explosion_image("end_right")
