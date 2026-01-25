@@ -2,7 +2,6 @@ require("engine.collision")
 require("players")
 local animations = require("engine.animations")
 local audio = require("engine.audio")
-local const = require("const")
 local grid = require("level_layout.grid")
 local hitboxes = require("engine.hitboxes")
 local points = require("engine.geometry.points")
@@ -83,7 +82,7 @@ local function clamp(val: number, min: number, max: number): number
 	return math.min(math.max(val, min), max)
 end
 
-function Lightning:_update_active_tiles(blockers: Group<ExplosionBlocking>, lookup: Lookup)
+function Lightning:_update_active_tiles(blockers: Group<Explodable>, lookup: Lookup)
     self.tiles = {}
 
     -- Calculate how far the lightning have expanded
@@ -103,9 +102,9 @@ function Lightning:_update_active_tiles(blockers: Group<ExplosionBlocking>, look
         end
         
         for ring=0, radius-1 do
-            local radius_pixels = ring * const.BLOCK_SIZE
+            local radius_pixels = ring * grid.TILE_SIZE
             for offset=0, ring do
-                local offset_pixels = offset * const.BLOCK_SIZE
+                local offset_pixels = offset * grid.TILE_SIZE
                 add_points_for(offset_pixels, radius_pixels)
             end
         end
@@ -167,7 +166,7 @@ function Lightning:draw()
     end
 end
 
-function Lightning:update(dt: number, blockers: Group<ExplosionBlocking>, lookup: Lookup)
+function Lightning:update(dt: number, blockers: Group<Explodable>, lookup: Lookup)
     self.duration = self.duration + dt
     self:_update_active_tiles(blockers, lookup)
     self:_get_animation():update(dt)
@@ -200,7 +199,7 @@ function Lightnings:place_explosion(position: Point, range: number)
     table.insert(self.on_ground, explosion)
 end
 
-function Lightnings:update(dt: number, blockers: Group<ExplosionBlocking>, explodables: Group<Player>, lookup: Lookup)
+function Lightnings:update(dt: number, blockers: Group<Explodable>, explodables: Group<Player>, lookup: Lookup)
     for i, explosion in ipairs(self.on_ground) do
 
         local collides_with = lookup:collisions_between(explosion.tiles, explodables)

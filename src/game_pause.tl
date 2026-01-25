@@ -1,13 +1,12 @@
 local audio = require("engine.audio")
-local const = require("const")
 local fonts = require("fonts")
 local joysticks = require("engine.joysticks")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
 local scenes = require("engine.scenes")
+local screen = require("screen")
 
 
-local JOYPAD = joysticks.buttons()
 local GAME_EXIT_TIME = 3.5
 local pause_menu_image: Image
 local pause_menu_sound: Source
@@ -26,8 +25,8 @@ local function get_pause_square(): Rectangle
     local height = 50
     local width = 180
     return rectangles.new(
-        (const.MAP_WIDTH - width) / 2,
-        (const.MAP_HEIGHT - height) / 2,
+        (screen.WIDTH - width) / 2,
+        (screen.HEIGHT - height) / 2,
         width,
         height
     )
@@ -96,13 +95,13 @@ function GamePause:draw()
 end
 
 function GamePause:update(dt: number)
-	if joysticks.is_pressed(self.player_id, JOYPAD.START) then
+	if joysticks.is_pressed(self.player_id, joysticks.BUTTONS.START) then
 		scenes.set(self.paused_scene, true)
 	end
-    if joysticks.is_pressed(self.player_id, JOYPAD.L) then
+    if joysticks.is_pressed(self.player_id, joysticks.BUTTONS.L) then
         self.toggle_if_playing(self.player_id)
     end
-    if lutro.joystick.isDown(self.player_id, JOYPAD.SELECT) then
+    if lutro.joystick.isDown(self.player_id, joysticks.BUTTONS.SELECT) then
         self.exit_counter = self.exit_counter + dt
     else
         self.exit_counter = 0

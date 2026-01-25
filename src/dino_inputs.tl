@@ -1,13 +1,12 @@
 require("engine.collision")
 require("players")
 require("bombs")
-local const = require("const")
 local hitboxes = require("engine.hitboxes")
 local grid = require("level_layout.grid")
 local joysticks = require("engine.joysticks")
 local vectors = require("engine.geometry.vectors")
 
-local JOYPAD = joysticks.buttons()
+
 local dino_inputs = {}
 
 local function handle_jump_input(dt: number, player: Player, blocks_jump: Group<Kinematic>, lookup: Lookup)
@@ -18,7 +17,7 @@ local function handle_jump_input(dt: number, player: Player, blocks_jump: Group<
 		-- movementboxes, check in an area around and then manually
 		-- check for movementbox overlap
 		local blocks_jumps_close = lookup:in_box_and_group(
-			jump_landing_area:expand(const.BLOCK_SIZE), blocks_jump
+			jump_landing_area:expand(grid.TILE_SIZE), blocks_jump
 		)
 		
 		for _, possible_jump_block in ipairs(blocks_jumps_close) do
@@ -35,7 +34,7 @@ local function handle_jump_input(dt: number, player: Player, blocks_jump: Group<
 		-- Try to jump as far as possible first
 		for nbr_of_blocks_to_jump=player:get_max_jump_dist(), 1, -1 do
 			local jump_to = player.position:move(
-				jump_direction:scale(const.BLOCK_SIZE * nbr_of_blocks_to_jump)
+				jump_direction:scale(grid.TILE_SIZE * nbr_of_blocks_to_jump)
 			)
 			local jump_candidates = {
 				jump_to, grid.snap_to(jump_to)
@@ -54,16 +53,16 @@ local function handle_jump_input(dt: number, player: Player, blocks_jump: Group<
 	local function get_jump_directions(): {Vector}
 		local result: {Vector} = {}
 
-		if lutro.joystick.isDown(player.id, JOYPAD.DOWN) then
+		if lutro.joystick.isDown(player.id, joysticks.BUTTONS.DOWN) then
 			table.insert(result, vectors.new(0, 1))
 		end
-		if lutro.joystick.isDown(player.id, JOYPAD.UP) then
+		if lutro.joystick.isDown(player.id, joysticks.BUTTONS.UP) then
 			table.insert(result, vectors.new(0, -1))
 		end
-		if lutro.joystick.isDown(player.id, JOYPAD.RIGHT) then
+		if lutro.joystick.isDown(player.id, joysticks.BUTTONS.RIGHT) then
 			table.insert(result, vectors.new(1, 0))
 		end
-		if lutro.joystick.isDown(player.id, JOYPAD.LEFT) then
+		if lutro.joystick.isDown(player.id, joysticks.BUTTONS.LEFT) then
 			table.insert(result, vectors.new(-1, 0))
 		end
 
@@ -79,19 +78,19 @@ local function handle_jump_input(dt: number, player: Player, blocks_jump: Group<
 		end
 	end
 	
-	if lutro.joystick.isDown(player.id, JOYPAD.B) and player:can_jump() then
+	if lutro.joystick.isDown(player.id, joysticks.BUTTONS.B) and player:can_jump() then
 		local dino = player.dino
 		dino.jump_powerup_for = dino.jump_powerup_for + dt
 	end
 
-	if (joysticks.is_released(player.id, JOYPAD.B) and player:can_jump()) or player:must_jump() then
+	if (joysticks.is_released(player.id, joysticks.BUTTONS.B) and player:can_jump()) or player:must_jump() then
 		local jump_to = get_jump_target()
 		player:jump_with_dino(jump_to)
 	end
 end
 
 local function handle_dash_input(player: Player)
-    if lutro.joystick.isDown(player.id, JOYPAD.B) then
+    if lutro.joystick.isDown(player.id, joysticks.BUTTONS.B) then
         player:dash_with_dino()
     end
 end
@@ -99,7 +98,7 @@ end
 local function handle_throw_input(dt: number, player: Player, bombs: Bombs, bombs_group: Group<Bomb>, lookup: Lookup)
 	local dino = player.dino
 	local powerup_time_interval = 0.1
-	local block_from_player_dir = vectors.from_direction(player.direction):scale(const.BLOCK_SIZE)
+	local block_from_player_dir = vectors.from_direction(player.direction):scale(grid.TILE_SIZE)
 
 	local function get_position_throwing_from(): Point
 		local snaped_pos = grid.snap_to(player.position)
@@ -122,7 +121,7 @@ local function handle_throw_input(dt: number, player: Player, bombs: Bombs, bomb
 		return nil
 	end
 
-	if joysticks.is_released(player.id, JOYPAD.B) or must_throw() then
+	if joysticks.is_released(player.id, joysticks.BUTTONS.B) or must_throw() then
 		local nbr_blocks_to_throw = math.floor(dino.throw_powerup_for / powerup_time_interval) + 2
 		nbr_blocks_to_throw = math.min(nbr_blocks_to_throw, dino.level * 2) -- clamp max throw dist
 
@@ -133,7 +132,7 @@ local function handle_throw_input(dt: number, player: Player, bombs: Bombs, bomb
 			bombs:throw_existing(bomb_to_throw, throw_to)
 		end
 		dino.throw_powerup_for = 0
-	elseif lutro.joystick.isDown(player.id, JOYPAD.B) then
+	elseif lutro.joystick.isDown(player.id, joysticks.BUTTONS.B) then
 		local bomb_to_throw = get_bomb_to_throw(get_position_throwing_from())
 		if not bomb_to_throw is nil then
 			dino.throw_powerup_for = dino.throw_powerup_for + dt

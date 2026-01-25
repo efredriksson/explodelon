@@ -1,5 +1,7 @@
 -- This module is a Teal implementation of the anim.lua library
 -- from https://lutro.libretro.com/doc/usefullibs.html
+local logging = require("engine.logger")
+
 
 global record Animation
 	image: Image
@@ -68,7 +70,7 @@ function Animation:_get_frame(): integer
         clamped_time = clamped_time - frame_duration
     end
 
-    print("WARNING: could not find frame for time, using last frame") 
+    logging.warning("Could not find frame for time, using last frame") 
     return #self.frame_durations
 end
 

@@ -1,7 +1,7 @@
 require("engine.collision")
+require("entity_properties")
 local animations = require("engine.animations")
 local audio = require("engine.audio")
-local const = require("const")
 local grid = require("level_layout.grid")
 local hitboxes = require("engine.hitboxes")
 local vectors = require("engine.geometry.vectors")
@@ -141,7 +141,7 @@ local enum BlockingResult
     "nil"
 end
 
-function Explosion:_update_active_tiles(blockers: Group<ExplosionBlocking>, lookup: Lookup)
+function Explosion:_update_active_tiles(blockers: Group<Explodable>, lookup: Lookup)
     self.tiles = {}
 
     -- Calculate how far the explosion should expanded
@@ -220,7 +220,7 @@ function Explosion:_update_active_tiles(blockers: Group<ExplosionBlocking>, look
 
     -- Propagate in all four directions
     for direction, delta in pairs(directions) do
-        for _, tile in ipairs(propagate(self.position, delta:scale(const.BLOCK_SIZE), 1, direction)) do
+        for _, tile in ipairs(propagate(self.position, delta:scale(grid.TILE_SIZE), 1, direction)) do
             table.insert(self.tiles, tile)
         end
     end
@@ -267,7 +267,7 @@ function Explosion:update_end_animation(dt: number)
     self.animations.center:update(dt)
 end
 
-function Explosion:update(dt: number, blockers: Group<ExplosionBlocking>, lookup: Lookup)
+function Explosion:update(dt: number, blockers: Group<Explodable>, lookup: Lookup)
     if self.delay > 0 then
         self.delay = self.delay - dt
         return
@@ -325,7 +325,7 @@ function Explosions:place_explosion(position: Point, range: number, delay?: numb
     table.insert(self.on_ground, explosion)
 end
 
-function Explosions:update(dt: number, blockers: Group<ExplosionBlocking>, explodables: Group<Explodable>, lookup: Lookup)
+function Explosions:update(dt: number, blockers: Group<Explodable>, explodables: Group<Explodable>, lookup: Lookup)
     for i, explosion in ipairs(self.on_ground) do
         explosion:update(dt, blockers, lookup)
 

@@ -1,7 +1,6 @@
 require("bombs")
 local animations = require("engine.animations")
 local characters = require("characters")
-local const = require("const")
 local grid = require("level_layout.grid")
 local hitboxes = require("engine.hitboxes")
 local joysticks = require("engine.joysticks")
@@ -10,7 +9,7 @@ local rail = require("level_layout.rail")
 local rectangles = require("engine.geometry.rectangles")
 local vectors = require("engine.geometry.vectors")
 
-local JOYPAD = joysticks.buttons()
+
 local CART_SPEEDS = {
     [false] = 60,
     [true] = 120,
@@ -274,11 +273,11 @@ function PlayerCart:fire_cannon(): Point, integer
     -- Adjust so we shoot from inside player area if 'down' or 'right'
     -- Also adjust for the cart position being its center for 'up' and 'down'
     if side == "down" then
-        shoot_from = shoot_from:move(vectors.new(-const.BLOCK_SIZE / 2, -const.BLOCK_SIZE))
+        shoot_from = shoot_from:move(vectors.new(-grid.TILE_SIZE / 2, -grid.TILE_SIZE))
     elseif side == "up" then
-        shoot_from = shoot_from:move(vectors.new(-const.BLOCK_SIZE / 2, 0))
+        shoot_from = shoot_from:move(vectors.new(-grid.TILE_SIZE / 2, 0))
     elseif side == "right" then
-        shoot_from = shoot_from:move(vectors.new(-const.BLOCK_SIZE, 0))
+        shoot_from = shoot_from:move(vectors.new(-grid.TILE_SIZE, 0))
     end
     shoot_from = grid.snap_to(shoot_from)
 
@@ -326,10 +325,10 @@ local function handle_cart_move_input(dt: number, bombs: Bombs, cart: PlayerCart
 
     cart:set_state("idle")
 
-    local up = lutro.joystick.isDown(cart.id, JOYPAD.UP)
-    local down = lutro.joystick.isDown(cart.id, JOYPAD.DOWN)
-    local left = lutro.joystick.isDown(cart.id, JOYPAD.LEFT)
-    local right = lutro.joystick.isDown(cart.id, JOYPAD.RIGHT)
+    local up = lutro.joystick.isDown(cart.id, joysticks.BUTTONS.UP)
+    local down = lutro.joystick.isDown(cart.id, joysticks.BUTTONS.DOWN)
+    local left = lutro.joystick.isDown(cart.id, joysticks.BUTTONS.LEFT)
+    local right = lutro.joystick.isDown(cart.id, joysticks.BUTTONS.RIGHT)
     local right_or_left = right or left
     local up_or_down = up or down
     local side = rail.get_side(cart.position)
@@ -353,19 +352,19 @@ local function handle_cart_move_input(dt: number, bombs: Bombs, cart: PlayerCart
         cart:set_state("backward")
     end
     
-    if lutro.joystick.isDown(cart.id, JOYPAD.R) and cart.cannon == "ready" then
+    if lutro.joystick.isDown(cart.id, joysticks.BUTTONS.R) and cart.cannon == "ready" then
         cart.cannon_powerup_for = cart.cannon_powerup_for + dt
     end
 
-    if joysticks.is_released(cart.id, JOYPAD.R) or cart.cannon_powerup_for > 0.8 then
+    if joysticks.is_released(cart.id, joysticks.BUTTONS.R) or cart.cannon_powerup_for > 0.8 then
         local fire_from, fire_len = cart:fire_cannon()
         if fire_from then
             local fire_dir = THROW_BOMB_DIRECTION_BY_SIDE[side]
-            local target = fire_from:move(fire_dir:scale(fire_len * const.BLOCK_SIZE))
+            local target = fire_from:move(fire_dir:scale(fire_len * grid.TILE_SIZE))
             bombs:throw_bomb(fire_from, target)
         end
     end
-    cart.turbo = lutro.joystick.isDown(cart.id, JOYPAD.A)
+    cart.turbo = lutro.joystick.isDown(cart.id, joysticks.BUTTONS.A)
 end
 
 function MadBombers:update(dt: number)

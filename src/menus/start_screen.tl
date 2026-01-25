@@ -1,9 +1,9 @@
 local audio = require("engine.audio")
 local characters = require("characters")
-local const = require("const")
 local game = require("game")
 local items = require("menus.items")
 local itertools = require("itertools")
+local joysticks = require("engine.joysticks")
 local player_selection = require("player_selection")
 local scenes = require("engine.scenes")
 local settings = require("settings")
@@ -16,7 +16,7 @@ local start_screen = {}
 
 
 function start_screen.new(): MenuScreen
-    local nbr_player_selected = items.new_integer_selection(settings.number_of_players, 2, const.MAX_PLAYERS)
+    local nbr_player_selected = items.new_integer_selection(settings.number_of_players, 2, joysticks.MAX_PLAYERS)
     local choices_values: {PlayerSelectionMethod} = {"on", "off", "keep"}
     local player_selection_choice = items.new_enum(choices_values)
     local map_selection_choice = items.new_enum({"football", "factory"})

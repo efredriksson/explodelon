@@ -2,7 +2,8 @@ require("engine.animations")
 require("characters")
 require("dinos")
 require("engine.entity")
-local const = require("const")
+require("entity_properties")
+local grid = require("level_layout.grid")
 local hitboxes = require("engine.hitboxes")
 local physics = require("engine.physics")
 local vectors = require("engine.geometry.vectors")
@@ -214,8 +215,8 @@ end
 -- Player jump constants 
 local JUMP_ON_TIME = 1.2               		 -- Unit: seconds
 local JUMP_OFF_TIME = 0.9              		 -- Unit: seconds
-local JUMP_ON_HEIGHT = 2 * const.BLOCK_SIZE  -- Unit: pixels (not SI unit!)
-local JUMP_OFF_HEIGHT = 3 * const.BLOCK_SIZE -- Unit: pixels (not SI unit!)
+local JUMP_ON_HEIGHT = 2 * grid.TILE_SIZE  -- Unit: pixels (not SI unit!)
+local JUMP_OFF_HEIGHT = 3 * grid.TILE_SIZE -- Unit: pixels (not SI unit!)
 
 function Player:jumps_onto(dino: Dino)
 	if not self:is_jumping() then
@@ -294,12 +295,12 @@ function Player:jump_with_dino(jump_to: Point | nil)
 			[6] = 1.4,
 		}
 		local dino_jump_height = {
-			[1] = 1.2 * const.BLOCK_SIZE,
-			[2] = 1.4 * const.BLOCK_SIZE,
-			[3] = 1.7 * const.BLOCK_SIZE,
-			[4] = 2.0 * const.BLOCK_SIZE,
-			[5] = 2.3 * const.BLOCK_SIZE,
-			[6] = 2.6 * const.BLOCK_SIZE,
+			[1] = 1.2 * grid.TILE_SIZE,
+			[2] = 1.4 * grid.TILE_SIZE,
+			[3] = 1.7 * grid.TILE_SIZE,
+			[4] = 2.0 * grid.TILE_SIZE,
+			[5] = 2.3 * grid.TILE_SIZE,
+			[6] = 2.6 * grid.TILE_SIZE,
 		}
 		local jump_power = self:get_max_jump_dist()
 		assert(jump_power <= 6 and jump_power >= 1)

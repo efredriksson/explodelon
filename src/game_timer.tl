@@ -1,10 +1,10 @@
 local audio = require("engine.audio")
-local const = require("const")
 local clock_text = require("clock_text")
 local fonts = require("fonts")
 local itertools = require("itertools")
 local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
+local screen = require("screen")
 local settings = require("settings")
 
 
@@ -52,10 +52,10 @@ function GameTimer.load_assets()
 	for _, letter in ipairs(hurry_letters) do
 		letter_box_width = letter_box_width + letter:getWidth()
 	end
-	hurry_letters_mid = (const.MAP_WIDTH - letter_box_width) / 2
+	hurry_letters_mid = (screen.WIDTH - letter_box_width) / 2
 	hurry_letters_start = points.new(
-		const.MAP_WIDTH,
-		(const.MAP_HEIGHT - hurry_letters[1]:getHeight()) / 2
+		screen.WIDTH,
+		(screen.HEIGHT - hurry_letters[1]:getHeight()) / 2
 	)
 end
 

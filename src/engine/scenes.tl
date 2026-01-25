@@ -1,5 +1,5 @@
 local logger = require("engine.logger")
-local settings = require("settings")
+local settings = require("engine.settings")
 
 local scenes = {}
 
@@ -94,7 +94,7 @@ end
 function scenes.set(scene: Scene, skip_loading?: boolean)
     if not scene.is_internal then
         scene = WrapperScene.new(scene)
-        if settings.debug.log_scene_perf then
+        if settings.log_scene_perf then
             scene = CheckPerformanceOfScene.new(scene)
         end
     end

@@ -1,8 +1,8 @@
 require("players")
 local animations = require("engine.animations")
 local characters = require("characters")
-local const = require("const")
 local dino_animations = require("dino_animations")
+local grid = require("level_layout.grid")
 local itertools = require("itertools")
 local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
@@ -112,8 +112,8 @@ end
 local function block_to_anim_draw_pos(animation: Animation, pos: Point): Point
 	-- y: +1 is because of the sprite, look over when doing animations
 	return points.new(
-		pos.x + (const.BLOCK_SIZE - animation.width) / 2,
-		pos.y - animation.height + const.BLOCK_SIZE + 1)
+		pos.x + (grid.TILE_SIZE - animation.width) / 2,
+		pos.y - animation.height + grid.TILE_SIZE + 1)
 end
 
 function PlayerAnimation:draw()

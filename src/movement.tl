@@ -1,12 +1,10 @@
 require("players")
 require("bombs")
 require("lightning_bombs")
-local const = require("const")
 local grid = require("level_layout.grid")
 local joysticks = require("engine.joysticks")
 local vectors = require("engine.geometry.vectors")
 
-local JOYPAD = joysticks.buttons()
 
 local record Movement
 	dxdy: Vector
@@ -46,16 +44,16 @@ end
 local function get_moves_from_input(player: Player, dt: number): {Movement}
 	local result: {Movement} = {}
 
-	if lutro.joystick.isDown(player.id, JOYPAD.DOWN) then
+	if lutro.joystick.isDown(player.id, joysticks.BUTTONS.DOWN) then
 		table.insert(result, Movement.new(vectors.new(0, dt * player:get_speed()), "down"))
 	end
-	if lutro.joystick.isDown(player.id, JOYPAD.UP) then
+	if lutro.joystick.isDown(player.id, joysticks.BUTTONS.UP) then
 		table.insert(result, Movement.new(vectors.new(0, -dt * player:get_speed()), "up"))
 	end
-	if lutro.joystick.isDown(player.id, JOYPAD.RIGHT) then
+	if lutro.joystick.isDown(player.id, joysticks.BUTTONS.RIGHT) then
 		table.insert(result, Movement.new(vectors.new(dt * player:get_speed(), 0), "right"))
 	end
-	if lutro.joystick.isDown(player.id, JOYPAD.LEFT) then
+	if lutro.joystick.isDown(player.id, joysticks.BUTTONS.LEFT) then
 		table.insert(result, Movement.new(vectors.new(-dt * player:get_speed(), 0), "left"))
 	end
 
@@ -103,10 +101,10 @@ local function in_end_of_corridor_and_walking_out(
 	local local_pos = grid.get_local_tile_position(player_pos)
 
 	local function first_half_of_block(val: number): boolean
-		return val < const.BLOCK_SIZE / 2 and val > 0
+		return val < grid.TILE_SIZE / 2 and val > 0
 	end
 	local function second_half_of_block(val: number): boolean
-		return val > const.BLOCK_SIZE / 2
+		return val > grid.TILE_SIZE / 2
 	end
 
 	return (movement.dir == "down" and second_half_of_block(local_pos.y)) or
@@ -135,7 +133,7 @@ local function restrict_player_movement(
 		pos_and_block_lateral_diff: number,
 		walk_along_y_axis: boolean
 	): CheckedMovement
-		local dist_to_corner = const.BLOCK_SIZE - math.abs(pos_and_block_lateral_diff)
+		local dist_to_corner = grid.TILE_SIZE - math.abs(pos_and_block_lateral_diff)
 
 		if dist_to_corner > margin_for_corner_assist then
 			return CheckedMovement.new(player.position, false, false)
@@ -162,17 +160,17 @@ local function restrict_player_movement(
 		return new_dist_to_1_ton_block < old_dist_to_1_ton_block
 	end
 
-	for _, bomb in ipairs(lookup:in_box_and_group(player:movementbox():expand(const.BLOCK_SIZE), bombs)) do
+	for _, bomb in ipairs(lookup:in_box_and_group(player:movementbox():expand(grid.TILE_SIZE), bombs)) do
 		local bomb_hitbox = bomb:movementbox()
 		if walking_further_into_block(bomb_hitbox) then
-			if bomb.position:distance_to(player.position) > const.BLOCK_SIZE * (3 / 4) or bomb.has_been_kicked then
+			if bomb.position:distance_to(player.position) > grid.TILE_SIZE * (3 / 4) or bomb.has_been_kicked then
 				-- If a bomb has been kicked then it is no longer to move
 				-- freely in far inside it. This is to stop moving through
 				-- bombs that are kicked against a player.
 				local kick_direction = movement:normalize()
 				if player.has_kick then
 					local can_move = bomb:can_move(
-						kick_direction:scale(const.BLOCK_SIZE), blocks_bombs, players, bombs, lookup
+						kick_direction:scale(grid.TILE_SIZE), blocks_bombs, players, bombs, lookup
 					)
 					if can_move.yes then
 						-- Walking into bomb and at edge of bomb then kick
@@ -188,7 +186,7 @@ local function restrict_player_movement(
 	for _, bomb in ipairs(lightning_bombs.on_ground) do
 		local bomb_hitbox = bomb:movementbox()
 		if walking_further_into_block(bomb_hitbox) then
-			if bomb.position:distance_to(player.position) > const.BLOCK_SIZE * (3 / 4) then
+			if bomb.position:distance_to(player.position) > grid.TILE_SIZE * (3 / 4) then
 				-- Not allowed to walk further into bomb if at edge
 				return CheckedMovement.new(player.position, false, false)
 			end

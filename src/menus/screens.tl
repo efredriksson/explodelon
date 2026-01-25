@@ -1,13 +1,12 @@
 require("engine.scenes")
 require("menus.choices")
 local audio = require("engine.audio")
-local const = require("const")
 local fonts = require("fonts")
 local joysticks = require("engine.joysticks")
 local items = require("menus.items")
+local screen = require("screen")
 
 
-local JOYPAD = joysticks.buttons()
 local gray_font: MenuFont
 local white_font: MenuFont
 local music: Source
@@ -56,11 +55,11 @@ function MenuScreen:update(_: number)
         end
     end
     
-    if joysticks.is_pressed_any(JOYPAD.DOWN) then
+    if joysticks.is_pressed_any(joysticks.BUTTONS.DOWN) then
         ok_action = self.menu_selection:increment()
-    elseif joysticks.is_pressed_any(JOYPAD.UP) then
+    elseif joysticks.is_pressed_any(joysticks.BUTTONS.UP) then
         ok_action = self.menu_selection:decrement()
-    elseif joysticks.is_pressed_any(JOYPAD.A) then
+    elseif joysticks.is_pressed_any(joysticks.BUTTONS.A) then
         self.go_back(self)
     end
 
@@ -75,7 +74,7 @@ function MenuScreen:draw()
     local x_pad = 20
     local y_pad = 10
 	lutro.graphics.rectangle(
-        "fill", x_pad, y_pad, const.MAP_WIDTH - 2*x_pad, const.MAP_HEIGHT - 2*y_pad
+        "fill", x_pad, y_pad, screen.WIDTH - 2*x_pad, screen.HEIGHT - 2*y_pad
     )
 
     local function get_font(line_idx): MenuFont

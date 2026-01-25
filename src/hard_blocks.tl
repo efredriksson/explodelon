@@ -1,10 +1,10 @@
 require("level_layout.map_entities")
-local const = require("const")
+local grid = require("level_layout.grid")
 local hard_block_animations = require("level_graphics.hard_block_animations")
 local hitboxes = require("engine.hitboxes")
 
 
-global record HardBlock is ExplosionBlocking, Kinematic, Entity
+global record HardBlock is Explodable, Kinematic, Entity
 	position: Point
 	in_explosion: boolean
     animation: Animation
@@ -23,7 +23,7 @@ function HardBlock:get_position(): Point
 end
 
 function HardBlock:draw()
-    local y_pos = self.position.y - (self.animation.height - const.BLOCK_SIZE)
+    local y_pos = self.position.y - (self.animation.height - grid.TILE_SIZE)
     self.animation:draw(self.position.x, y_pos)
 end
 

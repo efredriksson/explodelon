@@ -1,11 +1,12 @@
 require("engine.entity")
-local const = require("const")
+require("entity_properties")
+local grid = require("level_layout.grid")
+local hitboxes = require("engine.hitboxes")
 local map_entities = require("level_layout.map_entities")
 local points = require("engine.geometry.points")
-local hitboxes = require("engine.hitboxes")
 
 
-global record PressureBlock is Entity, ExplosionBlocking, Kinematic, Entity
+global record PressureBlock is Entity, Explodable, Kinematic
 	falling_position: Point
     position: Point
     in_explosion: boolean
@@ -16,7 +17,7 @@ local block_fall_shadow: Image
 
 function PressureBlock.new(target: Point): PressureBlock
 	local self: PressureBlock = setmetatable({}, { __index = PressureBlock })
-	self.falling_position = points.new(target.x, -const.BLOCK_SIZE)
+	self.falling_position = points.new(target.x, -grid.TILE_SIZE)
     self.position = target
     self.in_explosion = false
 	return self

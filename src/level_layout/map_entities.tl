@@ -1,4 +1,4 @@
-local const = require("const")
+require("entity_properties")
 local grid = require("level_layout.grid")
 local itertools = require("itertools")
 local vectors = require("engine.geometry.vectors")
@@ -126,7 +126,7 @@ local function get_soft_block_positions(occupies: {Kinematic}): {Point}
 		local sum_to_allow = lutro.math.random() < 0.5 and 2 or 0
 		for j, i in itertools.double_loop_inner_loopback({-1, 1}, {-1, 1}) do
 			if sum_to_allow ~= math.abs(i + j) or (i == 0 and j == 0) then
-				local close_by = vectors.new(j, i):scale(const.BLOCK_SIZE)
+				local close_by = vectors.new(j, i):scale(grid.TILE_SIZE)
 				table.insert(close_to_entity, occupied:get_position():move(close_by))
 			end
 		end

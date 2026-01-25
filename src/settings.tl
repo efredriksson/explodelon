@@ -1,3 +1,5 @@
+local engine_settings = require("engine.settings")
+
 global enum ItemType
    "speed"
    "bomb"
@@ -124,18 +126,6 @@ function GameRules.new(): GameRules
     return self
 end
 
-local record Debug
-    draw_hitboxes: boolean
-    log_scene_perf: boolean
-end
-
-function Debug.new(): Debug
-    local self: Debug = setmetatable({}, { __index = Debug })
-    self.draw_hitboxes = false
-    self.log_scene_perf = false
-    return self
-end
-
 global type PlayerSelectionMethod = enum
    "on"
    "off"
@@ -152,7 +142,6 @@ local record Settings
     player_selection: PlayerSelectionMethod
     map: Map
     game_rules: GameRules
-    debug: Debug
 end
 
 function Settings.new(): Settings
@@ -161,7 +150,6 @@ function Settings.new(): Settings
     self.player_selection = "on"
     self.map = "football"
     self.game_rules = GameRules.new()
-    self.debug = Debug.new()
     return self
 end
 
@@ -173,14 +161,6 @@ end
 
 function Settings.set_map(value: Map)
     settings.map = value
-end
-
-function Settings.set_draw_hitboxs(value: boolean)
-    settings.debug.draw_hitboxes = value
-end
-
-function Settings.set_log_scene_perf(value: boolean)
-    settings.debug.log_scene_perf = value
 end
 
 function Settings.set_number_of_players(value: integer)
@@ -358,7 +338,7 @@ function Settings.set_debug_performance()
     settings.game_rules.players.start_with_kick = true
     settings.game_rules.players.start_with_bombs = 10
     settings.game_rules.timings.sudden_death = 120
-    settings.debug.log_scene_perf = true
+    engine_settings.set_log_scene_perf(true)
 end
 
 function Settings.set_debug_dinos()

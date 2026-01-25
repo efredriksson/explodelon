@@ -1,7 +1,6 @@
 local animations = require("engine.animations")
 local audio = require("engine.audio")
 local characters = require("characters")
-local const = require("const")
 local fonts = require("fonts")
 local game = require("game")
 local joysticks = require("engine.joysticks")
@@ -26,7 +25,6 @@ function Character.new(sprite: CharacterName, number: integer): Character
     return self
 end
 
-local JOYPAD = joysticks.buttons()
 local FIRST_CHAR_POS = points.new(50, 50)
 local ROW_OFFSET = vectors.new(23, 20)
 local COLUMN_OFFSET = vectors.new(45, 0)
@@ -142,9 +140,9 @@ end
 function PlayerSelection:check_for_new_player_selecting()
     -- No player is selecting, check if anyone is pressing right or left
     -- indicating that they want to select a character
-    for player_id=1, const.MAX_PLAYERS do
-        local trying_to_select = joysticks.is_pressed(player_id, JOYPAD.RIGHT) or
-            joysticks.is_pressed(player_id, JOYPAD.LEFT)
+    for player_id=1, joysticks.MAX_PLAYERS do
+        local trying_to_select = joysticks.is_pressed(player_id, joysticks.BUTTONS.RIGHT) or
+            joysticks.is_pressed(player_id, joysticks.BUTTONS.LEFT)
 
         if trying_to_select and characters.have_not_selected(player_id) then
             self.player_selecting = player_id
@@ -174,12 +172,12 @@ function PlayerSelection:handle_player_input()
     
     local ok_action = false
 
-    if joysticks.is_pressed(self.player_selecting, JOYPAD.RIGHT) then
+    if joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.RIGHT) then
         ok_action = self.selector:increment()
-    elseif joysticks.is_pressed(self.player_selecting, JOYPAD.LEFT) then
+    elseif joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.LEFT) then
         ok_action = self.selector:decrement()
-    elseif (joysticks.is_pressed(self.player_selecting, JOYPAD.B) or 
-            joysticks.is_pressed(self.player_selecting, JOYPAD.R)) then
+    elseif (joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.B) or 
+            joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.R)) then
 
         local selected = table.remove(self.selectable_characters, self.selector:get_value())
         table.insert(self.walking_characters, selected)
