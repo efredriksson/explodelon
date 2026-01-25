@@ -1,3 +1,4 @@
+local battle = require("game.battle")
 local grid = require("level_layout.grid")
 local joysticks = require("engine.joysticks")
 local logger = require("engine.logger")
@@ -7,7 +8,7 @@ local screens = require("menus.screens")
 local settings = require("engine.settings")
 local start_screen = require("menus.start_screen")
 local player_selection = require("player_selection")
-local game = require("game")
+
 
 function lutro.conf(t: Configuration)
 	t.width  = screen.WIDTH
@@ -21,7 +22,7 @@ function lutro.load()
 	joysticks.setup()
 	screens.load_assets()
 	player_selection.load_assets()
-	game.load_assets()
+	battle.load_assets()
 	local load_time = lutro.timer.getTime() - load_start
 	logger.info("Loading assets at start took " .. load_time .. "s")
 	scenes.set_start(start_screen.new())

@@ -1,17 +1,16 @@
 local audio = require("engine.audio")
+local battle = require("game.battle")
 local characters = require("characters")
-local game = require("game")
+local choices = require("menus.choices")
+local debug_screen = require("menus.debug_screen")
+local game_rule_screen = require("menus.game_rule_screen")
 local items = require("menus.items")
 local itertools = require("itertools")
 local joysticks = require("engine.joysticks")
 local player_selection = require("player_selection")
 local scenes = require("engine.scenes")
-local settings = require("settings")
-local choices = require("menus.choices")
 local screens = require("menus.screens")
-local debug_screen = require("menus.debug_screen")
-local game_rule_screen = require("menus.game_rule_screen")
-
+local settings = require("settings")
 local start_screen = {}
 
 
@@ -29,7 +28,7 @@ function start_screen.new(): MenuScreen
             scenes.set(player_selection.setup())
         elseif settings.player_selection == "off" then
             characters.auto_select_for(settings.number_of_players)
-            scenes.set(game.new(nil))
+            scenes.set(battle.new(nil))
         else
             scenes.set(player_selection.setup())
         end

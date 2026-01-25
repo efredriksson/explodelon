@@ -7,7 +7,7 @@ local scenes = require("engine.scenes")
 local screen = require("screen")
 
 
-local record GameWinner is Scene
+local record GameWinnerScene is Scene
 	name: CharacterName
 	trophy: Animation
 	trophy_position: Point
@@ -24,9 +24,9 @@ local spark_2_image: Image
 local jump_animations: {CharacterName: Image}
 local music: Source
 
-local game_winner = {}
+local winner_scene = {}
 
-function game_winner.load_assets()
+function winner_scene.load_assets()
 	trophy_image = lutro.graphics.newImage("assets/trophy.png")
 	spark_1_image = lutro.graphics.newImage("assets/spark-1.png")
 	spark_2_image = lutro.graphics.newImage("assets/spark-2.png")
@@ -40,8 +40,8 @@ function game_winner.load_assets()
 	music:setVolume(0.75)
 end
 
-function game_winner.new(name: CharacterName): GameWinner
-    local self: GameWinner = setmetatable({}, { __index = GameWinner })
+function winner_scene.new(name: CharacterName): GameWinnerScene
+    local self: GameWinnerScene = setmetatable({}, { __index = GameWinnerScene })
 	self.name = name
 	self.trophy = animations.new_with_frames(trophy_image, {2, 0.1, 0.1, 1, 0.1})
 	self.trophy_position = points.new(
@@ -72,13 +72,13 @@ function game_winner.new(name: CharacterName): GameWinner
     return self
 end
 
-function GameWinner:_get_trophy_height_diff(): number
+function GameWinnerScene:_get_trophy_height_diff(): number
 	local period = 3
 	local amplitude = 8
 	return math.sin(self.waited_for * period) * amplitude
 end
 
-function GameWinner:update(dt: number)
+function GameWinnerScene:update(dt: number)
 	self.waited_for = self.waited_for + dt
 
 	local gravity = vectors.new(0, 10):scale(dt)
@@ -100,7 +100,7 @@ function GameWinner:update(dt: number)
 	end
 end
 
-function GameWinner:draw()
+function GameWinnerScene:draw()
 	lutro.graphics.setColor(72, 72, 72)
 	lutro.graphics.rectangle("fill", 0, 0, screen.WIDTH, screen.HEIGHT)
 
@@ -113,4 +113,4 @@ function GameWinner:draw()
 	end
 end
 
-return game_winner
+return winner_scene
