@@ -1,5 +1,6 @@
+require("bombs.explodable")
 require("engine.collision")
-require("entity_properties")
+require("kinematic")
 local animations = require("engine.animations")
 local audio = require("engine.audio")
 local grid = require("level_layout.grid")

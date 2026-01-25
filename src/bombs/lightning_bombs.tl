@@ -4,7 +4,7 @@ local animations = require("engine.animations")
 local audio = require("engine.audio")
 local grid = require("level_layout.grid")
 local hitboxes = require("engine.hitboxes")
-local lightnings = require("lightnings")
+local lightnings = require("bombs.lightnings")
 local vectors = require("engine.geometry.vectors")
 
 local bomb_shadow: Image
