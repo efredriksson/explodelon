@@ -11,9 +11,9 @@ local GAME_EXIT_TIME = 3.5
 local pause_menu_image: Image
 local pause_menu_sound: Source
 local white_font: MenuFont
-local game_pause = {}
+local pause_scene = {}
 
-local record GamePause is Scene
+local record GamePauseScene is Scene
     paused_scene: Scene
     player_id: integer
     is_playing: boolean
@@ -32,13 +32,13 @@ local function get_pause_square(): Rectangle
     )
 end
 
-function game_pause.new(
+function pause_scene.new(
     paused_scene: Scene,
     player_id: integer,
     is_playing: boolean,
     toggle_if_playing: function(integer)
-): GamePause
-    local self: GamePause = setmetatable({}, { __index = GamePause })
+): GamePauseScene
+    local self: GamePauseScene = setmetatable({}, { __index = GamePauseScene })
     self.paused_scene = paused_scene
     self.player_id = player_id
     self.is_playing = is_playing
@@ -59,18 +59,18 @@ local function set_alpha_for_image(image: Image, alpha: number)
 	end
 end
 
-function game_pause.load_assets()
+function pause_scene.load_assets()
     white_font = fonts.new_menu_white()
     pause_menu_image = lutro.graphics.newImage("assets/pause-menu.png")
     pause_menu_sound = audio.new_source("assets/pause.wav", "static")
     set_alpha_for_image(pause_menu_image, 225)
 end
 
-function GamePause:_time_to_exit(): integer
+function GamePauseScene:_time_to_exit(): integer
     return math.floor(GAME_EXIT_TIME - self.exit_counter)
 end
 
-function GamePause:draw()
+function GamePauseScene:draw()
 	self.paused_scene:draw()
     local window = get_pause_square()
     lutro.graphics.draw(pause_menu_image, window.x, window.y)
@@ -94,7 +94,7 @@ function GamePause:draw()
     end
 end
 
-function GamePause:update(dt: number)
+function GamePauseScene:update(dt: number)
 	if joysticks.is_pressed(self.player_id, joysticks.BUTTONS.START) then
 		scenes.set(self.paused_scene, true)
 	end
@@ -112,4 +112,4 @@ function GamePause:update(dt: number)
     end
 end
 
-return game_pause
+return pause_scene

@@ -27,9 +27,9 @@ local hurry_letters: {Image}
 local hurry_letters_mid: number
 local hurry_letters_start: Point
 local hurry_up_sound: Source
-local game_timer = {}
+local timer = {}
 
-function game_timer.new(): GameTimer
+function timer.new(): GameTimer
    local self: GameTimer = setmetatable({}, { __index = GameTimer })
    self.time_left = settings.game_rules.timings.battle
    self.have_played_hurry_up_sound = false
@@ -108,4 +108,4 @@ function GameTimer:draw_hurry_text()
 	end
 end
 
-return game_timer
+return timer

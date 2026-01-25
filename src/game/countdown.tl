@@ -25,9 +25,9 @@ function GameCountdown.load_assets()
 	start_jingle:setVolume(0.35)
 end
 
-local game_countdown = {}
+local countdown = {}
 
-function game_countdown.new(): GameCountdown
+function countdown.new(): GameCountdown
     local self: GameCountdown = setmetatable({}, { __index = GameCountdown })
 	local image_width = 52
 	self.animation = animations.new(ready_set_go_image, image_width, 1)
@@ -62,4 +62,4 @@ function GameCountdown:draw()
 	end
 end
 
-return game_countdown
+return countdown

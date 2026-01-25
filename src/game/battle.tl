@@ -1,5 +1,6 @@
 local audio = require("engine.audio")
 local background = require("level_graphics.background")
+local battle_end_scene = require("game.battle_end_scene")
 local bombs = require("bombs")
 local characters = require("characters")
 local collision = require("engine.collision")
@@ -7,10 +8,9 @@ local dino_animations = require("dino_animations")
 local dino_inputs = require("dino_inputs")
 local eggs = require("eggs")
 local explosions = require("explosions")
-local game_countdown = require("game_countdown")
-local game_end = require("game_end")
-local game_timer = require("game_timer")
-local game_pause = require("game_pause")
+local countdown = require("game.countdown")
+local timer = require("game.timer")
+local pause_scene = require("game.pause_scene")
 local grid = require("level_layout.grid")
 local hard_blocks = require("hard_blocks")
 local hitboxes = require("engine.hitboxes")
@@ -27,21 +27,21 @@ local player_animations = require("player_animations")
 local players = require("players")
 local pressure_blocks = require("pressure_block")
 local scenes = require("engine.scenes")
-local score_board = require("score_board")
+local score_board = require("game.score_board")
 local settings = require("settings")
 local soft_blocks = require("soft_blocks")
 
 
 local music: Source
 
-local type GameState = enum
+local type BattleState = enum
    "starting"
    "ongoing"
    "restarting"
    "finished"
 end
 
-global record Game is Scene
+global record Battle is Scene
 	score_board: ScoreBoard
 	player_selection: Scene
 	
@@ -54,19 +54,19 @@ global record Game is Scene
 	mad_bombers: MadBombers
 	eggs: Eggs
 	items: Items
-	game_timer: GameTimer
+	timer: GameTimer
 	players: {Player}
 	player_animations: PlayerAnimations
 	time_to_wait_to_end_game: number
 	time_of_1_alive_player: number
-	state: GameState
-	game_countdown: GameCountdown
+	state: BattleState
+	countdown: GameCountdown
 	pressure_blocks: PressureBlocks
 	tic_counter: integer
 	audio_paused: boolean
 end
 
-function Game:load()
+function Battle:load()
 	self.players = {}
 	local character_selections = characters.get_selections()
 	local start_positions = map_entities.get_player_start_positions(#character_selections)
@@ -84,12 +84,12 @@ function Game:load()
 	self.mad_bombers = mad_bombers.new(self.bombs)
 	self.eggs = eggs.new()
 	self.items = items.new()
-	self.game_timer = game_timer.new()
+	self.timer = timer.new()
 	self.player_animations = player_animations.new(self.players)
 	self.time_to_wait_to_end_game = 2.0
 	self.time_of_1_alive_player = 0.0
 	self.state = "starting"
-	self.game_countdown = game_countdown.new()
+	self.countdown = countdown.new()
 	self.pressure_blocks = pressure_blocks.new()
 	self.hard_blocks = hard_blocks.new(map_entities.get_hard_blocks())
 	self.hard_blocks_group = collision.new_group(self.hard_blocks.on_ground)
@@ -99,15 +99,15 @@ function Game:load()
 	music:stop()
 end
 
-function Game.new(player_selection: Scene): Game
-   	local self: Game = setmetatable({}, { __index = Game })
+function Battle.new(player_selection: Scene): Battle
+   	local self: Battle = setmetatable({}, { __index = Battle })
 	self.player_selection = player_selection
 	self.score_board = score_board.new(characters.get_selections())
 	self:load()
    	return self
 end
 
-function Game:get_available_spots(alive_players: {Player}): {Point}
+function Battle:get_available_spots(alive_players: {Player}): {Point}
 	-- Return places an item/egg can drop. The spot needs to
 	-- be free and not too close to a player
 	local available_spots: {Point} = {}
@@ -143,7 +143,7 @@ function Game:get_available_spots(alive_players: {Player}): {Point}
 	return available_spots
 end
 
-function Game:clear_entities(lookup: Lookup, destroys: Group<Entity>, ...: {Entity})
+function Battle:clear_entities(lookup: Lookup, destroys: Group<Entity>, ...: {Entity})
 	-- This is for things that directly removes an entity (no animations or such)
 	for _, entity_list in ipairs({...}) do
 		local is_destroyed = lookup:collisions_between(entity_list, destroys)
@@ -158,7 +158,7 @@ function Game:clear_entities(lookup: Lookup, destroys: Group<Entity>, ...: {Enti
 	end
 end
 
-function Game:handle_bomb_drop_input(player: Player)
+function Battle:handle_bomb_drop_input(player: Player)
 	local placed_bombs: {Entity} = itertools.combine(
 		self.bombs.on_ground, self.lightning_bombs.on_ground
 	)
@@ -171,11 +171,11 @@ function Game:handle_bomb_drop_input(player: Player)
 	end
 end
 
-function Game:update_players()
+function Battle:update_players()
 	self.score_board:update_avatars(characters.get_selections())
 end
 
-function Game:get_player(player_id: integer): Player
+function Battle:get_player(player_id: integer): Player
 	for _, player in ipairs(self.players) do
 		if player_id == player.id then
 			return player
@@ -185,12 +185,12 @@ function Game:get_player(player_id: integer): Player
 	return nil
 end
 
-function Game:join_with_next_free_sprite(player_id: integer)
+function Battle:join_with_next_free_sprite(player_id: integer)
 	characters.new_selection(player_id)
 	self:update_players()
 end
 
-function Game:handle_pause_input(): boolean
+function Battle:handle_pause_input(): boolean
 	if self.state == "finished" then
 		return
 	end
@@ -225,10 +225,10 @@ function Game:handle_pause_input(): boolean
 
 	for player_id=1, joysticks.MAX_PLAYERS do
 		if joysticks.is_pressed(player_id, joysticks.BUTTONS.START) then
-			self.game_countdown = game_countdown.new()
+			self.countdown = countdown.new()
 			self.audio_paused = true
 			audio.pause()
-			scenes.set(game_pause.new(
+			scenes.set(pause_scene.new(
 				self, player_id, characters.exist_selection_for(player_id), toggle_if_playing)
 			)
 			return true
@@ -246,18 +246,18 @@ local is_dead = function(player: Player): boolean
 	return not player:is_alive()
 end
 
-function Game:check_if_finished(dt: number, alive_players: {Player})
+function Battle:check_if_finished(dt: number, alive_players: {Player})
 	if self.state == "finished" then
 		return
 	end
 
 	if #alive_players <= 1 then
 		self.time_of_1_alive_player = self.time_of_1_alive_player + dt
-	elseif self.game_timer:out_of_time() then
+	elseif self.timer:out_of_time() then
 		self.state = "finished"
 		-- Many alive and time out => draw
 		music:stop()
-		scenes.set(game_end.new_for_timeout(self))
+		scenes.set(battle_end_scene.new_for_timeout(self))
 	end
 
 	if self.time_of_1_alive_player > self.time_to_wait_to_end_game then
@@ -266,15 +266,15 @@ function Game:check_if_finished(dt: number, alive_players: {Player})
 			local winner = alive_players[1]
 			local score = self.score_board:add_point(winner.id)
 			music:stop()
-			scenes.set(game_end.new_for_winner(self, winner.sprite, score))
+			scenes.set(battle_end_scene.new_for_winner(self, winner.sprite, score))
 		else
 			music:stop()
-			scenes.set(game_end.new_for_draw(self))
+			scenes.set(battle_end_scene.new_for_draw(self))
 		end
 	end
 end
 
-function Game:update(dt: number)
+function Battle:update(dt: number)
 	if self.state == "restarting" then
 		self:load()
 	end
@@ -284,8 +284,8 @@ function Game:update(dt: number)
 		return
 	end
 
-	self.game_countdown:update(dt)
-	if not self.game_countdown:finished() then
+	self.countdown:update(dt)
+	if not self.countdown:finished() then
 		return
 	end
 	if self.state == "starting" then
@@ -297,8 +297,8 @@ function Game:update(dt: number)
 		audio.unpause()
 	end
 
-	self.game_timer:update(dt)
-	self.pressure_blocks.sudden_death = self.game_timer:sudden_death()
+	self.timer:update(dt)
+	self.pressure_blocks.sudden_death = self.timer:sudden_death()
 
 	self.pressure_blocks:update(dt)
 	local alive_players = itertools.filter(self.players, is_alive)
@@ -394,7 +394,7 @@ function Game:update(dt: number)
 		end
 	end
 
-	if settings.clear_mad_bombers(self.game_timer:sudden_death()) then
+	if settings.clear_mad_bombers(self.timer:sudden_death()) then
 		-- Remove all mad bombers
 		self.mad_bombers.by_player = {}
 	end
@@ -450,10 +450,10 @@ local function sort_entities_by_y_cord(players_to_sort: {Entity})
 	table.sort(players_to_sort, compare_entity_y_pos)
 end
 
-function Game:draw()
+function Battle:draw()
 	background.draw()
-	self.game_timer:draw()
-	self.game_countdown:draw()
+	self.timer:draw()
+	self.countdown:draw()
 
 	for _, block in ipairs(self.pressure_blocks:falling()) do
 		-- falling blocks are rendered last on top of everything,
@@ -518,7 +518,7 @@ function Game:draw()
 		hitboxes.draw_movement(entity:movementbox())
 	end
 
-	self.game_timer:draw_hurry_text()
+	self.timer:draw_hurry_text()
 end
 
 local game = {}
@@ -536,8 +536,8 @@ function game.load_assets()
 	MadBombers.load_assets()
 	GameCountdown.load_assets()
 	ScoreBoard.load_assets()
-	game_pause.load_assets()
-	game_end.load_assets()
+	pause_scene.load_assets()
+	battle_end_scene.load_assets()
 	dino_animations.load_assets()
 	player_animations.load_assets()
 
@@ -546,8 +546,8 @@ function game.load_assets()
 	music:setVolume(0.75)
 end
 
-function game.new(player_selection: Scene): Game
-	return Game.new(player_selection)
+function game.new(player_selection: Scene): Battle
+	return Battle.new(player_selection)
 end
 
 return game

@@ -1,8 +1,8 @@
 local animations = require("engine.animations")
 local audio = require("engine.audio")
+local battle = require("game.battle")
 local characters = require("characters")
 local fonts = require("fonts")
-local game = require("game")
 local joysticks = require("engine.joysticks")
 local menu_items = require("menus.items")
 local scenes = require("engine.scenes")
@@ -71,7 +71,7 @@ local function get_walk_down_animation(character_name: CharacterName): Animation
 end
 
 local record PlayerSelection is Scene
-    game: Game
+    game: Battle
     going_back_to_game: boolean
     player_selecting: integer
     idle_images: {integer: Image}
@@ -83,7 +83,7 @@ end
 
 function PlayerSelection.new(): PlayerSelection
     local self: PlayerSelection = setmetatable({}, { __index = PlayerSelection })
-    self.game = game.new(self)
+    self.game = battle.new(self)
     self.going_back_to_game = false
     self.idle_images = {}
     self.slow_walk_animations = {}
@@ -160,7 +160,7 @@ function PlayerSelection:handle_player_input()
             -- The game might have paused audio, make sure to unpause:
             audio.unpause()
         end
-        -- Game started, keep track on that state:
+        -- Battle started, keep track on that state:
         self.going_back_to_game = true
         return
     end
