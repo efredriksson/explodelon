@@ -88,7 +88,7 @@ function ScoreBoard:update_avatars(new_characters: {CharacterSelection})
     end
 end
 
-function ScoreBoard.load_assets()
+function score_board.load_assets()
     score_font = fonts.new_shaded_numbers()
     avatar_images = {}
     for _, sprite in ipairs(characters.get_names()) do

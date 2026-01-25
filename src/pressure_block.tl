@@ -162,7 +162,7 @@ function PressureBlocks:update(dt: number)
     end
 end
 
-function PressureBlocks.load_assets()
+function pressure_blocks.load_assets()
     pressure_block_image = lutro.graphics.newImage("assets/1_ton.png")
     block_fall_shadow = lutro.graphics.newImage("assets/items/shadow.png")
 end
