@@ -3,6 +3,7 @@ local characters = require("characters")
 local dinos = require("dinos")
 local dino_animations = require("dino_animations")
 local grid = require("level_layout.grid")
+local images = require("engine.images")
 local itertools = require("itertools")
 local players = require("players")
 local points = require("engine.geometry.points")
@@ -50,28 +51,6 @@ local animation_frame_duration: {PlayerState: {Action: number}} = {
 		slide = 1/6
 	}
 }
-
---- Scale 0-1 represent how far from current to max to increase color component 
-local function increase_color(color: number, scale: number): number
-	return color + scale * (255 - color)
-end
-
-local function make_lighter(image: Image)
-	local image_data = image:getData()
-	local scale = 0.6
-	-- Using C index in getPixel API for some reason...
-	for i = 0, image:getWidth() - 1 do
-		for j = 0, image:getHeight() - 1 do
-			local r, g, b, alpha = image_data:getPixel(i, j)
-			if alpha ~= 0 then
-				r = increase_color(r, scale)
-				g = increase_color(g, scale)
-				b = increase_color(b, scale)
-				image_data:setPixel(i, j, r, g, b, alpha)
-			end
-		end
-	end
-end
 
 local function get_sprite_set(
 	character_asset: CharacterName, invulnerable: boolean
@@ -350,7 +329,7 @@ function player_animations.load_assets()
 		for _, by_action in pairs(by_state) do
 			for _, by_direction in pairs(by_action) do
 				for _, sprite_image in pairs(by_direction) do
-					make_lighter(sprite_image)
+					images.make_lighter(sprite_image, 0.6)
 				end
 			end
 		end

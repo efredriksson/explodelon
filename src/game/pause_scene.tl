@@ -1,5 +1,6 @@
 local audio = require("engine.audio")
 local fonts = require("fonts")
+local images = require("engine.images")
 local joysticks = require("engine.joysticks")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
@@ -52,21 +53,11 @@ function pause_scene.new(
     return self
 end
 
-local function set_alpha_for_image(image: Image, alpha: number)
-    local image_data = image:getData()
-	for i = 0, image:getWidth() - 1 do
-		for j = 0, image:getHeight() - 1 do
-			local r, g, b, _ = image_data:getPixel(i, j)	
-            image_data:setPixel(i, j, r, g, b, alpha)
-		end
-	end
-end
-
 function pause_scene.load_assets()
     white_font = fonts.new_menu_white()
     pause_menu_image = lutro.graphics.newImage("assets/pause-menu.png")
     pause_menu_sound = audio.new_source("assets/pause.wav", "static")
-    set_alpha_for_image(pause_menu_image, 225)
+    images.set_alpha(pause_menu_image, 225)
 end
 
 function GamePauseScene:_time_to_exit(): integer
