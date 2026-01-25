@@ -1,21 +1,17 @@
 local animations = require("engine.animations")
 local dinos = require("dinos")
+local images = require("engine.images")
 local vectors = require("engine.geometry.vectors")
 local settings = require("settings")
 
 local type Animation = animations.Animation
+local type Color = images.Color
 local type DinoAction = dinos.DinoAction
 local type Dino = dinos.Dino
 local type DinoColor = settings.DinoColor
 local type Direction = vectors.Direction
 
 local dino_images: {DinoColor: {Direction: {DinoAction: {integer: Image}}}}
-local type Color = {number, number, number}
-
-local function color_equal(c1: Color, c2: Color): boolean
-	return c1[1] == c2[1] and c1[2] == c2[2] and c1[3] == c2[3]
-end
-
 local pixel_maps: {DinoColor: {Color: Color}} = {
 	blue = {}, -- No mapping, default dino
 	pink = {
@@ -44,24 +40,6 @@ local pixel_maps: {DinoColor: {Color: Color}} = {
 	},
 }
 
-local function set_dino_colors(image: Image, color: DinoColor)
-	local pixel_map = pixel_maps[color]
-	local image_data = image:getData()
-	for i = 0, image:getWidth() - 1 do
-		for j = 0, image:getHeight() - 1 do
-			local r, g, b, alpha = image_data:getPixel(i, j)
-			if alpha ~= 0 then
-				for from_color, to_color in pairs(pixel_map) do
-					if color_equal({r, g, b}, from_color) then
-						r, g, b = table.unpack(to_color)
-					end
-				end
-				image_data:setPixel(i, j, r, g, b, alpha)
-			end
-		end
-	end
-end
-
 local function dino_iamge(level: integer, action: DinoAction, direction: Direction, color: DinoColor): Image
 	local png_name = action .. "_" .. direction
 	if action == "crashed" then
@@ -76,7 +54,7 @@ local function dino_iamge(level: integer, action: DinoAction, direction: Directi
 	end
 
 	local image = lutro.graphics.newImage("assets/tirras/level_" .. level .. "/" .. png_name .. ".png")
-	set_dino_colors(image, color)
+	images.change_colors(image, pixel_maps[color])
 	return image
 end
 
