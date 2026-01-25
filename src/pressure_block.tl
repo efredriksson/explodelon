@@ -1,8 +1,8 @@
-require("entity")
+require("engine.entity")
 local const = require("const")
 local map_entities = require("level_layout.map_entities")
-local points = require("geometry.points")
-local hitboxes = require("hitboxes")
+local points = require("engine.geometry.points")
+local hitboxes = require("engine.hitboxes")
 
 
 global record PressureBlock is Entity, ExplosionBlocking, Kinematic, Entity

@@ -1,10 +1,10 @@
-require("entity")
-require("geometry.points")
+require("engine.entity")
+require("engine.geometry.points")
 require("players")
-local animations = require("animations")
-local audio = require("audio")
+local animations = require("engine.animations")
+local audio = require("engine.audio")
 local itertools = require("itertools")
-local hitboxes = require("hitboxes")
+local hitboxes = require("engine.hitboxes")
 local settings = require("settings")
 
 local take_item_sound: Source

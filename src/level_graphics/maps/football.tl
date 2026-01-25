@@ -1,5 +1,5 @@
 require("level_graphics.maps.interfaces")
-local animations = require("animations")
+local animations = require("engine.animations")
 
 local football = {}
 

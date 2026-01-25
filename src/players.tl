@@ -1,11 +1,11 @@
-require("animations")
+require("engine.animations")
 require("characters")
 require("dinos")
-require("entity")
+require("engine.entity")
 local const = require("const")
-local hitboxes = require("hitboxes")
-local physics = require("physics")
-local vectors = require("geometry.vectors")
+local hitboxes = require("engine.hitboxes")
+local physics = require("engine.physics")
+local vectors = require("engine.geometry.vectors")
 local settings = require("settings")
 
 local SLIDE_FOR_TIME = 0.4

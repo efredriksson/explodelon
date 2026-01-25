@@ -1,5 +1,5 @@
-require("geometry.rectangles")
-require("entity")
+require("engine.geometry.rectangles")
+require("engine.entity")
 local const = require("const")
 
 local TILE_X = const.BLOCK_SIZE

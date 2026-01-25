@@ -1,16 +1,16 @@
-require("collision")
+require("engine.collision")
 require("players")
-local animations = require("animations")
+local animations = require("engine.animations")
 local const = require("const")
 local explosions = require("explosions")
 local map_entities = require("level_layout.map_entities")
 local grid = require("level_layout.grid")
-local hitboxes = require("hitboxes")
+local hitboxes = require("engine.hitboxes")
 local itertools = require("itertools")
-local logger = require("logger")
-local physics = require("physics")
-local points = require("geometry.points")
-local vectors = require("geometry.vectors")
+local logger = require("engine.logger")
+local physics = require("engine.physics")
+local points = require("engine.geometry.points")
+local vectors = require("engine.geometry.vectors")
 
 
 -- Bomb --

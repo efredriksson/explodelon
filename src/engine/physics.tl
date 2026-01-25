@@ -1,5 +1,5 @@
-require("geometry.points")
-local vectors = require("geometry.vectors")
+require("engine.geometry.points")
+local vectors = require("engine.geometry.vectors")
 
 local physics = {}
 

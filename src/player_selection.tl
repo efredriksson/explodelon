@@ -1,15 +1,15 @@
-local animations = require("animations")
-local audio = require("audio")
+local animations = require("engine.animations")
+local audio = require("engine.audio")
 local characters = require("characters")
 local const = require("const")
 local fonts = require("fonts")
 local game = require("game")
-local joysticks = require("joysticks")
+local joysticks = require("engine.joysticks")
 local menu_items = require("menus.items")
-local scenes = require("scenes")
+local scenes = require("engine.scenes")
 local settings = require("settings")
-local vectors = require("geometry.vectors")
-local points = require("geometry.points")
+local vectors = require("engine.geometry.vectors")
+local points = require("engine.geometry.points")
 
 
 local record Character

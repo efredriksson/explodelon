@@ -1,5 +1,5 @@
 return {
-   global_env_def = "lutro",
+   global_env_def = "engine.lutro",
    include_dir = {"./src"},
    warning_error = {
       "branch",

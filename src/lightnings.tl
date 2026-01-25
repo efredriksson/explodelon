@@ -1,11 +1,11 @@
-require("collision")
+require("engine.collision")
 require("players")
-local animations = require("animations")
-local audio = require("audio")
+local animations = require("engine.animations")
+local audio = require("engine.audio")
 local const = require("const")
 local grid = require("level_layout.grid")
-local hitboxes = require("hitboxes")
-local points = require("geometry.points")
+local hitboxes = require("engine.hitboxes")
+local points = require("engine.geometry.points")
 
 local END_ANIMATION_DURATION: number = 0.6
 local FRAME_DURATION = END_ANIMATION_DURATION / 4

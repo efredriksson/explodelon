@@ -1,8 +1,8 @@
-require("entity")
+require("engine.entity")
 require("level_layout.map_entities")
 local const = require("const")
-local points = require("geometry.points")
-local hitboxes = require("hitboxes")
+local points = require("engine.geometry.points")
+local hitboxes = require("engine.hitboxes")
 local itertools = require("itertools")
 local soft_block_animations = require("level_graphics.soft_block_animations")
 

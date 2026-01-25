@@ -1,6 +1,6 @@
 require("characters")
-local audio = require("audio")
-local scenes = require("scenes")
+local audio = require("engine.audio")
+local scenes = require("engine.scenes")
 local game_winner = require("game_winner")
 local settings = require("settings")
 

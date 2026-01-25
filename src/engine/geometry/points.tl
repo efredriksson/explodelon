@@ -1,4 +1,4 @@
-require("geometry.vectors")
+require("engine.geometry.vectors")
 
 global record Point
    x: number
