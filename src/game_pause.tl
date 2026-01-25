@@ -1,10 +1,10 @@
-local audio = require("audio")
+local audio = require("engine.audio")
 local const = require("const")
 local fonts = require("fonts")
-local joysticks = require("joysticks")
-local points = require("geometry.points")
-local rectangles = require("geometry.rectangles")
-local scenes = require("scenes")
+local joysticks = require("engine.joysticks")
+local points = require("engine.geometry.points")
+local rectangles = require("engine.geometry.rectangles")
+local scenes = require("engine.scenes")
 
 
 local JOYPAD = joysticks.buttons()

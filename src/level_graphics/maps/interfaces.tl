@@ -1,4 +1,4 @@
-require("animations")
+require("engine.animations")
 
 
 global type MapGraphics = interface

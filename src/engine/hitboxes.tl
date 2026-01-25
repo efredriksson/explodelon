@@ -1,7 +1,7 @@
-require("entity")
-require("geometry.points")
+require("engine.entity")
+require("engine.geometry.points")
 local const = require("const")
-local rectangles = require("geometry.rectangles")
+local rectangles = require("engine.geometry.rectangles")
 local settings = require("settings")
 
 

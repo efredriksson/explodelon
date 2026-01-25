@@ -1,11 +1,11 @@
-require("collision")
+require("engine.collision")
 require("players")
-local animations = require("animations")
-local audio = require("audio")
+local animations = require("engine.animations")
+local audio = require("engine.audio")
 local grid = require("level_layout.grid")
-local hitboxes = require("hitboxes")
+local hitboxes = require("engine.hitboxes")
 local lightnings = require("lightnings")
-local vectors = require("geometry.vectors")
+local vectors = require("engine.geometry.vectors")
 
 local bomb_shadow: Image
 local lightning_bomb_image: Image

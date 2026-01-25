@@ -1,4 +1,4 @@
-require("geometry.points")
+require("engine.geometry.points")
 
 global record ShadedFont
    main: Font

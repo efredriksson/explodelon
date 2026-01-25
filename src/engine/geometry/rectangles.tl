@@ -1,4 +1,4 @@
-local points = require("geometry.points")
+local points = require("engine.geometry.points")
 
 global record Rectangle
 	x: number

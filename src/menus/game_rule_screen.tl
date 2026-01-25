@@ -1,4 +1,4 @@
-local scenes = require("scenes")
+local scenes = require("engine.scenes")
 local choices = require("menus.choices")
 local screens = require("menus.screens")
 local dino_settings_screen = require("menus.dino_setting_screen")

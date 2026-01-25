@@ -1,5 +1,5 @@
-require("geometry.points")
-require("geometry.rectangles")
+require("engine.geometry.points")
+require("engine.geometry.rectangles")
 
 
 global type Entity = interface

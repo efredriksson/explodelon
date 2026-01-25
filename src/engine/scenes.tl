@@ -1,4 +1,4 @@
-local logger = require("logger")
+local logger = require("engine.logger")
 local settings = require("settings")
 
 local scenes = {}

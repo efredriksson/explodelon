@@ -1,8 +1,8 @@
 require("fonts")
-require("scenes")
+require("engine.scenes")
 local const = require("const")
-local points = require("geometry.points")
-local joysticks = require("joysticks")
+local points = require("engine.geometry.points")
+local joysticks = require("engine.joysticks")
 local items = require("menus.items")
 
 

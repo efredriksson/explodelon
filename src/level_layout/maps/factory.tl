@@ -1,7 +1,7 @@
 
 require("level_layout.maps.entities")
 local grid = require("level_layout.grid")
-local vectors = require("geometry.vectors")
+local vectors = require("engine.geometry.vectors")
 
 local record FactoryLayout is MapLayout
     get_conveyor_belts: function(self): {ConveyorBelt}

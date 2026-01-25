@@ -1,10 +1,10 @@
-require("entity")
+require("engine.entity")
 require("players")
-local animations = require("animations")
+local animations = require("engine.animations")
 local const = require("const")
 local dinos = require("dinos")
-local hitboxes = require("hitboxes")
-local points = require("geometry.points")
+local hitboxes = require("engine.hitboxes")
+local points = require("engine.geometry.points")
 
 local egg_shake_image: Image
 local egg_open_image: Image

@@ -1,6 +1,6 @@
-require("geometry.points")
-require("geometry.vectors")
-local hitboxes = require("hitboxes")
+require("engine.geometry.points")
+require("engine.geometry.vectors")
+local hitboxes = require("engine.hitboxes")
 local settings = require("settings")
 
 global type DinoAction = enum

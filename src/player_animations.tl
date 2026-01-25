@@ -1,11 +1,11 @@
 require("players")
-local animations = require("animations")
+local animations = require("engine.animations")
 local characters = require("characters")
 local const = require("const")
 local dino_animations = require("dino_animations")
 local itertools = require("itertools")
-local points = require("geometry.points")
-local vectors = require("geometry.vectors")
+local points = require("engine.geometry.points")
+local vectors = require("engine.geometry.vectors")
 
 
 local jump_shadow_image: Image

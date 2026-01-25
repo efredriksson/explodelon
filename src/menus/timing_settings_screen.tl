@@ -1,5 +1,5 @@
 local items = require("menus.items")
-local scenes = require("scenes")
+local scenes = require("engine.scenes")
 local settings = require("settings")
 local choices = require("menus.choices")
 local screens = require("menus.screens")

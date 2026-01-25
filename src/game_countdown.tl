@@ -1,6 +1,6 @@
-local animations = require("animations")
-local audio = require("audio")
-local points = require("geometry.points")
+local animations = require("engine.animations")
+local audio = require("engine.audio")
+local points = require("engine.geometry.points")
 
 local TIMER_POS = points.new(14, 1)
 local READY_AT_TIME = 3

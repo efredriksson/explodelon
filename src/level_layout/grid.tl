@@ -1,6 +1,6 @@
 local const = require("const")
-local points = require("geometry.points")
-local rectangles = require("geometry.rectangles")
+local points = require("engine.geometry.points")
+local rectangles = require("engine.geometry.rectangles")
 
 local PLAYER_AREA = rectangles.new(24, 32, 272, 176)
 local grid = {}

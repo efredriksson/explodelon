@@ -1,9 +1,9 @@
-require("scenes")
+require("engine.scenes")
 require("menus.choices")
-local audio = require("audio")
+local audio = require("engine.audio")
 local const = require("const")
 local fonts = require("fonts")
-local joysticks = require("joysticks")
+local joysticks = require("engine.joysticks")
 local items = require("menus.items")
 
 

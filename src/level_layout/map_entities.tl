@@ -1,7 +1,7 @@
 local const = require("const")
 local grid = require("level_layout.grid")
 local itertools = require("itertools")
-local vectors = require("geometry.vectors")
+local vectors = require("engine.geometry.vectors")
 local settings = require("settings")
 local maps = require("level_layout.maps.init")
 

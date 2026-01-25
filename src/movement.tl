@@ -3,8 +3,8 @@ require("bombs")
 require("lightning_bombs")
 local const = require("const")
 local grid = require("level_layout.grid")
-local joysticks = require("joysticks")
-local vectors = require("geometry.vectors")
+local joysticks = require("engine.joysticks")
+local vectors = require("engine.geometry.vectors")
 
 local JOYPAD = joysticks.buttons()
 

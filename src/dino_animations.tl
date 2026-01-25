@@ -1,5 +1,5 @@
 require("dinos")
-local animations = require("animations")
+local animations = require("engine.animations")
 
 
 local dino_images: {DinoColor: {Direction: {DinoAction: {integer: Image}}}}

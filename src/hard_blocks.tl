@@ -1,7 +1,7 @@
 require("level_layout.map_entities")
 local const = require("const")
 local hard_block_animations = require("level_graphics.hard_block_animations")
-local hitboxes = require("hitboxes")
+local hitboxes = require("engine.hitboxes")
 
 
 global record HardBlock is ExplosionBlocking, Kinematic, Entity

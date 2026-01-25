@@ -1,10 +1,10 @@
-local audio = require("audio")
+local audio = require("engine.audio")
 local const = require("const")
 local clock_text = require("clock_text")
 local fonts = require("fonts")
 local itertools = require("itertools")
-local points = require("geometry.points")
-local vectors = require("geometry.vectors")
+local points = require("engine.geometry.points")
+local vectors = require("engine.geometry.vectors")
 local settings = require("settings")
 
 

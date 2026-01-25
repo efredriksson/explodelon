@@ -1,8 +1,8 @@
 local characters = require("characters")
 local const = require("const")
 local fonts = require("fonts")
-local points = require("geometry.points")
-local vectors = require("geometry.vectors")
+local points = require("engine.geometry.points")
+local vectors = require("engine.geometry.vectors")
 
 
 local score_font: ShadedFont

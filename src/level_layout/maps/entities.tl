@@ -1,4 +1,4 @@
-local hitboxes = require("hitboxes")
+local hitboxes = require("engine.hitboxes")
 
 
 global record Goal

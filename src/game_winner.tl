@@ -1,10 +1,10 @@
-local animations = require("animations")
-local audio = require("audio")
+local animations = require("engine.animations")
+local audio = require("engine.audio")
 local characters = require("characters")
 local const = require("const")
-local points = require("geometry.points")
-local vectors = require("geometry.vectors")
-local scenes = require("scenes")
+local points = require("engine.geometry.points")
+local vectors = require("engine.geometry.vectors")
+local scenes = require("engine.scenes")
 
 
 local record GameWinner is Scene
