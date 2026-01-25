@@ -1,6 +1,6 @@
 require("players")
-require("bombs")
-require("lightning_bombs")
+require("bombs.bombs")
+require("bombs.lightning_bombs")
 local grid = require("level_layout.grid")
 local joysticks = require("engine.joysticks")
 local vectors = require("engine.geometry.vectors")

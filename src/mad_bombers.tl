@@ -1,4 +1,4 @@
-require("bombs")
+require("bombs.bombs")
 local animations = require("engine.animations")
 local characters = require("characters")
 local grid = require("level_layout.grid")

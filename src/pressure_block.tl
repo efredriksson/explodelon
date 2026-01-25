@@ -1,5 +1,6 @@
 require("engine.entity")
-require("entity_properties")
+require("kinematic")
+require("bombs.explodable")
 local grid = require("level_layout.grid")
 local hitboxes = require("engine.hitboxes")
 local map_entities = require("level_layout.map_entities")

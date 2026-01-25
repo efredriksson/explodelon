@@ -1,6 +1,6 @@
 require("engine.collision")
 require("players")
-require("bombs")
+require("bombs.bombs")
 local hitboxes = require("engine.hitboxes")
 local grid = require("level_layout.grid")
 local joysticks = require("engine.joysticks")

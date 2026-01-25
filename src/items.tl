@@ -1,5 +1,5 @@
 require("engine.entity")
-require("entity_properties")
+require("kinematic")
 require("players")
 local animations = require("engine.animations")
 local audio = require("engine.audio")

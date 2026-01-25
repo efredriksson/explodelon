@@ -1,4 +1,4 @@
-require("entity_properties")
+require("kinematic")
 local grid = require("level_layout.grid")
 local itertools = require("itertools")
 local vectors = require("engine.geometry.vectors")
