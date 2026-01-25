@@ -4,12 +4,19 @@ local battle = require("game.battle")
 local characters = require("characters")
 local fonts = require("fonts")
 local joysticks = require("engine.joysticks")
-local menu_items = require("menus.items")
+local items = require("menus.items")
 local scenes = require("engine.scenes")
 local settings = require("settings")
 local vectors = require("engine.geometry.vectors")
 local points = require("engine.geometry.points")
 
+local type Animation = animations.Animation
+local type Battle = battle.Battle
+local type CharacterName = characters.CharacterName
+local type MenuFont = fonts.MenuFont
+local type MenuSelection = items.MenuSelection
+local type Scene = scenes.Scene
+local type Point = points.Point
 
 local record Character
    sprite: CharacterName
@@ -117,7 +124,7 @@ function PlayerSelection:load()
         end
     end
 
-    self.selector = menu_items.new_integer_selection(1, 1, #self.selectable_characters)
+    self.selector = items.new_integer_selection(1, 1, #self.selectable_characters)
 end
 
 local player_selection = {}
@@ -131,7 +138,7 @@ function player_selection.load_assets()
     selector_indicator = lutro.graphics.newImage("assets/player_indicator.png")
     background = lutro.graphics.newImage("assets/grass.png")
 
-    ok_sound = menu_items.ok_sound()
+    ok_sound = items.ok_sound()
     black_font = fonts.new_menu_black()
     music = audio.new_source("assets/music/player-selection.ogg", "static")
     music:setVolume(0.75)

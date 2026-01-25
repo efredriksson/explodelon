@@ -3,6 +3,8 @@ local choices = require("menus.choices")
 local screens = require("menus.screens")
 local settings = require("engine.settings")
 
+local type Scene = scenes.Scene
+local type MenuScreen = screens.MenuScreen
 
 local debug_screen = {}
 

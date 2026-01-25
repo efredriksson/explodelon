@@ -1,13 +1,16 @@
-require("engine.entity")
-require("kinematic")
-require("bombs.explodable")
 local grid = require("level_layout.grid")
 local hitboxes = require("engine.hitboxes")
 local map_entities = require("level_layout.map_entities")
 local points = require("engine.geometry.points")
+local rectangles = require("engine.geometry.rectangles")
 
+local type Explodable = require("bombs.explodable")
+local type Entity = require("engine.entity")
+local type Kinematic = require("kinematic")
+local type Point = points.Point
+local type Rectangle = rectangles.Rectangle
 
-global record PressureBlock is Entity, Explodable, Kinematic
+local record PressureBlock is Entity, Explodable, Kinematic
 	falling_position: Point
     position: Point
     in_explosion: boolean
@@ -64,7 +67,7 @@ function PressureBlock:is_on_ground(): boolean
     return self.falling_position.y == self.position.y
 end
 
-global record PressureBlocks
+local record PressureBlocks
 	next_left_index: integer
     next_right_index: integer
     left_positions: {Point}
@@ -78,7 +81,7 @@ global record PressureBlocks
     sudden_death: boolean
 end
 
-local pressure_blocks = {}
+local pressure_blocks = {PressureBlocks = PressureBlocks}
 
 function pressure_blocks.new(): PressureBlocks
 	local self: PressureBlocks = setmetatable({}, { __index = PressureBlocks })

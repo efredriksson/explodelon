@@ -1,9 +1,11 @@
-require("characters")
 local audio = require("engine.audio")
+local characters = require("characters")
 local scenes = require("engine.scenes")
 local settings = require("settings")
 local winner_scene = require("game.winner_scene")
 
+local type CharacterName = characters.CharacterName
+local type Scene = scenes.Scene
 
 local winner_sound: Source
 local draw_sound: Source

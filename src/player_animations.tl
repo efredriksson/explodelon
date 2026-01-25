@@ -1,12 +1,25 @@
-require("players")
 local animations = require("engine.animations")
 local characters = require("characters")
+local dinos = require("dinos")
 local dino_animations = require("dino_animations")
 local grid = require("level_layout.grid")
 local itertools = require("itertools")
+local players = require("players")
 local points = require("engine.geometry.points")
+local rectangles = require("engine.geometry.rectangles")
 local vectors = require("engine.geometry.vectors")
 
+local type Entity = require("engine.entity")
+local type Animation = animations.Animation
+local type Action = players.Action
+local type CharacterName = characters.CharacterName
+local type AnimatedDinos = dino_animations.AnimatedDinos
+local type Dino = dinos.Dino
+local type Player = players.Player
+local type PlayerState = players.PlayerState
+local type Direction = vectors.Direction
+local type Point = points.Point
+local type Rectangle = rectangles.Rectangle
 
 local jump_shadow_image: Image
 local sprites: {CharacterName: {PlayerState: {Action: {Direction: Image}}}} = {}
@@ -231,7 +244,7 @@ function MountedPlayerAnimation:draw()
 	end
 end
 
-global record PlayerAnimations
+local record PlayerAnimations
     regular: {integer: {PlayerState: {Action: {Direction: Animation}}}}
     invulnerable: {integer: {PlayerState: {Action: {Direction: Animation}}}}
     players: {Player}
@@ -324,7 +337,7 @@ local function character_sprites(character_asset: CharacterName): {PlayerState: 
 	}
 end
 
-local player_animations = {}
+local player_animations = {PlayerAnimations = PlayerAnimations}
 
 function player_animations.load_assets()
 	jump_shadow_image = lutro.graphics.newImage("assets/items/shadow.png")
@@ -344,14 +357,14 @@ function player_animations.load_assets()
 	end
 end
 
-function player_animations.new(players: {Player}): PlayerAnimations
+function player_animations.new(entities: {Player}): PlayerAnimations
     local self: PlayerAnimations = setmetatable({}, { __index = PlayerAnimations })
     self.regular = {}
     self.invulnerable = {}
     self.players = {}
 	self.dinos = dino_animations.new()
 
-    for _, player in ipairs(players) do
+    for _, player in ipairs(entities) do
 		self:add_new(player)
 	end
     return self
@@ -419,8 +432,8 @@ function PlayerAnimations:get_all(): {Entity}
 	return entities_to_draw
 end
 
-local function draw_players_shadow(players: {Player})
-	for _, player in ipairs(players) do
+function PlayerAnimations:_draw_players_shadow(filter: function(Player): boolean)
+	for _, player in ipairs(itertools.filter(self.players, filter)) do
 		lutro.graphics.draw(jump_shadow_image, player.position.x - 1, player.position.y - 10)
 	end
 end
@@ -430,7 +443,7 @@ function PlayerAnimations:draw_lateral_jump_shadows()
 		return player.action == "jump" and player.jump_trajectory.lateral_velocity:length() > 0
 	end
 
-	draw_players_shadow(itertools.filter(self.players, jumps_lateral))
+	self:_draw_players_shadow(jumps_lateral)
 end
 
 function PlayerAnimations:draw_vertical_jump_shadows()
@@ -438,7 +451,7 @@ function PlayerAnimations:draw_vertical_jump_shadows()
 		return player.action == "jump" and player.jump_trajectory.lateral_velocity:length() == 0
 	end
 
-	draw_players_shadow(itertools.filter(self.players, jumps_vertically))
+	self:_draw_players_shadow(jumps_vertically)
 end
 
 return player_animations

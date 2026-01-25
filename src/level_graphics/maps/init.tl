@@ -2,6 +2,9 @@ local factory = require("level_graphics.maps.factory")
 local football = require("level_graphics.maps.football")
 local settings = require("settings")
 
+local type Map = settings.Map
+local type MapGraphics = require("level_graphics.maps.interfaces")
+
 local init = {}
 
 local map_graphics <total>: {Map: MapGraphics} = {

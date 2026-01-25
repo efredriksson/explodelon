@@ -1,16 +1,23 @@
-require("engine.entity")
-require("kinematic")
-require("players")
 local animations = require("engine.animations")
 local dinos = require("dinos")
 local grid = require("level_layout.grid")
 local hitboxes = require("engine.hitboxes")
+local players = require("players")
 local points = require("engine.geometry.points")
+local rectangles = require("engine.geometry.rectangles")
+
+local type Animation = animations.Animation
+local type Dino = dinos.Dino
+local type Explodable = require("bombs.explodable")
+local type Entity = require("engine.entity")
+local type Player = players.Player
+local type Point = points.Point
+local type Rectangle = rectangles.Rectangle
 
 local egg_shake_image: Image
 local egg_open_image: Image
 
-global record Egg is Entity, Explodable
+local record Egg is Entity, Explodable
     position: Point
     breaking: boolean
     hatched: boolean
@@ -75,11 +82,11 @@ function Egg:is_destroyed(): boolean
     return self.is_exploding
 end
 
-global record Eggs
+local record Eggs
     on_ground: {Egg}
 end
 
-local eggs = {}
+local eggs = {Eggs = Eggs}
 
 function eggs.new(): Eggs
    local self: Eggs = setmetatable({}, { __index = Eggs })

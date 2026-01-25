@@ -1,14 +1,22 @@
-require("engine.animations")
-require("characters")
-require("dinos")
-require("engine.entity")
-require("bombs.explodable")
-require("kinematic")
+local characters = require("characters")
+local dinos = require("dinos")
 local grid = require("level_layout.grid")
 local hitboxes = require("engine.hitboxes")
 local physics = require("engine.physics")
+local points = require("engine.geometry.points")
+local rectangles = require("engine.geometry.rectangles")
 local vectors = require("engine.geometry.vectors")
 local settings = require("settings")
+
+local type CharacterName = characters.CharacterName
+local type Dino = dinos.Dino
+local type Explodable = require("bombs.explodable")
+local type Entity = require("engine.entity")
+local type Kinematic = require("kinematic")
+local type ProjectileTrajectory = physics.ProjectileTrajectory
+local type Direction = vectors.Direction
+local type Point = points.Point
+local type Rectangle = rectangles.Rectangle
 
 local SLIDE_FOR_TIME = 0.4
 local CHARACTER_HEIGHT_ON_DINO = 8 -- How high up from ground player is when on dino
@@ -18,7 +26,7 @@ local DASH_WITH_DINO_SPEED_BONUS = {
 	[3] = 90,
 }
 
-global type Action = enum
+local type Action = enum
    "walk"
    "jump_on"
    "jump_off"
@@ -31,12 +39,12 @@ global type Action = enum
    "slide"
 end
 
-global type PlayerState = enum
+local type PlayerState = enum
 	"foot"
 	"mounted"
 end
 
-global record Player is Explodable, Kinematic, Entity
+local record Player is Explodable, Kinematic, Entity
 	id: integer
 	sprite: CharacterName
    	position: Point
@@ -59,7 +67,7 @@ global record Player is Explodable, Kinematic, Entity
 	jump_target: Point
 end
 
-local players = {}
+local players = {Player = Player, Action = Action, PlayerState = PlayerState}
 
 function players.new(id: integer, sprite: CharacterName, position: Point): Player
 	local self: Player = setmetatable({}, { __index = Player })

@@ -1,11 +1,24 @@
-require("engine.collision")
-require("players")
 local animations = require("engine.animations")
 local audio = require("engine.audio")
+local collision = require("engine.collision")
 local grid = require("level_layout.grid")
 local hitboxes = require("engine.hitboxes")
 local lightnings = require("bombs.lightnings")
+local players = require("players")
+local points = require("engine.geometry.points")
+local rectangles = require("engine.geometry.rectangles")
 local vectors = require("engine.geometry.vectors")
+
+local type Animation = animations.Animation
+local type Explodable = require("bombs.explodable")
+local type Kinematic = require("kinematic")
+local type Entity = require("engine.entity")
+local type Lightnings = lightnings.Lightnings
+local type Player = players.Player
+local type Group = collision.Group
+local type Lookup = collision.Lookup
+local type Point = points.Point
+local type Rectangle = rectangles.Rectangle
 
 local bomb_shadow: Image
 local lightning_bomb_image: Image
@@ -13,7 +26,7 @@ local coild_1_effect: Image
 local coild_2_effect: Image
 
 
-global record LightningBomb is Entity, Kinematic
+local record LightningBomb is Entity, Kinematic
     position: Point
     timer: number
     range: number
@@ -99,12 +112,12 @@ function LightningBomb:update(dt: number)
     end
 end
 
-global record LightningBombs
+local record LightningBombs
     on_ground: {LightningBomb}
     lightnings: Lightnings
 end
 
-local lightning_bombs = {}
+local lightning_bombs = {LightningBombs = LightningBombs}
 
 function lightning_bombs.load_assets()
     bomb_shadow = lutro.graphics.newImage("assets/items/shadow.png")

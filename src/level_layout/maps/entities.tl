@@ -1,7 +1,13 @@
 local hitboxes = require("engine.hitboxes")
+local vectors = require("engine.geometry.vectors")
+local points = require("engine.geometry.points")
+local rectangles = require("engine.geometry.rectangles")
 
+local type Vector = vectors.Vector
+local type Point = points.Point
+local type Rectangle = rectangles.Rectangle
 
-global record Goal
+local record Goal
     position: Point
     pair: Point
 end
@@ -17,7 +23,7 @@ function Goal:get_hitbox(): Rectangle
     return hitboxes.new_block(self.position)
 end
 
-global record ConveyorBelt
+local record ConveyorBelt
     position: Point
     direction: Vector
 end
@@ -33,7 +39,15 @@ function ConveyorBelt:get_hitbox(): Rectangle
     return hitboxes.new_block(self.position)
 end
 
-global type MapLayout = interface
+local type MapLayout = interface
     get_conveyor_belts: function(self): {ConveyorBelt}
     get_goals: function(self): {Goal}
 end
+
+local entities = {
+    Goal = Goal,
+    ConveyorBelt = ConveyorBelt,
+    MapLayout = MapLayout,
+}
+
+return entities

@@ -1,6 +1,9 @@
-require("level_layout.maps.entities")
+local entities = require("level_layout.maps.entities")
 local grid = require("level_layout.grid")
 
+local type MapLayout = entities.MapLayout
+local type Goal = entities.Goal
+local type ConveyorBelt = entities.ConveyorBelt
 
 local record FootballLayout is MapLayout
     get_conveyor_belts: function(self): {ConveyorBelt}

@@ -6,6 +6,11 @@ local vectors = require("engine.geometry.vectors")
 local scenes = require("engine.scenes")
 local screen = require("screen")
 
+local type Animation = animations.Animation
+local type CharacterName = characters.CharacterName
+local type Scene = scenes.Scene
+local type Vector = vectors.Vector
+local type Point = points.Point
 
 local record GameWinnerScene is Scene
 	name: CharacterName

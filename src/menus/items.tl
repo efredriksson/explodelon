@@ -2,7 +2,7 @@ local audio = require("engine.audio")
 local clock_text = require("clock_text")
 
 
-global record MenuLineColumn
+local record MenuLineColumn
     text: string
     width: number
 end
@@ -14,7 +14,7 @@ function MenuLineColumn.new(text: string, width: number): MenuLineColumn
     return self
 end
 
-global record MenuLine
+local record MenuLine
     columns: {MenuLineColumn}
     y_pos: number
 end
@@ -26,7 +26,7 @@ function MenuLine.new(columns: {MenuLineColumn}, y_pos: number): MenuLine
     return self
 end
 
-global record MenuSelection<T>
+local record MenuSelection<T>
     value: integer
     min: integer
     max: integer
@@ -34,7 +34,7 @@ global record MenuSelection<T>
     convert: function(integer): T
 end
 
-local menu_items = {}
+local menu_items = {MenuLineColumn = MenuLineColumn, MenuLine = MenuLine, MenuSelection = MenuSelection}
 
 function menu_items.new_integer_selection(start: integer, min: integer, max: integer): MenuSelection<integer>
     local self: MenuSelection<integer> = setmetatable({}, { __index = MenuSelection })

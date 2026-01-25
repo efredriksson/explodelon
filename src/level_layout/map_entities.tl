@@ -1,14 +1,26 @@
-require("kinematic")
+local entities = require("level_layout.maps.entities")
 local grid = require("level_layout.grid")
 local itertools = require("itertools")
+local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
 local settings = require("settings")
 local maps = require("level_layout.maps.init")
 
+local type Kinematic = require("kinematic")
+local type Point = points.Point
+local type Goal = entities.Goal
+local type ConveyorBelt = entities.ConveyorBelt
+local type ItemType = settings.ItemType
 
-global record HardBlockConfig
+local record HardBlockConfig
 	position: Point
     is_tall: boolean
+end
+
+local record SoftBlockConfig
+	position: Point
+    item: ItemType
+    egg: boolean
 end
 
 function HardBlockConfig.new(position: Point, is_tall: boolean): HardBlockConfig
@@ -18,7 +30,7 @@ function HardBlockConfig.new(position: Point, is_tall: boolean): HardBlockConfig
     return self
 end
 
-local map_entities = {}
+local map_entities = {SoftBlockConfig = SoftBlockConfig, HardBlockConfig = HardBlockConfig}
 
 function map_entities.get_hard_blocks(): {HardBlockConfig}
 	local configs: {HardBlockConfig} = {}
@@ -100,12 +112,6 @@ local function contains_position(list: {Point}, check_for: Point): boolean
 	end
 
 	return false
-end
-
-global record SoftBlockConfig
-	position: Point
-    item: ItemType
-    egg: boolean
 end
 
 function SoftBlockConfig.new(position: Point, item: ItemType, egg: boolean): SoftBlockConfig

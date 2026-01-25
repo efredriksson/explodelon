@@ -1,6 +1,13 @@
-require("dinos")
 local animations = require("engine.animations")
+local dinos = require("dinos")
+local vectors = require("engine.geometry.vectors")
+local settings = require("settings")
 
+local type Animation = animations.Animation
+local type DinoAction = dinos.DinoAction
+local type Dino = dinos.Dino
+local type DinoColor = settings.DinoColor
+local type Direction = vectors.Direction
 
 local dino_images: {DinoColor: {Direction: {DinoAction: {integer: Image}}}}
 local type Color = {number, number, number}
@@ -104,7 +111,7 @@ local function dino_images_for_color(color: DinoColor): {Direction : {DinoAction
 	}
 end
 
-global record AnimatedDino
+local record AnimatedDino
     dino: Dino
 	finished: boolean
 	previous_action: DinoAction
@@ -177,11 +184,11 @@ function AnimatedDino:update(dt: number)
 	end
 end
 
-global record AnimatedDinos
+local record AnimatedDinos
     existing: {AnimatedDino}
 end
 
-local dino_animations = {}
+local dino_animations = {AnimatedDinos = AnimatedDinos}
 
 function dino_animations.load_assets()
 	dino_images = {

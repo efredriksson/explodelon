@@ -1,12 +1,14 @@
-require("engine.geometry.vectors")
+local vectors = require("engine.geometry.vectors")
 
-global record Point
+local type Vector = vectors.Vector
+
+local record Point
    x: number
    y: number
    metamethod __tostring: function(Point): string
 end
 
-local points = {}
+local points = {Point = Point}
 
 local function point_to_string(p: Point): string
    return tostring(p.x) .. ":" .. tostring(p.y)

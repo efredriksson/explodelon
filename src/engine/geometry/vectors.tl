@@ -1,16 +1,16 @@
-global record Vector
+local record Vector
    x: number
    y: number
 end
 
-global type Direction = enum
+local type Direction = enum
    "up"
    "down"
    "right"
    "left"
 end
 
-local vectors = {}
+local vectors = {Vector = Vector, Direction = Direction}
 
 
 function vectors.new(x: number, y: number): Vector

@@ -1,18 +1,26 @@
-require("engine.entity")
-require("kinematic")
-require("players")
 local animations = require("engine.animations")
 local audio = require("engine.audio")
 local itertools = require("itertools")
 local hitboxes = require("engine.hitboxes")
+local players = require("players")
+local points = require("engine.geometry.points")
+local rectangles = require("engine.geometry.rectangles")
 local settings = require("settings")
+
+local type Animation = animations.Animation
+local type Explodable = require("bombs.explodable")
+local type Entity = require("engine.entity")
+local type Player = players.Player
+local type Point = points.Point
+local type Rectangle = rectangles.Rectangle
+local type ItemType = settings.ItemType
 
 local take_item_sound: Source
 local frame_animation: Animation
 local item_shadow: Image
 local item_icons: {ItemType: Image}
 
-global record Item is Entity, Explodable
+local record Item is Entity, Explodable
     type: ItemType
     position: Point
     is_exploding: boolean
@@ -57,12 +65,12 @@ function Item:is_destroyed(): boolean
     return self.is_exploding
 end
 
-global record Items
+local record Items
     on_ground: {Item}
     by_players: {integer: {ItemType}}
 end
 
-local items = {}
+local items = {Items = Items}
 
 function items.new(): Items
    local self: Items = setmetatable({}, { __index = Items })
@@ -112,10 +120,10 @@ function Items:update(dt: number)
     end
 end
 
-function Items:drop_items_of(players: {Player}, available_spots: {Point})
+function Items:drop_items_of(players_: {Player}, available_spots: {Point})
     local max_items_to_drop = 5
 
-    for _, player in ipairs(players) do
+    for _, player in ipairs(players_) do
         if self.by_players[player.id] then
             local shuffled_items = itertools.shuffle(self.by_players[player.id])
             self.by_players[player.id] = nil

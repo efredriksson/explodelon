@@ -1,7 +1,11 @@
-
-require("level_layout.maps.entities")
+local entities = require("level_layout.maps.entities")
 local grid = require("level_layout.grid")
 local vectors = require("engine.geometry.vectors")
+
+local type MapLayout = entities.MapLayout
+local type Goal = entities.Goal
+local type ConveyorBelt = entities.ConveyorBelt
+local type Direction = vectors.Direction
 
 local record FactoryLayout is MapLayout
     get_conveyor_belts: function(self): {ConveyorBelt}

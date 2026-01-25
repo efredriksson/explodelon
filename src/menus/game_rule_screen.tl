@@ -8,6 +8,9 @@ local player_setting_screen = require("menus.player_setting_screen")
 local timing_settings_screen = require("menus.timing_settings_screen")
 local load_rules_screen = require("menus.load_rules_screen")
 
+local type Scene = scenes.Scene
+local type MenuScreen = screens.MenuScreen
+
 local game_rule_screen = {}
 
 function game_rule_screen.new(previous_screen: Scene): MenuScreen

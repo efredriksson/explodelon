@@ -1,11 +1,15 @@
-require("engine.scenes")
-require("menus.choices")
 local audio = require("engine.audio")
+local choices = require("menus.choices")
 local fonts = require("fonts")
 local joysticks = require("engine.joysticks")
 local items = require("menus.items")
+local scenes = require("engine.scenes")
 local screen = require("screen")
 
+local type MenuFont = fonts.MenuFont
+local type Scene = scenes.Scene
+local type MenuSelection = items.MenuSelection
+local type MenuChoice = choices.MenuChoice
 
 local gray_font: MenuFont
 local white_font: MenuFont
@@ -14,14 +18,14 @@ local ok_sound: Source
 local background: Image
 
 
-global record MenuScreen is Scene
+local record MenuScreen is Scene
     menu_choices: {MenuChoice}
     menu_selection: MenuSelection<integer>
     on_load: function()
     go_back: function(Scene)
 end
 
-local screens = {}
+local screens = {MenuScreen = MenuScreen}
 
 function screens.new(menu_choices: {MenuChoice}, go_back?: function(Scene), on_load?: function()): MenuScreen
     local self: MenuScreen = setmetatable({}, { __index = MenuScreen })

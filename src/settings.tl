@@ -1,6 +1,6 @@
 local engine_settings = require("engine.settings")
 
-global enum ItemType
+local enum ItemType
    "speed"
    "bomb"
    "kick"
@@ -82,7 +82,7 @@ function PlayerRules.new(): PlayerRules
     return self
 end
 
-global type DinoColor = enum
+local type DinoColor = enum
     "blue"
     "pink"
     "purple"
@@ -126,13 +126,13 @@ function GameRules.new(): GameRules
     return self
 end
 
-global type PlayerSelectionMethod = enum
+local type PlayerSelectionMethod = enum
    "on"
    "off"
    "keep"
 end
 
-global type Map = enum
+local type Map = enum
    "football"
    "factory"
 end
@@ -142,6 +142,11 @@ local record Settings
     player_selection: PlayerSelectionMethod
     map: Map
     game_rules: GameRules
+    -- Type export
+    ItemType: ItemType
+    DinoColor: DinoColor
+    PlayerSelectionMethod: PlayerSelectionMethod
+    Map: Map
 end
 
 function Settings.new(): Settings
@@ -150,6 +155,11 @@ function Settings.new(): Settings
     self.player_selection = "on"
     self.map = "football"
     self.game_rules = GameRules.new()
+    -- Type export
+    self.ItemType = ItemType
+    self.DinoColor = DinoColor
+    self.PlayerSelectionMethod = PlayerSelectionMethod
+    self.Map = Map
     return self
 end
 

@@ -1,5 +1,7 @@
-require("level_graphics.maps.interfaces")
 local animations = require("engine.animations")
+
+local type Animation = animations.Animation
+local type MapGraphics = require("level_graphics.maps.interfaces")
 
 local football = {}
 
@@ -12,7 +14,7 @@ local function load_image(rel_path: string): Image
     return lutro.graphics.newImage("assets/football/" .. rel_path)
 end
 
-global record FootballGraphics is MapGraphics
+local record FootballGraphics is MapGraphics
 end
 
 function FootballGraphics:get_soft_block_exploding(): Animation

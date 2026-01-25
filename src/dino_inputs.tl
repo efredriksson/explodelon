@@ -1,11 +1,20 @@
-require("engine.collision")
-require("players")
-require("bombs.bombs")
+local bombs = require("bombs.bombs")
+local collision = require("engine.collision")
 local hitboxes = require("engine.hitboxes")
 local grid = require("level_layout.grid")
 local joysticks = require("engine.joysticks")
+local players = require("players")
 local vectors = require("engine.geometry.vectors")
+local points = require("engine.geometry.points")
 
+local type Bomb = bombs.Bomb
+local type Bombs = bombs.Bombs
+local type Kinematic = require("kinematic")
+local type Player = players.Player
+local type Group = collision.Group
+local type Lookup = collision.Lookup
+local type Vector = vectors.Vector
+local type Point = points.Point
 
 local dino_inputs = {}
 
@@ -95,7 +104,7 @@ local function handle_dash_input(player: Player)
     end
 end
 
-local function handle_throw_input(dt: number, player: Player, bombs: Bombs, bombs_group: Group<Bomb>, lookup: Lookup)
+local function handle_throw_input(dt: number, player: Player, bombs_: Bombs, bombs_group: Group<Bomb>, lookup: Lookup)
 	local dino = player.dino
 	local powerup_time_interval = 0.1
 	local block_from_player_dir = vectors.from_direction(player.direction):scale(grid.TILE_SIZE)
@@ -129,7 +138,7 @@ local function handle_throw_input(dt: number, player: Player, bombs: Bombs, bomb
 		local bomb_to_throw = get_bomb_to_throw(throw_bomb_from)
 		if not bomb_to_throw is nil then
 			local throw_to = throw_bomb_from:move(block_from_player_dir:scale(nbr_blocks_to_throw))
-			bombs:throw_existing(bomb_to_throw, throw_to)
+			bombs_:throw_existing(bomb_to_throw, throw_to)
 		end
 		dino.throw_powerup_for = 0
 	elseif lutro.joystick.isDown(player.id, joysticks.BUTTONS.B) then
@@ -142,14 +151,14 @@ local function handle_throw_input(dt: number, player: Player, bombs: Bombs, bomb
 	end
 end
 
-function dino_inputs.handle(dt: number, player: Player, bombs: Bombs, blocks_jump: Group<Kinematic>, bombs_group: Group<Bomb>, lookup: Lookup)
+function dino_inputs.handle(dt: number, player: Player, bombs_: Bombs, blocks_jump: Group<Kinematic>, bombs_group: Group<Bomb>, lookup: Lookup)
     if player.dino then
 		if player.dino.color == "pink" then
 			handle_jump_input(dt, player, blocks_jump, lookup)
 		elseif player.dino.color == "green" then
 			handle_dash_input(player)
 		elseif player.dino.color == "blue" then
-			handle_throw_input(dt, player, bombs, bombs_group, lookup)
+			handle_throw_input(dt, player, bombs_, bombs_group, lookup)
 		end
 	end
 end

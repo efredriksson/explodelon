@@ -2,11 +2,13 @@ local animations = require("engine.animations")
 local audio = require("engine.audio")
 local points = require("engine.geometry.points")
 
+local type Animation = animations.Animation
+
 local TIMER_POS = points.new(14, 1)
 local READY_AT_TIME = 3
 local SHOW_TIME_MARGIN = 1
 
-global record GameCountdown
+local record GameCountdown
 	animation: Animation
     have_played_sound: boolean
 	waited_for: number 
@@ -25,7 +27,7 @@ function GameCountdown.load_assets()
 	start_jingle:setVolume(0.35)
 end
 
-local countdown = {}
+local countdown = {GameCountdown = GameCountdown}
 
 function countdown.new(): GameCountdown
     local self: GameCountdown = setmetatable({}, { __index = GameCountdown })

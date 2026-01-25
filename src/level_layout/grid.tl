@@ -1,12 +1,15 @@
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
 
+local type Point = points.Point
+local type Rectangle = rectangles.Rectangle
+
 local PLAYER_AREA = rectangles.new(24, 32, 272, 176)
 local grid = {
 	TILE_SIZE = 16,
 }
 
-global record GridDimensions
+local record GridDimensions
 	x_min: integer
 	x_max: integer
 	y_min: integer

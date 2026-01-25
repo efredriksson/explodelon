@@ -1,6 +1,10 @@
 local grid = require("level_layout.grid")
 local vectors = require("engine.geometry.vectors")
+local points = require("engine.geometry.points")
 
+local type Direction = vectors.Direction
+local type Vector = vectors.Vector
+local type Point = points.Point
 
 local PLAYER_AREA = grid.area()
 local RAIL_LENGHT = PLAYER_AREA.width * 2 + PLAYER_AREA.height * 2

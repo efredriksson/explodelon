@@ -1,15 +1,16 @@
 local logger = require("engine.logger")
 local settings = require("engine.settings")
 
-local scenes = {}
 
-global type Scene = interface
+local type Scene = interface
     load: function(self)
     update: function(self, dt: number)
     draw: function(self)
     -- Implementation outside this file should not have this:
     is_internal: boolean
 end
+
+local scenes = {Scene = Scene}
 
 local record WrapperScene is Scene
     to_wrap: Scene
