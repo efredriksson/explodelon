@@ -479,9 +479,11 @@ function Game:draw()
 		self.eggs.on_ground,
 		self.bombs.in_air
 	)
+	local mad_bombers_to_draw = self.mad_bombers:to_draw()
 
 	-- Need to render entities in the front last so they are on top of any other entity
 	sort_entities_by_y_cord(entities_to_draw)
+	sort_entities_by_y_cord(mad_bombers_to_draw)
 
 	entities_to_draw = itertools.combine(
 		-- Drawing bombs first so they are always drawn underneath players
@@ -491,7 +493,7 @@ function Game:draw()
 		entities_to_draw,
 		-- Draw soft blocks exploding last, revealing possible item under
 		self.soft_blocks:exploding(),
-		self.mad_bombers:to_draw()
+		mad_bombers_to_draw
 	)
 
 	for _, entity in ipairs(entities_to_draw) do
