@@ -1,11 +1,9 @@
-local const = require("const")
-
 local previous_states: {integer: {integer: boolean}} = {}
 local down_for_states: {integer: {integer: number}} = {}
-local joysticks = {}
-
-function joysticks.buttons(): {string: integer}
-    return {
+local joysticks = {
+    MAX_PLAYERS = 8,
+    MAX_BUTTONS = 16,
+    BUTTONS = {
         B        = 1,
         Y        = 2,
         SELECT   = 3,
@@ -22,8 +20,8 @@ function joysticks.buttons(): {string: integer}
         R2       = 14,
         L3       = 15,
         R3       = 16,
-    }
-end
+    },
+}
 
 -- Used to check if a button was just pressed this frame (not held)
 function joysticks.is_pressed(player_id: integer, button: integer): boolean
@@ -35,7 +33,7 @@ end
 
 -- Used to check if a button was just pressed this frame (not held) by any player
 function joysticks.is_pressed_any(button: integer): boolean
-    for player_id=1, const.MAX_PLAYERS do
+    for player_id=1, joysticks.MAX_PLAYERS do
         if joysticks.is_pressed(player_id, button) then
             return true
         end
@@ -59,7 +57,7 @@ end
 
 -- Used to check if a button has been pressed down by any player
 function joysticks.is_down_for_any(button: integer, time: number): boolean
-    for player_id=1, const.MAX_PLAYERS do
+    for player_id=1, joysticks.MAX_PLAYERS do
         if joysticks.is_down_for(player_id, button, time) then
             return true
         end
@@ -69,10 +67,10 @@ function joysticks.is_down_for_any(button: integer, time: number): boolean
 end
 
 function joysticks.setup()
-    for player_id = 1, const.MAX_PLAYERS do
+    for player_id = 1, joysticks.MAX_PLAYERS do
         previous_states[player_id] = {}
         down_for_states[player_id] = {}
-        for button = 1, const.MAX_BUTTONS do
+        for button = 1, joysticks.MAX_BUTTONS do
             previous_states[player_id][button] = false
             down_for_states[player_id][button] = 0
         end

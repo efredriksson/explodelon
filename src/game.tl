@@ -3,16 +3,15 @@ local background = require("level_graphics.background")
 local bombs = require("bombs")
 local characters = require("characters")
 local collision = require("engine.collision")
-local const = require("const")
 local dino_animations = require("dino_animations")
 local dino_inputs = require("dino_inputs")
 local eggs = require("eggs")
-local map_entities = require("level_layout.map_entities")
 local explosions = require("explosions")
 local game_countdown = require("game_countdown")
 local game_end = require("game_end")
 local game_timer = require("game_timer")
 local game_pause = require("game_pause")
+local grid = require("level_layout.grid")
 local hard_blocks = require("hard_blocks")
 local hitboxes = require("engine.hitboxes")
 local items = require("items")
@@ -22,6 +21,7 @@ local level_graphics = require("level_graphics.maps.init")
 local lightnings = require("lightnings")
 local lightning_bombs = require("lightning_bombs")
 local mad_bombers = require("mad_bombers")
+local map_entities = require("level_layout.map_entities")
 local movement = require("movement")
 local player_animations = require("player_animations")
 local players = require("players")
@@ -32,7 +32,6 @@ local settings = require("settings")
 local soft_blocks = require("soft_blocks")
 
 
-local JOYPAD = joysticks.buttons()
 local music: Source
 
 local type GameState = enum
@@ -122,7 +121,7 @@ function Game:get_available_spots(alive_players: {Player}): {Point}
 
 	local function valid_position(pos: Point): boolean
 		for _, player in ipairs(alive_players) do
-			if player.position:distance_to(pos) < const.BLOCK_SIZE * 2 then
+			if player.position:distance_to(pos) < grid.TILE_SIZE * 2 then
 				return false
 			end
 		end
@@ -163,11 +162,11 @@ function Game:handle_bomb_drop_input(player: Player)
 	local placed_bombs: {Entity} = itertools.combine(
 		self.bombs.on_ground, self.lightning_bombs.on_ground
 	)
-	if joysticks.is_pressed(player.id, JOYPAD.R) then
+	if joysticks.is_pressed(player.id, joysticks.BUTTONS.R) then
 		self.bombs:place_bomb(player, placed_bombs)
 	end
 
-	if joysticks.is_pressed(player.id, JOYPAD.Y) then
+	if joysticks.is_pressed(player.id, joysticks.BUTTONS.Y) then
 		self.lightning_bombs:place_lightning_bomb(player, placed_bombs)
 	end
 end
@@ -224,8 +223,8 @@ function Game:handle_pause_input(): boolean
 		end
 	end
 
-	for player_id=1, const.MAX_PLAYERS do
-		if joysticks.is_pressed(player_id, JOYPAD.START) then
+	for player_id=1, joysticks.MAX_PLAYERS do
+		if joysticks.is_pressed(player_id, joysticks.BUTTONS.START) then
 			self.game_countdown = game_countdown.new()
 			self.audio_paused = true
 			audio.pause()
@@ -325,7 +324,7 @@ function Game:update(dt: number)
 		self.pressure_blocks.on_ground,
 		self.bombs.on_ground
 	)
-	local blockers: Group<ExplosionBlocking> = collision.new_group(
+	local blockers: Group<Explodable> = collision.new_group(
 		self.eggs.on_ground,
 		self.items.on_ground,
 		self.soft_blocks.on_ground,
@@ -338,7 +337,7 @@ function Game:update(dt: number)
 		self.eggs.on_ground,
 		self.items.on_ground
 	)
-	local lightning_blockers: Group<ExplosionBlocking> = collision.new_group(
+	local lightning_blockers: Group<Explodable> = collision.new_group(
 		self.pressure_blocks.on_ground,
 		self.hard_blocks.on_ground
 	)
@@ -364,7 +363,7 @@ function Game:update(dt: number)
 		player:update(dt)
 		if player:accepts_input() then
 			self:handle_bomb_drop_input(player)
-			local area_close_to_player = player:movementbox():expand(const.BLOCK_SIZE / 2)
+			local area_close_to_player = player:movementbox():expand(grid.TILE_SIZE / 2)
 			local blocking_blocks = lookup:in_box_and_group(area_close_to_player, blocking_blocks_group)
 			local close_hard_blocks = lookup:in_box_and_group(area_close_to_player, self.hard_blocks_group)
 			movement.set_position_and_dir_from_input(

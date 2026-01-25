@@ -1,8 +1,8 @@
 local characters = require("characters")
-local const = require("const")
 local fonts = require("fonts")
 local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
+local screen = require("screen")
 
 
 local score_font: ShadedFont
@@ -43,7 +43,7 @@ local function get_avatar_position(avatar_num: number, num_avatars: number): Poi
 	local y_start = 3
 	local avatar_space_padding = 10
 
-	local total_space = const.MAP_WIDTH - x_start - avatar_space_padding
+	local total_space = screen.WIDTH - x_start - avatar_space_padding
 	local padding = (total_space - space_for_avatar * num_avatars) / (num_avatars + 1)
 	local x_pos = x_start + padding * avatar_num + space_for_avatar * (avatar_num - 1)
 	return points.new(x_pos, y_start)

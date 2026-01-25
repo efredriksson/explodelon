@@ -1,7 +1,6 @@
 require("engine.collision")
 require("players")
 local animations = require("engine.animations")
-local const = require("const")
 local explosions = require("explosions")
 local map_entities = require("level_layout.map_entities")
 local grid = require("level_layout.grid")
@@ -124,8 +123,8 @@ local function moving_into_new_block(movementbox: Rectangle, direction: Vector):
     for i=-1, 1 do
         for j=-1, 1 do
             local close_block = hitboxes.new_block(points.new(
-                snaps_to.x + i * const.BLOCK_SIZE,
-                snaps_to.y + j * const.BLOCK_SIZE
+                snaps_to.x + i * grid.TILE_SIZE,
+                snaps_to.y + j * grid.TILE_SIZE
             ))
             if new_movementbox:overlap(close_block) and not movementbox:overlap(close_block) then
                 return close_block
@@ -173,9 +172,9 @@ function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, players: G
     local test_hitbox = self:movementbox():shift(direction)
     local old_hitbox = self:movementbox()
     local can_move_bomb = CanMoveBomb.new(test_hitbox:top_left(), direction:normalize())
-    local close_occupies = lookup:in_box_and_group(old_hitbox:expand(const.BLOCK_SIZE), occupies)
-    local close_players = lookup:in_box_and_group(old_hitbox:expand(const.BLOCK_SIZE), players)
-    local close_bombs = lookup:in_box_and_group(old_hitbox:expand(const.BLOCK_SIZE), bombs)
+    local close_occupies = lookup:in_box_and_group(old_hitbox:expand(grid.TILE_SIZE), occupies)
+    local close_players = lookup:in_box_and_group(old_hitbox:expand(grid.TILE_SIZE), players)
+    local close_bombs = lookup:in_box_and_group(old_hitbox:expand(grid.TILE_SIZE), bombs)
     close_bombs = itertools.filter(close_bombs, not_this_bomb)
     local close_interacts: {Kinematic} = itertools.combine(close_bombs, close_players)
 
@@ -337,9 +336,9 @@ function ThrownBomb.new(delegate: Bomb, target: Point, start_height: number, thr
 end
 
 function ThrownBomb:bounce()
-    self.target = self:get_position():move(self.trajectory:get_direction():scale(const.BLOCK_SIZE))
+    self.target = self:get_position():move(self.trajectory:get_direction():scale(grid.TILE_SIZE))
     self.trajectory = physics.calc_trajectory(
-        0, 0, const.BLOCK_SIZE * 0.8, 0.25, self.delegate.position, self.target
+        0, 0, grid.TILE_SIZE * 0.8, 0.25, self.delegate.position, self.target
     )
 end
 
@@ -428,15 +427,15 @@ end
 
 function Bombs:throw_bomb(from: Point, to: Point): Bomb
     local bomb = Bomb.new(from, 2, function() end)
-    local thrown = ThrownBomb.new(bomb, to, const.BLOCK_SIZE, const.BLOCK_SIZE * 2, 0.4)
+    local thrown = ThrownBomb.new(bomb, to, grid.TILE_SIZE, grid.TILE_SIZE * 2, 0.4)
     table.insert(self.in_air, thrown)
     return bomb
 end
 
 function Bombs:throw_existing(bomb: Bomb, to: Point)
     local throw_len = bomb.position:distance_to(to)
-    local throw_height = const.BLOCK_SIZE + throw_len * 0.1
-    local throw_time = 0.20 + 0.025 * throw_len / const.BLOCK_SIZE
+    local throw_height = grid.TILE_SIZE + throw_len * 0.1
+    local throw_time = 0.20 + 0.025 * throw_len / grid.TILE_SIZE
     for i, on_ground in ipairs(self.on_ground) do
         if on_ground == bomb then
             table.remove(self.on_ground, i)
@@ -450,7 +449,7 @@ end
 
 function Bombs:update(
     dt: number,
-    blockers: Group<ExplosionBlocking>,
+    blockers: Group<Explodable>,
     explodables: Group<Explodable>,
     occupies: Group<Kinematic>,
     players: Group<Player>,

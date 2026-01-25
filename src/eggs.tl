@@ -1,15 +1,16 @@
 require("engine.entity")
+require("entity_properties")
 require("players")
 local animations = require("engine.animations")
-local const = require("const")
 local dinos = require("dinos")
+local grid = require("level_layout.grid")
 local hitboxes = require("engine.hitboxes")
 local points = require("engine.geometry.points")
 
 local egg_shake_image: Image
 local egg_open_image: Image
 
-global record Egg is Entity, ExplosionBlocking, Explodable
+global record Egg is Entity, Explodable
     position: Point
     breaking: boolean
     hatched: boolean
@@ -35,8 +36,8 @@ end
 
 function Egg:get_position_to_draw_egg(): Point
 	return points.new(
-        self.position.x + (const.BLOCK_SIZE - self.animation.width) / 2,
-        self.position.y + const.BLOCK_SIZE - self.animation.height
+        self.position.x + (grid.TILE_SIZE - self.animation.width) / 2,
+        self.position.y + grid.TILE_SIZE - self.animation.height
     )
 end
 

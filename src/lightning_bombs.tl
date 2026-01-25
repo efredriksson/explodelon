@@ -145,7 +145,7 @@ function LightningBombs:place_lightning_bomb(player: Player, occupied: {Entity})
     player.lightning_bomb = player.lightning_bomb - 1
 end
 
-function LightningBombs:update(dt: number, blockers: Group<ExplosionBlocking>, explodables: Group<Player>, lookup: Lookup)
+function LightningBombs:update(dt: number, blockers: Group<Explodable>, explodables: Group<Player>, lookup: Lookup)
     for i, bomb in ipairs(self.on_ground) do
         bomb:update(dt)
 

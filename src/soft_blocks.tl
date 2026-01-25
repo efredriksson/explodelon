@@ -1,13 +1,14 @@
 require("engine.entity")
+require("entity_properties")
 require("level_layout.map_entities")
-local const = require("const")
-local points = require("engine.geometry.points")
+local grid = require("level_layout.grid")
 local hitboxes = require("engine.hitboxes")
 local itertools = require("itertools")
+local points = require("engine.geometry.points")
 local soft_block_animations = require("level_graphics.soft_block_animations")
 
 
-global record SoftBlock is Entity, Explodable, ExplosionBlocking, Kinematic
+global record SoftBlock is Entity, Explodable, Kinematic
 	position: Point
     is_exploding: boolean
     in_explosion: boolean
@@ -53,8 +54,8 @@ end
 
 local function center_animation_on_block(animation: Animation, position: Point): Point
 	return points.new(
-		position.x - (animation.width - const.BLOCK_SIZE) / 2,
-		position.y - (animation.height - const.BLOCK_SIZE) / 2
+		position.x - (animation.width - grid.TILE_SIZE) / 2,
+		position.y - (animation.height - grid.TILE_SIZE) / 2
     )
 end
 

@@ -1,5 +1,5 @@
 require("engine.entity")
-require("engine.geometry.points")
+require("entity_properties")
 require("players")
 local animations = require("engine.animations")
 local audio = require("engine.audio")
@@ -12,7 +12,7 @@ local frame_animation: Animation
 local item_shadow: Image
 local item_icons: {ItemType: Image}
 
-global record Item is Entity, ExplosionBlocking, Explodable, Entity
+global record Item is Entity, Explodable
     type: ItemType
     position: Point
     is_exploding: boolean

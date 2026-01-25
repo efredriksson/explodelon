@@ -1,12 +1,11 @@
 require("fonts")
 require("engine.scenes")
-local const = require("const")
 local points = require("engine.geometry.points")
 local joysticks = require("engine.joysticks")
 local items = require("menus.items")
+local screen = require("screen")
 
 
-local JOYPAD = joysticks.buttons()
 local choices = {}
 
 global type MenuChoice = interface
@@ -41,9 +40,9 @@ function MenuChoiceImpl:update(_: Scene): boolean
             joysticks.is_down_for_any(button, time_until_fast_change)
     end
 
-    if active_button(JOYPAD.RIGHT) then
+    if active_button(joysticks.BUTTONS.RIGHT) then
         ok_action = self.selection:increment()
-    elseif active_button(JOYPAD.LEFT) then
+    elseif active_button(joysticks.BUTTONS.LEFT) then
         ok_action = self.selection:decrement()
     end
     self.value_change(self.selection:get_value())
@@ -101,7 +100,7 @@ local record MenuAction is MenuChoice
 end
 
 function MenuAction:update(ctx: Scene): boolean
-    if joysticks.is_pressed_any(JOYPAD.B) then
+    if joysticks.is_pressed_any(joysticks.BUTTONS.B) then
         self.on_select(ctx)
         return true
     end
@@ -110,7 +109,7 @@ function MenuAction:update(ctx: Scene): boolean
 end
 
 function MenuAction:draw(font: MenuFont)
-    font:print_centered(self.menu_text, const.MAP_WIDTH, points.new(0, self.y_pos))
+    font:print_centered(self.menu_text, screen.WIDTH, points.new(0, self.y_pos))
 end
 
 function choices.new_done(menu_text: string, y_pos: integer, callback: function(ctx: Scene)): MenuAction

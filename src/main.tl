@@ -1,18 +1,22 @@
-local const = require("const")
+local grid = require("level_layout.grid")
 local joysticks = require("engine.joysticks")
 local logger = require("engine.logger")
 local scenes = require("engine.scenes")
+local screen = require("screen")
 local screens = require("menus.screens")
+local settings = require("engine.settings")
 local start_screen = require("menus.start_screen")
 local player_selection = require("player_selection")
 local game = require("game")
 
 function lutro.conf(t: Configuration)
-	t.width  = const.MAP_WIDTH
-	t.height = const.MAP_HEIGHT
+	t.width  = screen.WIDTH
+	t.height = screen.HEIGHT
 end
 
 function lutro.load()
+	logger.setup("EXPLODELON")
+	settings.set_block_size(grid.TILE_SIZE)
 	local load_start = lutro.timer.getTime()
 	joysticks.setup()
 	screens.load_assets()

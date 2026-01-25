@@ -1,10 +1,10 @@
 local animations = require("engine.animations")
 local audio = require("engine.audio")
 local characters = require("characters")
-local const = require("const")
 local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
 local scenes = require("engine.scenes")
+local screen = require("screen")
 
 
 local record GameWinner is Scene
@@ -45,12 +45,12 @@ function game_winner.new(name: CharacterName): GameWinner
 	self.name = name
 	self.trophy = animations.new_with_frames(trophy_image, {2, 0.1, 0.1, 1, 0.1})
 	self.trophy_position = points.new(
-		(const.MAP_WIDTH - self.trophy.width) / 2,
-		(const.MAP_HEIGHT - self.trophy.height) / 2
+		(screen.WIDTH - self.trophy.width) / 2,
+		(screen.HEIGHT - self.trophy.height) / 2
 	)
 	self.character_position = points.new(
-		(const.MAP_WIDTH - jump_animations[name]:getWidth()) / 2,
-		const.MAP_HEIGHT
+		(screen.WIDTH - jump_animations[name]:getWidth()) / 2,
+		screen.HEIGHT
 	)
 	self.character_jump_velocity = vectors.new(0, -47)
 	self.have_played_sound = false
@@ -102,7 +102,7 @@ end
 
 function GameWinner:draw()
 	lutro.graphics.setColor(72, 72, 72)
-	lutro.graphics.rectangle("fill", 0, 0, const.MAP_WIDTH, const.MAP_HEIGHT)
+	lutro.graphics.rectangle("fill", 0, 0, screen.WIDTH, screen.HEIGHT)
 
 	lutro.graphics.draw(jump_animations[self.name], self.character_position.x, self.character_position.y)
 	local pos = self.trophy_position:move(vectors.new(0, self:_get_trophy_height_diff()))
