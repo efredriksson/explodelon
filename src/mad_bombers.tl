@@ -374,13 +374,6 @@ function MadBombers:update(dt: number)
 	end
 end
 
-local function sort_carts_by_y_cord(carts_to_sort: {PlayerCart})
-	local function compare_cart_y_pos(c1: PlayerCart, c2: PlayerCart): boolean
-		return c1:get_position().y < c2:get_position().y
-	end
-	table.sort(carts_to_sort, compare_cart_y_pos)
-end
-
 function MadBombers:to_draw(): {PlayerCart}
     local carts_to_draw: {PlayerCart} = {}
 
@@ -388,7 +381,6 @@ function MadBombers:to_draw(): {PlayerCart}
 		table.insert(carts_to_draw, cart)
 	end
 
-	sort_carts_by_y_cord(carts_to_draw)
     return carts_to_draw
 end
 
