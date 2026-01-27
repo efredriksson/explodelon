@@ -23,6 +23,10 @@ function ProjectileTrajectory:get_direction(): Vector
 	return self.lateral_velocity:normalize()
 end
 
+function ProjectileTrajectory:reverse()
+	self.lateral_velocity:flip()
+end
+
 function ProjectileTrajectory:finished(): boolean
 	return self.duration <= 0
 end

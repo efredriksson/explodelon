@@ -499,8 +499,18 @@ function Bombs:update(
                 hitting_entity:hit_with_bomb()
                 bomb_bouncing = true
             end
+
+            if not grid.area():contains(bomb:hitbox()) and not bomb.delegate:get_goal() then
+                bomb_bouncing = true
+            end
             
             if bomb_bouncing then
+                if grid.outside_visible_area(bomb:hitbox()) then
+                    -- Bomb outside seen map, loops around
+                    bomb.delegate.position = grid.outside_on_opposite_side(bomb:get_position())
+                    bomb.trajectory:reverse()
+                end
+
                 bomb:bounce()
             else
                 table.remove(self.in_air, i)
