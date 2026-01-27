@@ -58,6 +58,10 @@ function Vector:normalize(): Vector
    return self:scale(1 / self:length())
 end
 
+function Vector:flip(): Vector
+   return vectors.new(-self.x, -self.y)
+end
+
 function Vector:minus(other: Vector): Vector
    return vectors.new(self.x - other.x, self.y - other.y)
 end

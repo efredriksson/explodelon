@@ -1,3 +1,4 @@
+local logger = require("engine.logger")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
 
@@ -52,7 +53,11 @@ function grid.get_local_tile_position(global_position: Point): Point
 end
 
 function grid.get_random_tile(): Point
-	return grid.get_tile_position(lutro.math.random(17) - 1, lutro.math.random(11) - 1)
+    local dim = grid.dimensions()
+	return grid.get_tile_position(
+        lutro.math.random(dim.x_max + 1) - 1,
+        lutro.math.random(dim.y_max + 1) - 1
+    )
 end
 
 function grid.snap_to_x(x: number): number
@@ -65,6 +70,29 @@ end
 
 function grid.snap_to(pos: Point): Point
 	return points.new(grid.snap_to_x(pos.x), grid.snap_to_y(pos.y))
+end
+
+function grid.outside_on_opposite_side(out_pos: Point): Point
+    if out_pos.y < PLAYER_AREA.y then
+        -- exiting top
+        return points.new(out_pos.x, PLAYER_AREA.y + PLAYER_AREA.height + grid.TILE_SIZE)
+    elseif out_pos.y > PLAYER_AREA.y + PLAYER_AREA.height then
+        -- exiting bottom
+        return points.new(out_pos.x, PLAYER_AREA.y - grid.TILE_SIZE * 2)
+    elseif out_pos.x < PLAYER_AREA.x then
+        -- exiting left
+        return points.new(PLAYER_AREA.x + PLAYER_AREA.width + grid.TILE_SIZE, out_pos.y)
+    elseif out_pos.x > PLAYER_AREA.x + PLAYER_AREA.width then
+        -- exiting right
+        return points.new(PLAYER_AREA.x - grid.TILE_SIZE * 2, out_pos.y)
+    else
+        logger.warning("Position is not outside of grid area!")
+        return out_pos
+    end
+end
+
+function grid.outside_visible_area(box: Rectangle): boolean
+	return not PLAYER_AREA:expand(grid.TILE_SIZE):contains(box)
 end
 
 return grid
