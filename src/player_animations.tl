@@ -25,32 +25,16 @@ local type Rectangle = rectangles.Rectangle
 local jump_shadow_image: Image
 local sprites: {CharacterName: {PlayerState: {Action: {Direction: Image}}}} = {}
 local sprites_invulnerable: {CharacterName: {PlayerState: {Action: {Direction: Image}}}} = {}
-local animation_frame_duration: {PlayerState: {Action: number}} = {
-	foot = {
-		walk = 1/6,
-		idle = 1/6,
-		jump_on = 1/6,
-		jump_off = 1/6,
-		jump = 1/6,
-		dash = 1/6,
-		dying = 1/8,
-		stunned = 1/8,
-		crashed = 1/8,
-		slide = 1/8
-	},
-	mounted = {
-		walk = 1/6,
-		idle = 1/6,
-		jump_on = 1/6,
-		jump_off = 1/6,
-		jump = 1/6,
-		dash = 1/6,
-		dying = 1/8,
-		stunned = 1/6,
-		crashed = 1/6,
-		slide = 1/6
-	}
+local special_animation_frame_durations: {Action: number} = {
+	dying = 1 / 8,
+	stunned = 1 / 8,
+	crashed = 1 / 8,
 }
+
+local function get_animation_frame_duration(action: Action): number
+	local default_frame_duration = 1 / 6
+	return special_animation_frame_durations[action] or default_frame_duration
+end
 
 local function get_sprite_set(
 	character_asset: CharacterName, invulnerable: boolean
@@ -69,7 +53,7 @@ local function character_animation(character_asset: CharacterName, invulnerable:
 		character_animations[state] = {}
 		for action, by_direction in pairs(by_action) do
 			character_animations[state][action] = {}
-			local frame_duration = animation_frame_duration[state][action]
+			local frame_duration = get_animation_frame_duration(action)
 			for direction, sprite_image in pairs(by_direction) do
 				character_animations[state][action][direction] = animations.new(sprite_image, 18, frame_duration)
 			end
