@@ -305,7 +305,7 @@ local function character_sprites_for_state(character_asset: CharacterName, state
 		dying = character_sprite_for_dying(character_asset),
 		stunned = character_sprite_for_stunned(character_asset, state),
 		crashed = character_sprite_for_stunned(character_asset, state),
-		slide = character_sprite_for_stunned(character_asset, state) -- TODO: Should change direction!
+		slide = character_sprite_for_stunned(character_asset, state)
 	}
 end
 
