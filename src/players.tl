@@ -20,6 +20,7 @@ local type Rectangle = rectangles.Rectangle
 
 local SLIDE_FOR_TIME = 0.4
 local CHARACTER_HEIGHT_ON_DINO = 8 -- How high up from ground player is when on dino
+local DINO_ROAR_FOR = 1.5
 local DASH_WITH_DINO_SPEED_BONUS = {
 	[1] = 50,
 	[2] = 70,
@@ -37,6 +38,7 @@ local type Action = enum
    "dash"
    "crashed"
    "slide"
+   "roar"
 end
 
 local type PlayerState = enum
@@ -60,6 +62,7 @@ local record Player is Explodable, Kinematic, Entity
 	invulnerable_for: number
 	stunned_for: number
 	slide_for: number
+	roar_for: number
 	after_image_shift: number
 	dino: Dino
 
@@ -88,6 +91,7 @@ function players.new(id: integer, sprite: CharacterName, position: Point): Playe
 	self.stunned_for = 0
 	self.after_image_shift = 0
 	self.slide_for = 0
+	self.roar_for = 0
 	self.dino = nil
 	return self
 end
@@ -120,13 +124,21 @@ function Player:is_sliding(): boolean
 	return self.slide_for > 0
 end
 
+function Player:is_roaring(): boolean
+	return self.roar_for > 0
+end
+
+function Player:have_roared_for(): number
+	return DINO_ROAR_FOR - self.roar_for
+end
+
 function Player:set_action(action: Action)
 	if self.action == "dying" or self:is_stunned() or self:is_sliding() then
 		-- Not able to perform new action due to conditions
 		return
 	end
 
-	if self.action == "dash" and (action == "walk" or action == "idle") then
+	if (self.action == "dash" or action == "roar") and (action == "walk" or action == "idle") then
 		-- Not possible to exit dash action into walk or idle
 		return
 	end
@@ -147,6 +159,8 @@ function Player:set_action(action: Action)
 			self.dino.action = "crashed"
 		elseif action == "slide" then
 			self.dino.action = "slide"
+		elseif action == "roar" then
+			self.dino.action = "roar"
 		end
 	end
 end
@@ -218,12 +232,12 @@ function Player:is_invulnerable(): boolean
 end
 
 function Player:accepts_input(): boolean
-	return not self:is_jumping() and not self:is_stunned() 
+	return not self:is_jumping() and not self:is_stunned() and not self:is_roaring()
 end
 
 -- Player jump constants 
-local JUMP_ON_TIME = 1.2               		 -- Unit: seconds
-local JUMP_OFF_TIME = 0.9              		 -- Unit: seconds
+local JUMP_ON_TIME = 1.2               	   -- Unit: seconds
+local JUMP_OFF_TIME = 0.9                  -- Unit: seconds
 local JUMP_ON_HEIGHT = 2 * grid.TILE_SIZE  -- Unit: pixels (not SI unit!)
 local JUMP_OFF_HEIGHT = 3 * grid.TILE_SIZE -- Unit: pixels (not SI unit!)
 
@@ -329,6 +343,11 @@ function Player:dash_with_dino()
 	self:set_action("dash")
 end
 
+function Player:roar_with_dino()
+	self:set_action("roar")
+	self.roar_for = DINO_ROAR_FOR
+end
+
 function Player:get_speed(): number
 	if self.action == "dash" and self.dino then
 		return self.speed + DASH_WITH_DINO_SPEED_BONUS[self.dino.level]
@@ -378,6 +397,7 @@ function Player:update(dt: number)
 	self.invulnerable_for = self.invulnerable_for - dt
 	self.stunned_for = self.stunned_for - dt
 	self.slide_for = self.slide_for - dt
+	self.roar_for = self.roar_for - dt
 	self.after_image_shift = self.after_image_shift + self:get_speed() * dt + lutro.math.random(4)
 	self.after_image_shift = math.fmod(self.after_image_shift, 37)
 

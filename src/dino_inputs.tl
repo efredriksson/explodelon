@@ -151,6 +151,12 @@ local function handle_throw_input(dt: number, player: Player, bombs_: Bombs, bom
 	end
 end
 
+local function handle_roar_input(player: Player)
+	if lutro.joystick.isDown(player.id, joysticks.BUTTONS.B) then
+		player:roar_with_dino()
+	end
+end
+
 function dino_inputs.handle(dt: number, player: Player, bombs_: Bombs, blocks_jump: Group<Kinematic>, bombs_group: Group<Bomb>, lookup: Lookup)
     if player.dino then
 		if player.dino.color == "pink" then
@@ -159,6 +165,8 @@ function dino_inputs.handle(dt: number, player: Player, bombs_: Bombs, blocks_ju
 			handle_dash_input(player)
 		elseif player.dino.color == "blue" then
 			handle_throw_input(dt, player, bombs_, bombs_group, lookup)
+		elseif player.dino.color == "yellow" then
+			handle_roar_input(player)
 		end
 	end
 end

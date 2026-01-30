@@ -21,6 +21,7 @@ local type PlayerState = players.PlayerState
 local type Direction = vectors.Direction
 local type Point = points.Point
 local type Rectangle = rectangles.Rectangle
+local type Vector = vectors.Vector
 local type SpriteImages = {PlayerState: {Action: {Direction: Image}}}
 
 local jump_shadow_image: Image
@@ -161,6 +162,26 @@ local DINO_AFTERIMGE_SHIFT = {
 	right = vectors.new(-1, 0),
 	left = vectors.new(1, 0)
 }
+local ROAR_SHAKE_PERIOD = 0.25
+local ROAR_SHAKE_T = ROAR_SHAKE_PERIOD / 2
+local ROAR_SHAKE_AXIS = {
+	up = vectors.new(0, 1),
+	down = vectors.new(0, 1),
+	right = vectors.new(1, 0),
+	left = vectors.new(1, 0)
+}
+
+local function roar_shake_displacement(player: Player): Vector
+	if player:have_roared_for() < dino_animations.ROAR_BUILDUP_TIME then
+		return vectors.new(0, 0)
+	end
+
+	if (player.roar_for % ROAR_SHAKE_PERIOD) > ROAR_SHAKE_T then
+		return ROAR_SHAKE_AXIS[player.direction]:scale(1)
+	else
+		return ROAR_SHAKE_AXIS[player.direction]:scale(-1)
+	end
+end
 
 function MountedPlayerAnimation:draw()
 	if not self.player:is_alive() then
@@ -175,6 +196,8 @@ function MountedPlayerAnimation:draw()
 	local function dino_position(): Point
 		if self.player.action == "jump" then
 			return self.player:get_jump_position()
+		elseif self.player.action == "roar" then
+			return self.player.dino.position:move(roar_shake_displacement(self.player))
 		else
 			return self.player.dino.position
 		end
@@ -235,7 +258,7 @@ local function character_sprite_for_action(character_asset: CharacterName, state
 	local function action_resolved(): string
 		if action == "jump_on" or action == "jump_off" then
 			return "jump"
-		elseif action == "jump" or action == "dash" then
+		elseif action == "jump" or action == "dash" or action == "roar" then
 			-- Same sprite for jump as walk/idle, is always on mount when this happen
 			return "walk"
 		else
@@ -290,7 +313,8 @@ local function character_sprites_for_state(character_asset: CharacterName, state
 		dying = character_sprite_for_dying(character_asset),
 		stunned = character_sprite_for_stunned(character_asset, state),
 		crashed = character_sprite_for_stunned(character_asset, state),
-		slide = character_sprite_for_stunned(character_asset, state)
+		slide = character_sprite_for_stunned(character_asset, state),
+		roar = character_sprite_for_stunned(character_asset, state)
 	}
 	return sprite_images
 end
