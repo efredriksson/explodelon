@@ -17,6 +17,7 @@ local type DinoAction = enum
     "dash"
     "crashed"
     "slide"
+    "roar"
 end
 
 local record Dino

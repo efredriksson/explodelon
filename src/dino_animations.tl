@@ -14,6 +14,7 @@ local type DinoImageByActionAndLevel = {DinoAction: {integer: Image}}
 local type DinoImages = {DinoColor: {Direction: DinoImageByActionAndLevel}}
 local type DinoAnimations = {Direction: {DinoAction: {integer: Animation}}}
 
+local ROAR_BUILDUP_TIME = 0.4
 local dino_images: DinoImages
 local pixel_maps <total>: {DinoColor: {Color: Color}} = {
 	blue = {}, -- No mapping, default dino
@@ -51,7 +52,7 @@ local function dino_iamge(level: integer, action: DinoAction, direction: Directi
 	if action == "slide" and level == 1 then
 		level = 2 -- Not possible to slide with level 1 dino
 	end
-	
+
 	if action == "dying" or action == "stunned" then
 		png_name = action
 	end
@@ -79,7 +80,8 @@ local function dino_images_for_dir(direction: Direction, color: DinoColor): Dino
 		crashed = dino_images_for_level("crashed", direction, color),
 		slide = dino_images_for_level("slide", direction, color),
 		jump = dino_images_for_level("jump", direction, color),
-		dash = dino_images_for_level("dash", direction, color)
+		dash = dino_images_for_level("dash", direction, color),
+		roar = dino_images_for_level("roar", direction, color)
 	}
 	return dino_animations
 end
@@ -129,6 +131,8 @@ local function new_dino_animations(color: DinoColor): DinoAnimations
 			return animations.new_with_frames(image, {0.2, 0.4, 0.2, 0.2, 10000})
 		elseif action == "slide" then
 			return animations.new_with_frames(image, {0.1, 10000})
+		elseif action == "roar" then
+			return animations.new_with_frames(image, {ROAR_BUILDUP_TIME, 10000})
 		elseif action == "dash" then
 			return animations.new_with_frames(image, get_dash_fames(level))
 		else
@@ -181,7 +185,7 @@ local record AnimatedDinos
     existing: {AnimatedDino}
 end
 
-local dino_animations = {AnimatedDinos = AnimatedDinos}
+local dino_animations = {AnimatedDinos = AnimatedDinos, ROAR_BUILDUP_TIME = ROAR_BUILDUP_TIME}
 
 function dino_animations.load_assets()
 	dino_images = get_dino_images()

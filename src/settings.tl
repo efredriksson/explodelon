@@ -359,11 +359,11 @@ function Settings.set_debug_dinos()
     settings.game_rules.items.nbr_of_items.speed = 0
     settings.game_rules.items.nbr_soft_blocks = 20
     settings.game_rules.dinos.nbr_of_eggs = 20
-    settings.game_rules.dinos.enabled.blue = true
+    settings.game_rules.dinos.enabled.blue = false
     settings.game_rules.dinos.enabled.pink = false
     settings.game_rules.dinos.enabled.purple = false
     settings.game_rules.dinos.enabled.green = false
-    settings.game_rules.dinos.enabled.yellow = false
+    settings.game_rules.dinos.enabled.yellow = true
 end
 
 return settings
