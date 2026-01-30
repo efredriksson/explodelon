@@ -45,7 +45,7 @@ end
 
 --- Get local position for point in block, so {x, y} ∈ [0, TILE_SIZE).
 function grid.get_local_tile_position(global_position: Point): Point
-	local player_area = grid.area() -- FIXME: Local position should be in grid!
+	local player_area = grid.area()
 	return points.new(
 		math.fmod(global_position.x - player_area.x, grid.TILE_SIZE),
 		math.fmod(global_position.y - player_area.y, grid.TILE_SIZE)
