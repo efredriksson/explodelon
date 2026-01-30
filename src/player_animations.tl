@@ -21,10 +21,11 @@ local type PlayerState = players.PlayerState
 local type Direction = vectors.Direction
 local type Point = points.Point
 local type Rectangle = rectangles.Rectangle
+local type SpriteImages = {PlayerState: {Action: {Direction: Image}}}
 
 local jump_shadow_image: Image
-local sprites: {CharacterName: {PlayerState: {Action: {Direction: Image}}}} = {}
-local sprites_invulnerable: {CharacterName: {PlayerState: {Action: {Direction: Image}}}} = {}
+local sprites: {CharacterName: SpriteImages} = {}
+local sprites_invulnerable: {CharacterName: SpriteImages} = {}
 local special_animation_frame_durations: {Action: number} = {
 	dying = 1 / 8,
 	stunned = 1 / 8,
@@ -38,7 +39,7 @@ end
 
 local function get_sprite_set(
 	character_asset: CharacterName, invulnerable: boolean
-): {PlayerState: {Action: {Direction: Image}}}
+): SpriteImages
 	if invulnerable then
 		return sprites_invulnerable[character_asset]
 	else
@@ -279,7 +280,7 @@ local function character_sprite_for_stunned(character_asset: CharacterName, stat
 end
 
 local function character_sprites_for_state(character_asset: CharacterName, state: PlayerState): {Action: {Direction: Image}}
-	return {
+	local sprite_images <total>: {Action: {Direction: Image}} = {
 		walk = character_sprite_for_action(character_asset, state, "walk"),
 		idle = character_sprite_for_action(character_asset, state, "idle"),
 		jump_on = character_sprite_for_action(character_asset, state, "jump_on"),
@@ -291,13 +292,15 @@ local function character_sprites_for_state(character_asset: CharacterName, state
 		crashed = character_sprite_for_stunned(character_asset, state),
 		slide = character_sprite_for_stunned(character_asset, state)
 	}
+	return sprite_images
 end
 
-local function character_sprites(character_asset: CharacterName): {PlayerState: {Action: {Direction: Image}}}
-	return {
+local function character_sprites(character_asset: CharacterName): SpriteImages
+	local sprites_images <total>: SpriteImages = {
 		foot = character_sprites_for_state(character_asset, "foot"),
 		mounted = character_sprites_for_state(character_asset, "mounted"),
 	}
+	return sprites_images
 end
 
 local player_animations = {PlayerAnimations = PlayerAnimations}

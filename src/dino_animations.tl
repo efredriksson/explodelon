@@ -10,9 +10,12 @@ local type DinoAction = dinos.DinoAction
 local type Dino = dinos.Dino
 local type DinoColor = settings.DinoColor
 local type Direction = vectors.Direction
+local type DinoImageByActionAndLevel = {DinoAction: {integer: Image}}
+local type DinoImages = {DinoColor: {Direction: DinoImageByActionAndLevel}}
+local type DinoAnimations = {Direction: {DinoAction: {integer: Animation}}}
 
-local dino_images: {DinoColor: {Direction: {DinoAction: {integer: Image}}}}
-local pixel_maps: {DinoColor: {Color: Color}} = {
+local dino_images: DinoImages
+local pixel_maps <total>: {DinoColor: {Color: Color}} = {
 	blue = {}, -- No mapping, default dino
 	pink = {
 		[{176, 224, 248}] = {248, 192, 248},
@@ -67,8 +70,8 @@ local function dino_images_for_level(action: DinoAction, direction: Direction, c
 	}
 end
 
-local function dino_images_for_dir(direction: Direction, color: DinoColor): {DinoAction: {integer: Image}}
-	return {
+local function dino_images_for_dir(direction: Direction, color: DinoColor): DinoImageByActionAndLevel
+	local dino_animations <total>: DinoImageByActionAndLevel = {
 		walk = dino_images_for_level("walk", direction, color),
 		idle = dino_images_for_level("idle", direction, color),
 		dying = dino_images_for_level("dying", direction, color),
@@ -78,6 +81,7 @@ local function dino_images_for_dir(direction: Direction, color: DinoColor): {Din
 		jump = dino_images_for_level("jump", direction, color),
 		dash = dino_images_for_level("dash", direction, color)
 	}
+	return dino_animations
 end
 
 local function dino_images_for_color(color: DinoColor): {Direction : {DinoAction : {integer : Image}}}
@@ -89,11 +93,22 @@ local function dino_images_for_color(color: DinoColor): {Direction : {DinoAction
 	}
 end
 
+local function get_dino_images(): DinoImages
+	local dino_images_total <total>: DinoImages = {
+		blue = dino_images_for_color("blue"),
+		pink = dino_images_for_color("pink"),
+		purple = dino_images_for_color("purple"),
+		green = dino_images_for_color("green"),
+		yellow = dino_images_for_color("yellow"),
+	}
+	return dino_images_total
+end
+
 local record AnimatedDino
     dino: Dino
 	finished: boolean
 	previous_action: DinoAction
-	animations: {Direction: {DinoAction: {integer: Animation}}}
+	animations: DinoAnimations
 end
 
 local function get_dash_fames(level: integer): {number}
@@ -104,8 +119,8 @@ local function get_dash_fames(level: integer): {number}
 	end
 end
 
-local function new_dino_animations(color: DinoColor): {Direction: {DinoAction: {integer: Animation}}}
-	local new_animations: {Direction: {DinoAction: {integer: Animation}}} = {}
+local function new_dino_animations(color: DinoColor): DinoAnimations
+	local new_animations: DinoAnimations = {}
 
 	local function create_animations(image: Image, action: DinoAction, level: integer): Animation
 		if action == "jump" then
@@ -169,13 +184,7 @@ end
 local dino_animations = {AnimatedDinos = AnimatedDinos}
 
 function dino_animations.load_assets()
-	dino_images = {
-		blue = dino_images_for_color("blue"),
-		pink = dino_images_for_color("pink"),
-		purple = dino_images_for_color("purple"),
-		green = dino_images_for_color("green"),
-		yellow = dino_images_for_color("yellow"),
-	}
+	dino_images = get_dino_images()
 end
 
 function dino_animations.new(): AnimatedDinos
