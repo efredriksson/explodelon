@@ -102,7 +102,7 @@ function DinoRules.new(): DinoRules
         pink=true,
         purple=false,
         green=true,
-        yellow=false,
+        yellow=true,
     }
 
     self.nbr_of_eggs = 4
