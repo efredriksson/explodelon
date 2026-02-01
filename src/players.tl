@@ -20,7 +20,6 @@ local type Rectangle = rectangles.Rectangle
 
 local SLIDE_FOR_TIME = 0.4
 local CHARACTER_HEIGHT_ON_DINO = 8 -- How high up from ground player is when on dino
-local DINO_ROAR_FOR = 1.5
 local DASH_WITH_DINO_SPEED_BONUS = {
 	[1] = 50,
 	[2] = 70,
@@ -124,12 +123,16 @@ function Player:is_sliding(): boolean
 	return self.slide_for > 0
 end
 
+function Player:have_roared_for(): number
+	return dinos.ROAR_FOR - self.roar_for
+end
+
 function Player:is_roaring(): boolean
 	return self.roar_for > 0
 end
 
-function Player:have_roared_for(): number
-	return DINO_ROAR_FOR - self.roar_for
+function Player:is_effective_roaring(): boolean
+	return self:is_roaring() and self:have_roared_for() > dinos.ROAR_BUILDUP_TIME
 end
 
 function Player:set_action(action: Action)
@@ -189,7 +192,7 @@ function Player:slide_with_dino()
 	self.slide_for = SLIDE_FOR_TIME
 end
 
-function Player:stun_for(duration: integer)
+function Player:stun_for(duration: number)
 	self:set_action("stunned")
 	self.stunned_for = duration
 	self.direction = "down"
@@ -345,7 +348,25 @@ end
 
 function Player:roar_with_dino()
 	self:set_action("roar")
-	self.roar_for = DINO_ROAR_FOR
+	self.roar_for = dinos.ROAR_FOR
+end
+
+function Player:get_roar_hitbox(): Rectangle
+	local hitbox_reach = self.dino.level * 3
+	local x = self.position.x
+	local y = self.position.y
+	local grid_reach = grid.TILE_SIZE * hitbox_reach
+	if self.direction == "up" then
+		return rectangles.new(x, y - grid_reach, grid.TILE_SIZE, grid_reach)
+	elseif self.direction == "down" then
+		return rectangles.new(x, y + grid.TILE_SIZE, grid.TILE_SIZE, grid_reach)
+	elseif self.direction == "right" then
+		return rectangles.new(x + grid.TILE_SIZE, y, grid_reach, grid.TILE_SIZE)
+	elseif self.direction == "left" then
+		return rectangles.new(x - grid_reach, y, grid_reach, grid.TILE_SIZE)
+	else
+		assert(false, "Bad direction")
+	end
 end
 
 function Player:get_speed(): number

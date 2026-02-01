@@ -14,7 +14,6 @@ local type DinoImageByActionAndLevel = {DinoAction: {integer: Image}}
 local type DinoImages = {DinoColor: {Direction: DinoImageByActionAndLevel}}
 local type DinoAnimations = {Direction: {DinoAction: {integer: Animation}}}
 
-local ROAR_BUILDUP_TIME = 0.4
 local dino_images: DinoImages
 local pixel_maps <total>: {DinoColor: {Color: Color}} = {
 	blue = {}, -- No mapping, default dino
@@ -132,7 +131,7 @@ local function new_dino_animations(color: DinoColor): DinoAnimations
 		elseif action == "slide" then
 			return animations.new_with_frames(image, {0.1, 10000})
 		elseif action == "roar" then
-			return animations.new_with_frames(image, {ROAR_BUILDUP_TIME, 10000})
+			return animations.new_with_frames(image, {dinos.ROAR_BUILDUP_TIME, 10000})
 		elseif action == "dash" then
 			return animations.new_with_frames(image, get_dash_fames(level))
 		else
@@ -185,7 +184,7 @@ local record AnimatedDinos
     existing: {AnimatedDino}
 end
 
-local dino_animations = {AnimatedDinos = AnimatedDinos, ROAR_BUILDUP_TIME = ROAR_BUILDUP_TIME}
+local dino_animations = {AnimatedDinos = AnimatedDinos}
 
 function dino_animations.load_assets()
 	dino_images = get_dino_images()
