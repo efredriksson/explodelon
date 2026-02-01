@@ -185,7 +185,7 @@ local ROAR_REACH_BY_LEVEL = {
 
 
 local function roar_shake_displacement(player: Player): Vector
-	if player:have_roared_for() < dino_animations.ROAR_BUILDUP_TIME then
+	if player:have_roared_for() < dinos.ROAR_BUILDUP_TIME then
 		return vectors.new(0, 0)
 	end
 
@@ -197,7 +197,11 @@ local function roar_shake_displacement(player: Player): Vector
 end
 
 local function draw_roar_text(player: Player)
-	local since_roar_buildup = player:have_roared_for() - dino_animations.ROAR_BUILDUP_TIME
+	if not player:is_roaring() then
+		return
+	end
+
+	local since_roar_buildup = player:have_roared_for() - dinos.ROAR_BUILDUP_TIME
 	
 	local function get_text_x_y_scaling(): (number, number)
 		local text_len_max_scale = ROAR_REACH_BY_LEVEL[player.dino.level]
@@ -230,7 +234,7 @@ local function draw_roar_text(player: Player)
 		return pos
 	end
 	
-	if player:is_roaring() and since_roar_buildup > 0 then
+	if since_roar_buildup > 0 then
 		local text = roar_text_images[player.direction][player.dino.level]
 		local draw_pos = get_text_position(text)
 		local x_scale, y_scale = get_text_x_y_scaling()

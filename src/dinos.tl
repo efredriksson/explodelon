@@ -31,7 +31,14 @@ local record Dino
     throw_powerup_for: number
 end
 
-local dinos = {DinoAction = DinoAction, Dino = Dino}
+local ROAR_FOR = 1.8
+local ROAR_BUILDUP_TIME = 0.4
+local dinos = {
+    ROAR_FOR = ROAR_FOR,
+    ROAR_BUILDUP_TIME = ROAR_BUILDUP_TIME,
+    DinoAction = DinoAction,
+    Dino = Dino
+}
 
 function dinos.new(position: Point, direction: Direction): Dino
    local self: Dino = setmetatable({}, { __index = Dino })

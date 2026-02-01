@@ -269,6 +269,10 @@ local is_dead = function(player: Player): boolean
 	return not player:is_alive()
 end
 
+local is_effective_roaring = function(player: Player): boolean
+	return player:is_effective_roaring()
+end
+
 function Battle:check_if_finished(dt: number, alive_players: {Player})
 	if self.state == "finished" then
 		return
@@ -401,6 +405,17 @@ function Battle:update(dt: number)
 		if hatching_dino then
 			player:jumps_onto(hatching_dino)
 			self.player_animations.dinos:add_for(hatching_dino)
+		end
+	end
+
+	for _, player in ipairs(itertools.filter(self.players, is_effective_roaring)) do
+		local hit_players = lookup:in_box_and_group(player:get_roar_hitbox(), alive_players_group)
+		for _, hit_player in ipairs(hit_players) do
+			if hit_player.action ~= "stunned" then
+				-- Roar only stun someone not already stunned
+				-- so not possible to perpetually stun in area
+				hit_player:stun_for(1.5)
+			end
 		end
 	end
 
@@ -541,6 +556,9 @@ function Battle:draw()
 	)
 	for _, entity in ipairs(mobility_related) do
 		hitboxes.draw_movement(entity:movementbox())
+	end
+	for _, player in ipairs(itertools.filter(self.players, is_effective_roaring)) do
+		hitboxes.draw(player:get_roar_hitbox())
 	end
 
 	self.timer:draw_hurry_text()
