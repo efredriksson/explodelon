@@ -169,13 +169,16 @@ local DINO_AFTERIMGE_SHIFT = {
 	right = vectors.new(-1, 0),
 	left = vectors.new(1, 0)
 }
-local ROAR_SHAKE_PERIOD = 0.25
-local ROAR_SHAKE_T = ROAR_SHAKE_PERIOD / 2
+local ROAR_SHAKE_PERIOD_BY_LEVEL = {
+	[1] = 0.05,
+	[2] = 0.10,
+	[3] = 0.20,
+}
 local ROAR_SHAKE_AXIS = {
 	up = vectors.new(0, 1),
-	down = vectors.new(0, 1),
+	down = vectors.new(0, -1),
 	right = vectors.new(1, 0),
-	left = vectors.new(1, 0)
+	left = vectors.new(-1, 0)
 }
 local ROAR_REACH_BY_LEVEL = {
 	[1] = 1.0,
@@ -189,10 +192,11 @@ local function roar_shake_displacement(player: Player): Vector
 		return vectors.new(0, 0)
 	end
 
-	if (player.roar_for % ROAR_SHAKE_PERIOD) > ROAR_SHAKE_T then
-		return ROAR_SHAKE_AXIS[player.direction]:scale(1)
+	local shake_period = ROAR_SHAKE_PERIOD_BY_LEVEL[player.dino.level]
+	if (player.roar_for % shake_period) > shake_period / 2 then
+		return ROAR_SHAKE_AXIS[player.direction]
 	else
-		return ROAR_SHAKE_AXIS[player.direction]:scale(-1)
+		return vectors.new(0, 0)
 	end
 end
 
