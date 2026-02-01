@@ -25,6 +25,7 @@ local type Vector = vectors.Vector
 local type SpriteImages = {PlayerState: {Action: {Direction: Image}}}
 
 local jump_shadow_image: Image
+local roar_text_images: {Direction: {integer: Image}}
 local sprites: {CharacterName: SpriteImages} = {}
 local sprites_invulnerable: {CharacterName: SpriteImages} = {}
 local special_animation_frame_durations: {Action: number} = {
@@ -156,6 +157,12 @@ local DINO_SLIDE_CHARACTER_ADJUST = {
 	right = vectors.new(9, 0),
 	left = vectors.new(-9, 0)
 }
+local DINO_ROAR_TEXT_POSITION = {
+	up = vectors.new(8, -4),
+	down = vectors.new(8, 18),
+	right = vectors.new(18, 6),
+	left = vectors.new(-4, 6)
+}
 local DINO_AFTERIMGE_SHIFT = {
 	up = vectors.new(0, 1),
 	down = vectors.new(0, -1),
@@ -170,6 +177,12 @@ local ROAR_SHAKE_AXIS = {
 	right = vectors.new(1, 0),
 	left = vectors.new(1, 0)
 }
+local ROAR_REACH_BY_LEVEL = {
+	[1] = 1.0,
+	[2] = 1.75,
+	[3] = 2.5
+}
+
 
 local function roar_shake_displacement(player: Player): Vector
 	if player:have_roared_for() < dino_animations.ROAR_BUILDUP_TIME then
@@ -180,6 +193,48 @@ local function roar_shake_displacement(player: Player): Vector
 		return ROAR_SHAKE_AXIS[player.direction]:scale(1)
 	else
 		return ROAR_SHAKE_AXIS[player.direction]:scale(-1)
+	end
+end
+
+local function draw_roar_text(player: Player)
+	local since_roar_buildup = player:have_roared_for() - dino_animations.ROAR_BUILDUP_TIME
+	
+	local function get_text_x_y_scaling(): (number, number)
+		local text_len_max_scale = ROAR_REACH_BY_LEVEL[player.dino.level]
+		local text_length_scale = math.min(since_roar_buildup*3, text_len_max_scale)
+		local text_height_scale = math.min(since_roar_buildup*4, 1.0)
+		
+		if player.direction == "down" or player.direction == "up" then
+			return text_height_scale, text_length_scale
+		else
+			return text_length_scale, text_height_scale
+		end
+	end
+
+	local function get_text_position(text: Image): Point
+		local x_scale, y_scale = get_text_x_y_scaling()
+		local pos = player.position:move(DINO_ROAR_TEXT_POSITION[player.direction])
+		
+		if player.direction == "left" or player.direction == "right" then
+			pos = pos:move(vectors.new(0, -text:getHeight()*y_scale / 2))
+		else
+			pos = pos:move(vectors.new(-text:getWidth()*x_scale / 2, 0))
+		end
+
+		if player.direction == "left" then
+			pos = pos:move(vectors.new(-text:getWidth()*x_scale, 0))
+		elseif player.direction == "up" then
+			pos = pos:move(vectors.new(0, -text:getHeight()*y_scale))
+		end
+
+		return pos
+	end
+	
+	if player:is_roaring() and since_roar_buildup > 0 then
+		local text = roar_text_images[player.direction][player.dino.level]
+		local draw_pos = get_text_position(text)
+		local x_scale, y_scale = get_text_x_y_scaling()
+		lutro.graphics.draw(text, draw_pos.x, draw_pos.y, 0, x_scale, y_scale)
 	end
 end
 
@@ -201,6 +256,12 @@ function MountedPlayerAnimation:draw()
 		else
 			return self.player.dino.position
 		end
+	end
+
+	if self.player.direction == "up" then
+		-- Roar text in upward direction should be behind player and dino. Note that
+		-- every entity upwards will have lower y-coord so it will be above them
+		draw_roar_text(self.player)
 	end
 
 	if self.player.action == "dash" and self.player.dino and self.player.dino.level == 3 then
@@ -345,6 +406,26 @@ function player_animations.load_assets()
 			end
 		end
 	end
+
+	local function get_roar_text_for_dir(dir: string): {integer: Image}
+		local result: {integer: Image} = {}
+		for level=1, 3 do
+			local asset = "assets/tirras/level_" .. level .. "/roar_text_" .. dir .. ".png"
+			result[level] = lutro.graphics.newImage(asset)
+		end
+
+		return result
+	end
+
+	local vertical_image = get_roar_text_for_dir("vertical")
+	local horizontal_image = get_roar_text_for_dir("horizontal")
+	-- Right and up images are 
+	roar_text_images = {
+		up = vertical_image,
+		down = vertical_image,
+		right = horizontal_image,
+		left = horizontal_image
+	}
 end
 
 function player_animations.new(entities: {Player}): PlayerAnimations
@@ -442,6 +523,14 @@ function PlayerAnimations:draw_vertical_jump_shadows()
 	end
 
 	self:_draw_players_shadow(jumps_vertically)
+end
+
+function PlayerAnimations:draw_roar_texts_not_up()
+	for _, player in ipairs(self.players) do
+		if player.direction ~= "up" then
+			draw_roar_text(player)
+		end
+	end
 end
 
 return player_animations

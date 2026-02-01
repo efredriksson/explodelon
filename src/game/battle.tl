@@ -524,10 +524,12 @@ function Battle:draw()
 		hitboxes.draw(entity:hitbox())
 	end
 
-	-- When jumping some distance, draw jump shadows over all entities
-	self.player_animations:draw_lateral_jump_shadows()
 	-- Bomb thrown in air, draw throw shadows over all entities
 	self.bombs:draw_in_air_shadows()
+	-- When jumping some distance, draw jump shadows over all entities
+	self.player_animations:draw_lateral_jump_shadows()
+	-- Put roar text above everything else (with up exception)
+	self.player_animations:draw_roar_texts_not_up()
 
 	local mobility_related: {Kinematic} = itertools.combine(
 		self.bombs.on_ground,
