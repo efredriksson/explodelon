@@ -582,6 +582,7 @@ function battle.load_assets()
 	pause_scene.load_assets()
 	battle_end_scene.load_assets()
 	dino_animations.load_assets()
+	players.load_assets()
 	player_animations.load_assets()
 
 	music = audio.new_source("assets/music/battle.ogg", "static")
