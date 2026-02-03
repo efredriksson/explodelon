@@ -1,3 +1,4 @@
+local audio = require("engine.audio")
 local characters = require("characters")
 local dinos = require("dinos")
 local grid = require("level_layout.grid")
@@ -18,6 +19,7 @@ local type Direction = vectors.Direction
 local type Point = points.Point
 local type Rectangle = rectangles.Rectangle
 
+local roar_sound: {integer: Source} = {}
 local SLIDE_FOR_TIME = 0.4
 local CHARACTER_HEIGHT_ON_DINO = 8 -- How high up from ground player is when on dino
 local DASH_WITH_DINO_SPEED_BONUS = {
@@ -63,6 +65,7 @@ local record Player is Explodable, Kinematic, Entity
 	slide_for: number
 	roar_for: number
 	after_image_shift: number
+	play_dino_roar: boolean
 	dino: Dino
 
 	jump_trajectory: ProjectileTrajectory
@@ -92,6 +95,7 @@ function players.new(id: integer, sprite: CharacterName, position: Point): Playe
 	self.slide_for = 0
 	self.roar_for = 0
 	self.dino = nil
+	self.play_dino_roar = false
 	return self
 end
 
@@ -349,6 +353,7 @@ end
 function Player:roar_with_dino()
 	self:set_action("roar")
 	self.roar_for = dinos.ROAR_FOR
+	self.play_dino_roar = true
 end
 
 function Player:get_roar_hitbox(): Rectangle
@@ -422,6 +427,11 @@ function Player:update(dt: number)
 	self.after_image_shift = self.after_image_shift + self:get_speed() * dt + lutro.math.random(4)
 	self.after_image_shift = math.fmod(self.after_image_shift, 37)
 
+	if self.play_dino_roar and self:is_effective_roaring() then
+		roar_sound[self.dino.level]:play()
+		self.play_dino_roar = false
+	end
+
 	if self.action == "stunned" or self.action == "slide" then
 		self:set_action("idle") -- Try to transition from stunned/slide
 	end
@@ -451,6 +461,15 @@ function Player:get_draw_position(): Point
 	end
 
 	return self.position
+end
+
+function players.load_assets()
+	for level=1, 3 do
+		local sound = audio.new_source_pool("assets/tirras/level_" .. level .. "/roar.ogg", "static", 2)
+		sound:setPitch(0.1)
+		sound:setVolume(1.25)
+		roar_sound[level] = sound
+	end
 end
 
 return players
