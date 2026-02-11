@@ -28,6 +28,3 @@ The CI for the fork at https://github.com/efredriksson/libretro-lutro builds fro
 This fork also have added support for more joysticks and allows playing the game with 10 players.
 
 Easiest way to get the .so file into your recalbox installation is to [ssh in and remount the volume for write](https://wiki.recalbox.com/en/tutorials/system/access/folders-and-ssh-commands), then you can [scp](https://man7.org/linux/man-pages/man1/scp.1.html) the .so file in (consider renaming existing lutro core as a way to backup).
-
-### Installing on recalbox
-If you just want to ensure you have the latest version of the game on your recalbox the see [this script](./custom.sh).

@@ -8,6 +8,7 @@ local screens = require("menus.screens")
 local settings = require("engine.settings")
 local start_screen = require("menus.start_screen")
 local player_selection = require("player_selection")
+local update_screen = require("menus.update_screen")
 
 
 function lutro.conf(t: Configuration)
@@ -23,6 +24,7 @@ function lutro.load()
 	screens.load_assets()
 	player_selection.load_assets()
 	battle.load_assets()
+	update_screen.load_assets()
 	local load_time = lutro.timer.getTime() - load_start
 	logger.info("Loading assets at start took " .. load_time .. "s")
 	scenes.set_start(start_screen.new())
