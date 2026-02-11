@@ -91,6 +91,8 @@ global record lutro
    update: function(dt: number)
    draw: function()
 
+   featureflags: {string: boolean} | nil
+
    record graphics
       clear: function()
       print: function(text: string, x: number, y: number)

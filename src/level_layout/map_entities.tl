@@ -35,7 +35,7 @@ local map_entities = {SoftBlockConfig = SoftBlockConfig, HardBlockConfig = HardB
 function map_entities.get_hard_blocks(): {HardBlockConfig}
 	local configs: {HardBlockConfig} = {}
 
-	local function hard_block_config(i: number, j: number, is_tall: boolean): HardBlockConfig
+	local function hard_block_config(i: integer, j: integer, is_tall: boolean): HardBlockConfig
 		return HardBlockConfig.new(grid.get_tile_position(1 + i * 2, 1 + j * 2), is_tall)
 	end
 
@@ -183,7 +183,11 @@ function map_entities.get_player_start_positions(number_of_players: integer): {P
 		grid.get_tile_position(x_max, y_min),
 		grid.get_tile_position(x_min, y_max)
 	}
-	local center = {grid.get_tile_position(x_max / 2, y_max / 2)}
+	local center = {
+		grid.get_tile_position(
+			math.floor(x_max / 2), math.floor(y_max / 2)
+		)
+	}
 	local inner_positions = {
 		grid.get_tile_position(x_min + 5, y_min + 2),
 		grid.get_tile_position(x_max - 5, y_max - 2),
@@ -196,7 +200,11 @@ function map_entities.get_player_start_positions(number_of_players: integer): {P
 			-- Only if there are 5 players can you start dead in the middle
 			return itertools.combine(corners, center)
 		else
-			local result = itertools.combine(corners, inner_positions)
+			local extra_on_sides = {
+				grid.get_tile_position(x_min, math.floor(y_max / 2)),
+				grid.get_tile_position(x_max, math.floor(y_max / 2))
+			}
+			local result = itertools.combine(corners, inner_positions, extra_on_sides)
 			return {table.unpack(result, 1, number_of_players)}
 		end
 	end

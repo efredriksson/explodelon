@@ -20,11 +20,12 @@ You can now run the game directly using `./retroarch --verbose -L cores/lutro_li
 ### Recomended core
 The game will run using existing compiled and distributed cores. However, some graphis, such as the yellow dino roar text, only displays correctly when using a core that supports scaling. To obtain a core with scaling support, it must be built from source. Building from source also allows the core to be compiled with LuaJIT, which gives better performance.
 
-
 The CI for the fork at https://github.com/efredriksson/libretro-lutro builds from a recent version of `lutro` and archives the built artifacts. CI builds exists for:
  * Windows
  * Windows with LuaJIT
  * Raspberry Pi 4/5 running Recalbox (build_linux_arm64)
+
+This fork also have added support for more joysticks and allows playing the game with 10 players.
 
 Easiest way to get the .so file into your recalbox installation is to [ssh in and remount the volume for write](https://wiki.recalbox.com/en/tutorials/system/access/folders-and-ssh-commands), then you can [scp](https://man7.org/linux/man-pages/man1/scp.1.html) the .so file in (consider renaming existing lutro core as a way to backup).
 
