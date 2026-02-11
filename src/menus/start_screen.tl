@@ -11,11 +11,15 @@ local player_selection = require("player_selection")
 local scenes = require("engine.scenes")
 local screens = require("menus.screens")
 local settings = require("settings")
-local start_screen = {}
+local update_sceen = require("menus.update_screen")
+
 
 local type Scene = scenes.Scene
 local type MenuScreen = screens.MenuScreen
+local type MenuChoice = choices.MenuChoice
 local type PlayerSelectionMethod = settings.PlayerSelectionMethod
+
+local start_screen = {}
 
 function start_screen.new(): MenuScreen
     local nbr_player_selected = items.new_integer_selection(settings.number_of_players, 2, joysticks.maxplayers())
@@ -43,6 +47,9 @@ function start_screen.new(): MenuScreen
     local function enter_debug_screen(ctx: Scene)
         scenes.set(debug_screen.new(ctx))
     end
+    local function enter_update_screen(ctx: Scene)
+        scenes.set(update_sceen.new(ctx))
+    end
     local function enter_game_rules_screen(ctx: Scene)
         scenes.set(game_rule_screen.new(ctx))
     end
@@ -67,14 +74,19 @@ function start_screen.new(): MenuScreen
         update_player_selection_choices()
     end
 
-    menu_screen = screens.new({
+    local menu_choices: {MenuChoice} = {
         choices.new_integer("number of players", 50, nbr_player_selected, set_number_of_players),
         choices.new_enum("player selection", 70, player_selection_choice, settings.set_player_selection),
         choices.new_enum("map", 90, map_selection_choice, settings.set_map),
         choices.new_done("game rules", 110, enter_game_rules_screen),
         choices.new_done("debug settings", 130, enter_debug_screen),
-        choices.new_done("start game", 180, done)
-    }, go_back, on_load)
+    }
+    if update_sceen.is_recalbox() then
+        table.insert(menu_choices, choices.new_done("check for updates", 150, enter_update_screen))
+    end
+    table.insert(menu_choices, choices.new_done("start game", 180, done))
+
+    menu_screen = screens.new(menu_choices, go_back, on_load)
     return menu_screen
 end
 
