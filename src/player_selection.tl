@@ -147,7 +147,7 @@ end
 function PlayerSelection:check_for_new_player_selecting()
     -- No player is selecting, check if anyone is pressing right or left
     -- indicating that they want to select a character
-    for player_id=1, joysticks.MAX_PLAYERS do
+    for player_id=1, joysticks.maxplayers() do
         local trying_to_select = joysticks.is_pressed(player_id, joysticks.BUTTONS.RIGHT) or
             joysticks.is_pressed(player_id, joysticks.BUTTONS.LEFT)
 

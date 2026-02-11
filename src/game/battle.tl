@@ -246,7 +246,7 @@ function Battle:handle_pause_input(): boolean
 		end
 	end
 
-	for player_id=1, joysticks.MAX_PLAYERS do
+	for player_id=1, joysticks.maxplayers() do
 		if joysticks.is_pressed(player_id, joysticks.BUTTONS.START) then
 			self.countdown = countdown.new()
 			self.audio_paused = true

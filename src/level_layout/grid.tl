@@ -30,7 +30,7 @@ function grid.dimensions(): GridDimensions
     }
 end
 
-function grid.get_tile(i: number, j: number): Rectangle
+function grid.get_tile(i: integer, j: integer): Rectangle
 	return rectangles.new(
 		PLAYER_AREA.x + i * grid.TILE_SIZE,
 		PLAYER_AREA.y + j * grid.TILE_SIZE,
@@ -39,7 +39,7 @@ function grid.get_tile(i: number, j: number): Rectangle
 	)
 end
 
-function grid.get_tile_position(i: number, j: number): Point
+function grid.get_tile_position(i: integer, j: integer): Point
 	return grid.get_tile(i, j):top_left()
 end
 

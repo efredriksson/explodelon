@@ -26,4 +26,26 @@ function EngineSettings.set_block_size(value: integer)
     settings.block_size = value
 end
 
+local record LutroFeatures
+    HAVE_COMPOSITION: boolean
+    HAVE_TRANSFORM: boolean
+    HAVE_INOTIFY: boolean
+    HAVE_JIT: boolean
+    HAVE_LUASOCKET: boolean
+    HAVE_16_JOYSTICKS: boolean
+end
+
+function EngineSettings.get_features(): LutroFeatures
+    -- featureflags can be nil if an old version, then no
+    -- features are expected to exist (nil but same as false).
+    local features = lutro.featureflags
+    if features == nil then
+        return {}
+    end
+
+    -- Cast as record, any features not existing are assumed to
+    -- not exist and is nil and will work as false.
+    return features as LutroFeatures
+end
+
 return settings
