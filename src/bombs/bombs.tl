@@ -346,7 +346,7 @@ end
 function ThrownBomb.new(delegate: Bomb, target: Point, start_height: number, throw_height: number, throw_time: number): ThrownBomb
     local self: ThrownBomb = setmetatable({}, { __index = ThrownBomb })
     self.delegate = delegate
-    self.z_index = z_index.LEVEL
+    self.z_index = z_index.ABOVE
     self.target = target
     self.trajectory = physics.calc_trajectory(
         start_height, 0, throw_height, throw_time, delegate.position, target
