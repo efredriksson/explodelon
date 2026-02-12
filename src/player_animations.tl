@@ -9,6 +9,7 @@ local players = require("players")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
 local vectors = require("engine.geometry.vectors")
+local z_index = require("z_index")
 
 local type Entity = require("engine.entity")
 local type Animation = animations.Animation
@@ -74,6 +75,7 @@ end
 
 function PlayerAnimation.new(animation: Animation, player: Player): PlayerAnimation
 	local self: PlayerAnimation = setmetatable({}, { __index = PlayerAnimation })
+	self.z_index = z_index.LEVEL
 	self.animation = animation
 	self.player = player
 	self.draw_position = player:get_draw_position()
@@ -107,6 +109,7 @@ end
 
 function MountAnimation.new(animation: Animation, dino: Dino): MountAnimation
 	local self: MountAnimation = setmetatable({}, { __index = MountAnimation })
+	self.z_index = z_index.LEVEL
 	self.dino = dino
 	self.animation = animation
 	return self
@@ -136,6 +139,7 @@ function MountedPlayerAnimation.new(
 	player_animation: Animation, dino_animation: Animation, player: Player
 ): MountedPlayerAnimation
 	local self: MountedPlayerAnimation = setmetatable({}, { __index = MountedPlayerAnimation })
+	self.z_index = z_index.LEVEL
 	self.player_animation = player_animation
 	self.dino_animation = dino_animation
 	self.player = player

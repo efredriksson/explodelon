@@ -6,6 +6,7 @@ local hitboxes = require("engine.hitboxes")
 local players = require("players")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
+local z_index = require("z_index")
 
 local type Animation = animations.Animation
 local type Explodable = require("bombs.explodable")
@@ -36,6 +37,7 @@ end
 function LightningTile.new(position: Point): LightningTile
     local self: LightningTile = setmetatable({}, { __index = LightningTile })
     self.position = position
+    self.z_index = z_index.LEVEL
     self.reduction = 4
     return self
 end

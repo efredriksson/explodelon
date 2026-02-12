@@ -6,6 +6,7 @@ local players = require("players")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
 local settings = require("settings")
+local z_index = require("z_index")
 
 local type Animation = animations.Animation
 local type Explodable = require("bombs.explodable")
@@ -31,6 +32,7 @@ function Item.new(item_type: ItemType, position: Point): Item
     local self: Item = setmetatable({}, { __index = Item })
     self.type = item_type
     self.position = position
+    self.z_index = z_index.LEVEL
     self.is_exploding = false
     self.in_explosion = true
     return self

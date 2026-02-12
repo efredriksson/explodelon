@@ -8,6 +8,7 @@ local players = require("players")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
 local vectors = require("engine.geometry.vectors")
+local z_index = require("z_index")
 
 local type Animation = animations.Animation
 local type Explodable = require("bombs.explodable")
@@ -40,6 +41,7 @@ end
 function LightningBomb.new(position: Point, hand_back: function()): LightningBomb
     local self: LightningBomb = setmetatable({}, { __index = LightningBomb })
     self.position = position
+    self.z_index = z_index.BELOW
     self.range = 6
     self.timer = 5
     self.hand_back = hand_back

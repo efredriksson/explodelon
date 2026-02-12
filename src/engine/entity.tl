@@ -6,6 +6,7 @@ local type Rectangle = rectangles.Rectangle
 
 local type Entity = interface
     get_position: function(self): Point
+    z_index: integer
     draw: function(self)
     hitbox: function(self): Rectangle
     clear: function(self)

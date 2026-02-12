@@ -8,6 +8,7 @@ local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
 local vectors = require("engine.geometry.vectors")
 local settings = require("settings")
+local z_index = require("z_index")
 
 local type CharacterName = characters.CharacterName
 local type Dino = dinos.Dino
@@ -79,6 +80,7 @@ function players.new(id: integer, sprite: CharacterName, position: Point): Playe
 	self.id = id
 	self.sprite = sprite
 	self.position = position
+	self.z_index = z_index.LEVEL
 	self.direction = "down"
 	self.action = "idle"
 	self.state = "foot"

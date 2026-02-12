@@ -8,6 +8,7 @@ local points = require("engine.geometry.points")
 local rail = require("level_layout.rail")
 local rectangles = require("engine.geometry.rectangles")
 local vectors = require("engine.geometry.vectors")
+local z_index = require("z_index")
 
 local type Animation = animations.Animation
 local type Bombs = bombs.Bombs
@@ -117,6 +118,7 @@ function PlayerCart.new(
     local self: PlayerCart = setmetatable({}, { __index = PlayerCart })
     self.id = id
     self.position = position
+    self.z_index = z_index.ABOVE
     self.head = head
     self.state = "idle"
     self.previous_direction = "idle"
