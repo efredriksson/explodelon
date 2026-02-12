@@ -7,6 +7,7 @@ local images = require("engine.images")
 local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
 local rectangles = require("engine.geometry.rectangles")
+local z_index = require("z_index")
 
 local type Animation = animations.Animation
 local type Explodable = require("bombs.explodable")
@@ -62,6 +63,7 @@ end
 function ExplosionTile.new(position: Point, reduction: integer, is_last: boolean, explosion_type: ExplosionTileType): ExplosionTile
     local self: ExplosionTile = setmetatable({}, { __index = ExplosionTile })
     self.position = position
+    self.z_index = z_index.LEVEL
     self.reduction = reduction
     self.is_last = is_last
     self.type = explosion_type

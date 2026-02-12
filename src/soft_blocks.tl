@@ -1,12 +1,12 @@
 local animations = require("engine.animations")
 local grid = require("level_layout.grid")
 local hitboxes = require("engine.hitboxes")
-local itertools = require("itertools")
 local map_entities = require("level_layout.map_entities")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
 local settings = require("settings")
 local soft_block_animations = require("level_graphics.soft_block_animations")
+local z_index = require("z_index")
 
 local type Animation = animations.Animation
 local type Explodable = require("bombs.explodable")
@@ -30,6 +30,7 @@ end
 function SoftBlock.new(position: Point, animation: Animation, item: ItemType, egg: boolean): SoftBlock
     local self: SoftBlock = setmetatable({}, { __index = SoftBlock })
     self.position = position
+    self.z_index = z_index.LEVEL
     self.animation = animation
     self.breaking_animation = soft_block_animations.get_exploding()
     self.is_exploding = false
@@ -81,6 +82,8 @@ end
 
 function SoftBlock:blow_up()
     self.is_exploding = true
+    -- Draw soft blocks exploding above, revealing possible item under it
+    self.z_index = z_index.ABOVE
 end
 
 function SoftBlock:is_destroyed(): boolean
@@ -116,21 +119,6 @@ function SoftBlocks:update(dt: number)
             table.remove(self.on_ground, i)
         end
     end
-end
-
-local is_exploding = function(block: SoftBlock): boolean
-    return block.is_exploding
-end
-local is_not_exploding = function(block: SoftBlock): boolean
-    return not block.is_exploding
-end
-
-function SoftBlocks:exploding(): {SoftBlock}
-    return itertools.filter(self.on_ground, is_exploding)
-end
-
-function SoftBlocks:not_exploding(): {SoftBlock}
-    return itertools.filter(self.on_ground, is_not_exploding)
 end
 
 return soft_blocks

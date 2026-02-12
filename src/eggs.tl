@@ -5,6 +5,7 @@ local hitboxes = require("engine.hitboxes")
 local players = require("players")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
+local z_index = require("z_index")
 
 local type Animation = animations.Animation
 local type Dino = dinos.Dino
@@ -29,6 +30,7 @@ end
 function Egg.new(position: Point): Egg
     local self: Egg = setmetatable({}, { __index = Egg })
     self.position = position
+    self.z_index = z_index.LEVEL
     self.breaking = false
     self.hatched = false
     self.is_exploding = false

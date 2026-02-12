@@ -3,6 +3,7 @@ local hitboxes = require("engine.hitboxes")
 local map_entities = require("level_layout.map_entities")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
+local z_index = require("z_index")
 
 local type Explodable = require("bombs.explodable")
 local type Entity = require("engine.entity")
@@ -23,6 +24,7 @@ function PressureBlock.new(target: Point): PressureBlock
 	local self: PressureBlock = setmetatable({}, { __index = PressureBlock })
 	self.falling_position = points.new(target.x, -grid.TILE_SIZE)
     self.position = target
+    self.z_index = z_index.LEVEL
     self.in_explosion = false
 	return self
 end
@@ -58,13 +60,16 @@ function PressureBlock:movementbox(): Rectangle
 	return hitboxes.new_block(self.position)
 end
 
+function PressureBlock:is_on_ground(): boolean
+    return self.falling_position.y == self.position.y
+end
+
 function PressureBlock:update(dt: number)
     local block_fall_speed = 285
     self.falling_position.y = math.min(self.position.y, self.falling_position.y + dt * block_fall_speed)
-end
-
-function PressureBlock:is_on_ground(): boolean
-    return self.falling_position.y == self.position.y
+    if self:is_on_ground() then
+        self.z_index = z_index.BELOW
+    end
 end
 
 local record PressureBlocks
@@ -123,20 +128,12 @@ function PressureBlocks:set_next_left_falling_block()
     end
 end
 
-function PressureBlocks:falling(): {PressureBlock}
-    local falling_blocks = {}
-    
+function PressureBlocks:falling(): {PressureBlock}    
     if self:no_updates() then
-        return falling_blocks
-    end
-    
-    for _, block in ipairs({self.left_falling, self.right_falling}) do
-        if not block:is_on_ground() then
-            table.insert(falling_blocks, block)
-        end
+        return {}
     end
 
-    return falling_blocks
+    return {self.left_falling, self.right_falling}
 end
 
 function PressureBlocks:update(dt: number)

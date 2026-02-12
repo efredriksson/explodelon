@@ -12,6 +12,7 @@ local players = require("players")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
 local vectors = require("engine.geometry.vectors")
+local z_index = require("z_index")
 
 local type Animation = animations.Animation
 local type Explodable = require("bombs.explodable")
@@ -48,6 +49,7 @@ end
 function Bomb.new(position: Point, range: integer, hand_back: function()): Bomb
    local self: Bomb = setmetatable({}, { __index = Bomb })
    self.position = position
+   self.z_index = z_index.BELOW
    self.velocity = vectors.new(0, 0)
    self.range = range
    self.timer = BOMB_TIMER_START
@@ -344,6 +346,7 @@ end
 function ThrownBomb.new(delegate: Bomb, target: Point, start_height: number, throw_height: number, throw_time: number): ThrownBomb
     local self: ThrownBomb = setmetatable({}, { __index = ThrownBomb })
     self.delegate = delegate
+    self.z_index = z_index.LEVEL
     self.target = target
     self.trajectory = physics.calc_trajectory(
         start_height, 0, throw_height, throw_time, delegate.position, target

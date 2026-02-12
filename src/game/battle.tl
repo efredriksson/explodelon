@@ -468,8 +468,10 @@ function Battle:update(dt: number)
 	)
 	self.player_animations:update(dt)
 	self.soft_blocks:update(dt)
-	for _, soft_block in ipairs(self.soft_blocks:exploding()) do
-		if soft_block.item then
+	for _, soft_block in ipairs(self.soft_blocks.on_ground) do
+		if not soft_block.is_exploding then
+			-- Do nothing
+		elseif soft_block.item then
 			self.items:drop_at(soft_block.position, soft_block.item)
 			soft_block.item = nil
 		elseif soft_block.egg then
@@ -483,6 +485,10 @@ end
 
 local function sort_entities_by_y_cord(players_to_sort: {Entity})
 	local function compare_entity_y_pos(e1: Entity, e2: Entity): boolean
+		if e1.z_index ~= e2.z_index then
+			return e1.z_index < e2.z_index 
+		end
+
 		return e1:get_position().y < e2:get_position().y
 	end
 	table.sort(players_to_sort, compare_entity_y_pos)
@@ -509,30 +515,21 @@ function Battle:draw()
 	self.lightning_bombs.lightnings:draw()
 
 	local entities_to_draw: {Entity} = itertools.combine(
+		self.bombs.on_ground,
+		self.lightning_bombs.on_ground,
+		self.pressure_blocks.on_ground,
 		self.player_animations:get_all(),
 		self.items.on_ground,
 		self.pressure_blocks:falling(),
 		self.hard_blocks.on_ground,
-		self.soft_blocks:not_exploding(),
+		self.soft_blocks.on_ground,
 		self.eggs.on_ground,
-		self.bombs.in_air
+		self.bombs.in_air,
+		self.mad_bombers:to_draw()
 	)
-	local mad_bombers_to_draw = self.mad_bombers:to_draw()
 
 	-- Need to render entities in the front last so they are on top of any other entity
 	sort_entities_by_y_cord(entities_to_draw)
-	sort_entities_by_y_cord(mad_bombers_to_draw)
-
-	entities_to_draw = itertools.combine(
-		-- Drawing bombs first so they are always drawn underneath players
-		self.bombs.on_ground,
-		self.lightning_bombs.on_ground,
-		self.pressure_blocks.on_ground,
-		entities_to_draw,
-		-- Draw soft blocks exploding last, revealing possible item under
-		self.soft_blocks:exploding(),
-		mad_bombers_to_draw
-	)
 
 	for _, entity in ipairs(entities_to_draw) do
 		entity:draw()
@@ -552,7 +549,7 @@ function Battle:draw()
 		self.pressure_blocks.on_ground,
 		itertools.filter(self.players, is_alive),
 		self.hard_blocks.on_ground,
-		self.soft_blocks:not_exploding()
+		self.soft_blocks.on_ground
 	)
 	for _, entity in ipairs(mobility_related) do
 		hitboxes.draw_movement(entity:movementbox())

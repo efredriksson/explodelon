@@ -5,6 +5,7 @@ local hitboxes = require("engine.hitboxes")
 local map_entities = require("level_layout.map_entities")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
+local z_index = require("z_index")
 
 local type Animation = animations.Animation
 local type Explodable = require("bombs.explodable")
@@ -23,6 +24,7 @@ end
 function HardBlock.new(position: Point, is_tall: boolean): HardBlock
    local self: HardBlock = setmetatable({}, { __index = HardBlock })
    self.position = position
+   self.z_index = z_index.LEVEL
    self.in_explosion = false
    self.animation = hard_block_animations.get(is_tall)
    return self
