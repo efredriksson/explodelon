@@ -100,7 +100,7 @@ function DinoRules.new(): DinoRules
     local enabled <total>: {DinoColor: boolean} = {
         blue=true,
         pink=true,
-        purple=false,
+        purple=true,
         green=true,
         yellow=true,
     }
