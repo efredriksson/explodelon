@@ -21,6 +21,7 @@ local type Point = points.Point
 local type Rectangle = rectangles.Rectangle
 
 local stun_cry_sound: {integer: Source} = {}
+local sonic_blast_sound: Source
 local STUN_CRY_ROAR_FOR = 1.8
 local SONIC_BLAST_ROAR_FOR = 1.4
 local SLIDE_FOR_TIME = 0.4
@@ -530,6 +531,10 @@ function Player:update(dt: number)
 		stun_cry_sound[self.dino.level]:play()
 		self.play_dino_roar = false
 	end
+	if self.play_dino_roar and self:is_sonic_blasting() then
+		sonic_blast_sound:play()
+		self.play_dino_roar = false
+	end
 
 	if self.action == "stunned" or self.action == "slide" then
 		self:set_action("idle") -- Try to transition from stunned/slide
@@ -569,6 +574,9 @@ function players.load_assets()
 		sound:setVolume(1.25)
 		stun_cry_sound[level] = sound
 	end
+	sonic_blast_sound = audio.new_source_pool("assets/tirras/sonic-blast.ogg", "static", 2)
+	sonic_blast_sound:setPitch(0.005)
+	sonic_blast_sound:setVolume(0.13)
 end
 
 return players
