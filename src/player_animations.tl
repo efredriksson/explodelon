@@ -24,8 +24,10 @@ local type Point = points.Point
 local type Rectangle = rectangles.Rectangle
 local type Vector = vectors.Vector
 local type SpriteImages = {PlayerState: {Action: {Direction: Image}}}
+local type SonicWaveColor = players.SonicWaveColor
 
 local jump_shadow_image: Image
+local sonic_wave_images: {Direction: {SonicWaveColor: Image}} = {}
 local stun_cry_text_images: {Direction: {integer: Image}}
 local sprites: {CharacterName: SpriteImages} = {}
 local sprites_invulnerable: {CharacterName: SpriteImages} = {}
@@ -167,6 +169,12 @@ local DINO_STUN_CRY_TEXT_POSITION = {
 	right = vectors.new(18, 6),
 	left = vectors.new(-4, 6)
 }
+local DINO_SONIC_BLAST_POSITION = {
+	up = vectors.new(8, -4),
+	down = vectors.new(8, 12),
+	right = vectors.new(14, 6),
+	left = vectors.new(0, 6)
+}
 local DINO_AFTERIMGE_SHIFT = {
 	up = vectors.new(0, 1),
 	down = vectors.new(0, -1),
@@ -204,12 +212,53 @@ local function stun_cry_displacement(player: Player): Vector
 	end
 end
 
+local function get_image_pos_in_front_of_player(player: Player, image: Image, x_scaling: number, y_scaling: number): Point
+	local pos = player.position
+	if player.direction == "left" or player.direction == "right" then
+		pos = pos:move(vectors.new(0, -image:getHeight()*y_scaling / 2))
+	else
+		pos = pos:move(vectors.new(-image:getWidth()*x_scaling / 2, 0))
+	end
+
+	if player.direction == "left" then
+		pos = pos:move(vectors.new(-image:getWidth()*x_scaling, 0))
+	elseif player.direction == "up" then
+		pos = pos:move(vectors.new(0, -image:getHeight()*y_scaling))
+	end
+
+	return pos
+end
+
+
+local function draw_sonic_blasts(player: Player)
+	if not player:is_sonic_blasting() then
+		return
+	end
+
+	local function get_text_position(scaling: number, wave_image: Image): Point
+		local pos = get_image_pos_in_front_of_player(player, wave_image, scaling, scaling)
+		return pos:move(DINO_SONIC_BLAST_POSITION[player.direction])
+	end
+
+	local reach = (player.dino.level + 1) * grid.TILE_SIZE
+	for _, sonic_wave in ipairs(player.sonic_waves) do
+		local sonic_wave_speed = reach / sonic_wave.live_for
+		local sonic_image = sonic_wave_images[player.direction][sonic_wave.color]
+		local scale = sonic_wave.duration / sonic_wave.live_for
+		local traveled = sonic_wave.duration * sonic_wave_speed
+		local pos = get_text_position(scale, sonic_image)
+		pos = pos:move(vectors.from_direction(player.direction):scale(traveled))
+		lutro.graphics.draw(sonic_image, pos.x, pos.y, 0, scale, scale)
+	end
+end
+
+
 local function draw_stun_cry_text(player: Player)
 	if not player:is_stun_crying() then
 		return
 	end
 
-	local since_roar_buildup = player:have_roared_for() - dinos.ROAR_BUILDUP_TIME
+	local since_roar_buildup = player:have_roared_since_buildup_for()
 	
 	local function get_text_x_y_scaling(): (number, number)
 		local text_len_max_scale = STUN_CRY_REACH_BY_LEVEL[player.dino.level]
@@ -225,21 +274,8 @@ local function draw_stun_cry_text(player: Player)
 
 	local function get_text_position(text: Image): Point
 		local x_scale, y_scale = get_text_x_y_scaling()
-		local pos = player.position:move(DINO_STUN_CRY_TEXT_POSITION[player.direction])
-		
-		if player.direction == "left" or player.direction == "right" then
-			pos = pos:move(vectors.new(0, -text:getHeight()*y_scale / 2))
-		else
-			pos = pos:move(vectors.new(-text:getWidth()*x_scale / 2, 0))
-		end
-
-		if player.direction == "left" then
-			pos = pos:move(vectors.new(-text:getWidth()*x_scale, 0))
-		elseif player.direction == "up" then
-			pos = pos:move(vectors.new(0, -text:getHeight()*y_scale))
-		end
-
-		return pos
+		local pos = get_image_pos_in_front_of_player(player, text, x_scale, y_scale)
+		return pos:move(DINO_STUN_CRY_TEXT_POSITION[player.direction])
 	end
 	
 	local text = stun_cry_text_images[player.direction][player.dino.level]
@@ -272,6 +308,7 @@ function MountedPlayerAnimation:draw()
 		-- Stun cry text in upward direction should be behind player and dino. Note that
 		-- every entity upwards will have lower y-coord so it will be above them
 		draw_stun_cry_text(self.player)
+		draw_sonic_blasts(self.player)
 	end
 
 	if self.player.action == "dash" and self.player.dino and self.player.dino.level == 3 then
@@ -436,6 +473,24 @@ function player_animations.load_assets()
 		right = horizontal_image,
 		left = horizontal_image
 	}
+
+	local function get_sonic_blast_for_dir(dir: string): {SonicWaveColor: Image}
+		local sonic_images<total>: {SonicWaveColor: Image} = {
+			purple = lutro.graphics.newImage("assets/tirras/sonic-" .. dir .. "-purple.png"),
+			white = lutro.graphics.newImage("assets/tirras/sonic-" .. dir .. "-white.png"),
+			yellow = lutro.graphics.newImage("assets/tirras/sonic-" .. dir .. "-yellow.png")
+		}
+		return sonic_images
+	end
+
+	local vertical_sonic_image = get_sonic_blast_for_dir("vertical")
+	local horizontal_sonic_image = get_sonic_blast_for_dir("horizontal")
+	sonic_wave_images = {
+		up = vertical_sonic_image,
+		down = vertical_sonic_image,
+		right = horizontal_sonic_image,
+		left = horizontal_sonic_image
+	}
 end
 
 function player_animations.new(entities: {Player}): PlayerAnimations
@@ -539,6 +594,7 @@ function PlayerAnimations:draw_stun_cry_texts_not_up()
 	for _, player in ipairs(self.players) do
 		if player.direction ~= "up" then
 			draw_stun_cry_text(player)
+			draw_sonic_blasts(player)
 		end
 	end
 end
