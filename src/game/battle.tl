@@ -269,8 +269,8 @@ local is_dead = function(player: Player): boolean
 	return not player:is_alive()
 end
 
-local is_effective_roaring = function(player: Player): boolean
-	return player:is_effective_roaring()
+local is_stun_crying = function(player: Player): boolean
+	return player:is_stun_crying()
 end
 
 function Battle:check_if_finished(dt: number, alive_players: {Player})
@@ -408,11 +408,11 @@ function Battle:update(dt: number)
 		end
 	end
 
-	for _, player in ipairs(itertools.filter(self.players, is_effective_roaring)) do
-		local hit_players = lookup:in_box_and_group(player:get_roar_hitbox(), alive_players_group)
+	for _, player in ipairs(itertools.filter(self.players, is_stun_crying)) do
+		local hit_players = lookup:in_box_and_group(player:get_stun_cry_hitbox(), alive_players_group)
 		for _, hit_player in ipairs(hit_players) do
 			if hit_player.action ~= "stunned" then
-				-- Roar only stun someone not already stunned
+				-- Stun cry only stun someone not already stunned
 				-- so not possible to perpetually stun in area
 				hit_player:stun_for(1.5)
 			end
@@ -540,8 +540,8 @@ function Battle:draw()
 	self.bombs:draw_in_air_shadows()
 	-- When jumping some distance, draw jump shadows over all entities
 	self.player_animations:draw_lateral_jump_shadows()
-	-- Put roar text above everything else (with up exception)
-	self.player_animations:draw_roar_texts_not_up()
+	-- Put stun cry text above everything else (with up exception)
+	self.player_animations:draw_stun_cry_texts_not_up()
 
 	local mobility_related: {Kinematic} = itertools.combine(
 		self.bombs.on_ground,
@@ -554,8 +554,8 @@ function Battle:draw()
 	for _, entity in ipairs(mobility_related) do
 		hitboxes.draw_movement(entity:movementbox())
 	end
-	for _, player in ipairs(itertools.filter(self.players, is_effective_roaring)) do
-		hitboxes.draw(player:get_roar_hitbox())
+	for _, player in ipairs(itertools.filter(self.players, is_stun_crying)) do
+		hitboxes.draw(player:get_stun_cry_hitbox())
 	end
 
 	self.timer:draw_hurry_text()
