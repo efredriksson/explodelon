@@ -21,6 +21,8 @@ local type Point = points.Point
 local type Rectangle = rectangles.Rectangle
 
 local stun_cry_sound: {integer: Source} = {}
+local STUN_CRY_ROAR_FOR = 1.8
+local SONIC_BLAST_ROAR_FOR = 1.4
 local SLIDE_FOR_TIME = 0.4
 local CHARACTER_HEIGHT_ON_DINO = 8 -- How high up from ground player is when on dino
 local DASH_WITH_DINO_SPEED_BONUS = {
@@ -65,6 +67,7 @@ local record Player is Explodable, Kinematic, Entity
 	stunned_for: number
 	slide_for: number
 	roar_for: number
+	total_roar_time: number
 	after_image_shift: number
 	play_dino_roar: boolean
 	dino: Dino
@@ -96,6 +99,7 @@ function players.new(id: integer, sprite: CharacterName, position: Point): Playe
 	self.after_image_shift = 0
 	self.slide_for = 0
 	self.roar_for = 0
+	self.total_roar_time = 0
 	self.dino = nil
 	self.play_dino_roar = false
 	return self
@@ -130,7 +134,7 @@ function Player:is_sliding(): boolean
 end
 
 function Player:have_roared_for(): number
-	return dinos.ROAR_FOR - self.roar_for
+	return self.total_roar_time - self.roar_for
 end
 
 function Player:is_roaring(): boolean
@@ -139,6 +143,10 @@ end
 
 function Player:is_stun_crying(): boolean
 	return self:is_roaring() and self.dino.color == "yellow" and self:have_roared_for() > dinos.ROAR_BUILDUP_TIME
+end
+
+function Player:is_sonic_blasting(): boolean
+	return self:is_roaring() and self.dino.color == "purple" and self:have_roared_for() > dinos.ROAR_BUILDUP_TIME
 end
 
 function Player:set_action(action: Action)
@@ -354,15 +362,22 @@ end
 
 function Player:stun_cry_with_dino()
 	self:set_action("roar")
-	self.roar_for = dinos.ROAR_FOR
+	self.roar_for = STUN_CRY_ROAR_FOR
+	self.total_roar_time = STUN_CRY_ROAR_FOR
 	self.play_dino_roar = true
 end
 
-function Player:get_stun_cry_hitbox(): Rectangle
-	local hitbox_reach = self.dino.level * 3
-	local x = self.position.x
-	local y = self.position.y
-	local grid_reach = grid.TILE_SIZE * hitbox_reach
+function Player:sonic_blast_with_dino()
+	self:set_action("roar")
+	self.roar_for = SONIC_BLAST_ROAR_FOR
+	self.total_roar_time = SONIC_BLAST_ROAR_FOR
+	self.play_dino_roar = true
+end
+
+function Player:_get_hitbox_in_dir(from_position: Point, reach_in_tiles: integer): Rectangle
+	local x = from_position.x
+	local y = from_position.y
+	local grid_reach = grid.TILE_SIZE * reach_in_tiles
 	if self.direction == "up" then
 		return rectangles.new(x, y - grid_reach, grid.TILE_SIZE, grid_reach)
 	elseif self.direction == "down" then
@@ -374,6 +389,14 @@ function Player:get_stun_cry_hitbox(): Rectangle
 	else
 		assert(false, "Bad direction")
 	end
+end
+
+function Player:get_stun_cry_hitbox(): Rectangle
+	return self:_get_hitbox_in_dir(self.position, self.dino.level * 3)
+end
+
+function Player:get_sonic_blast_hitbox(): Rectangle
+	return self:_get_hitbox_in_dir(grid.snap_to(self.position), self.dino.level + 1)
 end
 
 function Player:get_speed(): number

@@ -21,22 +21,26 @@ local record SoftBlock is Entity, Explodable, Kinematic
 	position: Point
     is_exploding: boolean
     in_explosion: boolean
-    animation: Animation
+    base_animation: Animation
+    revealed_animation: Animation
     breaking_animation: Animation
     item: ItemType
     egg: boolean
+    is_revealed: boolean
 end
 
-function SoftBlock.new(position: Point, animation: Animation, item: ItemType, egg: boolean): SoftBlock
+function SoftBlock.new(position: Point, base_animation: Animation, revealed_animation: Animation, item: ItemType, egg: boolean): SoftBlock
     local self: SoftBlock = setmetatable({}, { __index = SoftBlock })
     self.position = position
     self.z_index = z_index.LEVEL
-    self.animation = animation
+    self.base_animation = base_animation
+    self.revealed_animation = revealed_animation
     self.breaking_animation = soft_block_animations.get_exploding()
     self.is_exploding = false
     self.in_explosion = false
     self.item = item
     self.egg = egg
+    self.is_revealed = false
     return self
 end
 
@@ -46,6 +50,12 @@ end
 
 function SoftBlock:hit_with_bomb()
 	-- Does nothing
+end
+
+function SoftBlock:reveal()
+    if self.egg or self.item then
+	    self.is_revealed = true
+    end
 end
 
 function SoftBlock:hitbox(): Rectangle
@@ -75,8 +85,10 @@ function SoftBlock:draw()
             self.breaking_animation, self.position
         )
         self.breaking_animation:draw(position.x, position.y)
+    elseif self.is_revealed then
+        self.revealed_animation:draw(self.position.x, self.position.y)
     else
-        self.animation:draw(self.position.x, self.position.y)
+        self.base_animation:draw(self.position.x, self.position.y)
     end
 end
 
@@ -93,16 +105,24 @@ end
 local record SoftBlocks 
 	on_ground: {SoftBlock}
     rigid_animation: Animation
+    revealed_animation: Animation
 end
 
-local soft_blocks = {SoftBlocks = SoftBlocks}
+local soft_blocks = {SoftBlocks = SoftBlocks, SoftBlock = SoftBlock}
 
 function soft_blocks.new(configs: {SoftBlockConfig}): SoftBlocks
     local self: SoftBlocks = setmetatable({}, { __index = SoftBlocks })
     self.on_ground = {}
     self.rigid_animation = soft_block_animations.get_rigid()
+    self.revealed_animation = soft_block_animations.get_revealed()
     for _, config in ipairs(configs) do
-        local block = SoftBlock.new(config.position, self.rigid_animation, config.item, config.egg)
+        local block = SoftBlock.new(
+            config.position,
+            self.rigid_animation,
+            self.revealed_animation,
+            config.item,
+            config.egg
+        )
         table.insert(self.on_ground, block)
     end
     return self
@@ -111,6 +131,7 @@ end
 function SoftBlocks:update(dt: number)
     -- All soft blocks share animations that are in sync
     self.rigid_animation:update(dt)
+    self.revealed_animation:update(dt)
 
     for i, soft_block in ipairs(self.on_ground) do
         soft_block:update(dt)

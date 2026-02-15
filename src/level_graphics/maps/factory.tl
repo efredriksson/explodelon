@@ -6,7 +6,8 @@ local type MapGraphics = require("level_graphics.maps.interfaces")
 local factory = {}
 
 local background: Image
-local soft_block_animation: Animation 
+local soft_block_animation: Animation
+local soft_block_revealed_animation: Animation
 local soft_block_breaking_image: Image
 local hard_block_animations: {boolean: Animation} = {}
 
@@ -25,6 +26,10 @@ function FactoryGraphics:get_soft_block_rigid(): Animation
     return soft_block_animation
 end
 
+function FactoryGraphics:get_soft_block_revealed(): Animation
+    return soft_block_revealed_animation
+end
+
 function FactoryGraphics:get_hard_block(is_tall: boolean): Animation
     return hard_block_animations[is_tall]
 end
@@ -36,6 +41,7 @@ end
 function FactoryGraphics:load_assets()
     background = load_image("background.png")
     soft_block_animation = animations.new(load_image("soft-block.png"), 16, 0.1)
+    soft_block_revealed_animation = animations.new(load_image("soft-block-revealed.png"), 16, 0.1)
     soft_block_breaking_image = load_image("soft-block-breaking.png")
     hard_block_animations[false] = animations.new(load_image("hard-block.png"), 16, 1)
     hard_block_animations[true] = animations.new(load_image("hard-block-tall.png"), 16, 1)

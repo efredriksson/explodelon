@@ -157,6 +157,12 @@ local function handle_stun_cry_input(player: Player)
 	end
 end
 
+local function handle_sonic_blast_input(player: Player)
+	if lutro.joystick.isDown(player.id, joysticks.BUTTONS.B) then
+		player:sonic_blast_with_dino()
+	end
+end
+
 function dino_inputs.handle(dt: number, player: Player, bombs_: Bombs, blocks_jump: Group<Kinematic>, bombs_group: Group<Bomb>, lookup: Lookup)
     if player.dino then
 		if player.dino.color == "pink" then
@@ -167,6 +173,8 @@ function dino_inputs.handle(dt: number, player: Player, bombs_: Bombs, blocks_ju
 			handle_throw_input(dt, player, bombs_, bombs_group, lookup)
 		elseif player.dino.color == "yellow" then
 			handle_stun_cry_input(player)
+		elseif player.dino.color == "purple" then
+			handle_sonic_blast_input(player)
 		end
 	end
 end
