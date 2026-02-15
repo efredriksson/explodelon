@@ -18,7 +18,7 @@ You can now run the game directly using `./retroarch --verbose -L cores/lutro_li
 > Tip: The `--verbose` flag will give you helpful output if the game crashes during development. This is the main reason to use RetroArch over Ludo.
 
 ### Recomended core
-The game will run using existing compiled and distributed cores. However, some graphis, such as the yellow dino roar text, only displays correctly when using a core that supports scaling. To obtain a core with scaling support, it must be built from source. Building from source also allows the core to be compiled with LuaJIT, which gives better performance.
+The game will run using existing compiled and distributed cores. However, some graphis, such as the yellow dino stun cry text, only displays correctly when using a core that supports scaling. To obtain a core with scaling support, it must be built from source. Building from source also allows the core to be compiled with LuaJIT, which gives better performance.
 
 The CI for the fork at https://github.com/efredriksson/libretro-lutro builds from a recent version of `lutro` and archives the built artifacts. CI builds exists for:
  * Windows

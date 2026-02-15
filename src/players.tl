@@ -20,7 +20,7 @@ local type Direction = vectors.Direction
 local type Point = points.Point
 local type Rectangle = rectangles.Rectangle
 
-local roar_sound: {integer: Source} = {}
+local stun_cry_sound: {integer: Source} = {}
 local SLIDE_FOR_TIME = 0.4
 local CHARACTER_HEIGHT_ON_DINO = 8 -- How high up from ground player is when on dino
 local DASH_WITH_DINO_SPEED_BONUS = {
@@ -134,11 +134,11 @@ function Player:have_roared_for(): number
 end
 
 function Player:is_roaring(): boolean
-	return self.roar_for > 0
+	return self.roar_for > 0 and self.dino ~= nil
 end
 
-function Player:is_effective_roaring(): boolean
-	return self:is_roaring() and self:have_roared_for() > dinos.ROAR_BUILDUP_TIME
+function Player:is_stun_crying(): boolean
+	return self:is_roaring() and self.dino.color == "yellow" and self:have_roared_for() > dinos.ROAR_BUILDUP_TIME
 end
 
 function Player:set_action(action: Action)
@@ -352,13 +352,13 @@ function Player:dash_with_dino()
 	self:set_action("dash")
 end
 
-function Player:roar_with_dino()
+function Player:stun_cry_with_dino()
 	self:set_action("roar")
 	self.roar_for = dinos.ROAR_FOR
 	self.play_dino_roar = true
 end
 
-function Player:get_roar_hitbox(): Rectangle
+function Player:get_stun_cry_hitbox(): Rectangle
 	local hitbox_reach = self.dino.level * 3
 	local x = self.position.x
 	local y = self.position.y
@@ -429,8 +429,8 @@ function Player:update(dt: number)
 	self.after_image_shift = self.after_image_shift + self:get_speed() * dt + lutro.math.random(4)
 	self.after_image_shift = math.fmod(self.after_image_shift, 37)
 
-	if self.play_dino_roar and self:is_effective_roaring() then
-		roar_sound[self.dino.level]:play()
+	if self.play_dino_roar and self:is_stun_crying() then
+		stun_cry_sound[self.dino.level]:play()
 		self.play_dino_roar = false
 	end
 
@@ -470,7 +470,7 @@ function players.load_assets()
 		local sound = audio.new_source_pool("assets/tirras/level_" .. level .. "/roar.ogg", "static", 2)
 		sound:setPitch(0.1)
 		sound:setVolume(1.25)
-		roar_sound[level] = sound
+		stun_cry_sound[level] = sound
 	end
 end
 

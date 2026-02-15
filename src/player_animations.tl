@@ -26,7 +26,7 @@ local type Vector = vectors.Vector
 local type SpriteImages = {PlayerState: {Action: {Direction: Image}}}
 
 local jump_shadow_image: Image
-local roar_text_images: {Direction: {integer: Image}}
+local stun_cry_text_images: {Direction: {integer: Image}}
 local sprites: {CharacterName: SpriteImages} = {}
 local sprites_invulnerable: {CharacterName: SpriteImages} = {}
 local special_animation_frame_durations: {Action: number} = {
@@ -161,7 +161,7 @@ local DINO_SLIDE_CHARACTER_ADJUST = {
 	right = vectors.new(9, 0),
 	left = vectors.new(-9, 0)
 }
-local DINO_ROAR_TEXT_POSITION = {
+local DINO_STUN_CRY_TEXT_POSITION = {
 	up = vectors.new(8, -4),
 	down = vectors.new(8, 18),
 	right = vectors.new(18, 6),
@@ -173,46 +173,46 @@ local DINO_AFTERIMGE_SHIFT = {
 	right = vectors.new(-1, 0),
 	left = vectors.new(1, 0)
 }
-local ROAR_SHAKE_PERIOD_BY_LEVEL = {
+local STUN_CRY_SHAKE_PERIOD_BY_LEVEL = {
 	[1] = 0.05,
 	[2] = 0.10,
 	[3] = 0.20,
 }
-local ROAR_SHAKE_AXIS = {
+local STUN_CRY_SHAKE_AXIS = {
 	up = vectors.new(0, 1),
 	down = vectors.new(0, -1),
 	right = vectors.new(1, 0),
 	left = vectors.new(-1, 0)
 }
-local ROAR_REACH_BY_LEVEL = {
+local STUN_CRY_REACH_BY_LEVEL = {
 	[1] = 1.0,
 	[2] = 1.75,
 	[3] = 2.5
 }
 
 
-local function roar_shake_displacement(player: Player): Vector
-	if player:have_roared_for() < dinos.ROAR_BUILDUP_TIME then
+local function stun_cry_displacement(player: Player): Vector
+	if not player:is_stun_crying() then
 		return vectors.new(0, 0)
 	end
 
-	local shake_period = ROAR_SHAKE_PERIOD_BY_LEVEL[player.dino.level]
+	local shake_period = STUN_CRY_SHAKE_PERIOD_BY_LEVEL[player.dino.level]
 	if (player.roar_for % shake_period) > shake_period / 2 then
-		return ROAR_SHAKE_AXIS[player.direction]
+		return STUN_CRY_SHAKE_AXIS[player.direction]
 	else
 		return vectors.new(0, 0)
 	end
 end
 
-local function draw_roar_text(player: Player)
-	if not player:is_roaring() then
+local function draw_stun_cry_text(player: Player)
+	if not player:is_stun_crying() then
 		return
 	end
 
 	local since_roar_buildup = player:have_roared_for() - dinos.ROAR_BUILDUP_TIME
 	
 	local function get_text_x_y_scaling(): (number, number)
-		local text_len_max_scale = ROAR_REACH_BY_LEVEL[player.dino.level]
+		local text_len_max_scale = STUN_CRY_REACH_BY_LEVEL[player.dino.level]
 		local text_length_scale = math.min(since_roar_buildup*3, text_len_max_scale)
 		local text_height_scale = math.min(since_roar_buildup*4, 1.0)
 		
@@ -225,7 +225,7 @@ local function draw_roar_text(player: Player)
 
 	local function get_text_position(text: Image): Point
 		local x_scale, y_scale = get_text_x_y_scaling()
-		local pos = player.position:move(DINO_ROAR_TEXT_POSITION[player.direction])
+		local pos = player.position:move(DINO_STUN_CRY_TEXT_POSITION[player.direction])
 		
 		if player.direction == "left" or player.direction == "right" then
 			pos = pos:move(vectors.new(0, -text:getHeight()*y_scale / 2))
@@ -242,12 +242,10 @@ local function draw_roar_text(player: Player)
 		return pos
 	end
 	
-	if since_roar_buildup > 0 then
-		local text = roar_text_images[player.direction][player.dino.level]
-		local draw_pos = get_text_position(text)
-		local x_scale, y_scale = get_text_x_y_scaling()
-		lutro.graphics.draw(text, draw_pos.x, draw_pos.y, 0, x_scale, y_scale)
-	end
+	local text = stun_cry_text_images[player.direction][player.dino.level]
+	local draw_pos = get_text_position(text)
+	local x_scale, y_scale = get_text_x_y_scaling()
+	lutro.graphics.draw(text, draw_pos.x, draw_pos.y, 0, x_scale, y_scale)
 end
 
 function MountedPlayerAnimation:draw()
@@ -264,16 +262,16 @@ function MountedPlayerAnimation:draw()
 		if self.player.action == "jump" then
 			return self.player:get_jump_position()
 		elseif self.player.action == "roar" then
-			return self.player.dino.position:move(roar_shake_displacement(self.player))
+			return self.player.dino.position:move(stun_cry_displacement(self.player))
 		else
 			return self.player.dino.position
 		end
 	end
 
 	if self.player.direction == "up" then
-		-- Roar text in upward direction should be behind player and dino. Note that
+		-- Stun cry text in upward direction should be behind player and dino. Note that
 		-- every entity upwards will have lower y-coord so it will be above them
-		draw_roar_text(self.player)
+		draw_stun_cry_text(self.player)
 	end
 
 	if self.player.action == "dash" and self.player.dino and self.player.dino.level == 3 then
@@ -419,20 +417,20 @@ function player_animations.load_assets()
 		end
 	end
 
-	local function get_roar_text_for_dir(dir: string): {integer: Image}
+	local function get_stun_cry_text_for_dir(dir: string): {integer: Image}
 		local result: {integer: Image} = {}
 		for level=1, 3 do
-			local asset = "assets/tirras/level_" .. level .. "/roar_text_" .. dir .. ".png"
+			local asset = "assets/tirras/level_" .. level .. "/stun_cry_text_" .. dir .. ".png"
 			result[level] = lutro.graphics.newImage(asset)
 		end
 
 		return result
 	end
 
-	local vertical_image = get_roar_text_for_dir("vertical")
-	local horizontal_image = get_roar_text_for_dir("horizontal")
+	local vertical_image = get_stun_cry_text_for_dir("vertical")
+	local horizontal_image = get_stun_cry_text_for_dir("horizontal")
 	-- Right and up images are 
-	roar_text_images = {
+	stun_cry_text_images = {
 		up = vertical_image,
 		down = vertical_image,
 		right = horizontal_image,
@@ -537,10 +535,10 @@ function PlayerAnimations:draw_vertical_jump_shadows()
 	self:_draw_players_shadow(jumps_vertically)
 end
 
-function PlayerAnimations:draw_roar_texts_not_up()
+function PlayerAnimations:draw_stun_cry_texts_not_up()
 	for _, player in ipairs(self.players) do
 		if player.direction ~= "up" then
-			draw_roar_text(player)
+			draw_stun_cry_text(player)
 		end
 	end
 end
