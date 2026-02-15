@@ -50,6 +50,46 @@ local type PlayerState = enum
 	"mounted"
 end
 
+local type SonicWaveColor = enum
+	"white"
+	"purple"
+	"yellow"
+end
+
+local SONIC_WAVE_COLOR_ORDERS: {SonicWaveColor} = {
+	"white",
+	"purple",
+	"white",
+	"yellow",
+	"white",
+	"yellow",
+	"purple",
+	"yellow",
+	"purple",
+	"yellow",
+	"purple",
+	"white",
+	"purple",
+	"white",
+	"yellow",
+	"white",
+	"yellow",
+}
+
+local record SonicWave
+	duration: number
+	live_for: number
+	color: SonicWaveColor
+end
+
+function SonicWave.new(color: SonicWaveColor, live_for: number): SonicWave
+	local self: SonicWave = setmetatable({}, { __index = SonicWave })
+	self.duration = 0
+	self.live_for = live_for
+	self.color = color
+	return self
+end
+
 local record Player is Explodable, Kinematic, Entity
 	id: integer
 	sprite: CharacterName
@@ -69,6 +109,9 @@ local record Player is Explodable, Kinematic, Entity
 	roar_for: number
 	total_roar_time: number
 	after_image_shift: number
+	sonic_waves: {SonicWave}
+	last_time_adding_sonic_wave: number
+	sonic_wave_color_index: integer
 	play_dino_roar: boolean
 	dino: Dino
 
@@ -76,7 +119,7 @@ local record Player is Explodable, Kinematic, Entity
 	jump_target: Point
 end
 
-local players = {Player = Player, Action = Action, PlayerState = PlayerState}
+local players = {Player = Player, Action = Action, PlayerState = PlayerState, SonicWaveColor = SonicWaveColor}
 
 function players.new(id: integer, sprite: CharacterName, position: Point): Player
 	local self: Player = setmetatable({}, { __index = Player })
@@ -102,6 +145,9 @@ function players.new(id: integer, sprite: CharacterName, position: Point): Playe
 	self.total_roar_time = 0
 	self.dino = nil
 	self.play_dino_roar = false
+	self.sonic_waves = {}
+	self.last_time_adding_sonic_wave = 0
+	self.sonic_wave_color_index = 1
 	return self
 end
 
@@ -133,8 +179,8 @@ function Player:is_sliding(): boolean
 	return self.slide_for > 0
 end
 
-function Player:have_roared_for(): number
-	return self.total_roar_time - self.roar_for
+function Player:have_roared_since_buildup_for(): number
+	return self.total_roar_time - self.roar_for - dinos.ROAR_BUILDUP_TIME
 end
 
 function Player:is_roaring(): boolean
@@ -142,11 +188,11 @@ function Player:is_roaring(): boolean
 end
 
 function Player:is_stun_crying(): boolean
-	return self:is_roaring() and self.dino.color == "yellow" and self:have_roared_for() > dinos.ROAR_BUILDUP_TIME
+	return self:is_roaring() and self.dino.color == "yellow" and self:have_roared_since_buildup_for() > 0
 end
 
 function Player:is_sonic_blasting(): boolean
-	return self:is_roaring() and self.dino.color == "purple" and self:have_roared_for() > dinos.ROAR_BUILDUP_TIME
+	return self:is_roaring() and self.dino.color == "purple" and self:have_roared_since_buildup_for() > 0
 end
 
 function Player:set_action(action: Action)
@@ -372,12 +418,12 @@ function Player:sonic_blast_with_dino()
 	self.roar_for = SONIC_BLAST_ROAR_FOR
 	self.total_roar_time = SONIC_BLAST_ROAR_FOR
 	self.play_dino_roar = true
+	self.sonic_waves = {}
 end
 
-function Player:_get_hitbox_in_dir(from_position: Point, reach_in_tiles: integer): Rectangle
+function Player:_get_hitbox_in_dir(from_position: Point, grid_reach: number): Rectangle
 	local x = from_position.x
 	local y = from_position.y
-	local grid_reach = grid.TILE_SIZE * reach_in_tiles
 	if self.direction == "up" then
 		return rectangles.new(x, y - grid_reach, grid.TILE_SIZE, grid_reach)
 	elseif self.direction == "down" then
@@ -392,11 +438,14 @@ function Player:_get_hitbox_in_dir(from_position: Point, reach_in_tiles: integer
 end
 
 function Player:get_stun_cry_hitbox(): Rectangle
-	return self:_get_hitbox_in_dir(self.position, self.dino.level * 3)
+	return self:_get_hitbox_in_dir(self.position, self.dino.level * 3 * grid.TILE_SIZE)
 end
 
 function Player:get_sonic_blast_hitbox(): Rectangle
-	return self:_get_hitbox_in_dir(grid.snap_to(self.position), self.dino.level + 1)
+	local max_reach = (self.dino.level + 1) * grid.TILE_SIZE
+	local sound_traveled = self:have_roared_since_buildup_for() * 200
+	local reach = math.min(sound_traveled, max_reach)
+	return self:_get_hitbox_in_dir(grid.snap_to(self.position), reach)
 end
 
 function Player:get_speed(): number
@@ -444,13 +493,38 @@ function Player:get_jump_position(): Point
 	return self.jump_trajectory:in_air_position(self.position)
 end
 
+function Player:_new_sonic_wave(): SonicWave
+	local color = SONIC_WAVE_COLOR_ORDERS[self.sonic_wave_color_index]
+	local time_to_live = 0.4
+	self.sonic_wave_color_index = self.sonic_wave_color_index % #SONIC_WAVE_COLOR_ORDERS
+	self.sonic_wave_color_index = self.sonic_wave_color_index + 1
+	return SonicWave.new(color, time_to_live)
+end
+
 function Player:update(dt: number)
 	self.invulnerable_for = self.invulnerable_for - dt
 	self.stunned_for = self.stunned_for - dt
 	self.slide_for = self.slide_for - dt
 	self.roar_for = self.roar_for - dt
+	self.last_time_adding_sonic_wave = self.last_time_adding_sonic_wave + dt
+
 	self.after_image_shift = self.after_image_shift + self:get_speed() * dt + lutro.math.random(4)
 	self.after_image_shift = math.fmod(self.after_image_shift, 37)
+
+	if self:is_sonic_blasting() then
+		local time_between_waves = 0.1
+		if self.last_time_adding_sonic_wave > time_between_waves then
+			self.last_time_adding_sonic_wave = 0
+			table.insert(self.sonic_waves, self:_new_sonic_wave())
+		end
+
+		for i, sonic_wave in ipairs(self.sonic_waves) do
+			sonic_wave.duration = sonic_wave.duration + dt
+			if sonic_wave.duration > sonic_wave.live_for then
+				table.remove(self.sonic_waves, i)
+			end
+		end
+	end
 
 	if self.play_dino_roar and self:is_stun_crying() then
 		stun_cry_sound[self.dino.level]:play()
