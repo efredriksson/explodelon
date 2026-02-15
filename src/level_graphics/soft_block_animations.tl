@@ -9,6 +9,10 @@ function soft_block_animations.get_rigid(): Animation
     return init.get_graphics():get_soft_block_rigid()
 end
 
+function soft_block_animations.get_revealed(): Animation
+    return init.get_graphics():get_soft_block_revealed()
+end
+
 function soft_block_animations.get_exploding(): Animation
     return init.get_graphics():get_soft_block_exploding()
 end

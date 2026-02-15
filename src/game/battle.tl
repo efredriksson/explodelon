@@ -48,6 +48,7 @@ local type PlayerAnimations = player_animations.PlayerAnimations
 local type Player = players.Player
 local type PressureBlocks = pressure_blocks.PressureBlocks
 local type SoftBlocks = soft_blocks.SoftBlocks
+local type SoftBlock = soft_blocks.SoftBlock
 local type Group = collision.Group
 local type Lookup = collision.Lookup
 local type Scene = scenes.Scene
@@ -269,10 +270,6 @@ local is_dead = function(player: Player): boolean
 	return not player:is_alive()
 end
 
-local is_stun_crying = function(player: Player): boolean
-	return player:is_stun_crying()
-end
-
 function Battle:check_if_finished(dt: number, alive_players: {Player})
 	if self.state == "finished" then
 		return
@@ -298,6 +295,29 @@ function Battle:check_if_finished(dt: number, alive_players: {Player})
 			music:stop()
 			scenes.set(battle_end_scene.new_for_draw(self))
 		end
+	end
+end
+
+function Battle:_handle_stun_cry(lookup: Lookup, alive_players: Group<Player>, player: Player)
+	local hit_players = lookup:in_box_and_group(player:get_stun_cry_hitbox(), alive_players)
+	for _, hit_player in ipairs(hit_players) do
+		if hit_player.action ~= "stunned" then
+			-- Stun cry only stun someone not already stunned
+			-- so not possible to perpetually stun in area
+			hit_player:stun_for(1.5)
+		end
+	end
+end
+
+function Battle:_handle_sonic_blast(lookup: Lookup, bombs_group: Group<Bomb>, soft_blocks_group: Group<SoftBlock>, player: Player)
+	local hit_bombs = lookup:in_box_and_group(player:get_sonic_blast_hitbox(), bombs_group)
+	for _, hit_bomb in ipairs(hit_bombs) do
+		hit_bomb:blow_up()
+	end
+
+	local hit_blocks = lookup:in_box_and_group(player:get_sonic_blast_hitbox(), soft_blocks_group)
+	for _, hit_block in ipairs(hit_blocks) do
+		hit_block:reveal()
 	end
 end
 
@@ -371,6 +391,7 @@ function Battle:update(dt: number)
 	local pressure_blocks_group: Group<Entity> = collision.new_group(self.pressure_blocks.on_ground)
 	local bombs_group: Group<Bomb> = collision.new_group(self.bombs.on_ground)
 	local bomb_entities_group: Group<Entity> = collision.new_group(self.bombs.on_ground)
+	local soft_blocks_group: Group<SoftBlock> = collision.new_group(self.soft_blocks.on_ground)
 	local blocking_blocks_group: Group<Kinematic> = collision.new_group(self.soft_blocks.on_ground, self.pressure_blocks.on_ground)
 	local lookup = collision.new_lookup(
 		self.soft_blocks.on_ground,
@@ -406,16 +427,12 @@ function Battle:update(dt: number)
 			player:jumps_onto(hatching_dino)
 			self.player_animations.dinos:add_for(hatching_dino)
 		end
-	end
 
-	for _, player in ipairs(itertools.filter(self.players, is_stun_crying)) do
-		local hit_players = lookup:in_box_and_group(player:get_stun_cry_hitbox(), alive_players_group)
-		for _, hit_player in ipairs(hit_players) do
-			if hit_player.action ~= "stunned" then
-				-- Stun cry only stun someone not already stunned
-				-- so not possible to perpetually stun in area
-				hit_player:stun_for(1.5)
-			end
+		if player:is_stun_crying() then
+			self:_handle_stun_cry(lookup, alive_players_group, player)
+		end
+		if player:is_sonic_blasting() then
+			self:_handle_sonic_blast(lookup, bombs_group, soft_blocks_group, player)
 		end
 	end
 
@@ -554,8 +571,13 @@ function Battle:draw()
 	for _, entity in ipairs(mobility_related) do
 		hitboxes.draw_movement(entity:movementbox())
 	end
-	for _, player in ipairs(itertools.filter(self.players, is_stun_crying)) do
-		hitboxes.draw(player:get_stun_cry_hitbox())
+	for _, player in ipairs(itertools.filter(self.players, is_alive)) do
+		if player:is_stun_crying() then
+			hitboxes.draw(player:get_stun_cry_hitbox())
+		end
+		if player:is_sonic_blasting() then
+			hitboxes.draw(player:get_sonic_blast_hitbox())
+		end
 	end
 
 	self.timer:draw_hurry_text()
