@@ -42,15 +42,17 @@ local record CheckedMovement
 	position: Point
 	spent: boolean
 	cuts_corner: boolean
+	bombs_kicked: {{Bomb, Vector}}
 end
 
 function CheckedMovement.new(
-	position: Point, spent: boolean, cuts_corner: boolean
+	position: Point, spent: boolean, cuts_corner: boolean, bombs_kicked?: {{Bomb, Vector}}
 ): CheckedMovement
    local self: CheckedMovement = setmetatable({}, { __index = CheckedMovement })
    self.position = position
    self.spent = spent
    self.cuts_corner = cuts_corner
+   self.bombs_kicked = bombs_kicked or {}
    return self
 end
 
@@ -181,17 +183,18 @@ local function restrict_player_movement(
 				-- freely in far inside it. This is to stop moving through
 				-- bombs that are kicked against a player.
 				local kick_direction = movement:normalize()
+				local kicked_bombs: {{Bomb, Vector}} = {}
 				if player.has_kick then
 					local can_move = bomb:can_move(
 						kick_direction:scale(grid.TILE_SIZE), blocks_bombs, players_, bombs_, lookup
 					)
 					if can_move.yes then
 						-- Walking into bomb and at edge of bomb then kick
-						bomb:kick(can_move.in_direction)
+						table.insert(kicked_bombs, {bomb, can_move.in_direction})
 					end
 				end
 				-- Not allowed to walk further into bomb if at edge
-				return CheckedMovement.new(player.position, false, false)
+				return CheckedMovement.new(player.position, false, false, kicked_bombs)
 			end
 		end
 	end
@@ -296,6 +299,11 @@ local function get_new_player_orientation(
 		)
 		cur_position = movement.position
 		cur_direction = direction.dir
+		for _, bomb_kicked in ipairs(movement.bombs_kicked) do
+			local bomb = bomb_kicked[1]
+			local kick_direction = bomb_kicked[2]
+			bomb:kick(kick_direction)
+		end
 
 		if movement.spent then
 			break -- All speed have been used up!
