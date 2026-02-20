@@ -115,7 +115,8 @@ end
 
 function Items:update(dt: number)
     frame_animation:update(dt)
-    for i, item in ipairs(self.on_ground) do
+    for i = #self.on_ground, 1, -1 do
+        local item = self.on_ground[i]
         if item:is_destroyed() then
             table.remove(self.on_ground, i)
         end

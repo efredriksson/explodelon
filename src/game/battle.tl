@@ -171,7 +171,8 @@ function Battle:clear_entities(lookup: Lookup, destroys: Group<Entity>, ...: {En
 	-- This is for things that directly removes an entity (no animations or such)
 	for _, entity_list in ipairs({...}) do
 		local is_destroyed = lookup:collisions_between(entity_list, destroys)
-		for i, entity in ipairs(entity_list) do
+		for i = #entity_list, 1, -1 do
+			local entity = entity_list[i]
 			if is_destroyed[entity] then
 				if entity.clear then
 					entity:clear()
