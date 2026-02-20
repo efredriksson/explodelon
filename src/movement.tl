@@ -149,6 +149,7 @@ local function restrict_player_movement(
 	hard_blocks: {Kinematic},
 	lightning_bombs_: LightningBombs,
 	blocks_bombs: Group<Kinematic>,
+	close_bombs: {Bomb},
 	players_: Group<Player>,
 	bombs_: Group<Bomb>,
 	lookup: Lookup
@@ -189,16 +190,16 @@ local function restrict_player_movement(
 		return new_dist_to_1_ton_block < old_dist_to_1_ton_block
 	end
 
-	for _, bomb in ipairs(lookup:in_box_and_group(player:movementbox():expand(grid.TILE_SIZE), bombs_)) do
+	for _, bomb in ipairs(close_bombs) do
 		local bomb_hitbox = bomb:movementbox()
 		if walking_further_into_block(bomb_hitbox) then
 			if bomb.position:distance_to(player.position) > grid.TILE_SIZE * (3 / 4) or bomb.has_been_kicked then
 				-- If a bomb has been kicked then it is no longer to move
 				-- freely in far inside it. This is to stop moving through
 				-- bombs that are kicked against a player.
-				local kick_direction = movement:normalize()
 				local kicked_bombs: {{Bomb, Vector}} = {}
 				if player.has_kick then
+					local kick_direction = movement:normalize()
 					local can_move = bomb:can_move(
 						kick_direction:scale(grid.TILE_SIZE), blocks_bombs, players_, bombs_, lookup
 					)
@@ -302,9 +303,10 @@ local function get_new_player_orientation(
 	local cur_position = player.position
 	local cur_direction = player_dir
 	local directions_checks: {MovementWithCheck} = {}
+	local close_bombs = lookup:in_box_and_group(player:movementbox():expand(grid.TILE_SIZE), bombs_)
 	for _, direction in ipairs(directions) do
 		local movement = restrict_player_movement(
-			player, direction.dxdy, blocking_blocks, hard_blocks, lightning_bombs_, blocks_bombs, players_, bombs_, lookup
+			player, direction.dxdy, blocking_blocks, hard_blocks, lightning_bombs_, blocks_bombs, close_bombs, players_, bombs_, lookup
 		)
 		table.insert(directions_checks, MovementWithCheck.new(direction.dxdy, direction.dir, movement))
 	end
