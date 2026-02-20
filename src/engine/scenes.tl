@@ -67,7 +67,7 @@ end
 local function warn_if_took_too_long(start_time: number, ctx: string)
     local end_time = lutro.timer.getTime()
     local elapsed_time = end_time - start_time
-    local limit_to_log_time = 0.005
+    local limit_to_log_time = 0.003
     if elapsed_time > limit_to_log_time then
         logger.warning("The '" .. ctx .. "' took " .. elapsed_time .. "s")
     end
