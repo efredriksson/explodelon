@@ -56,6 +56,20 @@ function CheckedMovement.new(
    return self
 end
 
+local record MovementWithCheck
+	dxdy: Vector
+	dir: Direction
+	check: CheckedMovement
+end
+
+function MovementWithCheck.new(dxdy: Vector, dir: Direction, check: CheckedMovement): MovementWithCheck
+	local self: MovementWithCheck = setmetatable({}, { __index = MovementWithCheck })
+	self.dir = dir
+	self.dxdy = dxdy
+	self.check = check
+	return self
+end
+
 local function get_moves_from_input(player: Player, dt: number): {Movement}
 	local result: {Movement} = {}
 
@@ -111,7 +125,7 @@ local function in_corridor_and_walking_against_wall(
 end
 
 local function in_end_of_corridor_and_walking_out(
-	movement: Movement, player_pos: Point
+	movement: MovementWithCheck, player_pos: Point
 ): boolean
 	local local_pos = grid.get_local_tile_position(player_pos)
 
@@ -266,14 +280,10 @@ local function get_new_player_orientation(
 	-- have a low priority and should be tried last. This is
 	-- mainly to sort and handle all cases when the user press multiple
 	-- directions in a deterministic and expected way.
-	local function movement_prio(movement: Movement): integer
-		local move_if_done = restrict_player_movement(
-			player, movement.dxdy, blocking_blocks, hard_blocks, lightning_bombs_, blocks_bombs, players_, bombs_, lookup
-		)
-
+	local function movement_prio(movement: MovementWithCheck): integer
 		if in_end_of_corridor_and_walking_out(movement, player.position) then
 			return 4
-		elseif move_if_done.cuts_corner then
+		elseif movement.check.cuts_corner then
 			return 3
 		elseif in_corridor_and_walking_against_wall(player.position, movement.dir) then
 			return 2
@@ -282,8 +292,8 @@ local function get_new_player_orientation(
 		end
 	end
 
-	local function sort_directions_by_prio(to_sort: {Movement})
-		local function compare(m1: Movement, m2: Movement): boolean
+	local function sort_directions_by_prio(to_sort: {MovementWithCheck})
+		local function compare(m1: MovementWithCheck, m2: MovementWithCheck): boolean
 			return movement_prio(m1) < movement_prio(m2)
 		end
 		table.sort(to_sort, compare)
@@ -291,12 +301,17 @@ local function get_new_player_orientation(
 
 	local cur_position = player.position
 	local cur_direction = player_dir
-
-	sort_directions_by_prio(directions)
+	local directions_checks: {MovementWithCheck} = {}
 	for _, direction in ipairs(directions) do
 		local movement = restrict_player_movement(
 			player, direction.dxdy, blocking_blocks, hard_blocks, lightning_bombs_, blocks_bombs, players_, bombs_, lookup
 		)
+		table.insert(directions_checks, MovementWithCheck.new(direction.dxdy, direction.dir, movement))
+	end
+
+	sort_directions_by_prio(directions_checks)
+	for _, direction in ipairs(directions_checks) do
+		local movement = direction.check
 		cur_position = movement.position
 		cur_direction = direction.dir
 		for _, bomb_kicked in ipairs(movement.bombs_kicked) do
