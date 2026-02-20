@@ -11,9 +11,8 @@ local function index_2d_to_1d(i: integer, j: integer): integer
     return i * LIMIT_Y_TILES + j
 end
 
-local function get_indexes(hitbox: Rectangle): {integer}
+local function get_indexes(hitbox: Rectangle): function(): integer
     local block_size = settings.block_size
-    local indexes: {integer} = {}
     local x_min, y_min = math.ceil(hitbox.x / block_size), math.ceil(hitbox.y / block_size)
     local x_max, y_max = math.ceil((hitbox.x + hitbox.width) / block_size), math.ceil((hitbox.y + hitbox.height) / block_size)
 
@@ -21,13 +20,17 @@ local function get_indexes(hitbox: Rectangle): {integer}
         logger.warning("Tile out of bound, collision checking will not work")
     end
 
-    for i=x_min, x_max do
-        for j=y_min, y_max do
-            table.insert(indexes, index_2d_to_1d(i, j))
+    local i, j = x_min, y_min
+    return function(): integer
+        if i > x_max then return nil end
+        local index = index_2d_to_1d(i, j)
+        j = j + 1
+        if j > y_max then
+            j = y_min
+            i = i + 1
         end
+        return index
     end
-
-    return indexes
 end
 
 local record Group<T>
@@ -71,7 +74,7 @@ function collision.new_lookup(...: {Entity}): Lookup
 
     for _, entity_list in ipairs({...}) do
         for _, entity in ipairs(entity_list) do
-            for _, index in ipairs(get_indexes(entity:hitbox())) do
+            for index in get_indexes(entity:hitbox()) do
                 if not self.map[index] then
                     self.map[index] = {}
                 end
@@ -85,7 +88,7 @@ end
 function Lookup:collisions_between<K is Entity,T>(entities: {K}, group: Group<T>): {K: T}
     local collides_with: {K: T} = {}
     for _, entity in ipairs(entities) do
-        for _, index in ipairs(get_indexes(entity:hitbox())) do
+        for index in get_indexes(entity:hitbox()) do
             for _, check_against in ipairs(self.map[index] or {}) do
                 if entity ~= check_against and entity:hitbox():overlap(check_against:hitbox()) then
                     local in_group = group:get(check_against)
@@ -102,7 +105,7 @@ end
 
 function Lookup:in_box_and_group<T>(box: Rectangle, group: Group<T>): {T}
     local in_box_for_group: {T} = {}
-    for _, index in ipairs(get_indexes(box)) do
+    for index in get_indexes(box) do
         for _, check_against in ipairs(self.map[index] or {}) do
             if box:overlap(check_against:hitbox()) then
                 local in_group = group:get(check_against)
