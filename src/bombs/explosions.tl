@@ -341,7 +341,8 @@ function Explosions:place_explosion(position: Point, range: number, delay?: numb
 end
 
 function Explosions:update(dt: number, blockers: Group<Explodable>, explodables: Group<Explodable>, lookup: Lookup)
-    for i, explosion in ipairs(self.on_ground) do
+    for i = #self.on_ground, 1, -1 do
+        local explosion = self.on_ground[i]
         explosion:update(dt, blockers, lookup)
 
         local collides_with = lookup:collisions_between(explosion.tiles, explodables)

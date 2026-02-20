@@ -212,7 +212,8 @@ function Lightnings:place_explosion(position: Point, range: number)
 end
 
 function Lightnings:update(dt: number, blockers: Group<Explodable>, explodables: Group<Player>, lookup: Lookup)
-    for i, explosion in ipairs(self.on_ground) do
+    for i = #self.on_ground, 1, -1 do
+        local explosion = self.on_ground[i]
 
         local collides_with = lookup:collisions_between(explosion.tiles, explodables)
         for _, collide_with in pairs(collides_with) do

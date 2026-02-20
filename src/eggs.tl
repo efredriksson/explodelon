@@ -97,7 +97,8 @@ function eggs.new(): Eggs
 end
 
 function Eggs:update(dt: number)
-    for i, egg in ipairs(self.on_ground) do
+    for i = #self.on_ground, 1, -1 do
+        local egg = self.on_ground[i]
         egg:update(dt)
         if egg.hatched or egg:is_destroyed() then
             table.remove(self.on_ground, i)

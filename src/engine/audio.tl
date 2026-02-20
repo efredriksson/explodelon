@@ -66,6 +66,7 @@ function audio.clear(to_clear: Source)
     for i, source in ipairs(loaded_audio_sources) do
         if source == to_clear then
             table.remove(loaded_audio_sources, i)
+            return
         end
     end
 end

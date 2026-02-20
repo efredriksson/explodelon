@@ -197,7 +197,8 @@ function dino_animations.new(): AnimatedDinos
 end
 
 function AnimatedDinos:update(dt: number)
-	for i, animated in ipairs(self.existing) do
+	for i = #self.existing, 1, -1 do
+		local animated = self.existing[i]
 		animated:update(dt)
 
 		if animated.finished then

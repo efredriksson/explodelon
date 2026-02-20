@@ -519,7 +519,8 @@ function Player:update(dt: number)
 			table.insert(self.sonic_waves, self:_new_sonic_wave())
 		end
 
-		for i, sonic_wave in ipairs(self.sonic_waves) do
+		for i = #self.sonic_waves, 1, -1 do
+			local sonic_wave = self.sonic_waves[i]
 			sonic_wave.duration = sonic_wave.duration + dt
 			if sonic_wave.duration > sonic_wave.live_for then
 				table.remove(self.sonic_waves, i)

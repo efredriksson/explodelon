@@ -133,9 +133,10 @@ function SoftBlocks:update(dt: number)
     self.rigid_animation:update(dt)
     self.revealed_animation:update(dt)
 
-    for i, soft_block in ipairs(self.on_ground) do
+    for i = #self.on_ground, 1, -1 do
+        local soft_block = self.on_ground[i]
         soft_block:update(dt)
-        
+
         if soft_block:is_destroyed() then
             table.remove(self.on_ground, i)
         end

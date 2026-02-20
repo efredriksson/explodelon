@@ -130,6 +130,7 @@ function characters.remove_selection_for(player_id: integer)
     for i, selection in ipairs(character_selections) do
         if selection.player_id == player_id then
             table.remove(character_selections, i)
+            return
         end
     end
 end
