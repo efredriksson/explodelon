@@ -9,6 +9,7 @@ local scenes = require("engine.scenes")
 local settings = require("settings")
 local vectors = require("engine.geometry.vectors")
 local points = require("engine.geometry.points")
+local team_selection = require("team_selection")
 
 local type Animation = animations.Animation
 local type Battle = battle.Battle
@@ -79,6 +80,7 @@ end
 
 local record PlayerSelection is Scene
     game: Battle
+    team_selection: Scene
     going_back_to_game: boolean
     player_selecting: integer
     idle_images: {integer: Image}
@@ -91,6 +93,7 @@ end
 function PlayerSelection.new(): PlayerSelection
     local self: PlayerSelection = setmetatable({}, { __index = PlayerSelection })
     self.game = battle.new(self)
+    self.team_selection = team_selection.new(self.game, music)
     self.going_back_to_game = false
     self.idle_images = {}
     self.slow_walk_animations = {}
@@ -160,15 +163,21 @@ end
 
 function PlayerSelection:handle_player_input()
     if #characters.get_selections() == settings.number_of_players then
-        music:stop()
-        self.game:update_players()
-        scenes.set(self.game, self.going_back_to_game)
-        if self.going_back_to_game then
-            -- The game might have paused audio, make sure to unpause:
-            audio.unpause()
+        if settings.teams then
+            scenes.set(self.team_selection)
+        else
+            music:stop()
+            self.game:update_players()
+            
+            if self.going_back_to_game then
+                -- The game might have paused audio, make sure to unpause:
+                audio.unpause()
+            end
+            scenes.set(self.game, self.going_back_to_game)
+            -- Battle started, keep track on that state:
+            self.going_back_to_game = true
         end
-        -- Battle started, keep track on that state:
-        self.going_back_to_game = true
+
         return
     end
 

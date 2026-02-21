@@ -211,11 +211,6 @@ function Battle:get_player(player_id: integer): Player
 	return nil
 end
 
-function Battle:join_with_next_free_sprite(player_id: integer)
-	characters.new_selection(player_id)
-	self:update_players()
-end
-
 function Battle:handle_pause_input(): boolean
 	if self.state == "finished" then
 		return
@@ -224,13 +219,12 @@ function Battle:handle_pause_input(): boolean
 	local function toggle_if_playing(player_id: integer)
 		if not characters.exist_selection_for(player_id) then
 			settings.number_of_players = settings.number_of_players + 1
-			if self.player_selection then
-				characters.queue_selection_for(player_id)
-				scenes.set(self.player_selection)
+			if settings.player_selection == "off" then
+				characters.new_selection(player_id)
 			else
-				self:join_with_next_free_sprite(player_id)
-				scenes.set(self, true)
+				characters.queue_selection_for(player_id)
 			end
+			scenes.set(self.player_selection)
 
 			if self.state == "starting" then
 				-- If someone joins while game is still starting we restart so

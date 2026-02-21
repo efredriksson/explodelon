@@ -140,6 +140,7 @@ end
 local record Settings
     number_of_players: integer
     player_selection: PlayerSelectionMethod
+    teams: boolean
     map: Map
     game_rules: GameRules
     -- Type export
@@ -153,6 +154,7 @@ function Settings.new(): Settings
     local self: Settings = setmetatable({}, { __index = Settings })
     self.number_of_players = 4
     self.player_selection = "on"
+    self.teams = false
     self.map = "football"
     self.game_rules = GameRules.new()
     -- Type export
@@ -291,6 +293,10 @@ function Settings.set_dino_enabled(color: DinoColor): function(value: boolean)
     return function(value: boolean)
         settings.game_rules.dinos.enabled[color] = value
     end
+end
+
+function Settings.set_teams(value: boolean)
+    settings.teams = value
 end
 
 function Settings.set_game_rules_default()
