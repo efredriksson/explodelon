@@ -31,6 +31,7 @@ local scenes = require("engine.scenes")
 local score_board = require("game.score_board")
 local settings = require("settings")
 local soft_blocks = require("soft_blocks")
+local tracing = require("engine.tracing")
 
 local type Bomb = bombs.Bomb
 local type Bombs = bombs.Bombs
@@ -351,6 +352,7 @@ function Battle:update(dt: number)
 	self.pressure_blocks:update(dt)
 	local alive_players = itertools.filter(self.players, is_alive)
 	local dead_players = itertools.filter(self.players, is_dead)
+	local trace_collision = tracing.start("collision_groups")
 	local blocks_bombs: Group<Kinematic> = collision.new_group(
 		self.soft_blocks.on_ground,
 		self.hard_blocks.on_ground,
@@ -405,11 +407,19 @@ function Battle:update(dt: number)
 		self.pressure_blocks.on_ground
 	)
 	local alive_players_group = collision.new_group(alive_players)
+	trace_collision:stop()
+
+	local trace_bombs = tracing.start("bombs")
 	self.bombs:update(dt, blockers, explodables, blocks_bombs, alive_players_group, bombs_group, bombs_bounce_on, lookup)
 	self.lightning_bombs:update(dt, lightning_blockers, alive_players_group, lookup)
+	trace_bombs:stop()
 
+	local trace_players = tracing.start("players")
 	for _, player in ipairs(alive_players) do
+		local trace_player_update = tracing.start("update")
 		player:update(dt)
+		trace_player_update:stop()
+		local trace_player_movement = tracing.start("movement")
 		if player:accepts_input() then
 			self:handle_bomb_drop_input(player)
 			local area_close_to_player = player:movementbox():expand(grid.TILE_SIZE / 2)
@@ -420,6 +430,8 @@ function Battle:update(dt: number)
 			)
 			dino_inputs.handle(dt, player, self.bombs, blocks_jump, bombs_group, lookup)
 		end
+		trace_player_movement:stop()
+		local trace_player_interaction = tracing.start("interaction")
 
 		self.items:possible_pickup_by(player)
 
@@ -435,8 +447,11 @@ function Battle:update(dt: number)
 		if player:is_sonic_blasting() then
 			self:_handle_sonic_blast(lookup, bombs_group, soft_blocks_group, player)
 		end
+		trace_player_interaction:stop()
 	end
+	trace_players:stop()
 
+	local trace_entities = tracing.start("entities")
 	local hit_players = lookup:collisions_between(alive_players, pressure_blocks_group)
 	for player, _ in pairs(hit_players) do
 		player:kill()
@@ -499,6 +514,7 @@ function Battle:update(dt: number)
 	end
 
 	self:check_if_finished(dt, alive_players)
+	trace_entities:stop()
 end
 
 local function sort_entities_by_y_cord(players_to_sort: {Entity})
