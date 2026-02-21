@@ -1,6 +1,8 @@
 local logger = require("engine.logger")
 local settings = require("engine.settings")
+local tracing = require("engine.tracing")
 
+local type Span = tracing.Span
 
 local type Scene = interface
     load: function(self)
@@ -64,25 +66,24 @@ function CheckPerformanceOfScene:load()
     self.to_wrap:load()
 end
 
-local function warn_if_took_too_long(start_time: number, ctx: string)
-    local end_time = lutro.timer.getTime()
-    local elapsed_time = end_time - start_time
+local function warn_if_took_too_long(top_level_tracing: Span)
+    top_level_tracing:stop()
     local limit_to_log_time = 0.003
-    if elapsed_time > limit_to_log_time then
-        logger.warning("The '" .. ctx .. "' took " .. elapsed_time .. "s")
+    if top_level_tracing.elapsed > limit_to_log_time then
+        logger.warning(top_level_tracing:report())
     end
 end
 
 function CheckPerformanceOfScene:update(dt: number)
-    local start_time = lutro.timer.getTime()
+    local tracing_start = tracing.setup("main update")
     self.to_wrap:update(dt)
-    warn_if_took_too_long(start_time, "update")
+    warn_if_took_too_long(tracing_start)
 end
 
 function CheckPerformanceOfScene:draw()
-    local start_time = lutro.timer.getTime()
+    local tracing_start = tracing.setup("main draw")
     self.to_wrap:draw()
-    warn_if_took_too_long(start_time, "draw")
+    warn_if_took_too_long(tracing_start)
 end
 
 local current_scene: Scene

@@ -9,6 +9,7 @@ local settings = require("engine.settings")
 local start_screen = require("menus.start_screen")
 local player_selection = require("player_selection")
 local update_screen = require("menus.update_screen")
+local tracing = require("engine.tracing")
 
 
 function lutro.conf(t: Configuration)
@@ -31,10 +32,12 @@ function lutro.load()
 end
 
 function lutro.update(dt: number)
+	tracing.reset()
 	scenes.get():update(dt)
 	joysticks.update(dt)
 end
 
 function lutro.draw()
+	tracing.reset()
 	scenes.get():draw()
 end
