@@ -10,9 +10,12 @@ local settings = require("settings")
 local vectors = require("engine.geometry.vectors")
 local points = require("engine.geometry.points")
 local team_selection = require("team_selection")
+local score_board = require("game.score_board")
 
 local type Animation = animations.Animation
 local type Battle = battle.Battle
+local type SinglesScoreBoard = score_board.SinglesScoreBoard
+local type TeamsScoreBoard = score_board.TeamsScoreBoard
 local type CharacterName = characters.CharacterName
 local type MenuFont = fonts.MenuFont
 local type MenuSelection = items.MenuSelection
@@ -80,6 +83,8 @@ end
 
 local record PlayerSelection is Scene
     game: Battle
+    singles_score_board: SinglesScoreBoard
+    teams_score_board: TeamsScoreBoard
     team_selection: Scene
     going_back_to_game: boolean
     player_selecting: integer
@@ -92,8 +97,16 @@ end
 
 function PlayerSelection.new(): PlayerSelection
     local self: PlayerSelection = setmetatable({}, { __index = PlayerSelection })
-    self.game = battle.new(self)
-    self.team_selection = team_selection.new(self.game, music)
+    self.singles_score_board = score_board.new_for_singles()
+    self.teams_score_board = score_board.new_for_teams()
+    -- TODO: Does not make sense to create this here......
+    -- The team one should be created in team selection and used there!
+    if settings.teams then
+        self.game = battle.new(self, self.teams_score_board)
+    else
+        self.game = battle.new(self, self.singles_score_board)
+    end
+    self.team_selection = team_selection.new(self.game, music, self.teams_score_board)
     self.going_back_to_game = false
     self.idle_images = {}
     self.slow_walk_animations = {}
@@ -167,7 +180,7 @@ function PlayerSelection:handle_player_input()
             scenes.set(self.team_selection)
         else
             music:stop()
-            self.game:update_players()
+            self.singles_score_board:update_avatars(characters.get_selections())
             
             if self.going_back_to_game then
                 -- The game might have paused audio, make sure to unpause:

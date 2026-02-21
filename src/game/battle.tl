@@ -124,10 +124,10 @@ function Battle:load()
 	music:stop()
 end
 
-function Battle.new(player_selection: Scene): Battle
+function Battle.new(player_selection: Scene, score_board_: ScoreBoard): Battle
    	local self: Battle = setmetatable({}, { __index = Battle })
 	self.player_selection = player_selection
-	self.score_board = score_board.new(characters.get_selections())
+	self.score_board = score_board_
 	self:load()
    	return self
 end
@@ -197,10 +197,6 @@ function Battle:handle_bomb_drop_input(player: Player)
 	end
 end
 
-function Battle:update_players()
-	self.score_board:update_avatars(characters.get_selections())
-end
-
 function Battle:get_player(player_id: integer): Player
 	for _, player in ipairs(self.players) do
 		if player_id == player.id then
@@ -234,7 +230,7 @@ function Battle:handle_pause_input(): boolean
 		else
 			settings.number_of_players = settings.number_of_players - 1
 			characters.remove_selection_for(player_id)
-			self:update_players()
+			self.score_board:remove_player(player_id)
 			local possible_player = self:get_player(player_id)
 			if possible_player then
 				possible_player:remove()
@@ -619,8 +615,8 @@ function battle.load_assets()
 	music:setVolume(0.75)
 end
 
-function battle.new(player_selection: Scene): Battle
-	return Battle.new(player_selection)
+function battle.new(player_selection: Scene, score_board_: ScoreBoard): Battle
+	return Battle.new(player_selection, score_board_)
 end
 
 return battle

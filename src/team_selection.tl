@@ -10,18 +10,21 @@ local hitboxes = require("engine.hitboxes")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
 local scenes = require("engine.scenes")
+local score_board = require("game.score_board")
 local screen = require("screen")
 local vectors = require("engine.geometry.vectors")
 
 local type Animation = animations.Animation
 local type Battle = battle.Battle
 local type CharacterName = characters.CharacterName
+local type CharacterSelection = characters.CharacterSelection
 local type Color = images.Color
 local type Direction = vectors.Direction
 local type MenuFont = fonts.MenuFont
 local type Point = points.Point
 local type Rectangle = rectangles.Rectangle
 local type Scene = scenes.Scene
+local type TeamsScoreBoard = score_board.TeamsScoreBoard
 
 local WALK_SPEED = 45
 local PLAYER_AREA = rectangles.new(24, 32, 272, 176)
@@ -37,8 +40,6 @@ local record TeamAssignment
 	team: integer
 	sprite: CharacterName
 end
-
-local stored_assignments: {TeamAssignment} = {}
 
 local record TeamZone
 	id: integer
@@ -154,6 +155,7 @@ end
 
 local record TeamSelection is Scene
 	team_players: {integer: TeamPlayer}
+	score_board: TeamsScoreBoard
 	countdown_time: number
 	game: Battle
 	music: Source
@@ -206,16 +208,20 @@ function TeamSelection:update(dt: number)
 
 	-- Transition
 	if self.countdown_time == 0 then
+		local stored_assignments: {integer: {CharacterSelection}} = {}
 		stored_assignments = {}
 		for _, player in pairs(self.team_players) do
-			table.insert(stored_assignments, {
-				player_id = player.player_id,
-				team = player:get_team_zone(),
-				sprite = player.sprite,
-			})
+			stored_assignments[player:get_team_zone()] = {}
 		end
+		for _, player in pairs(self.team_players) do
+			table.insert(
+				stored_assignments[player:get_team_zone()],
+				CharacterSelection.new(player.player_id, player.sprite)
+			)
+		end
+
 		self.music:stop()
-		self.game:update_players()
+		self.score_board:update_avatars(stored_assignments)
 
 		if self.going_back_to_game then
 			-- The game might have paused audio, make sure to unpause:
@@ -293,18 +299,15 @@ function team_selection.load_assets()
 	end
 end
 
-function team_selection.new(game: Battle, music: Source): TeamSelection
+function team_selection.new(game: Battle, music: Source, teams_score_board: TeamsScoreBoard): TeamSelection
 	local self: TeamSelection = setmetatable({}, { __index = TeamSelection })
 	self.team_players = {}
+	self.score_board = teams_score_board
 	self.countdown_time = 0
 	self.music = music
 	self.game = game
 	self.going_back_to_game = false
 	return self
-end
-
-function team_selection.get_team_assignments(): {TeamAssignment}
-	return stored_assignments
 end
 
 return team_selection
