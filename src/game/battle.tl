@@ -32,6 +32,7 @@ local score_board = require("game.score_board")
 local settings = require("settings")
 local soft_blocks = require("soft_blocks")
 local tracing = require("engine.tracing")
+local win_condition = require("game.win_condition")
 
 local type Bomb = bombs.Bomb
 local type Bombs = bombs.Bombs
@@ -56,6 +57,7 @@ local type Scene = scenes.Scene
 local type ScoreBoard = score_board.ScoreBoard
 local type GameTimer = timer.GameTimer
 local type Point = points.Point
+local type WinCondition = win_condition.WinCondition
 
 local music: Source
 
@@ -82,8 +84,7 @@ local record Battle is Scene
 	timer: GameTimer
 	players: {Player}
 	player_animations: PlayerAnimations
-	time_to_wait_to_end_game: number
-	time_of_1_alive_player: number
+	win_condition: WinCondition
 	state: BattleState
 	countdown: GameCountdown
 	pressure_blocks: PressureBlocks
@@ -111,8 +112,7 @@ function Battle:load()
 	self.items = items.new()
 	self.timer = timer.new()
 	self.player_animations = player_animations.new(self.players)
-	self.time_to_wait_to_end_game = 2.0
-	self.time_of_1_alive_player = 0.0
+	self.win_condition = win_condition.new_for_singles(self.score_board)
 	self.state = "starting"
 	self.countdown = countdown.new()
 	self.pressure_blocks = pressure_blocks.new()
@@ -266,31 +266,30 @@ local is_dead = function(player: Player): boolean
 	return not player:is_alive()
 end
 
-function Battle:check_if_finished(dt: number, alive_players: {Player})
+function Battle:check_if_finished(dt: number)
 	if self.state == "finished" then
 		return
 	end
 
-	if #alive_players <= 1 then
-		self.time_of_1_alive_player = self.time_of_1_alive_player + dt
-	elseif self.timer:out_of_time() then
+	self.win_condition:update(dt, self.players)
+
+	if self.timer:out_of_time() and not self.win_condition.is_standing_count then
 		self.state = "finished"
-		-- Many alive and time out => draw
+		-- Time out and have not entered standing count => draw
 		music:stop()
 		scenes.set(battle_end_scene.new_for_timeout(self))
 	end
 
-	if self.time_of_1_alive_player > self.time_to_wait_to_end_game then
+	if self.win_condition.have_winner then
 		self.state = "finished"
-		if #alive_players == 1 then
-			local winner = alive_players[1]
-			local score = self.score_board:add_point(winner.id)
-			music:stop()
-			scenes.set(battle_end_scene.new_for_winner(self, winner.sprite, score))
-		else
-			music:stop()
-			scenes.set(battle_end_scene.new_for_draw(self))
-		end
+		music:stop()
+		scenes.set(battle_end_scene.new_for_winners(
+			self, self.win_condition.winners, self.score_board)
+		)
+	elseif self.win_condition.is_draw then
+		self.state = "finished"
+		music:stop()
+		scenes.set(battle_end_scene.new_for_draw(self))
 	end
 end
 
@@ -507,7 +506,7 @@ function Battle:update(dt: number)
 		end
 	end
 
-	self:check_if_finished(dt, alive_players)
+	self:check_if_finished(dt)
 	trace_entities:stop()
 end
 

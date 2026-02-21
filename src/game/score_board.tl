@@ -3,6 +3,7 @@ local fonts = require("fonts")
 local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
 local screen = require("screen")
+local settings = require("settings")
 
 local type CharacterName = characters.CharacterName
 local type CharacterSelection = characters.CharacterSelection
@@ -86,6 +87,15 @@ function ScoreBoard:update_avatars(new_characters: {CharacterSelection})
 
         table.insert(self.players, new_player)
     end
+end
+
+function ScoreBoard:game_finished(): boolean
+    for _, player in ipairs(self.players) do
+        if player.score >= settings.game_rules.timings.nbr_battles then
+            return true
+        end
+    end
+    return false
 end
 
 function score_board.load_assets()

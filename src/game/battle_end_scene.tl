@@ -1,11 +1,12 @@
 local audio = require("engine.audio")
 local characters = require("characters")
 local scenes = require("engine.scenes")
-local settings = require("settings")
+local score_board = require("game.score_board")
 local winner_scene = require("game.winner_scene")
 
 local type CharacterName = characters.CharacterName
 local type Scene = scenes.Scene
+local type ScoreBoard = score_board.ScoreBoard
 
 local winner_sound: Source
 local draw_sound: Source
@@ -34,14 +35,14 @@ function BattleEndScene.new(
     return self
 end
 
-function battle_end_scene.new_for_winner(
-    game_scene: Scene, name: CharacterName, score: integer
+function battle_end_scene.new_for_winners(
+    game_scene: Scene, names: {CharacterName}, score_board_: ScoreBoard
 ): BattleEndScene
     local function get_next_scene(): Scene
-        if score < settings.game_rules.timings.nbr_battles then
-            return game_scene
+        if score_board_:game_finished() then
+            return winner_scene.new(names)
         else
-            return winner_scene.new(name)
+            return game_scene
         end
     end
     return BattleEndScene.new(game_scene, get_next_scene(), winner_sound, 3)
