@@ -56,6 +56,10 @@ function Group:list(): {T}
     return list
 end
 
+function Group:is_empty(): boolean
+    return next(self.set) == nil
+end
+
 function collision.new_group<T>(...: {T}): Group<T>
     local self: Group<T> = setmetatable({}, { __index = Group })
 
@@ -87,6 +91,10 @@ end
 
 function Lookup:collisions_between<K is Entity,T>(entities: {K}, group: Group<T>): {K: T}
     local collides_with: {K: T} = {}
+    if group:is_empty() then
+        return collides_with
+    end
+
     for _, entity in ipairs(entities) do
         for index in get_indexes(entity:hitbox()) do
             for _, check_against in ipairs(self.map[index] or {}) do
@@ -105,6 +113,10 @@ end
 
 function Lookup:in_box_and_group<T>(box: Rectangle, group: Group<T>): {T}
     local in_box_for_group: {T} = {}
+    if group:is_empty() then
+        return in_box_for_group
+    end
+
     for index in get_indexes(box) do
         for _, check_against in ipairs(self.map[index] or {}) do
             if box:overlap(check_against:hitbox()) then
