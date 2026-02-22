@@ -40,7 +40,7 @@ function battle_end_scene.new_for_winners(
 ): BattleEndScene
     local function get_next_scene(): Scene
         if score_board_:game_finished() then
-            return winner_scene.new(names[1])
+            return winner_scene.new(names)
         else
             return game_scene
         end
