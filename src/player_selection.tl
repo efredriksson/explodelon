@@ -9,9 +9,12 @@ local scenes = require("engine.scenes")
 local settings = require("settings")
 local vectors = require("engine.geometry.vectors")
 local points = require("engine.geometry.points")
+local score_board = require("game.score_board")
+local win_condition = require("game.win_condition")
 
 local type Animation = animations.Animation
 local type Battle = battle.Battle
+local type SinglesScoreBoard = score_board.SinglesScoreBoard
 local type CharacterName = characters.CharacterName
 local type MenuFont = fonts.MenuFont
 local type MenuSelection = items.MenuSelection
@@ -79,6 +82,7 @@ end
 
 local record PlayerSelection is Scene
     game: Battle
+    score_board: SinglesScoreBoard
     going_back_to_game: boolean
     player_selecting: integer
     idle_images: {integer: Image}
@@ -90,7 +94,10 @@ end
 
 function PlayerSelection.new(): PlayerSelection
     local self: PlayerSelection = setmetatable({}, { __index = PlayerSelection })
-    self.game = battle.new(self)
+    self.score_board = score_board.new_for_singles()
+    self.game = battle.new(
+        self, self.score_board, win_condition.new_for_singles(self.score_board)
+    )
     self.going_back_to_game = false
     self.idle_images = {}
     self.slow_walk_animations = {}
@@ -161,14 +168,16 @@ end
 function PlayerSelection:handle_player_input()
     if #characters.get_selections() == settings.number_of_players then
         music:stop()
-        self.game:update_players()
-        scenes.set(self.game, self.going_back_to_game)
+        self.score_board:update_avatars(characters.get_selections())
+        
         if self.going_back_to_game then
             -- The game might have paused audio, make sure to unpause:
             audio.unpause()
         end
+        scenes.set(self.game, self.going_back_to_game)
         -- Battle started, keep track on that state:
         self.going_back_to_game = true
+
         return
     end
 

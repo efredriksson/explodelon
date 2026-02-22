@@ -1,5 +1,4 @@
 local audio = require("engine.audio")
-local battle = require("game.battle")
 local characters = require("characters")
 local choices = require("menus.choices")
 local debug_screen = require("menus.debug_screen")
@@ -32,16 +31,12 @@ function start_screen.new(): MenuScreen
         audio.stop()
         if settings.player_selection == "on" then
             characters.clear_selections()
-            scenes.set(player_selection.setup())
+            -- Set default as 'keep' if there is a selection for nbr of players:
+            settings.player_selection = "keep"
         elseif settings.player_selection == "off" then
             characters.auto_select_for(settings.number_of_players)
-            scenes.set(battle.new(nil))
-        else
-            scenes.set(player_selection.setup())
         end
-
-        -- Set default as 'keep' if there is a selection for nbr of players:
-        settings.player_selection = "keep"
+        scenes.set(player_selection.setup())
     end
     local function go_back(_: Scene) end -- Does nothing at start screen
     local function enter_debug_screen(ctx: Scene)
