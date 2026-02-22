@@ -13,10 +13,10 @@ local type Vector = vectors.Vector
 local type Point = points.Point
 
 local record GameWinnerScene is Scene
-	name: CharacterName
+	names: {CharacterName}
 	trophy: Animation
-	trophy_position: Point
-	character_position: Point
+	trophy_positions: {Point}
+	character_positions: {CharacterName: Point}
 	character_jump_velocity: Vector
 	sparks: {Vector: Animation}
     have_played_sound: boolean
@@ -45,18 +45,27 @@ function winner_scene.load_assets()
 	music:setVolume(0.75)
 end
 
-function winner_scene.new(name: CharacterName): GameWinnerScene
+local function get_x_pos(nbr: integer, total: integer): number
+	local space = 40
+	local total_space = space * (total - 1)
+	local y_start = (screen.WIDTH - total_space) / 2
+	return y_start + space * (nbr - 1)
+end
+
+function winner_scene.new(names: {CharacterName}): GameWinnerScene
     local self: GameWinnerScene = setmetatable({}, { __index = GameWinnerScene })
-	self.name = name
+	self.names = names
 	self.trophy = animations.new_with_frames(trophy_image, {2, 0.1, 0.1, 1, 0.1})
-	self.trophy_position = points.new(
-		(screen.WIDTH - self.trophy.width) / 2,
-		(screen.HEIGHT - self.trophy.height) / 2
-	)
-	self.character_position = points.new(
-		(screen.WIDTH - jump_animations[name]:getWidth()) / 2,
-		screen.HEIGHT
-	)
+	self.trophy_positions = {}
+	self.character_positions = {}
+	for i, name in ipairs(names) do
+		local x_pos_adjust = jump_animations[name]:getWidth() / 2
+		self.character_positions[name] = points.new(get_x_pos(i, #names) - x_pos_adjust, screen.HEIGHT)
+		table.insert(self.trophy_positions, points.new(
+			get_x_pos(i, #names) - self.trophy.width / 2,
+			(screen.HEIGHT - self.trophy.height) / 2
+		))
+	end
 	self.character_jump_velocity = vectors.new(0, -47)
 	self.have_played_sound = false
 	self.waited_for = 0.0
@@ -88,7 +97,9 @@ function GameWinnerScene:update(dt: number)
 
 	local gravity = vectors.new(0, 10):scale(dt)
 	self.character_jump_velocity = self.character_jump_velocity:plus(gravity)
-	self.character_position = self.character_position:move(self.character_jump_velocity:scale(dt))
+	for name, character_position in pairs(self.character_positions) do
+		self.character_positions[name] = character_position:move(self.character_jump_velocity:scale(dt))
+	end
 
 	self.trophy:update(dt)
 	for _, spark in pairs(self.sparks) do
@@ -109,12 +120,17 @@ function GameWinnerScene:draw()
 	lutro.graphics.setColor(72, 72, 72)
 	lutro.graphics.rectangle("fill", 0, 0, screen.WIDTH, screen.HEIGHT)
 
-	lutro.graphics.draw(jump_animations[self.name], self.character_position.x, self.character_position.y)
-	local pos = self.trophy_position:move(vectors.new(0, self:_get_trophy_height_diff()))
-	self.trophy:draw(pos.x, pos.y)
-	for spark_dp, spark_anim in pairs(self.sparks) do
-		local spark_pos = pos:move(spark_dp)
-		spark_anim:draw(spark_pos.x, spark_pos.y)
+	for name, character_position in pairs(self.character_positions) do
+		lutro.graphics.draw(jump_animations[name], character_position.x, character_position.y)
+	end
+	
+	for _, trophy_position in ipairs(self.trophy_positions) do
+		local pos = trophy_position:move(vectors.new(0, self:_get_trophy_height_diff()))
+		self.trophy:draw(pos.x, pos.y)
+		for spark_dp, spark_anim in pairs(self.sparks) do
+			local spark_pos = pos:move(spark_dp)
+			spark_anim:draw(spark_pos.x, spark_pos.y)
+		end
 	end
 end
 
