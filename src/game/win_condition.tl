@@ -1,10 +1,12 @@
 local characters = require("characters")
 local players = require("players")
 local score_board = require("game.score_board")
+local teams = require("teams")
 
 local type CharacterName = characters.CharacterName
 local type Player = players.Player
 local type ScoreBoard = score_board.ScoreBoard
+local type TeamSelection = teams.TeamSelection
 
 local interface WinCondition
     reset: function(self)
@@ -20,7 +22,13 @@ local record SinglesWinCondition is WinCondition
     score_board: ScoreBoard
 end
 
-local win_condition = {WinCondition = WinCondition}
+local record TeamsWinCondition is WinCondition
+    time_of_1_alive_team: number
+    score_board: ScoreBoard
+    teams_by_player_id: {integer: integer}
+end
+
+local win_condition = {WinCondition = WinCondition, TeamsWinCondition = TeamsWinCondition}
 local time_to_wait_to_end_game<const> = 2.0
 
 function SinglesWinCondition:update(dt: number, players_: {Player})
@@ -59,6 +67,63 @@ function win_condition.new_for_singles(score_board_: ScoreBoard): SinglesWinCond
     self.score_board = score_board_
     self:reset()
     return self
+end
+
+function TeamsWinCondition:update(dt: number, players_: {Player})
+    local alive_teams: {integer: boolean} = {}
+    for _, player in ipairs(players_) do
+        if player:is_alive() then
+            local alive_team = self.teams_by_player_id[player.id] or 0
+            alive_teams[alive_team] = true
+        end
+    end
+
+    local nbr_alive_teams = 0
+    for _, _ in pairs(alive_teams) do
+        nbr_alive_teams = nbr_alive_teams + 1
+    end
+
+    if nbr_alive_teams <= 1 then
+        self.time_of_1_alive_team = self.time_of_1_alive_team + dt
+        self.is_standing_count = true
+    end
+
+    if not self.have_winner and self.time_of_1_alive_team > time_to_wait_to_end_game then
+        for winning_team, _ in pairs(alive_teams) do
+            self.score_board:add_point(winning_team)
+        end
+        for _, player in ipairs(players_) do
+            if alive_teams[self.teams_by_player_id[player.id]] then
+                table.insert(self.winners, player.sprite)
+            end
+        end
+        self.have_winner = true
+    end
+
+    self.is_draw = (nbr_alive_teams == 0)
+end
+
+function TeamsWinCondition:reset()
+   self.time_of_1_alive_team = 0
+   self.is_standing_count = false
+   self.is_draw = false
+   self.have_winner = false
+   self.winners = {}
+end
+
+function TeamsWinCondition:update_team_mapping(selections: {TeamSelection})
+    self.teams_by_player_id = {}
+    for _, selection in ipairs(selections) do
+        self.teams_by_player_id[selection.player_id] = selection.team.id
+    end
+end
+
+function win_condition.new_for_teams(score_board_: ScoreBoard): TeamsWinCondition
+   local self: TeamsWinCondition = setmetatable({}, { __index = TeamsWinCondition })
+   self.score_board = score_board_
+   self.teams_by_player_id = {}
+   self:reset()
+   return self
 end
 
 return win_condition
