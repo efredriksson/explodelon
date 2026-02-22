@@ -93,6 +93,7 @@ end
 
 local record Player is Explodable, Kinematic, Entity
 	id: integer
+	team_id: integer
 	sprite: CharacterName
    	position: Point
 	direction: Direction
@@ -125,6 +126,7 @@ local players = {Player = Player, Action = Action, PlayerState = PlayerState, So
 function players.new(id: integer, sprite: CharacterName, position: Point): Player
 	local self: Player = setmetatable({}, { __index = Player })
 	self.id = id
+	self.team_id = nil
 	self.sprite = sprite
 	self.position = position
 	self.z_index = z_index.LEVEL

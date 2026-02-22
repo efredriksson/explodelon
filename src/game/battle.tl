@@ -82,6 +82,7 @@ local record Battle is Scene
 	eggs: Eggs
 	items: Items
 	timer: GameTimer
+	team_by_player_id: {integer: integer}
 	players: {Player}
 	player_animations: PlayerAnimations
 	win_condition: WinCondition
@@ -97,11 +98,13 @@ function Battle:load()
 	local character_selections = characters.get_selections()
 	local start_positions = map_entities.get_player_start_positions(#character_selections)
 	for i, character_selection in ipairs(character_selections) do
-		table.insert(self.players, players.new(
+		local created_player = players.new(
 			character_selection.player_id,
 			character_selection.sprite,
-			start_positions[i])
+			start_positions[i]
 		)
+		created_player.team_id = self.team_by_player_id[created_player.id]
+		table.insert(self.players, created_player)
 	end
 
 	self.bombs = bombs.new()
@@ -126,6 +129,7 @@ end
 
 function Battle.new(player_selection: Scene, score_board_: ScoreBoard, win_condition_: WinCondition): Battle
    	local self: Battle = setmetatable({}, { __index = Battle })
+	self.team_by_player_id = {}
 	self.player_selection = player_selection
 	self.score_board = score_board_
 	self.win_condition = win_condition_

@@ -211,11 +211,14 @@ function TeamSelectionScene:update(dt: number)
 	-- Transition
 	if self.countdown_time == 0 then
 		local selections: {TeamSelection} = {}
+		self.game.team_by_player_id = {}
 		for _, player in pairs(self.team_players) do
+			local team = player:get_team_zone().team
 			local selection = teams.new_selection(
-				player:get_team_zone().team, player.player_id, player.sprite
+				team, player.player_id, player.sprite
 			)
 			table.insert(selections, selection)
+			self.game.team_by_player_id[player.player_id] = team.id 
 		end
 
 		self.music:stop()
