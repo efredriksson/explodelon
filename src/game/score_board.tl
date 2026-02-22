@@ -3,6 +3,7 @@ local fonts = require("fonts")
 local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
 local screen = require("screen")
+local settings = require("settings")
 
 local type CharacterName = characters.CharacterName
 local type CharacterSelection = characters.CharacterSelection
@@ -12,32 +13,30 @@ local type Point = points.Point
 local score_font: ShadedFont
 local avatar_images: {CharacterName: Image}
 
+local interface ScoreBoard
+    draw: function(self)
+    add_point: function(self, id: integer)
+    game_finished: function(self): boolean
+    remove_player: function(self, player_id: integer)
+end
+
 local record PlayerScore
     id: integer
     score: integer
     avatar: CharacterName
 end
 
+local record SinglesScoreBoard is ScoreBoard
+    players: {PlayerScore}
+end
+
+local score_board = {ScoreBoard = ScoreBoard, SinglesScoreBoard = SinglesScoreBoard}
+
 function PlayerScore.new(id: integer, avatar: CharacterName): PlayerScore
     local self: PlayerScore = setmetatable({}, { __index = PlayerScore })
     self.id = id
     self.score = 0
     self.avatar = avatar
-    return self
-end
-
-local record ScoreBoard
-    players: {PlayerScore}
-end
-
-local score_board = {ScoreBoard = ScoreBoard}
-
-function score_board.new(avatars: {CharacterSelection}): ScoreBoard
-    local self: ScoreBoard = setmetatable({}, { __index = ScoreBoard })
-    self.players = {}
-    for _, avatar in ipairs(avatars) do
-        table.insert(self.players, PlayerScore.new(avatar.player_id, avatar.sprite))
-    end
     return self
 end
 
@@ -53,7 +52,7 @@ local function get_avatar_position(avatar_num: number, num_avatars: number): Poi
 	return points.new(x_pos, y_start)
 end
 
-function ScoreBoard:draw()
+function SinglesScoreBoard:draw()
     for nbr, player in ipairs(self.players) do
 		local avatar_pos = get_avatar_position(nbr, #self.players)
 		local score_pos = avatar_pos:move(vectors.new(18, 5))
@@ -62,18 +61,17 @@ function ScoreBoard:draw()
 	end
 end
 
-function ScoreBoard:add_point(player_id: integer): integer
+function SinglesScoreBoard:add_point(player_id: integer)
     for _, player in ipairs(self.players) do
         if player.id == player_id then
             player.score = player.score + 1
-            return player.score
+            return
         end
     end
-
     assert(false, "Trying to set score for missing player!")
 end
 
-function ScoreBoard:update_avatars(new_characters: {CharacterSelection})
+function SinglesScoreBoard:update_avatars(new_characters: {CharacterSelection})
     local old_data = self.players
     self.players = {}
     for _, char in ipairs(new_characters) do
@@ -83,9 +81,32 @@ function ScoreBoard:update_avatars(new_characters: {CharacterSelection})
                 new_player.score = old_player.score
             end
         end
-
         table.insert(self.players, new_player)
     end
+end
+
+function SinglesScoreBoard:remove_player(player_id: integer)
+    for i, player in ipairs(self.players) do
+        if player.id == player_id then
+            table.remove(self.players, i)
+            return
+        end
+    end
+end
+
+function SinglesScoreBoard:game_finished(): boolean
+    for _, player in ipairs(self.players) do
+        if player.score >= settings.game_rules.timings.nbr_battles then
+            return true
+        end
+    end
+    return false
+end
+
+function score_board.new_for_singles(): SinglesScoreBoard
+    local self: SinglesScoreBoard = setmetatable({}, { __index = SinglesScoreBoard })
+    self.players = {}
+    return self
 end
 
 function score_board.load_assets()
