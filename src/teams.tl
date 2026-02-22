@@ -34,6 +34,11 @@ function Team.new(id: integer, name: string, color: Color): Team
     return self
 end
 
+function Team:color_shade(): Color
+    local r, g, b = table.unpack(self.color)
+    return {r - 25, g - 20, b - 20}
+end
+
 function TeamSelectionGrouped.new(team: Team): TeamSelectionGrouped
     local self: TeamSelectionGrouped = setmetatable({}, { __index = TeamSelectionGrouped })
     self.team = team

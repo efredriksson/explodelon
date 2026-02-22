@@ -9,11 +9,13 @@ local players = require("players")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
 local vectors = require("engine.geometry.vectors")
+local teams = require("teams")
 local z_index = require("z_index")
 
 local type Entity = require("engine.entity")
 local type Animation = animations.Animation
 local type Action = players.Action
+local type Color = images.Color
 local type CharacterName = characters.CharacterName
 local type AnimatedDinos = dino_animations.AnimatedDinos
 local type Dino = dinos.Dino
@@ -27,6 +29,7 @@ local type SpriteImages = {PlayerState: {Action: {Direction: Image}}}
 local type SonicWaveColor = players.SonicWaveColor
 
 local jump_shadow_image: Image
+local flag_animations: {integer: {CharacterName: Animation}} = {}
 local sonic_wave_images: {Direction: {SonicWaveColor: Image}} = {}
 local stun_cry_text_images: {Direction: {integer: Image}}
 local sprites: {CharacterName: SpriteImages} = {}
@@ -35,6 +38,26 @@ local special_animation_frame_durations: {Action: number} = {
 	dying = 1 / 8,
 	stunned = 1 / 8,
 	crashed = 1 / 8,
+}
+local flag_base_color: Color = {154, 64, 64}
+local flag_dark_color: Color = {134, 48, 48}
+local flag_pixel_maps: {integer: {Color: Color}} = {
+	[1] = {
+		[flag_base_color] = teams.get(1).color,
+		[flag_dark_color] = teams.get(1):color_shade()
+	},
+	[2] = {
+		[flag_base_color] = teams.get(2).color,
+		[flag_dark_color] = teams.get(2):color_shade()
+	},
+	[3] = {
+		[flag_base_color] = teams.get(3).color,
+		[flag_dark_color] = teams.get(3):color_shade()
+	},
+    [4] = {
+		[flag_base_color] = teams.get(4).color,
+		[flag_dark_color] = teams.get(4):color_shade()
+	},
 }
 
 local function get_animation_frame_duration(action: Action): number
@@ -99,8 +122,16 @@ local function block_to_anim_draw_pos(animation: Animation, pos: Point): Point
 		pos.y - animation.height + grid.TILE_SIZE + 1)
 end
 
+local function draw_flag(player: Player, draw_position: Point)
+	if player.team_id then
+		local flag_pos = draw_position:move(vectors.new(4, -10))
+		flag_animations[player.team_id][player.sprite]:draw(flag_pos.x, flag_pos.y)
+	end
+end
+
 function PlayerAnimation:draw()
 	local draw_pos = block_to_anim_draw_pos(self.animation, self.draw_position)
+	draw_flag(self.player, draw_pos)
 	self.animation:draw(draw_pos.x, draw_pos.y)
 end
 
@@ -289,8 +320,11 @@ function MountedPlayerAnimation:draw()
 		return
 	end
 
-	local function draw(animation: Animation, pos: Point)
+	local function draw(animation: Animation, pos: Point, should_draw_flag?: boolean)
 		local draw_pos = block_to_anim_draw_pos(animation, pos)
+		if should_draw_flag then
+			draw_flag(self.player, draw_pos)
+		end
 		animation:draw(draw_pos.x, draw_pos.y)
 	end
 
@@ -321,21 +355,21 @@ function MountedPlayerAnimation:draw()
 		local character_pos = self.draw_position:move(DINO_SLIDE_CHARACTER_ADJUST[self.player.direction])
 		if self.player.direction == "right" or self.player.direction == "left" then
 			-- Need to draw dino in front of player sliding left or right with level 2 dino
-			draw(self.player_animation, character_pos)
+			draw(self.player_animation, character_pos, true)
 			draw(self.dino_animation, dino_position())
 		else
 			-- For up and down the player is on front
 			draw(self.dino_animation, dino_position())
-			draw(self.player_animation, character_pos)
+			draw(self.player_animation, character_pos, true)
 		end
 	elseif self.player.direction == "down" then
 		-- Need to draw dino in front of player walking towards screen
-		draw(self.player_animation, self.draw_position)
+		draw(self.player_animation, self.draw_position, true)
 		draw(self.dino_animation, dino_position())
 	else
 		-- And player in front of dino in all other cases
 		draw(self.dino_animation, dino_position())
-		draw(self.player_animation, self.draw_position)
+		draw(self.player_animation, self.draw_position, true)
 	end
 end
 
@@ -491,6 +525,15 @@ function player_animations.load_assets()
 		right = horizontal_sonic_image,
 		left = horizontal_sonic_image
 	}
+
+	for i=1, 4 do
+		local flag_image = lutro.graphics.newImage("assets/team_flag.png")
+		images.change_colors(flag_image, flag_pixel_maps[i])
+		flag_animations[i] = {}
+		for _, sprite in ipairs(characters.get_names()) do
+			flag_animations[i][sprite] = animations.new(flag_image, 30, 0.1)
+		end
+	end
 end
 
 function player_animations.new(entities: {Player}): PlayerAnimations
@@ -512,6 +555,12 @@ function PlayerAnimations:update(dt: number)
 		-- Update animations regardless if alive or not
 		self.regular[player.id][player.state][player.action][player.direction]:update(dt)
 		self.invulnerable[player.id][player.state][player.action][player.direction]:update(dt)
+	end
+
+	for i=1, 4 do
+		for _, sprite in ipairs(characters.get_names()) do
+			flag_animations[i][sprite]:update(dt)
+		end
 	end
 end
 
