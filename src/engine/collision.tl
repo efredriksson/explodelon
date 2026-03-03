@@ -11,7 +11,7 @@ local function index_2d_to_1d(i: integer, j: integer): integer
     return i * LIMIT_Y_TILES + j
 end
 
-local function get_indexes(hitbox: Rectangle): function(): integer
+local function get_indexes(hitbox: Rectangle): (integer, integer, integer, integer)
     local block_size = settings.block_size
     local x_min, y_min = math.ceil(hitbox.x / block_size), math.ceil(hitbox.y / block_size)
     local x_max, y_max = math.ceil((hitbox.x + hitbox.width) / block_size), math.ceil((hitbox.y + hitbox.height) / block_size)
@@ -20,17 +20,7 @@ local function get_indexes(hitbox: Rectangle): function(): integer
         logger.warning("Tile out of bound, collision checking will not work")
     end
 
-    local i, j = x_min, y_min
-    return function(): integer
-        if i > x_max then return nil end
-        local index = index_2d_to_1d(i, j)
-        j = j + 1
-        if j > y_max then
-            j = y_min
-            i = i + 1
-        end
-        return index
-    end
+    return x_min, x_max, y_min, y_max
 end
 
 local record Group<T>
@@ -78,11 +68,15 @@ function collision.new_lookup(...: {Entity}): Lookup
 
     for _, entity_list in ipairs({...}) do
         for _, entity in ipairs(entity_list) do
-            for index in get_indexes(entity:hitbox()) do
-                if not self.map[index] then
-                    self.map[index] = {}
+            local x_min, x_max, y_min, y_max = get_indexes(entity:hitbox())
+            for i = x_min, x_max do
+                for j = y_min, y_max do
+                    local index = index_2d_to_1d(i, j)
+                    if not self.map[index] then
+                        self.map[index] = {}
+                    end
+                    table.insert(self.map[index], entity)
                 end
-                table.insert(self.map[index], entity)
             end
         end
     end
@@ -96,12 +90,16 @@ function Lookup:collisions_between<K is Entity,T>(entities: {K}, group: Group<T>
     end
 
     for _, entity in ipairs(entities) do
-        for index in get_indexes(entity:hitbox()) do
-            for _, check_against in ipairs(self.map[index] or {}) do
-                if entity ~= check_against and entity:hitbox():overlap(check_against:hitbox()) then
-                    local in_group = group:get(check_against)
-                    if not in_group is nil then
-                        collides_with[entity] = in_group
+       local x_min, x_max, y_min, y_max = get_indexes(entity:hitbox())
+        for i = x_min, x_max do
+            for j = y_min, y_max do
+                local index = index_2d_to_1d(i, j)
+                for _, check_against in ipairs(self.map[index] or {}) do
+                    if entity ~= check_against and entity:hitbox():overlap(check_against:hitbox()) then
+                        local in_group = group:get(check_against)
+                        if not in_group is nil then
+                            collides_with[entity] = in_group
+                        end
                     end
                 end
             end
@@ -117,12 +115,16 @@ function Lookup:in_box_and_group<T>(box: Rectangle, group: Group<T>): {T}
         return in_box_for_group
     end
 
-    for index in get_indexes(box) do
-        for _, check_against in ipairs(self.map[index] or {}) do
-            if box:overlap(check_against:hitbox()) then
-                local in_group = group:get(check_against)
-                if in_group then
-                    table.insert(in_box_for_group, in_group)
+    local x_min, x_max, y_min, y_max = get_indexes(box)
+    for i = x_min, x_max do
+        for j = y_min, y_max do
+            local index = index_2d_to_1d(i, j)
+            for _, check_against in ipairs(self.map[index] or {}) do
+                if box:overlap(check_against:hitbox()) then
+                    local in_group = group:get(check_against)
+                    if in_group then
+                        table.insert(in_box_for_group, in_group)
+                    end
                 end
             end
         end
