@@ -39,25 +39,24 @@ local special_animation_frame_durations: {Action: number} = {
 	stunned = 1 / 8,
 	crashed = 1 / 8,
 }
-local flag_base_color: Color = {154, 64, 64}
-local flag_dark_color: Color = {134, 48, 48}
+
+local function get_flag_pixel_map(team_index: integer): {Color: Color}
+	local team = teams.get(team_index)
+	local flag_base_color: Color = {154, 64, 64}
+	local flag_dark_color: Color = {134, 48, 48}
+	local flag_darker_color: Color = {94, 34, 34}
+	return {
+		[flag_base_color] = team.color,
+		[flag_dark_color] = team:color_shade(),
+		[flag_darker_color] = team:color_darker_shade()
+	}
+end
+
 local flag_pixel_maps: {integer: {Color: Color}} = {
-	[1] = {
-		[flag_base_color] = teams.get(1).color,
-		[flag_dark_color] = teams.get(1):color_shade()
-	},
-	[2] = {
-		[flag_base_color] = teams.get(2).color,
-		[flag_dark_color] = teams.get(2):color_shade()
-	},
-	[3] = {
-		[flag_base_color] = teams.get(3).color,
-		[flag_dark_color] = teams.get(3):color_shade()
-	},
-    [4] = {
-		[flag_base_color] = teams.get(4).color,
-		[flag_dark_color] = teams.get(4):color_shade()
-	},
+	[1] = get_flag_pixel_map(1),
+	[2] = get_flag_pixel_map(2),
+	[3] = get_flag_pixel_map(3),
+    [4] = get_flag_pixel_map(4),
 }
 
 local function get_animation_frame_duration(action: Action): number
