@@ -62,7 +62,6 @@ function characters.get_names(nbr_to_get?: integer): {CharacterName}
 end
 
 function characters.is_unused(sprite: CharacterName): boolean
-    assert(#character_selections < #ALL_SPRITES, "All sprites are selected!")
     for _, selected in ipairs(character_selections) do
         if sprite == selected.sprite then
             return false

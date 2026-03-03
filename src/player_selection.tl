@@ -250,6 +250,9 @@ function PlayerSelection:draw()
     end
 
     local character = self.selectable_characters[self.selector:get_value()]
+    if character == nil then
+        return -- This only happens when all 10 characters are selected, will change scene!
+    end
     local indicator_offset = vectors.new(4, -5)
     local indicator_pos = character:get_position():move(indicator_offset)
     lutro.graphics.draw(selector_indicator, indicator_pos.x, indicator_pos.y)
