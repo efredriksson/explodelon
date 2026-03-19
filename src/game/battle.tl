@@ -41,7 +41,6 @@ local type Explodable = require("bombs.explodable")
 local type Kinematic = require("kinematic")
 local type Entity = require("engine.entity")
 local type GameCountdown = countdown.GameCountdown
-local type HardBlock = hard_blocks.HardBlock
 local type HardBlocks = hard_blocks.HardBlocks
 local type Items = items.Items
 local type LightningBombs = lightning_bombs.LightningBombs
@@ -73,7 +72,6 @@ local record Battle is Scene
 	player_selection: Scene
 	
 	hard_blocks: HardBlocks
-	hard_blocks_group: Group<HardBlock>
 	non_hard_block_positions: {Point}
 	bombs: Bombs
 	lightning_bombs: LightningBombs
@@ -120,7 +118,6 @@ function Battle:load()
 	self.countdown = countdown.new()
 	self.pressure_blocks = pressure_blocks.new()
 	self.hard_blocks = hard_blocks.new(map_entities.get_hard_blocks())
-	self.hard_blocks_group = collision.new_group(self.hard_blocks.on_ground)
 	self.non_hard_block_positions = map_entities.get_non_hard_block_positions()
 	self.tic_counter = 0
 	self.audio_paused = false
@@ -389,7 +386,7 @@ function Battle:update(dt: number)
 	local bombs_group: Group<Bomb> = collision.new_group(self.bombs.on_ground)
 	local bomb_entities_group: Group<Entity> = collision.new_group(self.bombs.on_ground)
 	local soft_blocks_group: Group<SoftBlock> = collision.new_group(self.soft_blocks.on_ground)
-	local blocking_blocks_group: Group<Kinematic> = collision.new_group(self.soft_blocks.on_ground, self.pressure_blocks.on_ground)
+	local blocking_blocks_group: Group<Kinematic> = collision.new_group(self.soft_blocks.on_ground, self.pressure_blocks.on_ground, self.hard_blocks.on_ground)
 	local lookup = collision.new_lookup(
 		self.soft_blocks.on_ground,
 		self.hard_blocks.on_ground,
@@ -417,10 +414,9 @@ function Battle:update(dt: number)
 		if player:accepts_input() then
 			self:handle_bomb_drop_input(player)
 			local area_close_to_player = player:movementbox():expand(grid.TILE_SIZE / 2)
-			local blocking_blocks = lookup:in_box_and_group(area_close_to_player, blocking_blocks_group)
-			local close_hard_blocks = lookup:in_box_and_group(area_close_to_player, self.hard_blocks_group)
+			local close_blocks = lookup:in_box_and_group(area_close_to_player, blocking_blocks_group)
 			movement.set_position_and_dir_from_input(
-				player, dt, blocking_blocks, close_hard_blocks, self.lightning_bombs, blocks_bombs, alive_players_group, bombs_group, lookup
+				player, dt, close_blocks, self.lightning_bombs, blocks_bombs, alive_players_group, bombs_group, lookup
 			)
 			dino_inputs.handle(dt, player, self.bombs, blocks_jump, bombs_group, lookup)
 		end

@@ -25,6 +25,10 @@ function Point:move(delta: Vector): Point
    return points.new(self.x + delta.x, self.y + delta.y)
 end
 
+function Point:vector_to(other: Point): Vector
+   return vectors.new(other.x - self.x, other.y - self.y)
+end
+
 function Point:distance_to(other: Point): number
    return math.sqrt((other.x - self.x) ^ 2 + (other.y - self.y) ^ 2) 
 end

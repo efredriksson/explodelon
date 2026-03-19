@@ -145,8 +145,7 @@ end
 local function restrict_player_movement(
 	player: Player,
 	movement: Vector,
-	blocking_blocks: {Kinematic},
-	hard_blocks: {Kinematic},
+	blocks: {Kinematic},
 	lightning_bombs_: LightningBombs,
 	blocks_bombs: Group<Kinematic>,
 	close_bombs: {Bomb},
@@ -224,33 +223,32 @@ local function restrict_player_movement(
 		end
 	end
 
-	for _, block in ipairs(blocking_blocks) do
-		if walking_further_into_block(block:movementbox()) then
-			-- Not allowed to walk further into 1 ton block
-			return CheckedMovement.new(player.position, false, false)
+	local function check_block_collision(block_box: Rectangle): CheckedMovement
+		if movement.x == 0 then
+			return move_against_block(movement.y, player.position.x - block_box.x, false)
+		elseif movement.y == 0 then
+			return move_against_block(movement.x, player.position.y - block_box.y, true)
+		else
+			assert(false, "Bad movement vector")
 		end
 	end
 
-	for _, block in ipairs(hard_blocks) do
+	for _, block in ipairs(blocks) do
 		local block_box = block:movementbox()
-		if new_hitbox:overlap(block_box) then
-			if movement.x == 0 then
-				local movement_len = movement.y
-				local pos_and_block_lateral_diff = player.position.x - block_box.x
-				local walk_along_y_axis = false
-				return move_against_block(
-					movement_len, pos_and_block_lateral_diff, walk_along_y_axis
+		if walking_further_into_block(block_box) then
+			local result = check_block_collision(block_box)
+			if result.cuts_corner then
+				local corner_cut_hitbox = player:movementbox():shift(
+					player.position:vector_to(result.position)
 				)
-			elseif movement.y == 0 then
-				local movement_len = movement.x
-				local pos_and_block_lateral_diff = player.position.y - block_box.y
-				local walk_along_y_axis = true
-				return move_against_block(
-					movement_len, pos_and_block_lateral_diff, walk_along_y_axis
-				)
-			else
-				assert(false, "Bad movement vector")
+				for _, other_block in ipairs(blocks) do
+					if other_block ~= block and corner_cut_hitbox:overlap(other_block:movementbox()) then
+						return CheckedMovement.new(player.position, false, false)
+					end
+				end
 			end
+
+			return result
 		end
 	end
 
@@ -266,8 +264,7 @@ end
 local function get_new_player_orientation(
 	player_dir: Direction,
 	directions: {Movement},
-	blocking_blocks: {Kinematic},
-	hard_blocks: {Kinematic},
+	blocks: {Kinematic},
 	lightning_bombs_: LightningBombs,
 	player: Player,
 	blocks_bombs: Group<Kinematic>,
@@ -306,7 +303,7 @@ local function get_new_player_orientation(
 	local close_bombs = lookup:in_box_and_group(player:movementbox():expand(grid.TILE_SIZE), bombs_)
 	for _, direction in ipairs(directions) do
 		local movement = restrict_player_movement(
-			player, direction.dxdy, blocking_blocks, hard_blocks, lightning_bombs_, blocks_bombs, close_bombs, players_, bombs_, lookup
+			player, direction.dxdy, blocks, lightning_bombs_, blocks_bombs, close_bombs, players_, bombs_, lookup
 		)
 		table.insert(directions_checks, MovementWithCheck.new(direction.dxdy, direction.dir, movement))
 	end
@@ -373,8 +370,7 @@ end
 function movement.set_position_and_dir_from_input(
 	player: Player,
 	dt: number,
-	blocking_blocks: {Kinematic},
-	hard_blocks: {Kinematic},
+	blocks: {Kinematic},
 	lightning_bombs_: LightningBombs,
 	blocks_bombs: Group<Kinematic>,
 	players_: Group<Player>,
@@ -391,7 +387,7 @@ function movement.set_position_and_dir_from_input(
 	local moves = get_moves(player, move_inputs, momentum)
 
 	local new_dir, new_pos = get_new_player_orientation(
-		player.direction, moves, blocking_blocks, hard_blocks, lightning_bombs_, player, blocks_bombs, players_, bombs_, lookup
+		player.direction, moves, blocks, lightning_bombs_, player, blocks_bombs, players_, bombs_, lookup
 	)
 	player:set_movement(new_pos, new_dir)
 	if #moves == 0 then
