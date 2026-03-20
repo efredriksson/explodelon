@@ -42,6 +42,7 @@ local record CheckedMovement
 	position: Point
 	spent: boolean
 	cuts_corner: boolean
+	constrained: boolean  -- true if anything was touched: block, bomb, boundary, or corner cut
 	bombs_kicked: {{Bomb, Vector}}
 end
 
@@ -52,6 +53,7 @@ function CheckedMovement.new(
    self.position = position
    self.spent = spent
    self.cuts_corner = cuts_corner
+   self.constrained = not spent or cuts_corner
    self.bombs_kicked = bombs_kicked or {}
    return self
 end
@@ -173,7 +175,7 @@ local function restrict_player_movement(
 		):permutate_if(walk_along_y_axis)
 
 		-- Using 'new_position' instead of 'player_pos' here is not a bug, this
-		-- actuall makes corner movement smoother and feel much better.
+		-- actually makes corner movement smoother and feel much better.
 		-- It also makes so you move over the corner, i.e 'cutting the corner'
 		return CheckedMovement.new(new_position:move(along_wall), true, true)
 	end
@@ -267,13 +269,14 @@ local function get_new_player_orientation(
 	blocks: {Kinematic},
 	lightning_bombs_: LightningBombs,
 	player: Player,
+	max_directions: integer,
 	blocks_bombs: Group<Kinematic>,
 	players_: Group<Player>,
 	bombs_: Group<Bomb>,
 	lookup: Lookup
-): Direction, Point
+): Direction, Point, boolean
 
-	--- Get movment priority, lower number is higher priority.
+	--- Get movement priority, lower number is higher priority.
 	-- For example walking out of corridor and cutting corner
 	-- have a low priority and should be tried last. This is
 	-- mainly to sort and handle all cases when the user press multiple
@@ -302,28 +305,43 @@ local function get_new_player_orientation(
 	local directions_checks: {MovementWithCheck} = {}
 	local close_bombs = lookup:in_box_and_group(player:movementbox():expand(grid.TILE_SIZE), bombs_)
 	for _, direction in ipairs(directions) do
-		local movement = restrict_player_movement(
+		local check = restrict_player_movement(
 			player, direction.dxdy, blocks, lightning_bombs_, blocks_bombs, close_bombs, players_, bombs_, lookup
 		)
-		table.insert(directions_checks, MovementWithCheck.new(direction.dxdy, direction.dir, movement))
+		table.insert(directions_checks, MovementWithCheck.new(direction.dxdy, direction.dir, check))
 	end
 
 	sort_directions_by_prio(directions_checks)
+
+	local function any_constrained(checks: {MovementWithCheck}): boolean
+		for _, dc in ipairs(checks) do
+			if dc.check.constrained then return true end
+		end
+		return false
+	end
+
+	local constrained = any_constrained(directions_checks)
+
+	local directions_applied = 0
 	for _, direction in ipairs(directions_checks) do
-		local movement = direction.check
-		cur_position = movement.position
+		local check = direction.check
+		-- Accumulate displacement so movements compose rather than overwrite
+		cur_position = cur_position:move(player.position:vector_to(check.position))
 		cur_direction = direction.dir
-		for _, bomb_kicked in ipairs(movement.bombs_kicked) do
+		for _, bomb_kicked in ipairs(check.bombs_kicked) do
 			local bomb = bomb_kicked[1]
 			local kick_direction = bomb_kicked[2]
 			bomb:kick(kick_direction)
 		end
+		if check.spent then
+			directions_applied = directions_applied + 1
 
-		if movement.spent then
-			break -- All speed have been used up!
+			if constrained or directions_applied >= max_directions then
+				break
+			end
 		end
 	end
-	return cur_direction, cur_position
+	return cur_direction, cur_position, constrained
 end
 
 local movement = {}
@@ -367,6 +385,36 @@ local function get_moves(player: Player, move_inputs: {Movement}, momentum: Move
 	end
 end
 
+local function is_diagonal(moves: {Movement}): boolean
+	local has_x = false
+	local has_y = false
+	for _, move in ipairs(moves) do
+		if move.dxdy.x ~= 0 then has_x = true end
+		if move.dxdy.y ~= 0 then has_y = true end
+	end
+	return has_x and has_y
+end
+
+local function any_move_has_direction(moves: {Movement}, dir: Direction): boolean
+	for _, move in ipairs(moves) do
+		if move.dir == dir then
+			return true
+		end
+	end
+	return false
+end
+
+local function direction_for_diagonal(moves: {Movement}, current_dir: Direction, computed_dir: Direction, constrained: boolean): Direction
+	if constrained then
+		return computed_dir
+	end
+
+	if is_diagonal(moves) and any_move_has_direction(moves, current_dir) then
+		return current_dir
+	end
+	return computed_dir
+end
+
 function movement.set_position_and_dir_from_input(
 	player: Player,
 	dt: number,
@@ -385,11 +433,12 @@ function movement.set_position_and_dir_from_input(
 
 	local momentum = Movement.new_from_player(dt, player)
 	local moves = get_moves(player, move_inputs, momentum)
+	local max_directions = (player.action == "slide" or player.action == "dash") and 1 or 2
 
-	local new_dir, new_pos = get_new_player_orientation(
-		player.direction, moves, blocks, lightning_bombs_, player, blocks_bombs, players_, bombs_, lookup
+	local new_dir, new_pos, constrained = get_new_player_orientation(
+		player.direction, moves, blocks, lightning_bombs_, player, max_directions, blocks_bombs, players_, bombs_, lookup
 	)
-	player:set_movement(new_pos, new_dir)
+	player:set_movement(new_pos, direction_for_diagonal(moves, player.direction, new_dir, constrained))
 	if #moves == 0 then
 		player:set_action("idle")
 	else
