@@ -4,6 +4,7 @@ local grid = require("level_layout.grid")
 local joysticks = require("engine.joysticks")
 local lightning_bombs = require("bombs.lightning_bombs")
 local players = require("players")
+local settings = require("settings")
 local vectors = require("engine.geometry.vectors")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
@@ -440,8 +441,9 @@ end
 
 local function get_ice_moves(player: Player, dt: number, move_inputs: {Movement}): {Movement}
 	local max_speed = player:get_speed()
-	local acceleration = max_speed * 4
-	local friction = max_speed * 2
+	local ice = settings.game_rules.ice
+	local acceleration = max_speed * ice.acceleration_factor
+	local friction = max_speed * ice.friction_factor
 
 	local function update_axis(v: number, pos: boolean, neg: boolean): number
 		if pos then
