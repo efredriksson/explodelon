@@ -49,4 +49,8 @@ function FactoryLayout:get_conveyor_belts(): {ConveyorBelt}
 	}
 end
 
+function FactoryLayout:has_hard_blocks(): boolean
+	return true
+end
+
 return FactoryLayout.new()

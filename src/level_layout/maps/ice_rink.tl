@@ -23,3 +23,14 @@ function IceRinkLayout:get_conveyor_belts(): {ConveyorBelt}
 end
 
 return IceRinkLayout.new()
+
+function IceRinkLayout:has_hard_blocks(): boolean
+    return false
+end
+
+
+function IceRinkLayout:has_hard_blocks(): boolean
+    return false
+end
+
+return IceRinkLayout.new()
