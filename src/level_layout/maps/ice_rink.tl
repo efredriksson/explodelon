@@ -26,7 +26,7 @@ function IceRinkLayout:get_conveyor_belts(): {ConveyorBelt}
 end
 
 function IceRinkLayout:get_block_layout(occupies: {Kinematic}): {integer: {integer: BlockType}}
-    return block_layouts.empty(occupies)
+    return block_layouts.quadrant(occupies)
 end
 
 function IceRinkLayout:has_ice(): boolean

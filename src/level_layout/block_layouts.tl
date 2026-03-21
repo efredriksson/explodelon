@@ -86,4 +86,69 @@ function block_layouts.empty(occupies: {Kinematic}): {integer: {integer: BlockTy
     return layout
 end
 
+local record QuadrantCell
+    distance: integer
+    i: integer
+    j: integer
+end
+
+function QuadrantCell.new(i: integer, j: integer, corner_x: integer, corner_y: integer): QuadrantCell
+    local self: QuadrantCell = setmetatable({}, { __index = QuadrantCell })
+    self.i = i
+    self.j = j
+    self.distance = math.abs(i - corner_x) + math.abs(j - corner_y)
+    return self
+end
+
+function QuadrantCell:can_place_soft_block(layout: {integer: {integer: BlockType}}, exclusion_zone: {Point}): boolean
+    return layout[self.i][self.j] == "none"
+        and not contains_point(exclusion_zone, grid.get_tile_position(self.i, self.j))
+end
+
+local function distance_to_corner(first: QuadrantCell, second: QuadrantCell): boolean
+    if first.distance ~= second.distance then return first.distance < second.distance end
+    return first.i < second.i
+end
+
+local function quadrant_cells(x_min: integer, x_max: integer, y_min: integer, y_max: integer, corner_x: integer, corner_y: integer): {QuadrantCell}
+    local cells: {QuadrantCell} = {}
+    for i = x_min, x_max do
+        for j = y_min, y_max do
+            table.insert(cells, QuadrantCell.new(i, j, corner_x, corner_y))
+        end
+    end
+    table.sort(cells, distance_to_corner)
+    return cells
+end
+
+function block_layouts.quadrant(occupies: {Kinematic}): {integer: {integer: BlockType}}
+    local layout = new_empty_layout()
+    local exclusion_zone = player_exclusion_zone(occupies)
+    local dim = grid.dimensions()
+    local x_mid = math.floor(dim.x_max / 2)
+    local y_mid = math.floor(dim.y_max / 2)
+    local total = settings.game_rules.items.nbr_soft_blocks
+    local per_quadrant = math.floor(total / 4)
+    local remainder = total - per_quadrant * 4
+
+    local top_left     = quadrant_cells(1,         x_mid     - 1,   1,         y_mid     - 1,   1,             1            )
+    local top_right    = quadrant_cells(x_mid + 1, dim.x_max - 1,   1,         y_mid     - 1,   dim.x_max - 1, 1            )
+    local bottom_left  = quadrant_cells(1,         x_mid     - 1,   y_mid + 1, dim.y_max - 1,   1,             dim.y_max - 1)
+    local bottom_right = quadrant_cells(x_mid + 1, dim.x_max - 1,   y_mid + 1, dim.y_max - 1,   dim.x_max - 1, dim.y_max - 1)
+    local all_quadrants = {top_left, top_right, bottom_left, bottom_right}
+
+    for quadrant_index, cells in ipairs(all_quadrants) do
+        local count = per_quadrant + (quadrant_index <= remainder and 1 or 0)
+        local placed = 0
+        for _, cell in ipairs(cells) do
+            if placed >= count then break end
+            if cell:can_place_soft_block(layout, exclusion_zone) then
+                layout[cell.i][cell.j] = "soft"
+                placed = placed + 1
+            end
+        end
+    end
+    return layout
+end
+
 return block_layouts
