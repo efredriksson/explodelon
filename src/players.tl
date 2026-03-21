@@ -17,6 +17,7 @@ local type Entity = require("engine.entity")
 local type Kinematic = require("kinematic")
 local type ProjectileTrajectory = physics.ProjectileTrajectory
 local type Direction = vectors.Direction
+local type Vector = vectors.Vector
 local type Point = points.Point
 local type Rectangle = rectangles.Rectangle
 
@@ -119,6 +120,7 @@ local record Player is Explodable, Kinematic, Entity
 
 	jump_trajectory: ProjectileTrajectory
 	jump_target: Point
+	ice_velocity: Vector
 end
 
 local players = {Player = Player, Action = Action, PlayerState = PlayerState, SonicWaveColor = SonicWaveColor}
@@ -151,6 +153,7 @@ function players.new(id: integer, sprite: CharacterName, position: Point): Playe
 	self.sonic_waves = {}
 	self.last_time_adding_sonic_wave = 0
 	self.sonic_wave_color_index = 1
+	self.ice_velocity = vectors.new(0, 0)
 	return self
 end
 

@@ -53,4 +53,8 @@ function FactoryLayout:has_hard_blocks(): boolean
 	return true
 end
 
+function FactoryLayout:has_ice(): boolean
+	return false
+end
+
 return FactoryLayout.new()

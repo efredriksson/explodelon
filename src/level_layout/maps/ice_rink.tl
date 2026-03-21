@@ -7,6 +7,7 @@ local type ConveyorBelt = entities.ConveyorBelt
 local record IceRinkLayout is MapLayout
     get_conveyor_belts: function(self): {ConveyorBelt}
     get_goals: function(self): {Goal}
+    has_hard_blocks: function(self): boolean
 end
 
 function IceRinkLayout.new(): IceRinkLayout
@@ -22,15 +23,12 @@ function IceRinkLayout:get_conveyor_belts(): {ConveyorBelt}
     return {}
 end
 
-return IceRinkLayout.new()
-
 function IceRinkLayout:has_hard_blocks(): boolean
     return false
 end
 
-
-function IceRinkLayout:has_hard_blocks(): boolean
-    return false
+function IceRinkLayout:has_ice(): boolean
+    return true
 end
 
 return IceRinkLayout.new()
