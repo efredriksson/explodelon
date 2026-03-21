@@ -39,10 +39,19 @@ function ConveyorBelt:get_hitbox(): Rectangle
     return hitboxes.new_block(self.position)
 end
 
+local enum BlockType
+    "none"
+    "hard"
+    "hard_tall"
+    "soft"
+end
+
+local type Kinematic = require("kinematic")
+
 local type MapLayout = interface
     get_conveyor_belts: function(self): {ConveyorBelt}
     get_goals: function(self): {Goal}
-    has_hard_blocks: function(self): boolean
+    get_block_layout: function(self, occupies: {Kinematic}): {integer: {integer: BlockType}}
     has_ice: function(self): boolean
 end
 
@@ -50,6 +59,7 @@ local entities = {
     Goal = Goal,
     ConveyorBelt = ConveyorBelt,
     MapLayout = MapLayout,
+    BlockType = BlockType,
 }
 
 return entities
