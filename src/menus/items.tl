@@ -91,7 +91,7 @@ end
 
 function menu_items.new_enum<T>(choices: {T}): MenuSelection<T>
     local function value_as_enum(value: integer): string
-        return tostring(choices[value])
+        return (tostring(choices[value]):gsub("_", " "))
     end
     local self: MenuSelection<T> = setmetatable({}, { __index = MenuSelection })
     self.value = 1
