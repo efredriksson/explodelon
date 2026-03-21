@@ -110,11 +110,24 @@ function DinoRules.new(): DinoRules
     return self
 end
 
+local record IceRules
+    acceleration_factor: number
+    friction_factor: number
+end
+
+function IceRules.new(): IceRules
+    local self: IceRules = setmetatable({}, { __index = IceRules })
+    self.acceleration_factor = 4
+    self.friction_factor = 1
+    return self
+end
+
 local record GameRules
     players: PlayerRules
     items: ItemRules
     timings: TimingRules
     dinos: DinoRules
+    ice: IceRules
 end
 
 function GameRules.new(): GameRules
@@ -123,6 +136,7 @@ function GameRules.new(): GameRules
     self.items = ItemRules.new()
     self.timings = TimingRules.new()
     self.dinos = DinoRules.new()
+    self.ice = IceRules.new()
     return self
 end
 
@@ -298,6 +312,14 @@ end
 
 function Settings.set_teams(value: boolean)
     settings.teams = value
+end
+
+function Settings.set_ice_acceleration_factor(value: number)
+    settings.game_rules.ice.acceleration_factor = value
+end
+
+function Settings.set_ice_friction_factor(value: number)
+    settings.game_rules.ice.friction_factor = value
 end
 
 function Settings.set_game_rules_default()
