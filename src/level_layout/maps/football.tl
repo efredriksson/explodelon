@@ -1,9 +1,12 @@
+local block_layouts = require("level_layout.block_layouts")
 local entities = require("level_layout.maps.entities")
 local grid = require("level_layout.grid")
 
 local type MapLayout = entities.MapLayout
+local type BlockType = entities.BlockType
 local type Goal = entities.Goal
 local type ConveyorBelt = entities.ConveyorBelt
+local type Kinematic = require("kinematic")
 
 local record FootballLayout is MapLayout
     get_conveyor_belts: function(self): {ConveyorBelt}
@@ -28,8 +31,8 @@ function FootballLayout:get_conveyor_belts(): {ConveyorBelt}
 	return {}
 end
 
-function FootballLayout:has_hard_blocks(): boolean
-	return true
+function FootballLayout:get_block_layout(occupies: {Kinematic}): {integer: {integer: BlockType}}
+	return block_layouts.grid(occupies)
 end
 
 function FootballLayout:has_ice(): boolean

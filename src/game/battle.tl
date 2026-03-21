@@ -108,7 +108,8 @@ function Battle:load()
 
 	self.bombs = bombs.new()
 	self.lightning_bombs = lightning_bombs.new()
-	self.soft_blocks = soft_blocks.new(map_entities.get_soft_blocks(self.players))
+	local block_configs = map_entities.get_block_configs(self.players)
+	self.soft_blocks = soft_blocks.new(block_configs.soft)
 	self.mad_bombers = mad_bombers.new(self.bombs)
 	self.eggs = eggs.new()
 	self.items = items.new()
@@ -118,8 +119,8 @@ function Battle:load()
 	self.state = "starting"
 	self.countdown = countdown.new()
 	self.pressure_blocks = pressure_blocks.new()
-	self.hard_blocks = hard_blocks.new(map_entities.get_hard_blocks())
-	self.non_hard_block_positions = map_entities.get_non_hard_block_positions()
+	self.hard_blocks = hard_blocks.new(block_configs.hard)
+	self.non_hard_block_positions = block_configs.non_hard
 	self.tic_counter = 0
 	self.audio_paused = false
 	music:stop()
