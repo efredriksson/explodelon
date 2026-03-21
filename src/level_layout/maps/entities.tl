@@ -42,6 +42,7 @@ end
 local type MapLayout = interface
     get_conveyor_belts: function(self): {ConveyorBelt}
     get_goals: function(self): {Goal}
+    has_hard_blocks: function(self): boolean
 end
 
 local entities = {

@@ -28,4 +28,8 @@ function FootballLayout:get_conveyor_belts(): {ConveyorBelt}
 	return {}
 end
 
+function FootballLayout:has_hard_blocks(): boolean
+	return true
+end
+
 return FootballLayout.new()

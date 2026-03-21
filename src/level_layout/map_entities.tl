@@ -33,6 +33,10 @@ end
 local map_entities = {SoftBlockConfig = SoftBlockConfig, HardBlockConfig = HardBlockConfig}
 
 function map_entities.get_hard_blocks(): {HardBlockConfig}
+	if not maps.get_layout():has_hard_blocks() then
+		return {}
+	end
+
 	local configs: {HardBlockConfig} = {}
 
 	local function hard_block_config(i: integer, j: integer, is_tall: boolean): HardBlockConfig
