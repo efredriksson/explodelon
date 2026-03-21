@@ -339,6 +339,26 @@ function Settings.set_game_rules_insanity()
     settings.game_rules.players.mad_bombers.after_sudden_death = true
 end
 
+function Settings.set_game_rules_bomb_stack()
+    settings.game_rules = GameRules.new()
+    settings.game_rules.items.nbr_soft_blocks = 65
+    settings.game_rules.items.nbr_of_items.bomb = 12
+    settings.game_rules.items.nbr_of_items.fire = 6
+    settings.game_rules.items.nbr_of_items.speed = 0
+    settings.game_rules.items.nbr_of_items.kick = 0
+    settings.game_rules.items.nbr_of_items.lightning_bomb = 2
+    settings.game_rules.items.spawn_rates.bomb = 0.1
+    settings.game_rules.items.spawn_rates.speed = 0.1
+    settings.game_rules.dinos.nbr_of_eggs = 6
+    settings.game_rules.dinos.enabled.pink = false
+    settings.game_rules.dinos.enabled.green = false
+    settings.game_rules.dinos.enabled.purple = false
+    settings.game_rules.timings.battle = 150
+    settings.game_rules.timings.sudden_death = 70
+    settings.game_rules.players.mad_bombers.enabled = true
+    settings.game_rules.players.mad_bombers.after_sudden_death = false
+end
+
 function Settings.set_game_rules_dino_madness()
     settings.game_rules = GameRules.new()
     settings.game_rules.items.nbr_soft_blocks = 60
