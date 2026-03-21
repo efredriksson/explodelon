@@ -18,6 +18,7 @@ local items = require("items")
 local itertools = require("itertools")
 local joysticks = require("engine.joysticks")
 local level_graphics = require("level_graphics.maps.init")
+local maps = require("level_layout.maps.init")
 local lightnings = require("bombs.lightnings")
 local lightning_bombs = require("bombs.lightning_bombs")
 local mad_bombers = require("mad_bombers")
@@ -416,7 +417,8 @@ function Battle:update(dt: number)
 			local area_close_to_player = player:movementbox():expand(grid.TILE_SIZE / 2)
 			local close_blocks = lookup:in_box_and_group(area_close_to_player, blocking_blocks_group)
 			movement.set_position_and_dir_from_input(
-				player, dt, close_blocks, self.lightning_bombs, blocks_bombs, alive_players_group, bombs_group, lookup
+				player, dt, close_blocks, self.lightning_bombs, blocks_bombs, alive_players_group, bombs_group, lookup,
+				maps.get_layout():has_ice()
 			)
 			dino_inputs.handle(dt, player, self.bombs, blocks_jump, bombs_group, lookup)
 		end

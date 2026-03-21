@@ -283,7 +283,16 @@ local function get_new_player_orientation(
 	-- directions in a deterministic and expected way.
 	local function movement_prio(movement: MovementWithCheck): integer
 		if in_end_of_corridor_and_walking_out(movement, player.position) then
-			return 4
+			-- On ice, pressing down while sliding horizontally can put the player
+			-- slightly past the tile midpoint, which triggers
+			-- in_end_of_corridor_and_walking_out for the downward corner cut.
+			-- Without this split, the corner cut ties with the horizontal
+			-- movement at prio 4, the horizontal fires first, and the corner
+			-- cut is dropped by the constrained early-break.
+			if movement.check.cuts_corner then
+				return 4
+			end
+			return 5
 		elseif movement.check.cuts_corner then
 			return 3
 		elseif in_corridor_and_walking_against_wall(player.position, movement.dir) then
@@ -335,7 +344,7 @@ local function get_new_player_orientation(
 		end
 		if check.spent then
 			directions_applied = directions_applied + 1
-
+			
 			if constrained or directions_applied >= max_directions then
 				break
 			end
@@ -415,6 +424,57 @@ local function direction_for_diagonal(moves: {Movement}, current_dir: Direction,
 	return computed_dir
 end
 
+local function direction_from_dominant_velocity(vel: Vector, current_dir: Direction): Direction
+	if math.abs(vel.x) > math.abs(vel.y) then
+		return vel.x > 0 and "right" or "left"
+	elseif math.abs(vel.y) > math.abs(vel.x) then
+		return vel.y > 0 and "down" or "up"
+	elseif vel.x ~= 0 then
+		return vel.x > 0 and "right" or "left"
+	elseif vel.y ~= 0 then
+		return vel.y > 0 and "down" or "up"
+	else
+		return current_dir
+	end
+end
+
+local function get_ice_moves(player: Player, dt: number, move_inputs: {Movement}): {Movement}
+	local max_speed = player:get_speed()
+	local acceleration = max_speed * 4
+	local friction = max_speed * 2
+
+	local function update_axis(v: number, pos: boolean, neg: boolean): number
+		if pos then
+			return math.min(max_speed, v + acceleration * dt)
+		elseif neg then
+			return math.max(-max_speed, v - acceleration * dt)
+		elseif math.abs(v) <= friction * dt then
+			return 0
+		elseif v > 0 then
+			return v - friction * dt
+		else
+			return v + friction * dt
+		end
+	end
+
+	local new_vel = vectors.new(
+		update_axis(player.ice_velocity.x, any_move_has_direction(move_inputs, "right"), any_move_has_direction(move_inputs, "left")),
+		update_axis(player.ice_velocity.y, any_move_has_direction(move_inputs, "down"), any_move_has_direction(move_inputs, "up"))
+	)
+	player.ice_velocity = new_vel
+
+	local result: {Movement} = {}
+	if new_vel.x ~= 0 then
+		local dir: Direction = new_vel.x > 0 and "right" or "left"
+		table.insert(result, Movement.new(vectors.new(new_vel.x * dt, 0), dir))
+	end
+	if new_vel.y ~= 0 then
+		local dir: Direction = new_vel.y > 0 and "down" or "up"
+		table.insert(result, Movement.new(vectors.new(0, new_vel.y * dt), dir))
+	end
+	return result
+end
+
 function movement.set_position_and_dir_from_input(
 	player: Player,
 	dt: number,
@@ -423,27 +483,30 @@ function movement.set_position_and_dir_from_input(
 	blocks_bombs: Group<Kinematic>,
 	players_: Group<Player>,
 	bombs_: Group<Bomb>,
-	lookup: Lookup
+	lookup: Lookup,
+	ice_sliding: boolean
 )
 	local move_inputs = get_moves_from_input(player, dt)
+	local momentum = Movement.new_from_player(dt, player)
+	local moves = get_moves(player, move_inputs, momentum)
+
+	if ice_sliding then
+		moves = get_ice_moves(player, dt, moves)
+	end
 
 	if player:can_slide() and inputs_for_sliding(player, move_inputs) then
 		player:slide_with_dino()
 	end
-
-	local momentum = Movement.new_from_player(dt, player)
-	local moves = get_moves(player, move_inputs, momentum)
+	
 	local max_directions = (player.action == "slide" or player.action == "dash") and 1 or 2
-
 	local new_dir, new_pos, constrained = get_new_player_orientation(
 		player.direction, moves, blocks, lightning_bombs_, player, max_directions, blocks_bombs, players_, bombs_, lookup
 	)
-	player:set_movement(new_pos, direction_for_diagonal(moves, player.direction, new_dir, constrained))
-	if #moves == 0 then
-		player:set_action("idle")
-	else
-		player:set_action("walk")
-	end
+	local dominant_dir = direction_from_dominant_velocity(player.ice_velocity, new_dir)
+	local updated_dir = direction_for_diagonal(moves, player.direction, dominant_dir, constrained)
+
+	player:set_movement(new_pos, updated_dir)
+	player:set_action(#moves ~= 0 and "walk" or "idle")
 end
 
 return movement
