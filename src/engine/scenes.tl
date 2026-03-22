@@ -14,6 +14,75 @@ end
 
 local scenes = {Scene = Scene}
 
+local record MemorySample
+    frame_count: integer
+    accumulated_kb: number
+end
+
+function MemorySample.new(): MemorySample
+    local self: MemorySample = setmetatable({}, { __index = MemorySample })
+    self.frame_count = 0
+    self.accumulated_kb = 0
+    return self
+end
+
+function MemorySample:start(): number
+    collectgarbage("stop")
+    return collectgarbage("count") as number
+end
+
+function MemorySample:record(before_kb: number, label: string)
+    local after_kb = collectgarbage("count") as number
+    collectgarbage("restart")
+    self.accumulated_kb = self.accumulated_kb + (after_kb - before_kb)
+    self.frame_count = self.frame_count + 1
+    if self.frame_count >= 60 then
+        local avg = self.accumulated_kb / self.frame_count
+        logger.info(
+            string.format(
+                "mem %s allocated/frame: %+.2f KB avg over %d frames",
+                label,
+                avg,
+                self.frame_count
+            )
+        )
+        self.frame_count = 0
+        self.accumulated_kb = 0
+    end
+end
+
+local record CheckMemoryOfScene is Scene
+    to_wrap: Scene
+    is_internal: boolean
+    update_sample: MemorySample
+    draw_sample: MemorySample
+end
+
+function CheckMemoryOfScene.new(to_wrap: Scene): CheckMemoryOfScene
+    local self: CheckMemoryOfScene = setmetatable({}, { __index = CheckMemoryOfScene })
+    self.to_wrap = to_wrap
+    self.is_internal = true
+    self.update_sample = MemorySample.new()
+    self.draw_sample = MemorySample.new()
+    return self
+end
+
+function CheckMemoryOfScene:load()
+    self.to_wrap:load()
+end
+
+function CheckMemoryOfScene:update(dt: number)
+    local used_before = self.update_sample:start()
+    self.to_wrap:update(dt)
+    self.update_sample:record(used_before, "update")
+end
+
+function CheckMemoryOfScene:draw()
+    local used_before = self.draw_sample:start()
+    self.to_wrap:draw()
+    self.draw_sample:record(used_before, "draw")
+end
+
 local record WrapperScene is Scene
     to_wrap: Scene
     load: function(self)
@@ -98,6 +167,9 @@ function scenes.set(scene: Scene, skip_loading?: boolean)
         scene = WrapperScene.new(scene)
         if settings.log_scene_perf then
             scene = CheckPerformanceOfScene.new(scene)
+        end
+        if settings.log_mem_usage then
+            scene = CheckMemoryOfScene.new(scene)
         end
     end
 
