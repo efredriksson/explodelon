@@ -20,6 +20,9 @@ function debug_screen.new(previous_screen: Scene): MenuScreen
         choices.new_boolean(
             "log slow game loop", 70, settings.log_scene_perf, settings.set_log_scene_perf
         ),
+        choices.new_boolean(
+            "log memory usage", 90, settings.log_mem_usage, settings.set_log_mem_usage
+        ),
         choices.new_done("back", 180, done)
     }, done)
 end
