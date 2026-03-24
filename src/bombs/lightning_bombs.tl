@@ -16,7 +16,7 @@ local type Kinematic = require("kinematic")
 local type Entity = require("engine.entity")
 local type Lightnings = lightnings.Lightnings
 local type Player = players.Player
-local type Group = collision.Group
+local type ReadableGroup = collision.ReadableGroup
 local type Lookup = collision.Lookup
 local type Point = points.Point
 local type Rectangle = rectangles.Rectangle
@@ -160,7 +160,7 @@ function LightningBombs:place_lightning_bomb(player: Player, occupied: {Entity})
     player.lightning_bomb = player.lightning_bomb - 1
 end
 
-function LightningBombs:update(dt: number, blockers: Group<Explodable>, explodables: Group<Player>, lookup: Lookup)
+function LightningBombs:update(dt: number, blockers: ReadableGroup<Explodable>, explodables: ReadableGroup<Player>, lookup: Lookup)
     for i = #self.on_ground, 1, -1 do
         local bomb = self.on_ground[i]
         bomb:update(dt)

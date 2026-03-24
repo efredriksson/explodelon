@@ -13,7 +13,7 @@ local type Bomb = bombs.Bomb
 local type Kinematic = require("kinematic")
 local type LightningBombs = lightning_bombs.LightningBombs
 local type Player = players.Player
-local type Group = collision.Group
+local type ReadableGroup = collision.ReadableGroup
 local type Lookup = collision.Lookup
 local type Direction = vectors.Direction
 local type Vector = vectors.Vector
@@ -150,10 +150,10 @@ local function restrict_player_movement(
 	movement: Vector,
 	blocks: {Kinematic},
 	lightning_bombs_: LightningBombs,
-	blocks_bombs: Group<Kinematic>,
+	blocks_bombs: ReadableGroup<Kinematic>,
 	close_bombs: {Bomb},
-	players_: Group<Player>,
-	bombs_: Group<Bomb>,
+	players_: ReadableGroup<Player>,
+	bombs_: ReadableGroup<Bomb>,
 	lookup: Lookup
 ): CheckedMovement
 	local margin_for_corner_assist = 8
@@ -271,9 +271,9 @@ local function get_new_player_orientation(
 	lightning_bombs_: LightningBombs,
 	player: Player,
 	max_directions: integer,
-	blocks_bombs: Group<Kinematic>,
-	players_: Group<Player>,
-	bombs_: Group<Bomb>,
+	blocks_bombs: ReadableGroup<Kinematic>,
+	players_: ReadableGroup<Player>,
+	bombs_: ReadableGroup<Bomb>,
 	lookup: Lookup
 ): Direction, Point, boolean
 
@@ -482,9 +482,9 @@ function movement.set_position_and_dir_from_input(
 	dt: number,
 	blocks: {Kinematic},
 	lightning_bombs_: LightningBombs,
-	blocks_bombs: Group<Kinematic>,
-	players_: Group<Player>,
-	bombs_: Group<Bomb>,
+	blocks_bombs: ReadableGroup<Kinematic>,
+	players_: ReadableGroup<Player>,
+	bombs_: ReadableGroup<Bomb>,
 	lookup: Lookup,
 	ice_sliding: boolean
 )

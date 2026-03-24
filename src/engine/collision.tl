@@ -23,18 +23,27 @@ local function get_indexes(hitbox: Rectangle): (integer, integer, integer, integ
     return x_min, x_max, y_min, y_max
 end
 
-local record Group<T>
-    set: {T: T}
+local interface ReadableGroup<T>
+    get: function(self, any): T | nil
+    is_empty: function(self): boolean
+end
+
+local record Group<T> is ReadableGroup<T>
+    set: {any: T}
 end
 
 local record Lookup
     map: {integer: {Entity}}
 end
 
-local collision = {Group = Group, Lookup = Lookup}
+local record CombinedGroup<T> is ReadableGroup<T>
+    sub_groups: {ReadableGroup<T>}
+end
+
+local collision = {Group = Group, Lookup = Lookup, CombinedGroup = CombinedGroup, ReadableGroup = ReadableGroup}
 
 function Group:get(object: any): T | nil
-    return self.set[object as T]
+    return self.set[object]
 end
 
 function Group:list(): {T}
@@ -50,6 +59,25 @@ function Group:is_empty(): boolean
     return next(self.set) == nil
 end
 
+function CombinedGroup:get(object: any): T | nil
+    for _, sub_group in ipairs(self.sub_groups) do
+        local found = sub_group:get(object)
+        if found then
+            return found
+        end
+    end
+    return nil
+end
+
+function CombinedGroup:is_empty(): boolean
+    for _, sub_group in ipairs(self.sub_groups) do
+        if not sub_group:is_empty() then
+            return false
+        end
+    end
+    return true
+end
+
 function collision.new_group<T>(...: {T}): Group<T>
     local self: Group<T> = setmetatable({}, { __index = Group })
 
@@ -58,6 +86,23 @@ function collision.new_group<T>(...: {T}): Group<T>
         for _, entity in ipairs(entity_list) do
             self.set[entity] = entity
         end
+    end
+    return self
+end
+
+function collision.new_group_from_set<T>(set: {any: T}): Group<T>
+    local self: Group<T> = setmetatable({}, { __index = Group })
+
+    self.set = set
+    return self
+end
+
+function collision.new_combined_group<T>(...: {any: T}): CombinedGroup<T>
+    local self: CombinedGroup<T> = setmetatable({}, { __index = CombinedGroup })
+
+    self.sub_groups = {}
+    for _, set in ipairs({...}) do
+        table.insert(self.sub_groups, collision.new_group_from_set(set))
     end
     return self
 end
@@ -83,7 +128,7 @@ function collision.new_lookup(...: {Entity}): Lookup
     return self
 end
 
-function Lookup:collisions_between<K is Entity,T>(entities: {K}, group: Group<T>): {K: T}
+function Lookup:collisions_between<K is Entity,T>(entities: {K}, group: ReadableGroup<T>): {K: T}
     local collides_with: {K: T} = {}
     if group:is_empty() then
         return collides_with
@@ -109,7 +154,7 @@ function Lookup:collisions_between<K is Entity,T>(entities: {K}, group: Group<T>
     return collides_with
 end
 
-function Lookup:in_box_and_group<T>(box: Rectangle, group: Group<T>): {T}
+function Lookup:in_box_and_group<T>(box: Rectangle, group: ReadableGroup<T>): {T}
     local in_box_for_group: {T} = {}
     if group:is_empty() then
         return in_box_for_group

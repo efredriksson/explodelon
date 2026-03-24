@@ -42,17 +42,21 @@ local type Explodable = require("bombs.explodable")
 local type Kinematic = require("kinematic")
 local type Entity = require("engine.entity")
 local type GameCountdown = countdown.GameCountdown
+local type HardBlock = hard_blocks.HardBlock
 local type HardBlocks = hard_blocks.HardBlocks
 local type Items = items.Items
 local type LightningBombs = lightning_bombs.LightningBombs
 local type MadBombers = mad_bombers.MadBombers
 local type PlayerAnimations = player_animations.PlayerAnimations
 local type Player = players.Player
+local type PressureBlock = pressure_blocks.PressureBlock
 local type PressureBlocks = pressure_blocks.PressureBlocks
 local type SoftBlocks = soft_blocks.SoftBlocks
 local type SoftBlock = soft_blocks.SoftBlock
+local type CombinedGroup = collision.CombinedGroup
 local type Group = collision.Group
 local type Lookup = collision.Lookup
+local type ReadableGroup = collision.ReadableGroup
 local type Scene = scenes.Scene
 local type ScoreBoard = score_board.ScoreBoard
 local type GameTimer = timer.GameTimer
@@ -172,7 +176,7 @@ function Battle:get_available_spots(alive_players: {Player}): {Point}
 	return available_spots
 end
 
-function Battle:clear_entities(lookup: Lookup, destroys: Group<Entity>, ...: {Entity})
+function Battle:clear_entities(lookup: Lookup, destroys: ReadableGroup<Entity>, ...: {Entity})
 	-- This is for things that directly removes an entity (no animations or such)
 	for _, entity_list in ipairs({...}) do
 		local is_destroyed = lookup:collisions_between(entity_list, destroys)
@@ -293,7 +297,7 @@ function Battle:check_if_finished(dt: number)
 	end
 end
 
-function Battle:_handle_stun_cry(lookup: Lookup, alive_players: Group<Player>, player: Player)
+function Battle:_handle_stun_cry(lookup: Lookup, alive_players: ReadableGroup<Player>, player: Player)
 	local hit_players = lookup:in_box_and_group(player:get_stun_cry_hitbox(), alive_players)
 	for _, hit_player in ipairs(hit_players) do
 		if hit_player.action ~= "stunned" then
@@ -304,7 +308,7 @@ function Battle:_handle_stun_cry(lookup: Lookup, alive_players: Group<Player>, p
 	end
 end
 
-function Battle:_handle_sonic_blast(lookup: Lookup, bombs_group: Group<Bomb>, soft_blocks_group: Group<SoftBlock>, player: Player)
+function Battle:_handle_sonic_blast(lookup: Lookup, bombs_group: ReadableGroup<Bomb>, soft_blocks_group: ReadableGroup<SoftBlock>, player: Player)
 	local hit_bombs = lookup:in_box_and_group(player:get_sonic_blast_hitbox(), bombs_group)
 	for _, hit_bomb in ipairs(hit_bombs) do
 		hit_bomb:blow_up()
@@ -346,49 +350,63 @@ function Battle:update(dt: number)
 	local alive_players = itertools.filter(self.players, is_alive)
 	local dead_players = itertools.filter(self.players, is_dead)
 	local trace_collision = tracing.start("collision_groups")
-	local blocks_bombs: Group<Kinematic> = collision.new_group(
-		self.soft_blocks.on_ground,
-		self.hard_blocks.on_ground,
-		self.lightning_bombs.on_ground,
-		self.pressure_blocks.on_ground
-	)
-	local bombs_bounce_on: Group<Kinematic> = collision.new_group(
-		self.soft_blocks.on_ground,
-		self.hard_blocks.on_ground,
-		self.lightning_bombs.on_ground,
-		self.pressure_blocks.on_ground,
-		self.bombs.on_ground,
-		alive_players
-	)
-	local blocks_jump: Group<Kinematic> = collision.new_group(
-		self.soft_blocks.on_ground,
-		self.hard_blocks.on_ground,
-		self.lightning_bombs.on_ground,
-		self.pressure_blocks.on_ground,
-		self.bombs.on_ground
-	)
-	local blockers: Group<Explodable> = collision.new_group(
-		self.eggs.on_ground,
-		self.items.on_ground,
-		self.soft_blocks.on_ground,
-		self.pressure_blocks.on_ground,
-		self.hard_blocks.on_ground
-	)
-	local explodables: Group<Explodable> = collision.new_group(
-		self.players,
-		self.bombs.on_ground,
-		self.eggs.on_ground,
-		self.items.on_ground
-	)
-	local lightning_blockers: Group<Explodable> = collision.new_group(
-		self.pressure_blocks.on_ground,
-		self.hard_blocks.on_ground
-	)
-	local pressure_blocks_group: Group<Entity> = collision.new_group(self.pressure_blocks.on_ground)
-	local bombs_group: Group<Bomb> = collision.new_group(self.bombs.on_ground)
-	local bomb_entities_group: Group<Entity> = collision.new_group(self.bombs.on_ground)
+	-- One group per entity list — each entity list is iterated exactly once to build its set.
+	-- The sets are then referenced by combined groups below without further allocation.
 	local soft_blocks_group: Group<SoftBlock> = collision.new_group(self.soft_blocks.on_ground)
-	local blocking_blocks_group: Group<Kinematic> = collision.new_group(self.soft_blocks.on_ground, self.pressure_blocks.on_ground, self.hard_blocks.on_ground)
+	local hard_blocks_group: Group<HardBlock> = collision.new_group(self.hard_blocks.on_ground)
+	local lightning_blocks_group: Group<Kinematic> = collision.new_group(self.lightning_bombs.on_ground)
+	local pressure_blocks_on_ground_group: Group<PressureBlock> = collision.new_group(self.pressure_blocks.on_ground)
+	local bombs_group: Group<Bomb> = collision.new_group(self.bombs.on_ground)
+	local eggs_on_ground_group: Group<Explodable> = collision.new_group(self.eggs.on_ground)
+	local items_on_ground_group: Group<Explodable> = collision.new_group(self.items.on_ground)
+	local alive_players_group: Group<Player> = collision.new_group(alive_players)
+	-- Entity-typed views sharing the same set as their source group (no new iteration).
+	local pressure_blocks_group: Group<Entity> = collision.new_group_from_set(pressure_blocks_on_ground_group.set)
+	local bomb_entities_group: Group<Entity> = collision.new_group_from_set(bombs_group.set)
+	-- Combined groups: each is a read-only view across multiple entity sets.
+	local blocks_bombs: CombinedGroup<Kinematic> = collision.new_combined_group(
+		soft_blocks_group.set,
+		hard_blocks_group.set,
+		lightning_blocks_group.set,
+		pressure_blocks_on_ground_group.set
+	)
+	local bombs_bounce_on: CombinedGroup<Kinematic> = collision.new_combined_group(
+		soft_blocks_group.set,
+		hard_blocks_group.set,
+		lightning_blocks_group.set,
+		pressure_blocks_on_ground_group.set,
+		bombs_group.set,
+		alive_players_group.set
+	)
+	local blocks_jump: CombinedGroup<Kinematic> = collision.new_combined_group(
+		soft_blocks_group.set,
+		hard_blocks_group.set,
+		lightning_blocks_group.set,
+		pressure_blocks_on_ground_group.set,
+		bombs_group.set
+	)
+	local blockers: CombinedGroup<Explodable> = collision.new_combined_group(
+		eggs_on_ground_group.set,
+		items_on_ground_group.set,
+		soft_blocks_group.set,
+		pressure_blocks_on_ground_group.set,
+		hard_blocks_group.set
+	)
+	local explodables: CombinedGroup<Explodable> = collision.new_combined_group(
+		alive_players_group.set,
+		bombs_group.set,
+		eggs_on_ground_group.set,
+		items_on_ground_group.set
+	)
+	local lightning_blockers: CombinedGroup<Explodable> = collision.new_combined_group(
+		pressure_blocks_on_ground_group.set,
+		hard_blocks_group.set
+	)
+	local blocking_blocks_group: CombinedGroup<Kinematic> = collision.new_combined_group(
+		soft_blocks_group.set,
+		pressure_blocks_on_ground_group.set,
+		hard_blocks_group.set
+	)
 	local lookup = collision.new_lookup(
 		self.soft_blocks.on_ground,
 		self.hard_blocks.on_ground,
@@ -399,7 +417,6 @@ function Battle:update(dt: number)
 		self.lightning_bombs.on_ground,
 		self.pressure_blocks.on_ground
 	)
-	local alive_players_group = collision.new_group(alive_players)
 	trace_collision:stop()
 
 	local trace_bombs = tracing.start("bombs")

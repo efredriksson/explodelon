@@ -12,7 +12,7 @@ local type Animation = animations.Animation
 local type Explodable = require("bombs.explodable")
 local type Entity = require("engine.entity")
 local type Player = players.Player
-local type Group = collision.Group
+local type ReadableGroup = collision.ReadableGroup
 local type Lookup = collision.Lookup
 local type Point = points.Point
 local type Rectangle = rectangles.Rectangle
@@ -94,7 +94,7 @@ local function clamp(val: number, min: number, max: number): number
 	return math.min(math.max(val, min), max)
 end
 
-function Lightning:_update_active_tiles(blockers: Group<Explodable>, lookup: Lookup)
+function Lightning:_update_active_tiles(blockers: ReadableGroup<Explodable>, lookup: Lookup)
     self.tiles = {}
 
     -- Calculate how far the lightning have expanded
@@ -178,7 +178,7 @@ function Lightning:draw()
     end
 end
 
-function Lightning:update(dt: number, blockers: Group<Explodable>, lookup: Lookup)
+function Lightning:update(dt: number, blockers: ReadableGroup<Explodable>, lookup: Lookup)
     self.duration = self.duration + dt
     self:_update_active_tiles(blockers, lookup)
     self:_get_animation():update(dt)
@@ -211,7 +211,7 @@ function Lightnings:place_explosion(position: Point, range: number)
     table.insert(self.on_ground, explosion)
 end
 
-function Lightnings:update(dt: number, blockers: Group<Explodable>, explodables: Group<Player>, lookup: Lookup)
+function Lightnings:update(dt: number, blockers: ReadableGroup<Explodable>, explodables: ReadableGroup<Player>, lookup: Lookup)
     for i = #self.on_ground, 1, -1 do
         local explosion = self.on_ground[i]
 
