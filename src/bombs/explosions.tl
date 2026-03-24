@@ -12,7 +12,7 @@ local z_index = require("z_index")
 local type Animation = animations.Animation
 local type Explodable = require("bombs.explodable")
 local type Entity = require("engine.entity")
-local type Group = collision.Group
+local type ReadableGroup = collision.ReadableGroup
 local type Lookup = collision.Lookup
 local type Vector = vectors.Vector
 local type Point = points.Point
@@ -154,7 +154,7 @@ local enum BlockingResult
     "nil"
 end
 
-function Explosion:_update_active_tiles(blockers: Group<Explodable>, lookup: Lookup)
+function Explosion:_update_active_tiles(blockers: ReadableGroup<Explodable>, lookup: Lookup)
     self.tiles = {}
 
     -- Calculate how far the explosion should expanded
@@ -280,7 +280,7 @@ function Explosion:update_end_animation(dt: number)
     self.animations.center:update(dt)
 end
 
-function Explosion:update(dt: number, blockers: Group<Explodable>, lookup: Lookup)
+function Explosion:update(dt: number, blockers: ReadableGroup<Explodable>, lookup: Lookup)
     if self.delay > 0 then
         self.delay = self.delay - dt
         return
@@ -340,7 +340,7 @@ function Explosions:place_explosion(position: Point, range: number, delay?: numb
     table.insert(self.on_ground, explosion)
 end
 
-function Explosions:update(dt: number, blockers: Group<Explodable>, explodables: Group<Explodable>, lookup: Lookup)
+function Explosions:update(dt: number, blockers: ReadableGroup<Explodable>, explodables: ReadableGroup<Explodable>, lookup: Lookup)
     for i = #self.on_ground, 1, -1 do
         local explosion = self.on_ground[i]
         explosion:update(dt, blockers, lookup)

@@ -86,7 +86,7 @@ local record PressureBlocks
     sudden_death: boolean
 end
 
-local pressure_blocks = {PressureBlocks = PressureBlocks}
+local pressure_blocks = {PressureBlocks = PressureBlocks, PressureBlock = PressureBlock}
 
 function pressure_blocks.new(): PressureBlocks
 	local self: PressureBlocks = setmetatable({}, { __index = PressureBlocks })

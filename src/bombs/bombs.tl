@@ -20,7 +20,7 @@ local type Explosions = explosions.Explosions
 local type Kinematic = require("kinematic")
 local type Entity = require("engine.entity")
 local type Player = players.Player
-local type Group = collision.Group
+local type ReadableGroup = collision.ReadableGroup
 local type Lookup = collision.Lookup
 local type ProjectileTrajectory = physics.ProjectileTrajectory
 local type Vector = vectors.Vector
@@ -182,7 +182,7 @@ function CanMoveBomb:no(): CanMoveBomb
    return self
 end
 
-function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, players_: Group<Player>, bombs: Group<Bomb>, lookup: Lookup, call_level?: integer): CanMoveBomb    
+function Bomb:can_move(direction: Vector, occupies: ReadableGroup<Kinematic>, players_: ReadableGroup<Player>, bombs: ReadableGroup<Bomb>, lookup: Lookup, call_level?: integer): CanMoveBomb
     local function not_this_bomb(occupied: Kinematic): boolean
         return occupied ~= self
     end
@@ -299,7 +299,7 @@ function Bomb:can_move(direction: Vector, occupies: Group<Kinematic>, players_: 
     return can_move_bomb
 end
 
-function Bomb:update(dt: number, occupies: Group<Kinematic>, players_: Group<Player>, bombs: Group<Bomb>, lookup: Lookup)
+function Bomb:update(dt: number, occupies: ReadableGroup<Kinematic>, players_: ReadableGroup<Player>, bombs: ReadableGroup<Bomb>, lookup: Lookup)
     self.timer = self.timer - dt
     
     if self.velocity:length() > 0 then
@@ -468,12 +468,12 @@ end
 
 function Bombs:update(
     dt: number,
-    blockers: Group<Explodable>,
-    explodables: Group<Explodable>,
-    occupies: Group<Kinematic>,
-    players_: Group<Player>,
-    bombs_: Group<Bomb>,
-    bombs_bounce_on: Group<Kinematic>,
+    blockers: ReadableGroup<Explodable>,
+    explodables: ReadableGroup<Explodable>,
+    occupies: ReadableGroup<Kinematic>,
+    players_: ReadableGroup<Player>,
+    bombs_: ReadableGroup<Bomb>,
+    bombs_bounce_on: ReadableGroup<Kinematic>,
     lookup: Lookup
 )
     for i = #self.on_ground, 1, -1 do

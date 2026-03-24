@@ -11,14 +11,14 @@ local type Bomb = bombs.Bomb
 local type Bombs = bombs.Bombs
 local type Kinematic = require("kinematic")
 local type Player = players.Player
-local type Group = collision.Group
+local type ReadableGroup = collision.ReadableGroup
 local type Lookup = collision.Lookup
 local type Vector = vectors.Vector
 local type Point = points.Point
 
 local dino_inputs = {}
 
-local function handle_jump_input(dt: number, player: Player, blocks_jump: Group<Kinematic>, lookup: Lookup)
+local function handle_jump_input(dt: number, player: Player, blocks_jump: ReadableGroup<Kinematic>, lookup: Lookup)
 	local function jump_is_possible(jump_to: Point): boolean
 		local jump_landing_area = hitboxes.new_block(jump_to)
 		
@@ -104,7 +104,7 @@ local function handle_dash_input(player: Player)
     end
 end
 
-local function handle_throw_input(dt: number, player: Player, bombs_: Bombs, bombs_group: Group<Bomb>, lookup: Lookup)
+local function handle_throw_input(dt: number, player: Player, bombs_: Bombs, bombs_group: ReadableGroup<Bomb>, lookup: Lookup)
 	local dino = player.dino
 	local powerup_time_interval = 0.1
 	local block_from_player_dir = vectors.from_direction(player.direction):scale(grid.TILE_SIZE)
@@ -163,7 +163,7 @@ local function handle_sonic_blast_input(player: Player)
 	end
 end
 
-function dino_inputs.handle(dt: number, player: Player, bombs_: Bombs, blocks_jump: Group<Kinematic>, bombs_group: Group<Bomb>, lookup: Lookup)
+function dino_inputs.handle(dt: number, player: Player, bombs_: Bombs, blocks_jump: ReadableGroup<Kinematic>, bombs_group: ReadableGroup<Bomb>, lookup: Lookup)
     if player.dino then
 		if player.dino.color == "pink" then
 			handle_jump_input(dt, player, blocks_jump, lookup)
