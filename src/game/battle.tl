@@ -42,14 +42,12 @@ local type Explodable = require("bombs.explodable")
 local type Kinematic = require("kinematic")
 local type Entity = require("engine.entity")
 local type GameCountdown = countdown.GameCountdown
-local type HardBlock = hard_blocks.HardBlock
 local type HardBlocks = hard_blocks.HardBlocks
 local type Items = items.Items
 local type LightningBombs = lightning_bombs.LightningBombs
 local type MadBombers = mad_bombers.MadBombers
 local type PlayerAnimations = player_animations.PlayerAnimations
 local type Player = players.Player
-local type PressureBlock = pressure_blocks.PressureBlock
 local type PressureBlocks = pressure_blocks.PressureBlocks
 local type SoftBlocks = soft_blocks.SoftBlocks
 local type SoftBlock = soft_blocks.SoftBlock
@@ -94,6 +92,16 @@ local record Battle is Scene
 	pressure_blocks: PressureBlocks
 	tic_counter: integer
 	audio_paused: boolean
+	pressure_blocks_group: Group<Entity>
+	bomb_entities_group: Group<Entity>
+	alive_players_group: Group<Player>
+	bombs_bounce_on: CombinedGroup<Kinematic>
+	explodables: CombinedGroup<Explodable>
+	blocks_bombs: CombinedGroup<Kinematic>
+	blocks_jump: CombinedGroup<Kinematic>
+	blockers: CombinedGroup<Explodable>
+	lightning_blockers: CombinedGroup<Explodable>
+	blocking_blocks_group: CombinedGroup<Kinematic>
 end
 
 function Battle:load()
@@ -128,6 +136,52 @@ function Battle:load()
 	self.tic_counter = 0
 	self.audio_paused = false
 	music:stop()
+	self.pressure_blocks_group = collision.new_group_from_set(self.pressure_blocks.on_ground.set)
+	self.bomb_entities_group = collision.new_group_from_set(self.bombs.on_ground.set)
+	self.alive_players_group = collision.new_group(self.players)
+	self.bombs_bounce_on = collision.new_combined_group(
+		self.soft_blocks.on_ground.set,
+		self.hard_blocks.on_ground.set,
+		self.lightning_bombs.on_ground.set,
+		self.pressure_blocks.on_ground.set,
+		self.bombs.on_ground.set,
+		self.alive_players_group.set
+	)
+	self.explodables = collision.new_combined_group(
+		self.alive_players_group.set,
+		self.bombs.on_ground.set,
+		self.eggs.on_ground.set,
+		self.items.on_ground.set
+	)
+	self.blocks_bombs = collision.new_combined_group(
+		self.soft_blocks.on_ground.set,
+		self.hard_blocks.on_ground.set,
+		self.lightning_bombs.on_ground.set,
+		self.pressure_blocks.on_ground.set
+	)
+	self.blocks_jump = collision.new_combined_group(
+		self.soft_blocks.on_ground.set,
+		self.hard_blocks.on_ground.set,
+		self.lightning_bombs.on_ground.set,
+		self.pressure_blocks.on_ground.set,
+		self.bombs.on_ground.set
+	)
+	self.blockers = collision.new_combined_group(
+		self.eggs.on_ground.set,
+		self.items.on_ground.set,
+		self.soft_blocks.on_ground.set,
+		self.pressure_blocks.on_ground.set,
+		self.hard_blocks.on_ground.set
+	)
+	self.lightning_blockers = collision.new_combined_group(
+		self.pressure_blocks.on_ground.set,
+		self.hard_blocks.on_ground.set
+	)
+	self.blocking_blocks_group = collision.new_combined_group(
+		self.soft_blocks.on_ground.set,
+		self.pressure_blocks.on_ground.set,
+		self.hard_blocks.on_ground.set
+	)
 end
 
 function Battle.new(player_selection: Scene, score_board_: ScoreBoard, win_condition_: WinCondition): Battle
@@ -145,11 +199,11 @@ function Battle:get_available_spots(alive_players: {Player}): {Point}
 	-- be free and not too close to a player
 	local available_spots: {Point} = {}
 	
-	local occupied: {Entity} = itertools.combine(
-		self.eggs.on_ground,
-		self.items.on_ground,
-		self.soft_blocks.on_ground,
-		self.pressure_blocks.on_ground
+	local occupied: {Entity} = itertools.sets_as_list(
+		self.eggs.on_ground.set,
+		self.items.on_ground.set,
+		self.soft_blocks.on_ground.set,
+		self.pressure_blocks.on_ground.set
 	)
 
 	local function valid_position(pos: Point): boolean
@@ -176,25 +230,10 @@ function Battle:get_available_spots(alive_players: {Player}): {Point}
 	return available_spots
 end
 
-function Battle:clear_entities(lookup: Lookup, destroys: ReadableGroup<Entity>, ...: {Entity})
-	-- This is for things that directly removes an entity (no animations or such)
-	for _, entity_list in ipairs({...}) do
-		local is_destroyed = lookup:collisions_between(entity_list, destroys)
-		for i = #entity_list, 1, -1 do
-			local entity = entity_list[i]
-			if is_destroyed[entity] then
-				if entity.clear then
-					entity:clear()
-				end
-				table.remove(entity_list, i)
-			end
-		end
-	end
-end
 
 function Battle:handle_bomb_drop_input(player: Player)
-	local placed_bombs: {Entity} = itertools.combine(
-		self.bombs.on_ground, self.lightning_bombs.on_ground
+	local placed_bombs: {Entity} = itertools.sets_as_list(
+		self.bombs.on_ground.set, self.lightning_bombs.on_ground.set
 	)
 	if joysticks.is_pressed(player.id, joysticks.BUTTONS.R) then
 		self.bombs:place_bomb(player, placed_bombs)
@@ -350,78 +389,22 @@ function Battle:update(dt: number)
 	local alive_players = itertools.filter(self.players, is_alive)
 	local dead_players = itertools.filter(self.players, is_dead)
 	local trace_collision = tracing.start("collision_groups")
-	-- One group per entity list — each entity list is iterated exactly once to build its set.
-	-- The sets are then referenced by combined groups below without further allocation.
-	local soft_blocks_group: Group<SoftBlock> = collision.new_group(self.soft_blocks.on_ground)
-	local hard_blocks_group: Group<HardBlock> = collision.new_group(self.hard_blocks.on_ground)
-	local lightning_blocks_group: Group<Kinematic> = collision.new_group(self.lightning_bombs.on_ground)
-	local pressure_blocks_on_ground_group: Group<PressureBlock> = collision.new_group(self.pressure_blocks.on_ground)
-	local bombs_group: Group<Bomb> = collision.new_group(self.bombs.on_ground)
-	local eggs_on_ground_group: Group<Explodable> = collision.new_group(self.eggs.on_ground)
-	local items_on_ground_group: Group<Explodable> = collision.new_group(self.items.on_ground)
-	local alive_players_group: Group<Player> = collision.new_group(alive_players)
-	-- Entity-typed views sharing the same set as their source group (no new iteration).
-	local pressure_blocks_group: Group<Entity> = collision.new_group_from_set(pressure_blocks_on_ground_group.set)
-	local bomb_entities_group: Group<Entity> = collision.new_group_from_set(bombs_group.set)
-	-- Combined groups: each is a read-only view across multiple entity sets.
-	local blocks_bombs: CombinedGroup<Kinematic> = collision.new_combined_group(
-		soft_blocks_group.set,
-		hard_blocks_group.set,
-		lightning_blocks_group.set,
-		pressure_blocks_on_ground_group.set
-	)
-	local bombs_bounce_on: CombinedGroup<Kinematic> = collision.new_combined_group(
-		soft_blocks_group.set,
-		hard_blocks_group.set,
-		lightning_blocks_group.set,
-		pressure_blocks_on_ground_group.set,
-		bombs_group.set,
-		alive_players_group.set
-	)
-	local blocks_jump: CombinedGroup<Kinematic> = collision.new_combined_group(
-		soft_blocks_group.set,
-		hard_blocks_group.set,
-		lightning_blocks_group.set,
-		pressure_blocks_on_ground_group.set,
-		bombs_group.set
-	)
-	local blockers: CombinedGroup<Explodable> = collision.new_combined_group(
-		eggs_on_ground_group.set,
-		items_on_ground_group.set,
-		soft_blocks_group.set,
-		pressure_blocks_on_ground_group.set,
-		hard_blocks_group.set
-	)
-	local explodables: CombinedGroup<Explodable> = collision.new_combined_group(
-		alive_players_group.set,
-		bombs_group.set,
-		eggs_on_ground_group.set,
-		items_on_ground_group.set
-	)
-	local lightning_blockers: CombinedGroup<Explodable> = collision.new_combined_group(
-		pressure_blocks_on_ground_group.set,
-		hard_blocks_group.set
-	)
-	local blocking_blocks_group: CombinedGroup<Kinematic> = collision.new_combined_group(
-		soft_blocks_group.set,
-		pressure_blocks_on_ground_group.set,
-		hard_blocks_group.set
-	)
+	self.alive_players_group:rebuild(alive_players)
 	local lookup = collision.new_lookup(
-		self.soft_blocks.on_ground,
-		self.hard_blocks.on_ground,
-		self.eggs.on_ground,
-		self.items.on_ground,
-		alive_players,
-		self.bombs.on_ground,
-		self.lightning_bombs.on_ground,
-		self.pressure_blocks.on_ground
+		self.soft_blocks.on_ground.set,
+		self.hard_blocks.on_ground.set,
+		self.eggs.on_ground.set,
+		self.items.on_ground.set,
+		self.bombs.on_ground.set,
+		self.lightning_bombs.on_ground.set,
+		self.pressure_blocks.on_ground.set,
+		self.alive_players_group.set
 	)
 	trace_collision:stop()
 
 	local trace_bombs = tracing.start("bombs")
-	self.bombs:update(dt, blockers, explodables, blocks_bombs, alive_players_group, bombs_group, bombs_bounce_on, lookup)
-	self.lightning_bombs:update(dt, lightning_blockers, alive_players_group, lookup)
+	self.bombs:update(dt, self.blockers, self.explodables, self.blocks_bombs, self.alive_players_group, self.bombs.on_ground, self.bombs_bounce_on, lookup)
+	self.lightning_bombs:update(dt, self.lightning_blockers, self.alive_players_group, lookup)
 	trace_bombs:stop()
 
 	local trace_players = tracing.start("players")
@@ -433,12 +416,12 @@ function Battle:update(dt: number)
 		if player:accepts_input() then
 			self:handle_bomb_drop_input(player)
 			local area_close_to_player = player:movementbox():expand(grid.TILE_SIZE / 2)
-			local close_blocks = lookup:in_box_and_group(area_close_to_player, blocking_blocks_group)
+			local close_blocks = lookup:in_box_and_group(area_close_to_player, self.blocking_blocks_group)
 			movement.set_position_and_dir_from_input(
-				player, dt, close_blocks, self.lightning_bombs, blocks_bombs, alive_players_group, bombs_group, lookup,
+				player, dt, close_blocks, self.lightning_bombs, self.blocks_bombs, self.alive_players_group, self.bombs.on_ground, lookup,
 				maps.get_layout():has_ice()
 			)
-			dino_inputs.handle(dt, player, self.bombs, blocks_jump, bombs_group, lookup)
+			dino_inputs.handle(dt, player, self.bombs, self.blocks_jump, self.bombs.on_ground, lookup)
 		end
 		trace_player_movement:stop()
 		local trace_player_interaction = tracing.start("interaction")
@@ -452,17 +435,17 @@ function Battle:update(dt: number)
 		end
 
 		if player:is_stun_crying() then
-			self:_handle_stun_cry(lookup, alive_players_group, player)
+			self:_handle_stun_cry(lookup, self.alive_players_group, player)
 		end
 		if player:is_sonic_blasting() then
-			self:_handle_sonic_blast(lookup, bombs_group, soft_blocks_group, player)
+			self:_handle_sonic_blast(lookup, self.bombs.on_ground, self.soft_blocks.on_ground, player)
 		end
 		trace_player_interaction:stop()
 	end
 	trace_players:stop()
 
 	local trace_entities = tracing.start("entities")
-	local hit_players = lookup:collisions_between(alive_players, pressure_blocks_group)
+	local hit_players = lookup:collisions_between(self.alive_players_group, self.pressure_blocks_group)
 	for player, _ in pairs(hit_players) do
 		player:kill()
 	end
@@ -493,25 +476,17 @@ function Battle:update(dt: number)
 		self.items:drop_items_of(dead_players, available_spots)
 	end
 
-	self:clear_entities(
-		lookup,
-		pressure_blocks_group,
-		self.eggs.on_ground,
-		self.items.on_ground,
-		self.bombs.on_ground,
-		self.lightning_bombs.on_ground,
-		self.soft_blocks.on_ground,
-		self.hard_blocks.on_ground
-	)
-	self:clear_entities(
-		lookup,
-		bomb_entities_group,
-		self.eggs.on_ground,
-		self.items.on_ground
-	)
+	self.bombs.on_ground:cull_if_hit_by(lookup, self.pressure_blocks_group)
+	self.lightning_bombs.on_ground:cull_if_hit_by(lookup, self.pressure_blocks_group)
+	self.soft_blocks.on_ground:cull_if_hit_by(lookup, self.pressure_blocks_group)
+	self.hard_blocks.on_ground:cull_if_hit_by(lookup, self.pressure_blocks_group)
+	self.items.on_ground:cull_if_hit_by(lookup, self.pressure_blocks_group)
+	self.items.on_ground:cull_if_hit_by(lookup, self.bomb_entities_group)
+	self.eggs.on_ground:cull_if_hit_by(lookup, self.pressure_blocks_group)
+	self.eggs.on_ground:cull_if_hit_by(lookup, self.bomb_entities_group)
 	self.player_animations:update(dt)
 	self.soft_blocks:update(dt)
-	for _, soft_block in ipairs(self.soft_blocks.on_ground) do
+	for _, soft_block in pairs(self.soft_blocks.on_ground.set) do
 		if not soft_block.is_exploding then
 			-- Do nothing
 		elseif soft_block.item then
@@ -543,7 +518,7 @@ function Battle:draw()
 	self.timer:draw()
 	self.countdown:draw()
 
-	for _, block in ipairs(self.pressure_blocks:falling()) do
+	for _, block in pairs(self.pressure_blocks:falling()) do
 		-- falling blocks are rendered last on top of everything,
 		-- but their shadows have to be behind anything
 		block:draw_shadow()
@@ -558,18 +533,18 @@ function Battle:draw()
 	self.bombs.explosions:draw()
 	self.lightning_bombs.lightnings:draw()
 
-	local entities_to_draw: {Entity} = itertools.combine(
-		self.bombs.on_ground,
-		self.lightning_bombs.on_ground,
-		self.pressure_blocks.on_ground,
-		self.player_animations:get_all(),
-		self.items.on_ground,
+	local entities_to_draw: {Entity} = itertools.sets_as_list(
+		self.bombs.on_ground.set,
+		self.lightning_bombs.on_ground.set,
+		self.pressure_blocks.on_ground.set,
 		self.pressure_blocks:falling(),
-		self.hard_blocks.on_ground,
-		self.soft_blocks.on_ground,
-		self.eggs.on_ground,
-		self.bombs.in_air,
-		self.mad_bombers:to_draw()
+		self.items.on_ground.set,
+		self.hard_blocks.on_ground.set,
+		self.soft_blocks.on_ground.set,
+		self.eggs.on_ground.set,
+		self.bombs.in_air.set,
+		self.mad_bombers.by_player,
+		self.player_animations:get_all()
 	)
 
 	-- Need to render entities in the front last so they are on top of any other entity
@@ -587,18 +562,18 @@ function Battle:draw()
 	-- Put stun cry text above everything else (with up exception)
 	self.player_animations:draw_stun_cry_texts_not_up()
 
-	local mobility_related: {Kinematic} = itertools.combine(
-		self.bombs.on_ground,
-		self.lightning_bombs.on_ground,
-		self.pressure_blocks.on_ground,
-		itertools.filter(self.players, is_alive),
-		self.hard_blocks.on_ground,
-		self.soft_blocks.on_ground
+	local mobility_related: {Kinematic} = itertools.sets_as_list(
+		self.bombs.on_ground.set,
+		self.lightning_bombs.on_ground.set,
+		self.pressure_blocks.on_ground.set,
+		self.hard_blocks.on_ground.set,
+		self.soft_blocks.on_ground.set,
+		self.alive_players_group.set
 	)
 	for _, entity in ipairs(mobility_related) do
 		hitboxes.draw_movement(entity:movementbox())
 	end
-	for _, player in ipairs(itertools.filter(self.players, is_alive)) do
+	for _, player in pairs(self.alive_players_group.set) do
 		if player:is_stun_crying() then
 			hitboxes.draw(player:get_stun_cry_hitbox())
 		end

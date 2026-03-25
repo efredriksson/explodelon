@@ -12,6 +12,7 @@ local type Animation = animations.Animation
 local type Explodable = require("bombs.explodable")
 local type Entity = require("engine.entity")
 local type Player = players.Player
+local type Group = collision.Group
 local type ReadableGroup = collision.ReadableGroup
 local type Lookup = collision.Lookup
 local type Point = points.Point
@@ -59,7 +60,7 @@ local record Lightning
     range: number
     duration: number
     speed: number
-    tiles: {LightningTile}
+    tiles: Group<LightningTile>
     animations: LightningAnimations
 end
 
@@ -67,7 +68,7 @@ function Lightning.new(position: Point, range: number): Lightning
     local self: Lightning = setmetatable({}, { __index = Lightning })
     self.position = position
     self.range = range
-    self.tiles = {}
+    self.tiles = collision.new_group()
     self.duration = 0
     self.speed = 8
     self.animations = {
@@ -95,7 +96,7 @@ local function clamp(val: number, min: number, max: number): number
 end
 
 function Lightning:_update_active_tiles(blockers: ReadableGroup<Explodable>, lookup: Lookup)
-    self.tiles = {}
+    self.tiles = collision.new_group()
 
     -- Calculate how far the lightning have expanded
     local current_radius = math.floor(clamp(self.duration * self.speed, 1, self.range))
@@ -129,7 +130,7 @@ function Lightning:_update_active_tiles(blockers: ReadableGroup<Explodable>, loo
             return false
         end
 
-        for _, _ in pairs(lookup:collisions_between({tile}, blockers)) do
+        for _, _ in pairs(lookup:collisions_between(collision.new_group({tile}), blockers)) do
             return false
         end
 
@@ -140,13 +141,13 @@ function Lightning:_update_active_tiles(blockers: ReadableGroup<Explodable>, loo
     for _, lightning_pos in ipairs(lightning_at) do
         local new_tile = LightningTile.new(lightning_pos)
         if is_not_blocked(new_tile) then
-            table.insert(self.tiles, new_tile)
+            self.tiles:add(new_tile)
         end
     end
 end
 
 function Lightning:collides_with(explodable: Explodable): boolean
-    for _, tile in ipairs(self.tiles) do
+    for _, tile in pairs(self.tiles.set) do
         if explodable:hitbox():overlap(tile:hitbox()) then
             return true
         end
@@ -172,7 +173,7 @@ function Lightning:_get_animation(): Animation
 end
 
 function Lightning:draw()
-    for _, tile in ipairs(self.tiles) do
+    for _, tile in pairs(self.tiles.set) do
         self:_get_animation():draw(tile.position.x, tile.position.y)
         hitboxes.draw(tile:hitbox())
     end

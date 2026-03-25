@@ -384,15 +384,6 @@ function MadBombers:update(dt: number)
 	end
 end
 
-function MadBombers:to_draw(): {PlayerCart}
-    local carts_to_draw: {PlayerCart} = {}
-
-    for _, cart in pairs(self.by_player) do
-		table.insert(carts_to_draw, cart)
-	end
-
-    return carts_to_draw
-end
 
 function mad_bombers.load_assets()
     local folder = "assets/carts/"

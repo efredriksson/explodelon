@@ -1,3 +1,4 @@
+local collision = require("engine.collision")
 local grid = require("level_layout.grid")
 local hitboxes = require("engine.hitboxes")
 local map_entities = require("level_layout.map_entities")
@@ -7,6 +8,7 @@ local z_index = require("z_index")
 
 local type Explodable = require("bombs.explodable")
 local type Entity = require("engine.entity")
+local type Group = collision.Group
 local type Kinematic = require("kinematic")
 local type Point = points.Point
 local type Rectangle = rectangles.Rectangle
@@ -81,7 +83,7 @@ local record PressureBlocks
     right_falling: PressureBlock
     right_fall_finished: boolean
     left_fall_finished: boolean
-    on_ground: {PressureBlock}
+    on_ground: Group<PressureBlock>
     no_more_falling_blocks: boolean
     sudden_death: boolean
 end
@@ -92,7 +94,7 @@ function pressure_blocks.new(): PressureBlocks
 	local self: PressureBlocks = setmetatable({}, { __index = PressureBlocks })
     self.left_positions = map_entities.get_left_side_pressure_blocks()
     self.right_positions = map_entities.get_right_side_pressure_blocks()
-    self.on_ground = {}
+    self.on_ground = collision.new_group()
     self.left_falling = PressureBlock.new(self.left_positions[1])
     self.right_falling = PressureBlock.new(self.right_positions[1])
     self.next_left_index = 2
@@ -128,12 +130,14 @@ function PressureBlocks:set_next_left_falling_block()
     end
 end
 
-function PressureBlocks:falling(): {PressureBlock}    
+function PressureBlocks:falling(): {PressureBlock: PressureBlock}
     if self:no_updates() then
         return {}
     end
-
-    return {self.left_falling, self.right_falling}
+    return {
+        [self.left_falling] = self.left_falling,
+        [self.right_falling] = self.right_falling
+    }
 end
 
 function PressureBlocks:update(dt: number)
@@ -146,11 +150,11 @@ function PressureBlocks:update(dt: number)
 
     if self.right_falling:is_on_ground() and not self.right_fall_finished then
         self.right_fall_finished = true
-        table.insert(self.on_ground, self.right_falling)
+        self.on_ground:add(self.right_falling)
     end
     if self.left_falling:is_on_ground() and not self.left_fall_finished then
         self.left_fall_finished = true
-        table.insert(self.on_ground, self.left_falling)
+        self.on_ground:add(self.left_falling)
     end
 
     if self.left_fall_finished and self.right_fall_finished then

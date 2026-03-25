@@ -595,25 +595,28 @@ function PlayerAnimations:_get_for(player: Player): Animation
     end
 end
 
-function PlayerAnimations:get_all(): {Entity}
+function PlayerAnimations:get_all(): {Entity: Entity}
 	local dinos_drawn_with_player: {Dino} = {}
-	local entities_to_draw: {Entity} = {}
+	local entity_set_to_draw: {Entity: Entity} = {}
 	for _, player in ipairs(self.players) do
 		local player_animation = self:_get_for(player)
 		if player:is_riding_dino() then
 			local dino_anim = self.dinos:get_from(player.dino)
 			table.insert(dinos_drawn_with_player, player.dino)
-			table.insert(entities_to_draw, MountedPlayerAnimation.new(player_animation, dino_anim, player))
+			local entity = MountedPlayerAnimation.new(player_animation, dino_anim, player)
+			entity_set_to_draw[entity] = entity
 		elseif player_animation then
-			table.insert(entities_to_draw, PlayerAnimation.new(player_animation, player))
+			local entity = PlayerAnimation.new(player_animation, player)
+			entity_set_to_draw[entity] = entity
 		end
 	end
 
 	for dino, animation in pairs(self.dinos:get_all_except(dinos_drawn_with_player)) do
-		table.insert(entities_to_draw, MountAnimation.new(animation, dino))
+		local entity = MountAnimation.new(animation, dino)
+		entity_set_to_draw[entity] = entity
 	end
 
-	return entities_to_draw
+	return entity_set_to_draw
 end
 
 function PlayerAnimations:_draw_players_shadow(filter: function(Player): boolean)

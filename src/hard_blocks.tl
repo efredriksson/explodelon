@@ -1,4 +1,5 @@
 local animations = require("engine.animations")
+local collision = require("engine.collision")
 local grid = require("level_layout.grid")
 local hard_block_animations = require("level_graphics.hard_block_animations")
 local hitboxes = require("engine.hitboxes")
@@ -10,6 +11,7 @@ local z_index = require("z_index")
 local type Animation = animations.Animation
 local type Explodable = require("bombs.explodable")
 local type Entity = require("engine.entity")
+local type Group = collision.Group
 local type Kinematic = require("kinematic")
 local type Point = points.Point
 local type Rectangle = rectangles.Rectangle
@@ -55,17 +57,17 @@ function HardBlock:movementbox(): Rectangle
 	return hitboxes.new_block(self.position)
 end
 
-local record HardBlocks 
-	on_ground: {HardBlock}
+local record HardBlocks
+	on_ground: Group<HardBlock>
 end
 
 local hard_blocks = {HardBlock = HardBlock, HardBlocks = HardBlocks}
 
 function hard_blocks.new(configs: {HardBlockConfig}): HardBlocks
     local self: HardBlocks = setmetatable({}, { __index = HardBlocks })
-    self.on_ground = {}
+    self.on_ground = collision.new_group()
     for _, config in ipairs(configs) do
-        table.insert(self.on_ground, HardBlock.new(config.position, config.is_tall))
+        self.on_ground:add(HardBlock.new(config.position, config.is_tall))
     end
     return self
 end

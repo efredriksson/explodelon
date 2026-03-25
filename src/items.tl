@@ -1,5 +1,6 @@
 local animations = require("engine.animations")
 local audio = require("engine.audio")
+local collision = require("engine.collision")
 local itertools = require("itertools")
 local hitboxes = require("engine.hitboxes")
 local players = require("players")
@@ -11,6 +12,7 @@ local z_index = require("z_index")
 local type Animation = animations.Animation
 local type Explodable = require("bombs.explodable")
 local type Entity = require("engine.entity")
+local type Group = collision.Group
 local type Player = players.Player
 local type Point = points.Point
 local type Rectangle = rectangles.Rectangle
@@ -68,7 +70,7 @@ function Item:is_destroyed(): boolean
 end
 
 local record Items
-    on_ground: {Item}
+    on_ground: Group<Item>
     by_players: {integer: {ItemType}}
 end
 
@@ -76,7 +78,7 @@ local items = {Items = Items}
 
 function items.new(): Items
    local self: Items = setmetatable({}, { __index = Items })
-   self.on_ground = {}
+   self.on_ground = collision.new_group()
    self.by_players = {}
    return self
 end
@@ -105,20 +107,19 @@ function Items:possible_drop(available_spots: {Point})
 
     for _, item_spawn in ipairs(item_spawns) do
         local spot_to_drop = available_spots[lutro.math.random(#available_spots)]
-        table.insert(self.on_ground, Item.new(item_spawn, spot_to_drop))
+        self.on_ground:add(Item.new(item_spawn, spot_to_drop))
     end
 end
 
 function Items:drop_at(position: Point, item: ItemType)
-    table.insert(self.on_ground, Item.new(item, position))
+    self.on_ground:add(Item.new(item, position))
 end
 
 function Items:update(dt: number)
     frame_animation:update(dt)
-    for i = #self.on_ground, 1, -1 do
-        local item = self.on_ground[i]
+    for _, item in pairs(self.on_ground.set) do
         if item:is_destroyed() then
-            table.remove(self.on_ground, i)
+            self.on_ground:remove(item)
         end
     end
 end
@@ -140,10 +141,9 @@ function Items:drop_items_of(players_: {Player}, available_spots: {Point})
     end
 end
 
-function Items:consumed_by_player(player: Player, index: integer)
+function Items:_consume_by(player: Player, item: Item)
     take_item_sound:play()
-
-    local item = table.remove(self.on_ground, index)
+    self.on_ground:remove(item)
     if self.by_players[player.id] == nil then
         self.by_players[player.id] = {}
     end
@@ -164,9 +164,9 @@ function Items:consumed_by_player(player: Player, index: integer)
 end
 
 function Items:possible_pickup_by(player: Player)
-    for i, item in ipairs(self.on_ground) do
+    for _, item in pairs(self.on_ground.set) do
         if player:hitbox():overlap(item:hitbox()) then
-            self:consumed_by_player(player, i)
+            self:_consume_by(player, item)
         end
     end
 end

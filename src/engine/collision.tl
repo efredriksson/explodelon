@@ -28,7 +28,7 @@ local interface ReadableGroup<T>
     is_empty: function(self): boolean
 end
 
-local record Group<T> is ReadableGroup<T>
+local record Group<T is Entity> is ReadableGroup<T>
     set: {any: T}
 end
 
@@ -46,17 +46,24 @@ function Group:get(object: any): T | nil
     return self.set[object]
 end
 
-function Group:list(): {T}
-    local list: {T} = {}
-    for _, entity in pairs(self.set) do
-        table.insert(list, entity)
-    end
-
-    return list
-end
 
 function Group:is_empty(): boolean
     return next(self.set) == nil
+end
+
+function Group:add(entity: T)
+    self.set[entity] = entity
+end
+
+function Group:remove(entity: T)
+    self.set[entity] = nil
+end
+
+function Group:rebuild(list: {T})
+    for k in pairs(self.set) do self.set[k] = nil end
+    for _, entity in ipairs(list) do
+        self.set[entity] = entity
+    end
 end
 
 function CombinedGroup:get(object: any): T | nil
@@ -97,6 +104,9 @@ function collision.new_group_from_set<T>(set: {any: T}): Group<T>
     return self
 end
 
+-- Returns a read-only view across the given sets. Each set is held by reference, so
+-- membership changes made by the owning code (add/remove on the source Group) are
+-- immediately visible through this view without any rebuild step.
 function collision.new_combined_group<T>(...: {any: T}): CombinedGroup<T>
     local self: CombinedGroup<T> = setmetatable({}, { __index = CombinedGroup })
 
@@ -107,12 +117,12 @@ function collision.new_combined_group<T>(...: {any: T}): CombinedGroup<T>
     return self
 end
 
-function collision.new_lookup(...: {Entity}): Lookup
+function collision.new_lookup(...: {any: Entity}): Lookup
     local self: Lookup = setmetatable({}, { __index = Lookup })
     self.map = {}
 
-    for _, entity_list in ipairs({...}) do
-        for _, entity in ipairs(entity_list) do
+    for _, entity_set in ipairs({...}) do
+        for _, entity in pairs(entity_set) do
             local x_min, x_max, y_min, y_max = get_indexes(entity:hitbox())
             for i = x_min, x_max do
                 for j = y_min, y_max do
@@ -128,13 +138,13 @@ function collision.new_lookup(...: {Entity}): Lookup
     return self
 end
 
-function Lookup:collisions_between<K is Entity,T>(entities: {K}, group: ReadableGroup<T>): {K: T}
+function Lookup:collisions_between<K is Entity,T>(entities: Group<K>, group: ReadableGroup<T>): {K: T}
     local collides_with: {K: T} = {}
     if group:is_empty() then
         return collides_with
     end
 
-    for _, entity in ipairs(entities) do
+    for _, entity in pairs(entities.set) do
        local x_min, x_max, y_min, y_max = get_indexes(entity:hitbox())
         for i = x_min, x_max do
             for j = y_min, y_max do
@@ -176,6 +186,16 @@ function Lookup:in_box_and_group<T>(box: Rectangle, group: ReadableGroup<T>): {T
     end
 
     return in_box_for_group
+end
+
+function Group:cull_if_hit_by(lookup: Lookup, destroys: ReadableGroup<Entity>)
+    local is_destroyed = lookup:collisions_between(self, destroys)
+    for entity, _ in pairs(is_destroyed) do
+        if entity.clear then
+            entity:clear()
+        end
+        self:remove(entity as T)
+    end
 end
 
 return collision

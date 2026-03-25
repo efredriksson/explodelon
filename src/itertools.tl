@@ -51,6 +51,18 @@ function itertools.double_loop_inner_loopback(
     end
 end
 
+function itertools.sets_as_list<T>(...: {any: T}): {T}
+	local list: {T} = {}
+
+	for _, set in ipairs({...}) do
+		for _, elem in pairs(set) do
+			table.insert(list, elem)
+		end
+	end
+
+	return list
+end
+
 function itertools.combine<T>(...: {T}): {T}
 	local combined_list: {T} = {}
 	
