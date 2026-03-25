@@ -12,6 +12,7 @@ local z_index = require("z_index")
 local type Animation = animations.Animation
 local type Explodable = require("bombs.explodable")
 local type Entity = require("engine.entity")
+local type Group = collision.Group
 local type ReadableGroup = collision.ReadableGroup
 local type Lookup = collision.Lookup
 local type Vector = vectors.Vector
@@ -88,7 +89,7 @@ local record Explosion
     duration: number
     delay: number
     speed: number
-    tiles: {ExplosionTile}
+    tiles: Group<ExplosionTile>
     blocked_at: {Point}
     animations: ExplosionAnimations
 end
@@ -98,7 +99,7 @@ function Explosion.new(position: Point, range: number, delay?: number): Explosio
     self.position = position
     self.blocked_at = {}
     self.range = range
-    self.tiles = {}
+    self.tiles = collision.new_group()
     self.duration = 0
     self.delay = delay or 0
     self.speed = 28
@@ -155,7 +156,7 @@ local enum BlockingResult
 end
 
 function Explosion:_update_active_tiles(blockers: ReadableGroup<Explodable>, lookup: Lookup)
-    self.tiles = {}
+    self.tiles = collision.new_group()
 
     -- Calculate how far the explosion should expanded
     -- based on time elapsed, capped at max range
@@ -174,7 +175,7 @@ function Explosion:_update_active_tiles(blockers: ReadableGroup<Explodable>, loo
             end
         end
 
-        local colliding_blockers = lookup:collisions_between({tile}, blockers)
+        local colliding_blockers = lookup:collisions_between(collision.new_group({tile}), blockers)
         for _, blocker in pairs(colliding_blockers) do
             if blocker.in_explosion then
                 return "next"
@@ -222,7 +223,7 @@ function Explosion:_update_active_tiles(blockers: ReadableGroup<Explodable>, loo
     end
 
     -- Center tile
-    table.insert(self.tiles, self:new_tile(self.position, false, "center"))
+    self.tiles:add(self:new_tile(self.position, false, "center"))
 
     local directions: {ExplosionTileType: Vector} = {
         right = vectors.new(1, 0),
@@ -234,7 +235,7 @@ function Explosion:_update_active_tiles(blockers: ReadableGroup<Explodable>, loo
     -- Propagate in all four directions
     for direction, delta in pairs(directions) do
         for _, tile in ipairs(propagate(self.position, delta:scale(grid.TILE_SIZE), 1, direction)) do
-            table.insert(self.tiles, tile)
+            self.tiles:add(tile)
         end
     end
 end
@@ -263,7 +264,7 @@ function Explosion:is_complete(): boolean
 end
 
 function Explosion:draw()
-    for _, tile in ipairs(self.tiles) do
+    for _, tile in pairs(self.tiles.set) do
         local animation = self:get_tile_animation(tile)
         animation:draw(tile.position.x, tile.position.y)
         hitboxes.draw(tile:hitbox())

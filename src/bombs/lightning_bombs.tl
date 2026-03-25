@@ -14,6 +14,7 @@ local type Animation = animations.Animation
 local type Explodable = require("bombs.explodable")
 local type Kinematic = require("kinematic")
 local type Entity = require("engine.entity")
+local type Group = collision.Group
 local type Lightnings = lightnings.Lightnings
 local type Player = players.Player
 local type ReadableGroup = collision.ReadableGroup
@@ -115,7 +116,7 @@ function LightningBomb:update(dt: number)
 end
 
 local record LightningBombs
-    on_ground: {LightningBomb}
+    on_ground: Group<LightningBomb>
     lightnings: Lightnings
 end
 
@@ -130,7 +131,7 @@ end
 
 function lightning_bombs.new(): LightningBombs
     local self: LightningBombs = setmetatable({}, { __index = LightningBombs })
-    self.on_ground = {}
+    self.on_ground = collision.new_group()
     self.lightnings = lightnings.new()
     return self
 end
@@ -156,17 +157,16 @@ function LightningBombs:place_lightning_bomb(player: Player, occupied: {Entity})
     
     local hand_back_bomb = function() player.lightning_bomb = player.lightning_bomb + 1 end
     local bomb = LightningBomb.new(position, hand_back_bomb)
-    table.insert(self.on_ground, bomb)
+    self.on_ground:add(bomb)
     player.lightning_bomb = player.lightning_bomb - 1
 end
 
 function LightningBombs:update(dt: number, blockers: ReadableGroup<Explodable>, explodables: ReadableGroup<Player>, lookup: Lookup)
-    for i = #self.on_ground, 1, -1 do
-        local bomb = self.on_ground[i]
+    for _, bomb in pairs(self.on_ground.set) do
         bomb:update(dt)
 
         if bomb:is_complete() then
-            table.remove(self.on_ground, i)
+            self.on_ground:remove(bomb)
             bomb.hand_back()
             self.lightnings:place_explosion(bomb.position, bomb.range)
         end
@@ -174,5 +174,6 @@ function LightningBombs:update(dt: number, blockers: ReadableGroup<Explodable>, 
 
     self.lightnings:update(dt, blockers, explodables, lookup)
 end
+
 
 return lightning_bombs

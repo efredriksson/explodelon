@@ -1,4 +1,5 @@
 local animations = require("engine.animations")
+local collision = require("engine.collision")
 local grid = require("level_layout.grid")
 local hitboxes = require("engine.hitboxes")
 local map_entities = require("level_layout.map_entities")
@@ -11,6 +12,7 @@ local z_index = require("z_index")
 local type Animation = animations.Animation
 local type Explodable = require("bombs.explodable")
 local type Entity = require("engine.entity")
+local type Group = collision.Group
 local type Kinematic = require("kinematic")
 local type Point = points.Point
 local type Rectangle = rectangles.Rectangle
@@ -102,8 +104,8 @@ function SoftBlock:is_destroyed(): boolean
     return self.breaking_animation.loops > 0
 end
 
-local record SoftBlocks 
-	on_ground: {SoftBlock}
+local record SoftBlocks
+	on_ground: Group<SoftBlock>
     rigid_animation: Animation
     revealed_animation: Animation
 end
@@ -112,7 +114,7 @@ local soft_blocks = {SoftBlocks = SoftBlocks, SoftBlock = SoftBlock}
 
 function soft_blocks.new(configs: {SoftBlockConfig}): SoftBlocks
     local self: SoftBlocks = setmetatable({}, { __index = SoftBlocks })
-    self.on_ground = {}
+    self.on_ground = collision.new_group()
     self.rigid_animation = soft_block_animations.get_rigid()
     self.revealed_animation = soft_block_animations.get_revealed()
     for _, config in ipairs(configs) do
@@ -123,7 +125,7 @@ function soft_blocks.new(configs: {SoftBlockConfig}): SoftBlocks
             config.item,
             config.egg
         )
-        table.insert(self.on_ground, block)
+        self.on_ground:add(block)
     end
     return self
 end
@@ -133,12 +135,11 @@ function SoftBlocks:update(dt: number)
     self.rigid_animation:update(dt)
     self.revealed_animation:update(dt)
 
-    for i = #self.on_ground, 1, -1 do
-        local soft_block = self.on_ground[i]
+    for _, soft_block in pairs(self.on_ground.set) do
         soft_block:update(dt)
 
         if soft_block:is_destroyed() then
-            table.remove(self.on_ground, i)
+            self.on_ground:remove(soft_block)
         end
     end
 end

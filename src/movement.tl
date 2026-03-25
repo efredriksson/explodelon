@@ -216,7 +216,7 @@ local function restrict_player_movement(
 		end
 	end
 
-	for _, bomb in ipairs(lightning_bombs_.on_ground) do
+	for _, bomb in pairs(lightning_bombs_.on_ground.set) do
 		local bomb_hitbox = bomb:movementbox()
 		if walking_further_into_block(bomb_hitbox) then
 			if bomb.position:distance_to(player.position) > grid.TILE_SIZE * (3 / 4) then

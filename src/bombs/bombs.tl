@@ -19,6 +19,7 @@ local type Explodable = require("bombs.explodable")
 local type Explosions = explosions.Explosions
 local type Kinematic = require("kinematic")
 local type Entity = require("engine.entity")
+local type Group = collision.Group
 local type Player = players.Player
 local type ReadableGroup = collision.ReadableGroup
 local type Lookup = collision.Lookup
@@ -399,8 +400,8 @@ end
 -- Bombs --
 
 local record Bombs
-    on_ground: {Bomb}
-    in_air: {ThrownBomb}
+    on_ground: Group<Bomb>
+    in_air: Group<ThrownBomb>
     explosions: Explosions
 end
 
@@ -413,8 +414,8 @@ end
 
 function bombs.new(): Bombs
     local self: Bombs = setmetatable({}, { __index = Bombs })
-    self.on_ground = {}
-    self.in_air = {}
+    self.on_ground = collision.new_group()
+    self.in_air = collision.new_group()
     self.explosions = explosions.new()
     return self
 end
@@ -440,14 +441,14 @@ function Bombs:place_bomb(player: Player, occupied: {Entity})
     
     local hand_back_bomb = function() player.bombs = player.bombs + 1 end
     local bomb = Bomb.new(position, player.fire, hand_back_bomb)
-    table.insert(self.on_ground, bomb)
+    self.on_ground:add(bomb)
     player.bombs = player.bombs - 1
 end
 
 function Bombs:throw_bomb(from: Point, to: Point): Bomb
     local bomb = Bomb.new(from, 2, function() end)
     local thrown = ThrownBomb.new(bomb, to, grid.TILE_SIZE, grid.TILE_SIZE * 2, 0.4)
-    table.insert(self.in_air, thrown)
+    self.in_air:add(thrown)
     return bomb
 end
 
@@ -455,15 +456,10 @@ function Bombs:throw_existing(bomb: Bomb, to: Point)
     local throw_len = bomb.position:distance_to(to)
     local throw_height = grid.TILE_SIZE + throw_len * 0.1
     local throw_time = 0.20 + 0.025 * throw_len / grid.TILE_SIZE
-    for i, on_ground in ipairs(self.on_ground) do
-        if on_ground == bomb then
-            table.remove(self.on_ground, i)
-            bomb.timer = BOMB_TIMER_START -- Reset when thrown
-            local thrown = ThrownBomb.new(bomb, to, 0, throw_height, throw_time)
-            table.insert(self.in_air, thrown)
-            return
-        end
-    end
+    self.on_ground:remove(bomb)
+    bomb.timer = BOMB_TIMER_START -- Reset when thrown
+    local thrown = ThrownBomb.new(bomb, to, 0, throw_height, throw_time)
+    self.in_air:add(thrown)
 end
 
 function Bombs:update(
@@ -476,12 +472,11 @@ function Bombs:update(
     bombs_bounce_on: ReadableGroup<Kinematic>,
     lookup: Lookup
 )
-    for i = #self.on_ground, 1, -1 do
-        local bomb = self.on_ground[i]
+    for _, bomb in pairs(self.on_ground.set) do
         bomb:update(dt, occupies, players_, bombs_, lookup)
 
         if bomb:is_complete() then
-            table.remove(self.on_ground, i)
+            self.on_ground:remove(bomb)
             bomb.hand_back()
             local goal = bomb:get_goal()
             if not goal then
@@ -493,10 +488,10 @@ function Bombs:update(
         end
     end
 
-    for i, bomb in ipairs(self.in_air) do
+    for _, bomb in pairs(self.in_air.set) do
         bomb:update(dt)
         if bomb:has_landed() then
-            local hitting_entities = lookup:collisions_between({bomb}, bombs_bounce_on)
+            local hitting_entities = lookup:collisions_between(collision.new_group({bomb}), bombs_bounce_on)
             local bomb_bouncing = false
             for _, hitting_entity in pairs(hitting_entities) do
                 hitting_entity:hit_with_bomb()
@@ -506,7 +501,7 @@ function Bombs:update(
             if not grid.area():contains(bomb:hitbox()) and not bomb.delegate:get_goal() then
                 bomb_bouncing = true
             end
-            
+
             if bomb_bouncing then
                 if grid.outside_visible_area(bomb:hitbox()) then
                     -- Bomb outside seen map, loops around
@@ -516,8 +511,8 @@ function Bombs:update(
 
                 bomb:bounce()
             else
-                table.remove(self.in_air, i)
-                table.insert(self.on_ground, bomb.delegate)
+                self.in_air:remove(bomb)
+                self.on_ground:add(bomb.delegate)
             end
         end
     end
@@ -525,18 +520,19 @@ function Bombs:update(
     self.explosions:update(dt, blockers, explodables, lookup)
 end
 
+
 local function draw_bomb_shadow(bomb: Bomb)
     lutro.graphics.draw(bomb_shadow, bomb.position.x - 1, bomb.position.y - 8)
 end
 
 function Bombs:draw_on_ground_shadows()
-    for _, bomb in ipairs(self.on_ground) do
+    for _, bomb in pairs(self.on_ground.set) do
         draw_bomb_shadow(bomb)
     end
 end
 
 function Bombs:draw_in_air_shadows()
-    for _, bomb in ipairs(self.in_air) do
+    for _, bomb in pairs(self.in_air.set) do
         draw_bomb_shadow(bomb.delegate)
     end
 end

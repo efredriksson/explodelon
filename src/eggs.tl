@@ -1,4 +1,5 @@
 local animations = require("engine.animations")
+local collision = require("engine.collision")
 local dinos = require("dinos")
 local grid = require("level_layout.grid")
 local hitboxes = require("engine.hitboxes")
@@ -11,6 +12,7 @@ local type Animation = animations.Animation
 local type Dino = dinos.Dino
 local type Explodable = require("bombs.explodable")
 local type Entity = require("engine.entity")
+local type Group = collision.Group
 local type Player = players.Player
 local type Point = points.Point
 local type Rectangle = rectangles.Rectangle
@@ -85,33 +87,33 @@ function Egg:is_destroyed(): boolean
 end
 
 local record Eggs
-    on_ground: {Egg}
+    on_ground: Group<Egg>
 end
 
 local eggs = {Eggs = Eggs}
 
 function eggs.new(): Eggs
    local self: Eggs = setmetatable({}, { __index = Eggs })
-   self.on_ground = {}
+   self.on_ground = collision.new_group()
    return self
 end
 
 function Eggs:update(dt: number)
-    for i = #self.on_ground, 1, -1 do
-        local egg = self.on_ground[i]
+    for _, egg in pairs(self.on_ground.set) do
         egg:update(dt)
         if egg.hatched or egg:is_destroyed() then
-            table.remove(self.on_ground, i)
+            self.on_ground:remove(egg)
         end
     end
 end
 
 function Eggs:spawn_at(position: Point)
-    table.insert(self.on_ground, Egg.new(position))
+    self.on_ground:add(Egg.new(position))
 end
 
+
 function Eggs:possible_hatcher(player: Player): Dino
-    for _, egg in ipairs(self.on_ground) do
+    for _, egg in pairs(self.on_ground.set) do
         if player:hitbox():overlap(egg:hitbox()) then
 			if not egg.breaking and not egg.is_exploding then
 				egg:open()
