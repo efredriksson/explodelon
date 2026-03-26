@@ -1,8 +1,12 @@
 local animations = require("engine.animations")
 local dinos = require("dinos")
+local grid = require("level_layout.grid")
 local images = require("engine.images")
+local points = require("engine.geometry.points")
+local rectangles = require("engine.geometry.rectangles")
 local vectors = require("engine.geometry.vectors")
 local settings = require("settings")
+local z_index = require("z_index")
 
 local type Animation = animations.Animation
 local type Color = images.Color
@@ -10,6 +14,9 @@ local type DinoAction = dinos.DinoAction
 local type Dino = dinos.Dino
 local type DinoColor = settings.DinoColor
 local type Direction = vectors.Direction
+local type Entity = require("engine.entity")
+local type Point = points.Point
+local type Rectangle = rectangles.Rectangle
 local type DinoImageByActionAndLevel = {DinoAction: {integer: Image}}
 local type DinoImages = {DinoColor: {Direction: DinoImageByActionAndLevel}}
 local type DinoAnimations = {Direction: {DinoAction: {integer: Animation}}}
@@ -180,11 +187,45 @@ function AnimatedDino:update(dt: number)
 	end
 end
 
-local record AnimatedDinos
-    existing: {AnimatedDino}
+local function block_to_anim_draw_pos(animation: Animation, pos: Point): Point
+	-- y: +1 is because of the sprite, look over when doing animations
+	return points.new(
+		pos.x + (grid.TILE_SIZE - animation.width) / 2,
+		pos.y - animation.height + grid.TILE_SIZE + 1)
 end
 
-local dino_animations = {AnimatedDinos = AnimatedDinos}
+local record MountAnimation is Entity
+	dino: Dino
+	animated_dino: AnimatedDino
+end
+
+function MountAnimation.new(animated_dino: AnimatedDino, dino: Dino): MountAnimation
+	local self: MountAnimation = setmetatable({}, { __index = MountAnimation })
+	self.z_index = z_index.LEVEL
+	self.dino = dino
+	self.animated_dino = animated_dino
+	return self
+end
+
+function MountAnimation:get_position(): Point
+	return self.dino.position
+end
+
+function MountAnimation:hitbox(): Rectangle
+	return self.dino:hitbox()
+end
+
+function MountAnimation:draw()
+	local animation = self.animated_dino:get_animation()
+	local draw_pos = block_to_anim_draw_pos(animation, self.dino.position)
+	animation:draw(draw_pos.x, draw_pos.y)
+end
+
+local record AnimatedDinos
+	mount_entity_by_dino: {Dino: MountAnimation}
+end
+
+local dino_animations = {AnimatedDinos = AnimatedDinos, AnimatedDino = AnimatedDino, MountAnimation = MountAnimation}
 
 function dino_animations.load_assets()
 	dino_images = get_dino_images()
@@ -192,17 +233,15 @@ end
 
 function dino_animations.new(): AnimatedDinos
    local self: AnimatedDinos = setmetatable({}, { __index = AnimatedDinos })
-   self.existing = {}
+   self.mount_entity_by_dino = {}
    return self
 end
 
 function AnimatedDinos:update(dt: number)
-	for i = #self.existing, 1, -1 do
-		local animated = self.existing[i]
-		animated:update(dt)
-
-		if animated.finished then
-			table.remove(self.existing, i)
+	for dino, mount in pairs(self.mount_entity_by_dino) do
+		mount.animated_dino:update(dt)
+		if mount.animated_dino.finished then
+			self.mount_entity_by_dino[dino] = nil
 		end
 	end
 end
@@ -212,29 +251,29 @@ function AnimatedDinos:add_for(dino: Dino)
 		return -- Dino was consumed into existing dino
 	end
 
-	table.insert(self.existing, AnimatedDino.new(dino))
+	local animated = AnimatedDino.new(dino)
+	self.mount_entity_by_dino[dino] = MountAnimation.new(animated, dino)
 end
 
 function AnimatedDinos:get_from(dino: Dino): Animation
-	for _, animated in ipairs(self.existing) do
-		if animated.dino == dino then
-			return animated:get_animation()
-		end
+	local mount = self.mount_entity_by_dino[dino]
+	if mount then
+		return mount.animated_dino:get_animation()
 	end
 end
 
-function AnimatedDinos:get_all_except(exclude: {Dino}): {Dino: Animation}
-	local to_return: {Dino: Animation} = {}
-	for _, animated in ipairs(self.existing) do
+function AnimatedDinos:get_mount_entities_except(exclude: {Dino}): {Dino: MountAnimation}
+	local to_return: {Dino: MountAnimation} = {}
+	for dino, mount in pairs(self.mount_entity_by_dino) do
 		local is_excluded = false
 		for _, excluded_dino in ipairs(exclude) do
-			if excluded_dino == animated.dino then
+			if excluded_dino == dino then
 				is_excluded = true
 			end
 		end
 
-		if not is_excluded and not animated.dino.hatching then
-			to_return[animated.dino] = animated:get_animation()
+		if not is_excluded and not dino.hatching then
+			to_return[dino] = mount
 		end
 	end
 

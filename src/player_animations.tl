@@ -134,31 +134,6 @@ function PlayerAnimation:draw()
 	self.animation:draw(draw_pos.x, draw_pos.y)
 end
 
-local record MountAnimation is Entity
-	dino: Dino
-	animation: Animation
-end
-
-function MountAnimation.new(animation: Animation, dino: Dino): MountAnimation
-	local self: MountAnimation = setmetatable({}, { __index = MountAnimation })
-	self.z_index = z_index.LEVEL
-	self.dino = dino
-	self.animation = animation
-	return self
-end
-
-function MountAnimation:get_position(): Point
-    return self.dino.position
-end
-
-function MountAnimation:hitbox(): Rectangle
-    return self.dino:hitbox()
-end
-
-function MountAnimation:draw()
-	local draw_pos = block_to_anim_draw_pos(self.animation, self.dino.position)
-	self.animation:draw(draw_pos.x, draw_pos.y)
-end
 
 local record MountedPlayerAnimation is Entity
 	player: Player
@@ -611,9 +586,8 @@ function PlayerAnimations:get_all(): {Entity: Entity}
 		end
 	end
 
-	for dino, animation in pairs(self.dinos:get_all_except(dinos_drawn_with_player)) do
-		local entity = MountAnimation.new(animation, dino)
-		entity_set_to_draw[entity] = entity
+	for _, mount in pairs(self.dinos:get_mount_entities_except(dinos_drawn_with_player)) do
+		entity_set_to_draw[mount] = mount
 	end
 
 	return entity_set_to_draw
