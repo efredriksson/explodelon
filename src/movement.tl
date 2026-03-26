@@ -204,9 +204,22 @@ local function restrict_player_movement(
 		end
 	end
 
+	local bombs_player_is_inside: {Kinematic: Kinematic} = {}
+	for _, bomb in ipairs(close_bombs) do
+		if bomb.position:distance_to(player.position) <= grid.TILE_SIZE * (3 / 4) and not bomb.has_been_kicked then
+			bombs_player_is_inside[bomb] = bomb
+		end
+	end
+	for _, bomb in ipairs(close_lightning_bombs) do
+		if bomb.position:distance_to(player.position) <= grid.TILE_SIZE * (3 / 4) then
+			bombs_player_is_inside[bomb] = bomb
+		end
+	end
+
 	-- Attempt a corner cut around the given hitbox. Returns the cut movement if
 	-- the path is clear of all blocks, bombs and lightning bombs, nil otherwise.
-	-- skip excludes the obstacle being cut around from the overlap check.
+	-- skip excludes the obstacle being cut around. bombs_player_is_inside are
+	-- also excluded since the player can freely overlap them during the cut.
 	local function try_corner_cut(hitbox: Rectangle, skip?: Kinematic): CheckedMovement | nil
 		local result = check_block_collision(hitbox)
 		if not result.cuts_corner then
@@ -214,8 +227,11 @@ local function restrict_player_movement(
 		end
 		local corner_cut_hitbox = player:movementbox():shift(player.position:vector_to(result.position))
 		local all_obstacles = itertools.combine(blocks, close_bombs, close_lightning_bombs)
-		for _, obstacle in ipairs(all_obstacles) do
-			if obstacle ~= skip and corner_cut_hitbox:overlap(obstacle:movementbox()) then
+		local function not_skipped(obstacle: Kinematic): boolean
+			return obstacle ~= skip and not bombs_player_is_inside[obstacle]
+		end
+		for _, obstacle in ipairs(itertools.filter(all_obstacles, not_skipped)) do
+			if corner_cut_hitbox:overlap(obstacle:movementbox()) then
 				return nil
 			end
 		end
@@ -224,43 +240,39 @@ local function restrict_player_movement(
 
 	for _, bomb in ipairs(close_bombs) do
 		local bomb_hitbox = bomb:movementbox()
-		if walking_further_into_block(bomb_hitbox) then
-			if bomb.position:distance_to(player.position) > grid.TILE_SIZE * (3 / 4) or bomb.has_been_kicked then
-				-- If a bomb has been kicked then it is no longer to move
-				-- freely in far inside it. This is to stop moving through
-				-- bombs that are kicked against a player.
-				local corner_cut = try_corner_cut(bomb_hitbox, bomb)
-				if corner_cut then
-					return corner_cut
-				end
-				local kicked_bombs: {{Bomb, Vector}} = {}
-				if player.has_kick then
-					local kick_direction = movement:normalize()
-					local can_move = bomb:can_move(
-						kick_direction:scale(grid.TILE_SIZE), blocks_bombs, players_, bombs_, lookup
-					)
-					if can_move.yes then
-						-- Walking into bomb and at edge of bomb then kick
-						table.insert(kicked_bombs, {bomb, can_move.in_direction})
-					end
-				end
-				-- Not allowed to walk further into bomb if at edge
-				return CheckedMovement.new(player.position, false, false, kicked_bombs)
+		if walking_further_into_block(bomb_hitbox) and not bombs_player_is_inside[bomb] then
+			-- If a bomb has been kicked then it is no longer to move
+			-- freely in far inside it. This is to stop moving through
+			-- bombs that are kicked against a player.
+			local corner_cut = try_corner_cut(bomb_hitbox, bomb)
+			if corner_cut then
+				return corner_cut
 			end
+			local kicked_bombs: {{Bomb, Vector}} = {}
+			if player.has_kick then
+				local kick_direction = movement:normalize()
+				local can_move = bomb:can_move(
+					kick_direction:scale(grid.TILE_SIZE), blocks_bombs, players_, bombs_, lookup
+				)
+				if can_move.yes then
+					-- Walking into bomb and at edge of bomb then kick
+					table.insert(kicked_bombs, {bomb, can_move.in_direction})
+				end
+			end
+			-- Not allowed to walk further into bomb if at edge
+			return CheckedMovement.new(player.position, false, false, kicked_bombs)
 		end
 	end
 
 	for _, bomb in ipairs(close_lightning_bombs) do
 		local bomb_hitbox = bomb:movementbox()
-		if walking_further_into_block(bomb_hitbox) then
-			if bomb.position:distance_to(player.position) > grid.TILE_SIZE * (3 / 4) then
-				local corner_cut = try_corner_cut(bomb_hitbox, bomb)
-				if corner_cut then
-					return corner_cut
-				end
-				-- Not allowed to walk further into bomb if at edge
-				return CheckedMovement.new(player.position, false, false)
+		if walking_further_into_block(bomb_hitbox) and not bombs_player_is_inside[bomb] then
+			local corner_cut = try_corner_cut(bomb_hitbox, bomb)
+			if corner_cut then
+				return corner_cut
 			end
+			-- Not allowed to walk further into bomb if at edge
+			return CheckedMovement.new(player.position, false, false)
 		end
 	end
 
