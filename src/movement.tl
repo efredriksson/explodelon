@@ -10,6 +10,7 @@ local vectors = require("engine.geometry.vectors")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
 
+local type Action = players.Action
 local type Bomb = bombs.Bomb
 local type Kinematic = require("kinematic")
 local type LightningBomb = lightning_bombs.LightningBomb
@@ -524,6 +525,7 @@ function movement.set_position_and_dir_from_input(
 	local move_inputs = get_moves_from_input(player, dt)
 	local momentum = Movement.new_from_player(dt, player)
 	local moves = get_moves(player, move_inputs, momentum)
+	local player_action: Action = #moves ~= 0 and "walk" or "idle"
 
 	if ice_sliding then
 		moves = get_ice_moves(player, dt, moves)
@@ -541,7 +543,7 @@ function movement.set_position_and_dir_from_input(
 	local updated_dir = direction_for_diagonal(moves, player.direction, dominant_dir, constrained)
 
 	player:set_movement(new_pos, updated_dir)
-	player:set_action(#moves ~= 0 and "walk" or "idle")
+	player:set_action(player_action)
 end
 
 return movement
