@@ -505,10 +505,19 @@ end
 local function sort_entities_by_y_cord(players_to_sort: {Entity})
 	local function compare_entity_y_pos(e1: Entity, e2: Entity): boolean
 		if e1.z_index ~= e2.z_index then
-			return e1.z_index < e2.z_index 
+			return e1.z_index < e2.z_index
 		end
-
-		return e1:get_position().y < e2:get_position().y
+		local pos1 = e1:get_position()
+		local pos2 = e2:get_position()
+		if pos1.y ~= pos2.y then
+			return pos1.y < pos2.y
+		end
+		if pos1.x ~= pos2.x then
+			return pos1.x < pos2.x
+		end
+		-- tostring gives a stable memory-address-based order within a session,
+		-- preventing flickering for entities at identical positions.
+		return tostring(e1) < tostring(e2)
 	end
 	table.sort(players_to_sort, compare_entity_y_pos)
 end
