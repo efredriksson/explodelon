@@ -120,7 +120,7 @@ local record LightningBombs
     lightnings: Lightnings
 end
 
-local lightning_bombs = {LightningBombs = LightningBombs}
+local lightning_bombs = {LightningBombs = LightningBombs, LightningBomb = LightningBomb}
 
 function lightning_bombs.load_assets()
     bomb_shadow = lutro.graphics.newImage("assets/items/shadow.png")

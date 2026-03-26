@@ -1,5 +1,6 @@
 local bombs = require("bombs.bombs")
 local collision = require("engine.collision")
+local itertools = require("itertools")
 local grid = require("level_layout.grid")
 local joysticks = require("engine.joysticks")
 local lightning_bombs = require("bombs.lightning_bombs")
@@ -11,6 +12,7 @@ local rectangles = require("engine.geometry.rectangles")
 
 local type Bomb = bombs.Bomb
 local type Kinematic = require("kinematic")
+local type LightningBomb = lightning_bombs.LightningBomb
 local type LightningBombs = lightning_bombs.LightningBombs
 local type Player = players.Player
 local type ReadableGroup = collision.ReadableGroup
@@ -149,7 +151,7 @@ local function restrict_player_movement(
 	player: Player,
 	movement: Vector,
 	blocks: {Kinematic},
-	lightning_bombs_: LightningBombs,
+	close_lightning_bombs: {LightningBomb},
 	blocks_bombs: ReadableGroup<Kinematic>,
 	close_bombs: {Bomb},
 	players_: ReadableGroup<Player>,
@@ -192,6 +194,34 @@ local function restrict_player_movement(
 		return new_dist_to_1_ton_block < old_dist_to_1_ton_block
 	end
 
+	local function check_block_collision(block_box: Rectangle): CheckedMovement
+		if movement.x == 0 then
+			return move_against_block(movement.y, player.position.x - block_box.x, false)
+		elseif movement.y == 0 then
+			return move_against_block(movement.x, player.position.y - block_box.y, true)
+		else
+			assert(false, "Bad movement vector")
+		end
+	end
+
+	-- Attempt a corner cut around the given hitbox. Returns the cut movement if
+	-- the path is clear of all blocks, bombs and lightning bombs, nil otherwise.
+	-- skip excludes the obstacle being cut around from the overlap check.
+	local function try_corner_cut(hitbox: Rectangle, skip?: Kinematic): CheckedMovement | nil
+		local result = check_block_collision(hitbox)
+		if not result.cuts_corner then
+			return nil
+		end
+		local corner_cut_hitbox = player:movementbox():shift(player.position:vector_to(result.position))
+		local all_obstacles = itertools.combine(blocks, close_bombs, close_lightning_bombs)
+		for _, obstacle in ipairs(all_obstacles) do
+			if obstacle ~= skip and corner_cut_hitbox:overlap(obstacle:movementbox()) then
+				return nil
+			end
+		end
+		return result
+	end
+
 	for _, bomb in ipairs(close_bombs) do
 		local bomb_hitbox = bomb:movementbox()
 		if walking_further_into_block(bomb_hitbox) then
@@ -199,6 +229,10 @@ local function restrict_player_movement(
 				-- If a bomb has been kicked then it is no longer to move
 				-- freely in far inside it. This is to stop moving through
 				-- bombs that are kicked against a player.
+				local corner_cut = try_corner_cut(bomb_hitbox, bomb)
+				if corner_cut then
+					return corner_cut
+				end
 				local kicked_bombs: {{Bomb, Vector}} = {}
 				if player.has_kick then
 					local kick_direction = movement:normalize()
@@ -216,42 +250,28 @@ local function restrict_player_movement(
 		end
 	end
 
-	for _, bomb in pairs(lightning_bombs_.on_ground.set) do
+	for _, bomb in ipairs(close_lightning_bombs) do
 		local bomb_hitbox = bomb:movementbox()
 		if walking_further_into_block(bomb_hitbox) then
 			if bomb.position:distance_to(player.position) > grid.TILE_SIZE * (3 / 4) then
+				local corner_cut = try_corner_cut(bomb_hitbox, bomb)
+				if corner_cut then
+					return corner_cut
+				end
 				-- Not allowed to walk further into bomb if at edge
 				return CheckedMovement.new(player.position, false, false)
 			end
 		end
 	end
 
-	local function check_block_collision(block_box: Rectangle): CheckedMovement
-		if movement.x == 0 then
-			return move_against_block(movement.y, player.position.x - block_box.x, false)
-		elseif movement.y == 0 then
-			return move_against_block(movement.x, player.position.y - block_box.y, true)
-		else
-			assert(false, "Bad movement vector")
-		end
-	end
-
 	for _, block in ipairs(blocks) do
 		local block_box = block:movementbox()
 		if walking_further_into_block(block_box) then
-			local result = check_block_collision(block_box)
-			if result.cuts_corner then
-				local corner_cut_hitbox = player:movementbox():shift(
-					player.position:vector_to(result.position)
-				)
-				for _, other_block in ipairs(blocks) do
-					if other_block ~= block and corner_cut_hitbox:overlap(other_block:movementbox()) then
-						return CheckedMovement.new(player.position, false, false)
-					end
-				end
+			local corner_cut = try_corner_cut(block_box, block)
+			if corner_cut then
+				return corner_cut
 			end
-
-			return result
+			return CheckedMovement.new(player.position, false, false)
 		end
 	end
 
@@ -268,7 +288,7 @@ local function get_new_player_orientation(
 	player_dir: Direction,
 	directions: {Movement},
 	blocks: {Kinematic},
-	lightning_bombs_: LightningBombs,
+	lightning_bombs_on_ground: ReadableGroup<LightningBomb>,
 	player: Player,
 	max_directions: integer,
 	blocks_bombs: ReadableGroup<Kinematic>,
@@ -314,9 +334,10 @@ local function get_new_player_orientation(
 	local cur_direction = player_dir
 	local directions_checks: {MovementWithCheck} = {}
 	local close_bombs = lookup:in_box_and_group(player:movementbox():expand(grid.TILE_SIZE), bombs_)
+	local close_lightning_bombs = lookup:in_box_and_group(player:movementbox():expand(grid.TILE_SIZE), lightning_bombs_on_ground)
 	for _, direction in ipairs(directions) do
 		local check = restrict_player_movement(
-			player, direction.dxdy, blocks, lightning_bombs_, blocks_bombs, close_bombs, players_, bombs_, lookup
+			player, direction.dxdy, blocks, close_lightning_bombs, blocks_bombs, close_bombs, players_, bombs_, lookup
 		)
 		table.insert(directions_checks, MovementWithCheck.new(direction.dxdy, direction.dir, check))
 	end
@@ -502,7 +523,7 @@ function movement.set_position_and_dir_from_input(
 	
 	local max_directions = (player.action == "slide" or player.action == "dash") and 1 or 2
 	local new_dir, new_pos, constrained = get_new_player_orientation(
-		player.direction, moves, blocks, lightning_bombs_, player, max_directions, blocks_bombs, players_, bombs_, lookup
+		player.direction, moves, blocks, lightning_bombs_.on_ground, player, max_directions, blocks_bombs, players_, bombs_, lookup
 	)
 	local dominant_dir = direction_from_dominant_velocity(player.ice_velocity, new_dir)
 	local updated_dir = direction_for_diagonal(moves, player.direction, dominant_dir, constrained)
