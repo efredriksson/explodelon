@@ -116,18 +116,53 @@ function WrapperScene:draw()
     end
 end
 
+local record PerformanceSample
+    frame_count: integer
+    accumulated_seconds: number
+end
+
+function PerformanceSample.new(): PerformanceSample
+    local self: PerformanceSample = setmetatable({}, { __index = PerformanceSample })
+    self.frame_count = 0
+    self.accumulated_seconds = 0
+    return self
+end
+
+function PerformanceSample:start(): number
+    return lutro.timer.getTime()
+end
+
+function PerformanceSample:record(before_seconds: number, label: string)
+    self.accumulated_seconds = self.accumulated_seconds + (lutro.timer.getTime() - before_seconds)
+    self.frame_count = self.frame_count + 1
+    if self.frame_count >= 300 then
+        local avg_ms = (self.accumulated_seconds / self.frame_count) * 1000
+        logger.info(
+            string.format(
+                "perf %s avg/frame: %.1f ms avg over %d frames",
+                label,
+                avg_ms,
+                self.frame_count
+            )
+        )
+        self.frame_count = 0
+        self.accumulated_seconds = 0
+    end
+end
+
 local record CheckPerformanceOfScene is Scene
     to_wrap: Scene
-    load: function(self)
-    update: function(self, dt: number)
-    draw: function(self)
     is_internal: boolean
+    update_sample: PerformanceSample
+    draw_sample: PerformanceSample
 end
 
 function CheckPerformanceOfScene.new(to_wrap: Scene): CheckPerformanceOfScene
    local self: CheckPerformanceOfScene = setmetatable({}, { __index = CheckPerformanceOfScene })
    self.to_wrap = to_wrap
    self.is_internal = true
+   self.update_sample = PerformanceSample.new()
+   self.draw_sample = PerformanceSample.new()
    return self
 end
 
@@ -144,15 +179,19 @@ local function warn_if_took_too_long(top_level_tracing: Span)
 end
 
 function CheckPerformanceOfScene:update(dt: number)
+    local used_before = self.update_sample:start()
     local tracing_start = tracing.setup("main update")
     self.to_wrap:update(dt)
     warn_if_took_too_long(tracing_start)
+    self.update_sample:record(used_before, "update")
 end
 
 function CheckPerformanceOfScene:draw()
+    local used_before = self.draw_sample:start()
     local tracing_start = tracing.setup("main draw")
     self.to_wrap:draw()
     warn_if_took_too_long(tracing_start)
+    self.draw_sample:record(used_before, "draw")
 end
 
 local current_scene: Scene
