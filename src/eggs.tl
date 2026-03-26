@@ -54,6 +54,7 @@ end
 
 function Egg:open()
     self.breaking = true
+    self.z_index = z_index.ABOVE
     self.animation = animations.new(egg_open_image, 34, 1 / 6, 0.5)
 end
 
