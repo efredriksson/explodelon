@@ -4,7 +4,6 @@ local dinos = require("dinos")
 local dino_animations = require("dino_animations")
 local grid = require("level_layout.grid")
 local images = require("engine.images")
-local itertools = require("itertools")
 local players = require("players")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
@@ -91,77 +90,12 @@ local function character_animation(character_asset: CharacterName, invulnerable:
 	return character_animations
 end
 
-local record PlayerAnimation is Entity
-	player: Player
-	draw_position: Point
-	animation: Animation
-end
-
-function PlayerAnimation.new(animation: Animation, player: Player): PlayerAnimation
-	local self: PlayerAnimation = setmetatable({}, { __index = PlayerAnimation })
-	self.z_index = z_index.LEVEL
-	self.animation = animation
-	self.player = player
-	self.draw_position = player:get_draw_position()
-	return self
-end
-
-function PlayerAnimation:get_position(): Point
-    return self.player.position
-end
-
-function PlayerAnimation:hitbox(): Rectangle
-    return self.player:hitbox()
-end
-
-local function block_to_anim_draw_pos(animation: Animation, pos: Point): Point
-	-- y: +1 is because of the sprite, look over when doing animations
-	return points.new(
-		pos.x + (grid.TILE_SIZE - animation.width) / 2,
-		pos.y - animation.height + grid.TILE_SIZE + 1)
-end
-
-local function draw_flag(player: Player, draw_position: Point)
-	if player.team_id then
-		local flag_pos = draw_position:move(vectors.new(4, -10))
-		flag_animations[player.team_id][player.sprite]:draw(flag_pos.x, flag_pos.y)
-	end
-end
-
-function PlayerAnimation:draw()
-	local draw_pos = block_to_anim_draw_pos(self.animation, self.draw_position)
-	draw_flag(self.player, draw_pos)
-	self.animation:draw(draw_pos.x, draw_pos.y)
-end
-
-
-local record MountedPlayerAnimation is Entity
-	player: Player
-	draw_position: Point
-	player_animation: Animation
-	dino_animation: Animation
-end
-
-function MountedPlayerAnimation.new(
-	player_animation: Animation, dino_animation: Animation, player: Player
-): MountedPlayerAnimation
-	local self: MountedPlayerAnimation = setmetatable({}, { __index = MountedPlayerAnimation })
-	self.z_index = z_index.LEVEL
-	self.player_animation = player_animation
-	self.dino_animation = dino_animation
-	self.player = player
-	self.draw_position = player:get_draw_position()
-	return self
-end
-
-function MountedPlayerAnimation:get_position(): Point
-    return self.player.position
-end
-
-function MountedPlayerAnimation:hitbox(): Rectangle
-    return self.player:hitbox()
-end
-
+local SLIDE_WIHT_DINO_DIR_MAP: {Direction: Direction} = {
+	up = "left",
+	down = "right",
+	left = "down",
+	right = "down"
+}
 local DINO_SLIDE_CHARACTER_ADJUST = {
 	up = vectors.new(7, 0),
 	down = vectors.new(-7, 0),
@@ -203,6 +137,19 @@ local STUN_CRY_REACH_BY_LEVEL = {
 	[3] = 2.5
 }
 
+local function block_to_anim_draw_pos(animation: Animation, pos: Point): Point
+	-- y: +1 is because of the sprite, look over when doing animations
+	return points.new(
+		pos.x + (grid.TILE_SIZE - animation.width) / 2,
+		pos.y - animation.height + grid.TILE_SIZE + 1)
+end
+
+local function draw_flag(player: Player, draw_position: Point)
+	if player.team_id then
+		local flag_pos = draw_position:move(vectors.new(4, -10))
+		flag_animations[player.team_id][player.sprite]:draw(flag_pos.x, flag_pos.y)
+	end
+end
 
 local function stun_cry_displacement(player: Player): Vector
 	if not player:is_stun_crying() then
@@ -234,7 +181,6 @@ local function get_image_pos_in_front_of_player(player: Player, image: Image, x_
 	return pos
 end
 
-
 local function draw_sonic_blasts(player: Player)
 	if not player:is_sonic_blasting() then
 		return
@@ -257,19 +203,18 @@ local function draw_sonic_blasts(player: Player)
 	end
 end
 
-
 local function draw_stun_cry_text(player: Player)
 	if not player:is_stun_crying() then
 		return
 	end
 
 	local since_roar_buildup = player:have_roared_since_buildup_for()
-	
+
 	local function get_text_x_y_scaling(): (number, number)
 		local text_len_max_scale = STUN_CRY_REACH_BY_LEVEL[player.dino.level]
 		local text_length_scale = math.min(since_roar_buildup*3, text_len_max_scale)
 		local text_height_scale = math.min(since_roar_buildup*4, 1.0)
-		
+
 		if player.direction == "down" or player.direction == "up" then
 			return text_height_scale, text_length_scale
 		else
@@ -282,17 +227,83 @@ local function draw_stun_cry_text(player: Player)
 		local pos = get_image_pos_in_front_of_player(player, text, x_scale, y_scale)
 		return pos:move(DINO_STUN_CRY_TEXT_POSITION[player.direction])
 	end
-	
+
 	local text = stun_cry_text_images[player.direction][player.dino.level]
 	local draw_pos = get_text_position(text)
 	local x_scale, y_scale = get_text_x_y_scaling()
 	lutro.graphics.draw(text, draw_pos.x, draw_pos.y, 0, x_scale, y_scale)
 end
 
-function MountedPlayerAnimation:draw()
+local record PlayerEntity is Entity
+	player: Player
+	regular: {PlayerState: {Action: {Direction: Animation}}}
+	invulnerable: {PlayerState: {Action: {Direction: Animation}}}
+	dinos: AnimatedDinos
+end
+
+function PlayerEntity.new(player: Player, animated_dinos: AnimatedDinos): PlayerEntity
+	local self: PlayerEntity = setmetatable({}, { __index = PlayerEntity })
+	self.z_index = z_index.LEVEL
+	self.player = player
+	self.regular = character_animation(player.sprite, false)
+	self.invulnerable = character_animation(player.sprite, true)
+	self.dinos = animated_dinos
+	return self
+end
+
+function PlayerEntity:get_position(): Point
+	return self.player.position
+end
+
+function PlayerEntity:hitbox(): Rectangle
+	return self.player:hitbox()
+end
+
+function PlayerEntity:update(dt: number)
+	self.regular[self.player.state][self.player.action][self.player.direction]:update(dt)
+	self.invulnerable[self.player.state][self.player.action][self.player.direction]:update(dt)
+end
+
+function PlayerEntity:_get_animation(): Animation
+	local function get_direction(): Direction
+		if self.player.dino and self.player.dino.action == "slide" and self.player.dino.level == 2 then
+			-- For level 2 dino sliding the character riding it should turn depending
+			-- on the direction sliding for it to look like they bracing sliding to a stop:
+			return SLIDE_WIHT_DINO_DIR_MAP[self.player.direction]
+		else
+			return self.player.direction
+		end
+	end
+
+	local resolved_dir = get_direction()
+	if self.player:is_invulnerable() and self.player.invulnerable_for % 0.3 < 0.15 then
+		return self.invulnerable[self.player.state][self.player.action][resolved_dir]
+	else
+		local animation = self.regular[self.player.state][self.player.action][resolved_dir]
+		if self.player.action == "dying" and animation.loops > 0 then
+			-- If dying and the animation have played one loop then don't draw anything:
+			return nil
+		else
+			return animation
+		end
+	end
+end
+
+function PlayerEntity:_draw_foot(animation: Animation)
+	local draw_position = self.player:get_draw_position()
+	local draw_pos = block_to_anim_draw_pos(animation, draw_position)
+	draw_flag(self.player, draw_pos)
+	animation:draw(draw_pos.x, draw_pos.y)
+end
+
+function PlayerEntity:_draw_mounted()
 	if not self.player:is_alive() then
 		return
 	end
+
+	local player_animation = self:_get_animation()
+	local dino_animation = self.dinos:get_from(self.player.dino)
+	local draw_position = self.player:get_draw_position()
 
 	local function draw(animation: Animation, pos: Point, should_draw_flag?: boolean)
 		local draw_pos = block_to_anim_draw_pos(animation, pos)
@@ -322,42 +333,49 @@ function MountedPlayerAnimation:draw()
 	if self.player.action == "dash" and self.player.dino and self.player.dino.level == 3 then
 		local shift_vector = DINO_AFTERIMGE_SHIFT[self.player.direction]:scale(self.player.after_image_shift)
 		-- Draw after image shifted behind when dashing
-		draw(self.dino_animation, dino_position():move(shift_vector))	
+		draw(dino_animation, dino_position():move(shift_vector))
 	end
 
-	if self.player.action == "slide" and self.player.dino and self.player.dino.level == 2  then
-		local character_pos = self.draw_position:move(DINO_SLIDE_CHARACTER_ADJUST[self.player.direction])
+	if self.player.action == "slide" and self.player.dino and self.player.dino.level == 2 then
+		local character_pos = draw_position:move(DINO_SLIDE_CHARACTER_ADJUST[self.player.direction])
 		if self.player.direction == "right" or self.player.direction == "left" then
 			-- Need to draw dino in front of player sliding left or right with level 2 dino
-			draw(self.player_animation, character_pos, true)
-			draw(self.dino_animation, dino_position())
+			draw(player_animation, character_pos, true)
+			draw(dino_animation, dino_position())
 		else
 			-- For up and down the player is on front
-			draw(self.dino_animation, dino_position())
-			draw(self.player_animation, character_pos, true)
+			draw(dino_animation, dino_position())
+			draw(player_animation, character_pos, true)
 		end
 	elseif self.player.direction == "down" then
 		-- Need to draw dino in front of player walking towards screen
-		draw(self.player_animation, self.draw_position, true)
-		draw(self.dino_animation, dino_position())
+		draw(player_animation, draw_position, true)
+		draw(dino_animation, dino_position())
 	else
 		-- And player in front of dino in all other cases
-		draw(self.dino_animation, dino_position())
-		draw(self.player_animation, self.draw_position, true)
+		draw(dino_animation, dino_position())
+		draw(player_animation, draw_position, true)
+	end
+end
+
+function PlayerEntity:draw()
+	if self.player:is_riding_dino() then
+		self:_draw_mounted()
+	else
+		local animation = self:_get_animation()
+		if animation then
+			self:_draw_foot(animation)
+		end
 	end
 end
 
 local record PlayerAnimations
-    regular: {integer: {PlayerState: {Action: {Direction: Animation}}}}
-    invulnerable: {integer: {PlayerState: {Action: {Direction: Animation}}}}
-    players: {Player}
+	entities: {PlayerEntity}
 	dinos: AnimatedDinos
 end
 
 function PlayerAnimations:add_new(player: Player)
-    self.regular[player.id] = character_animation(player.sprite, false)
-    self.invulnerable[player.id] = character_animation(player.sprite, true)
-    table.insert(self.players, player)
+	table.insert(self.entities, PlayerEntity.new(player, self.dinos))
 end
 
 local function character_sprite_for_action(character_asset: CharacterName, state: PlayerState, action: Action): {Direction: Image}
@@ -510,14 +528,11 @@ function player_animations.load_assets()
 	end
 end
 
-function player_animations.new(entities: {Player}): PlayerAnimations
+function player_animations.new(initial_players: {Player}): PlayerAnimations
     local self: PlayerAnimations = setmetatable({}, { __index = PlayerAnimations })
-    self.regular = {}
-    self.invulnerable = {}
-    self.players = {}
+    self.entities = {}
 	self.dinos = dino_animations.new()
-
-    for _, player in ipairs(entities) do
+    for _, player in ipairs(initial_players) do
 		self:add_new(player)
 	end
     return self
@@ -525,12 +540,10 @@ end
 
 function PlayerAnimations:update(dt: number)
 	self.dinos:update(dt)
-    for _, player in ipairs(self.players) do
+	for _, entity in ipairs(self.entities) do
 		-- Update animations regardless if alive or not
-		self.regular[player.id][player.state][player.action][player.direction]:update(dt)
-		self.invulnerable[player.id][player.state][player.action][player.direction]:update(dt)
+		entity:update(dt)
 	end
-
 	for i=1, 4 do
 		for _, sprite in ipairs(characters.get_names()) do
 			flag_animations[i][sprite]:update(dt)
@@ -538,64 +551,28 @@ function PlayerAnimations:update(dt: number)
 	end
 end
 
-local SLIDE_WIHT_DINO_DIR_MAP: {Direction: Direction} = {
-	up = "left",
-	down = "right",
-	left = "down",
-	right = "down"
-}
-
-function PlayerAnimations:_get_for(player: Player): Animation
-	local function get_direction(): Direction
-		if player.dino and player.dino.action == "slide" and player.dino.level == 2 then
-			-- For level 2 dino sliding the character riding it should turn depending
-			-- on the direction sliding for it to look like they bracing sliding to a stop:
-			return SLIDE_WIHT_DINO_DIR_MAP[player.direction]
-		else
-			return player.direction
-		end
-	end
-
-	local resolved_dir = get_direction()
-    if player:is_invulnerable() and player.invulnerable_for % 0.3 < 0.15 then
-        return self.invulnerable[player.id][player.state][player.action][resolved_dir]
-    else
-        local animation = self.regular[player.id][player.state][player.action][resolved_dir]
-        if player.action == "dying" and animation.loops > 0 then
-            -- If dying and the animation have played one loop then don't draw anything:
-            return nil
-        else
-            return animation
-        end
-    end
-end
-
 function PlayerAnimations:get_all(): {Entity: Entity}
 	local dinos_drawn_with_player: {Dino} = {}
 	local entity_set_to_draw: {Entity: Entity} = {}
-	for _, player in ipairs(self.players) do
-		local player_animation = self:_get_for(player)
-		if player:is_riding_dino() then
-			local dino_anim = self.dinos:get_from(player.dino)
-			table.insert(dinos_drawn_with_player, player.dino)
-			local entity = MountedPlayerAnimation.new(player_animation, dino_anim, player)
+	for _, entity in ipairs(self.entities) do
+		if entity.player:is_riding_dino() then
+			table.insert(dinos_drawn_with_player, entity.player.dino)
 			entity_set_to_draw[entity] = entity
-		elseif player_animation then
-			local entity = PlayerAnimation.new(player_animation, player)
+		elseif entity:_get_animation() then
 			entity_set_to_draw[entity] = entity
 		end
 	end
-
 	for _, mount in pairs(self.dinos:get_mount_entities_except(dinos_drawn_with_player)) do
 		entity_set_to_draw[mount] = mount
 	end
-
 	return entity_set_to_draw
 end
 
 function PlayerAnimations:_draw_players_shadow(filter: function(Player): boolean)
-	for _, player in ipairs(itertools.filter(self.players, filter)) do
-		lutro.graphics.draw(jump_shadow_image, player.position.x - 1, player.position.y - 10)
+	for _, entity in ipairs(self.entities) do
+		if filter(entity.player) then
+			lutro.graphics.draw(jump_shadow_image, entity.player.position.x - 1, entity.player.position.y - 10)
+		end
 	end
 end
 
@@ -616,10 +593,10 @@ function PlayerAnimations:draw_vertical_jump_shadows()
 end
 
 function PlayerAnimations:draw_stun_cry_texts_not_up()
-	for _, player in ipairs(self.players) do
-		if player.direction ~= "up" then
-			draw_stun_cry_text(player)
-			draw_sonic_blasts(player)
+	for _, entity in ipairs(self.entities) do
+		if entity.player.direction ~= "up" then
+			draw_stun_cry_text(entity.player)
+			draw_sonic_blasts(entity.player)
 		end
 	end
 end
