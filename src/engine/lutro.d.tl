@@ -32,8 +32,20 @@ end
 
 global type ImageData = interface
    is Object
-   getPixel: function(self: ImageData, x: number, y: number): number, number, number, number
-   setPixel: function(self: ImageData, x: number, y: number, r: number, g: number, b: number, a: number)
+   getPixel: function(
+       self: ImageData,
+       x: number,
+       y: number
+   ): number, number, number, number
+   setPixel: function(
+       self: ImageData,
+       x: number,
+       y: number,
+       r: number,
+       g: number,
+       b: number,
+       a: number
+   )
 end
 
 global type Font = interface
@@ -45,7 +57,15 @@ global type Quad = interface
    is Object
    getTextureDimensions: function(self: Quad): number, number
    getViewport: function(self: Quad): number, number, number, number
-   setViewport: function(self: Quad, x: number, y: number, w: number, h: number, sw?: number, sh?: number)
+   setViewport: function(
+       self: Quad,
+       x: number,
+       y: number,
+       w: number,
+       h: number,
+       sw?: number,
+       sh?: number
+   )
 end
 
 global type Source = interface
@@ -106,12 +126,48 @@ global record lutro
       printf: function(text: string, x: number, y: number, limit: number, align: string)
 
       newImage: function(filename: string): Image
-      newQuad: function(x: number, y: number, width: number, height: number, sw: number, sh: number): Quad
+      newQuad: function(
+          x: number,
+          y: number,
+          width: number,
+          height: number,
+          sw: number,
+          sh: number
+      ): Quad
 
-      draw: function(drawable: Drawable, x?: number, y?: number, r?: number, sx?: number, sy?: number, ox?: number, oy?: number, kx?: number, ky?: number)
-      draw: function(drawable: Drawable, quad: Quad, x: number, y: number, r?: number, sx?: number, sy?: number, ox?: number, oy?: number, kx?: number, ky?: number)
+      draw: function(
+          drawable: Drawable,
+          x?: number,
+          y?: number,
+          r?: number,
+          sx?: number,
+          sy?: number,
+          ox?: number,
+          oy?: number,
+          kx?: number,
+          ky?: number
+      )
+      draw: function(
+          drawable: Drawable,
+          quad: Quad,
+          x: number,
+          y: number,
+          r?: number,
+          sx?: number,
+          sy?: number,
+          ox?: number,
+          oy?: number,
+          kx?: number,
+          ky?: number
+      )
 
-      rectangle: function(mode: DrawMode, x: number, y: number, width: number, height: number)
+      rectangle: function(
+          mode: DrawMode,
+          x: number,
+          y: number,
+          width: number,
+          height: number
+      )
    end
 
    record joystick

@@ -184,7 +184,9 @@ function TeamSelectionScene:load()
             self.team_players[selection.player_id] = old_states[selection.player_id]
         else
             local new_player = new_team_player(
-                selection.player_id, selection.sprite, START_POSITIONS[i]
+                selection.player_id,
+                selection.sprite,
+                START_POSITIONS[i]
             )
             self.team_players[selection.player_id] = new_player
         end
@@ -218,9 +220,7 @@ function TeamSelectionScene:update(dt: number)
         self.game.team_by_player_id = {}
         for _, player in pairs(self.team_players) do
             local team = player:get_team_zone().team
-            local selection = teams.new_selection(
-                team, player.player_id, player.sprite
-            )
+            local selection = teams.new_selection(team, player.player_id, player.sprite)
             table.insert(selections, selection)
             self.game.team_by_player_id[player.player_id] = team.id
         end
@@ -301,7 +301,11 @@ function team_selection.load_assets()
             player_animations[is_walking][sprite_name] = {}
             for _, direction in ipairs(all_directions) do
                 local char_image = get_image(is_walking, sprite_name, direction)
-                player_animations[is_walking][sprite_name][direction] = animations.new(char_image, 18, 1 / 6)
+                player_animations[is_walking][sprite_name][direction] = animations.new(
+                    char_image,
+                    18,
+                    1 / 6
+                )
             end
         end
     end
@@ -317,9 +321,7 @@ function team_selection.new(
     self.music = music
     self.score_board = score_board.new_for_teams()
     self.win_condition = win_condition.new_for_teams(self.score_board)
-    self.game = battle.new(
-        player_selection_scene, self.score_board, self.win_condition
-    )
+    self.game = battle.new(player_selection_scene, self.score_board, self.win_condition)
     self.going_back_to_game = false
     return self
 end

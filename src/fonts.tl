@@ -35,8 +35,14 @@ end
 
 function fonts.new_shaded_numbers(): ShadedFont
     local font_symbols = " 0123456789:\""
-    local clock_main = lutro.graphics.newImageFont("assets/imgfont/numbers.png", font_symbols)
-    local clock_shade = lutro.graphics.newImageFont("assets/imgfont/numbers_blue_tint.png", font_symbols)
+    local clock_main = lutro.graphics.newImageFont(
+        "assets/imgfont/numbers.png",
+        font_symbols
+    )
+    local clock_shade = lutro.graphics.newImageFont(
+        "assets/imgfont/numbers_blue_tint.png",
+        font_symbols
+    )
     return fonts.new_shaded(clock_main, clock_shade)
 end
 
@@ -50,24 +56,42 @@ end
 local FONT_SYMBOLS = " abcdefghijklmnopqrstuvwxyz0123456789.!'-:*"
 
 function fonts.new_menu_white(): MenuFont
-    local white_font = lutro.graphics.newImageFont("assets/imgfont/white.png", FONT_SYMBOLS)
+    local white_font = lutro.graphics.newImageFont(
+        "assets/imgfont/white.png",
+        FONT_SYMBOLS
+    )
     return MenuFont.new(white_font, nil)
 end
 
 function fonts.new_menu_black(): MenuFont
-    local black_font = lutro.graphics.newImageFont("assets/imgfont/black.png", FONT_SYMBOLS)
+    local black_font = lutro.graphics.newImageFont(
+        "assets/imgfont/black.png",
+        FONT_SYMBOLS
+    )
     return MenuFont.new(black_font, nil)
 end
 
 function fonts.new_menu_white_outlined(): MenuFont
-    local white_font = lutro.graphics.newImageFont("assets/imgfont/white.png", FONT_SYMBOLS)
-    local black_font = lutro.graphics.newImageFont("assets/imgfont/black.png", FONT_SYMBOLS)
+    local white_font = lutro.graphics.newImageFont(
+        "assets/imgfont/white.png",
+        FONT_SYMBOLS
+    )
+    local black_font = lutro.graphics.newImageFont(
+        "assets/imgfont/black.png",
+        FONT_SYMBOLS
+    )
     return MenuFont.new(white_font, black_font)
 end
 
 function fonts.new_menu_gray_outlined(): MenuFont
-    local gray_font = lutro.graphics.newImageFont("assets/imgfont/gray.png", FONT_SYMBOLS)
-    local black_font = lutro.graphics.newImageFont("assets/imgfont/black.png", FONT_SYMBOLS)
+    local gray_font = lutro.graphics.newImageFont(
+        "assets/imgfont/gray.png",
+        FONT_SYMBOLS
+    )
+    local black_font = lutro.graphics.newImageFont(
+        "assets/imgfont/black.png",
+        FONT_SYMBOLS
+    )
     return MenuFont.new(gray_font, black_font)
 end
 
@@ -76,7 +100,13 @@ function MenuFont:print_centered(text: string, box_width: number, position: Poin
         lutro.graphics.setFont(self.outline)
         for dx = -1, 1 do
             for dy = -1, 1 do
-                lutro.graphics.printf(text, position.x + dx, position.y + dy, box_width, "center")
+                lutro.graphics.printf(
+                    text,
+                    position.x + dx,
+                    position.y + dy,
+                    box_width,
+                    "center"
+                )
             end
         end
     end

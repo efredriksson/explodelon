@@ -20,7 +20,11 @@ local type PlayerSelectionMethod = settings.PlayerSelectionMethod
 local start_screen = {}
 
 function start_screen.new(): MenuScreen
-    local nbr_player_selected = items.new_integer_selection(settings.number_of_players, 2, joysticks.maxplayers())
+    local nbr_player_selected = items.new_integer_selection(
+        settings.number_of_players,
+        2,
+        joysticks.maxplayers()
+    )
     local choices_values: {PlayerSelectionMethod} = {"on", "off", "keep"}
     local player_selection_choice = items.new_enum(choices_values)
     local map_selection_choice = items.new_enum({"football", "factory", "ice_rink"})
@@ -64,20 +68,36 @@ function start_screen.new(): MenuScreen
     end
     local function on_load()
         nbr_player_selected.value = settings.number_of_players
-        player_selection_choice.value = itertools.find(settings.player_selection, choices_values)
+        player_selection_choice.value = itertools.find(
+            settings.player_selection,
+            choices_values
+        )
         update_player_selection_choices()
     end
 
     local menu_choices: {MenuChoice} = {
-        choices.new_integer("number of players", 50, nbr_player_selected, set_number_of_players),
-        choices.new_enum("player selection", 65, player_selection_choice, settings.set_player_selection),
+        choices.new_integer(
+            "number of players",
+            50,
+            nbr_player_selected,
+            set_number_of_players
+        ),
+        choices.new_enum(
+            "player selection",
+            65,
+            player_selection_choice,
+            settings.set_player_selection
+        ),
         choices.new_boolean("teams", 80, settings.teams, settings.set_teams),
         choices.new_enum("map", 95, map_selection_choice, settings.set_map),
         choices.new_done("game rules", 110, enter_game_rules_screen),
         choices.new_done("debug settings", 125, enter_debug_screen),
     }
     if update_sceen.is_recalbox() then
-        table.insert(menu_choices, choices.new_done("check for updates", 140, enter_update_screen))
+        table.insert(
+            menu_choices,
+            choices.new_done("check for updates", 140, enter_update_screen)
+        )
     end
     table.insert(menu_choices, choices.new_done("start game", 180, done))
 

@@ -236,7 +236,8 @@ end
 
 function Battle:handle_bomb_drop_input(player: Player)
     local placed_bombs: {Entity} = itertools.sets_as_list(
-        self.bombs.on_ground.set, self.lightning_bombs.on_ground.set
+        self.bombs.on_ground.set,
+        self.lightning_bombs.on_ground.set
     )
     if joysticks.is_pressed(player.id, joysticks.BUTTONS.R) then
         self.bombs:place_bomb(player, placed_bombs)
@@ -344,7 +345,10 @@ function Battle:_handle_stun_cry(
     alive_players: ReadableGroup<Player>,
     player: Player
 )
-    local hit_players = lookup:in_box_and_group(player:get_stun_cry_hitbox(), alive_players)
+    local hit_players = lookup:in_box_and_group(
+        player:get_stun_cry_hitbox(),
+        alive_players
+    )
     for _, hit_player in ipairs(hit_players) do
         if hit_player.action ~= "stunned" then
             -- Stun cry only stun someone not already stunned
@@ -360,12 +364,18 @@ function Battle:_handle_sonic_blast(
     soft_blocks_group: ReadableGroup<SoftBlock>,
     player: Player
 )
-    local hit_bombs = lookup:in_box_and_group(player:get_sonic_blast_hitbox(), bombs_group)
+    local hit_bombs = lookup:in_box_and_group(
+        player:get_sonic_blast_hitbox(),
+        bombs_group
+    )
     for _, hit_bomb in ipairs(hit_bombs) do
         hit_bomb:blow_up()
     end
 
-    local hit_blocks = lookup:in_box_and_group(player:get_sonic_blast_hitbox(), soft_blocks_group)
+    local hit_blocks = lookup:in_box_and_group(
+        player:get_sonic_blast_hitbox(),
+        soft_blocks_group
+    )
     for _, hit_block in ipairs(hit_blocks) do
         hit_block:reveal()
     end
@@ -415,8 +425,22 @@ function Battle:update(dt: number)
     trace_collision:stop()
 
     local trace_bombs = tracing.start("bombs")
-    self.bombs:update(dt, self.blockers, self.explodables, self.blocks_bombs, self.alive_players_group, self.bombs.on_ground, self.bombs_bounce_on, lookup)
-    self.lightning_bombs:update(dt, self.lightning_blockers, self.alive_players_group, lookup)
+    self.bombs:update(
+        dt,
+        self.blockers,
+        self.explodables,
+        self.blocks_bombs,
+        self.alive_players_group,
+        self.bombs.on_ground,
+        self.bombs_bounce_on,
+        lookup
+    )
+    self.lightning_bombs:update(
+        dt,
+        self.lightning_blockers,
+        self.alive_players_group,
+        lookup
+    )
     trace_bombs:stop()
 
     local trace_players = tracing.start("players")
@@ -428,12 +452,29 @@ function Battle:update(dt: number)
         if player:accepts_input() then
             self:handle_bomb_drop_input(player)
             local area_close_to_player = player:movementbox():expand(grid.TILE_SIZE / 2)
-            local close_blocks = lookup:in_box_and_group(area_close_to_player, self.blocking_blocks_group)
+            local close_blocks = lookup:in_box_and_group(
+                area_close_to_player,
+                self.blocking_blocks_group
+            )
             movement.set_position_and_dir_from_input(
-                player, dt, close_blocks, self.lightning_bombs, self.blocks_bombs, self.alive_players_group, self.bombs.on_ground, lookup,
+                player,
+                dt,
+                close_blocks,
+                self.lightning_bombs,
+                self.blocks_bombs,
+                self.alive_players_group,
+                self.bombs.on_ground,
+                lookup,
                 maps.get_layout():has_ice()
             )
-            dino_inputs.handle(dt, player, self.bombs, self.blocks_jump, self.bombs.on_ground, lookup)
+            dino_inputs.handle(
+                dt,
+                player,
+                self.bombs,
+                self.blocks_jump,
+                self.bombs.on_ground,
+                lookup
+            )
         end
         trace_player_movement:stop()
         local trace_player_interaction = tracing.start("interaction")
@@ -450,14 +491,22 @@ function Battle:update(dt: number)
             self:_handle_stun_cry(lookup, self.alive_players_group, player)
         end
         if player:is_sonic_blasting() then
-            self:_handle_sonic_blast(lookup, self.bombs.on_ground, self.soft_blocks.on_ground, player)
+            self:_handle_sonic_blast(
+                lookup,
+                self.bombs.on_ground,
+                self.soft_blocks.on_ground,
+                player
+            )
         end
         trace_player_interaction:stop()
     end
     trace_players:stop()
 
     local trace_entities = tracing.start("entities")
-    local hit_players = lookup:collisions_between(self.alive_players_group, self.pressure_blocks_group)
+    local hit_players = lookup:collisions_between(
+        self.alive_players_group,
+        self.pressure_blocks_group
+    )
     for player, _ in pairs(hit_players) do
         player:kill()
     end

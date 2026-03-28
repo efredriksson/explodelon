@@ -112,7 +112,11 @@ function Explosion.new(position: Point, range: number, delay?: number): Explosio
         left_end = animations.new(explosion_end_left_image, 16, FRAME_DURATION),
         top_end = animations.new(explosion_end_top_image, 16, FRAME_DURATION),
         bottom_end = animations.new(explosion_end_bottom_image, 16, FRAME_DURATION),
-        middle_horizontal = animations.new(explosion_horizontal_image, 16, FRAME_DURATION),
+        middle_horizontal = animations.new(
+            explosion_horizontal_image,
+            16,
+            FRAME_DURATION
+        ),
         middle_vertical = animations.new(explosion_vertical_image, 16, FRAME_DURATION),
         center = animations.new(explosion_center_image, 16, FRAME_DURATION)
     }
@@ -186,7 +190,10 @@ function Explosion:_update_active_tiles(
             end
         end
 
-        local colliding_blockers = lookup:collisions_between(collision.new_group({tile}), blockers)
+        local colliding_blockers = lookup:collisions_between(
+            collision.new_group({tile}),
+            blockers
+        )
         for _, blocker in pairs(colliding_blockers) do
             if blocker.in_explosion then
                 return "next"
@@ -224,7 +231,12 @@ function Explosion:_update_active_tiles(
             return {next_tile}
         end
 
-        local remaining_tiles = propagate(next_pos, delta, distance_traveled + 1, explosion_type)
+        local remaining_tiles = propagate(
+            next_pos,
+            delta,
+            distance_traveled + 1,
+            explosion_type
+        )
         local is_last = #remaining_tiles == 0
 
         local tile = self:new_tile(next_pos, is_last, explosion_type)
@@ -333,7 +345,11 @@ function explosions.load_assets()
     explosion_center_image = get_explosion_image("center")
 
     local function get_explosion_audio(size: string): Source
-        local explosion_audio = audio.new_source_pool("assets/bomb/explosion/" .. size .. ".wav", "static", 5)
+        local explosion_audio = audio.new_source_pool(
+            "assets/bomb/explosion/" .. size .. ".wav",
+            "static",
+            5
+        )
         explosion_audio:setVolume(0.4)
         explosion_audio:setPitch(0.25)
         return explosion_audio

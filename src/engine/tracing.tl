@@ -76,7 +76,10 @@ end
 
 function SpanTiming:_reqursive_report(indentation: string): string
     local parts: {string} = {}
-    table.insert(parts, indentation .. self.name .. ": " .. string.format("%.1f", self.elapsed * 1000) .. "ms")
+    table.insert(
+        parts,
+        indentation .. self.name .. ": " .. string.format("%.1f", self.elapsed * 1000) .. "ms"
+    )
     for _, next_level in ipairs(self.next_levels) do
         table.insert(parts, next_level:_reqursive_report(indentation .. "  "))
     end

@@ -166,7 +166,11 @@ local function new_dino_animations(color: DinoColor): DinoAnimations
         for action, image_by_level in pairs(image_by_level_by_action) do
             new_animations[direction][action] = {}
             for level, image in pairs(image_by_level) do
-                new_animations[direction][action][level] = create_animations(image, action, level)
+                new_animations[direction][action][level] = create_animations(
+                    image,
+                    action,
+                    level
+                )
             end
         end
     end

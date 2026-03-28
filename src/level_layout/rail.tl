@@ -16,15 +16,11 @@ local DISTANCE_TO_SIDE: {Direction: number} = {
 }
 local START_POSITION_OF_SIDE: {Direction: Point} = {
     up = PLAYER_AREA:top_left(),
-    right = PLAYER_AREA:top_left():move(
-        vectors.new(PLAYER_AREA.width, 0)
-    ),
+    right = PLAYER_AREA:top_left():move(vectors.new(PLAYER_AREA.width, 0)),
     down = PLAYER_AREA:top_left():move(
         vectors.new(PLAYER_AREA.width, PLAYER_AREA.height)
     ),
-    left = PLAYER_AREA:top_left():move(
-        vectors.new(0, PLAYER_AREA.height)
-    ),
+    left = PLAYER_AREA:top_left():move(vectors.new(0, PLAYER_AREA.height)),
 }
 local MOVE_DIRECTION_OF_SIDE: {Direction: Vector} = {
     up = vectors.new(1, 0),

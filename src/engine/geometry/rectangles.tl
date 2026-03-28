@@ -32,7 +32,12 @@ local function interval_overlap(
 end
 
 function Rectangle:overlap(other: Rectangle): boolean
-    return interval_overlap(self.x, self.x + self.width, other.x, other.x + other.width) and
+    return interval_overlap(
+        self.x,
+        self.x + self.width,
+        other.x,
+        other.x + other.width
+    ) and
         interval_overlap(self.y, self.y + self.height, other.y, other.y + other.height)
 end
 
@@ -46,8 +51,18 @@ local function interval_contained(
 end
 
 function Rectangle:contains(other: Rectangle): boolean
-   return interval_contained(other.x, other.x + other.width, self.x, self.x + self.width) and
-        interval_contained(other.y, other.y + other.height, self.y, self.y + self.height)
+   return interval_contained(
+       other.x,
+       other.x + other.width,
+       self.x,
+       self.x + self.width
+   ) and
+        interval_contained(
+            other.y,
+            other.y + other.height,
+            self.y,
+            self.y + self.height
+        )
 end
 
 --- Clamp a number in interval [min, max]
@@ -57,18 +72,15 @@ end
 
 function Rectangle:clamp(rec: Rectangle): Rectangle
    return rectangles.new(
-      clamp(rec.x, self.x, self.x + self.width - rec.width),
-      clamp(rec.y, self.y, self.y + self.height - rec.height),
-      rec.width,
-      rec.height
+       clamp(rec.x, self.x, self.x + self.width - rec.width),
+       clamp(rec.y, self.y, self.y + self.height - rec.height),
+       rec.width,
+       rec.height
    )
 end
 
 function Rectangle:center(): Point
-   return points.new(
-      self.x + self.width / 2,
-      self.y + self.height / 2
-   )
+   return points.new(self.x + self.width / 2, self.y + self.height / 2)
 end
 
 --- Distance between rectangles from their centers
@@ -82,30 +94,25 @@ end
 
 function Rectangle:shrink(shrink: number): Rectangle
    return rectangles.new(
-      self.x + shrink,
-      self.y + shrink,
-      self.width - 2 * shrink,
-      self.height - 2 * shrink
+       self.x + shrink,
+       self.y + shrink,
+       self.width - 2 * shrink,
+       self.height - 2 * shrink
    )
 end
 
 function Rectangle:expand(padding: number): Rectangle
    return rectangles.new(
-      self.x - padding,
-      self.y - padding,
-      self.width + 2 * padding,
-      self.height + 2 * padding
+       self.x - padding,
+       self.y - padding,
+       self.width + 2 * padding,
+       self.height + 2 * padding
    )
 end
 
 function Rectangle:shift(movement: Vector): Rectangle
    local new_top_left = self:top_left():move(movement)
-   return rectangles.new(
-      new_top_left.x,
-      new_top_left.y,
-      self.width,
-      self.height
-   )
+   return rectangles.new(new_top_left.x, new_top_left.y, self.width, self.height)
 end
 
 return rectangles

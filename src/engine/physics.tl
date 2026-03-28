@@ -64,7 +64,10 @@ function physics.new_trajectory(
     gravity: number,
     duration: number
 ): ProjectileTrajectory
-    local self: ProjectileTrajectory = setmetatable({}, { __index = ProjectileTrajectory })
+    local self: ProjectileTrajectory = setmetatable(
+        {},
+        { __index = ProjectileTrajectory }
+    )
     self.height = start_height
     self.velocity = velocity
     self.lateral_velocity = lateral_velocity
@@ -82,16 +85,21 @@ function physics.calc_trajectory(
     target: Point
 ): ProjectileTrajectory
     local velocity = physics.calc_init_projectile_velocity(
-        math.abs(start_height - end_height), h_max, duration
+        math.abs(start_height - end_height),
+        h_max,
+        duration
     )
     local gravity = physics.calc_gravity(velocity, h_max)
 
-    local throw_vector = vectors.new(
-        target.x - position.x,
-        target.y - position.y
-    )
+    local throw_vector = vectors.new(target.x - position.x, target.y - position.y)
     local lateral_velocity = throw_vector:scale(1 / duration)
-    return physics.new_trajectory(start_height, velocity, lateral_velocity, gravity, duration)
+    return physics.new_trajectory(
+        start_height,
+        velocity,
+        lateral_velocity,
+        gravity,
+        duration
+    )
 end
 
 return physics

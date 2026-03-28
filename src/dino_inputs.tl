@@ -31,7 +31,8 @@ local function handle_jump_input(
         -- movementboxes, check in an area around and then manually
         -- check for movementbox overlap
         local blocks_jumps_close = lookup:in_box_and_group(
-            jump_landing_area:expand(grid.TILE_SIZE), blocks_jump
+            jump_landing_area:expand(grid.TILE_SIZE),
+            blocks_jump
         )
 
         for _, possible_jump_block in ipairs(blocks_jumps_close) do
@@ -143,7 +144,10 @@ local function handle_throw_input(
 
     if joysticks.is_released(player.id, joysticks.BUTTONS.B) or must_throw() then
         local nbr_blocks_to_throw = math.floor(dino.throw_powerup_for / powerup_time_interval) + 2
-        nbr_blocks_to_throw = math.min(nbr_blocks_to_throw, dino.level * 2) -- clamp max throw dist
+        nbr_blocks_to_throw = math.min(
+            nbr_blocks_to_throw,
+            dino.level * 2
+        ) -- clamp max throw dist
 
         local throw_bomb_from = get_position_throwing_from()
         local bomb_to_throw = get_bomb_to_throw(throw_bomb_from)

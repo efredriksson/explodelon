@@ -60,11 +60,14 @@ function winner_scene.new(names: {CharacterName}): GameWinnerScene
     self.character_positions = {}
     for i, name in ipairs(names) do
         local x_pos_adjust = jump_animations[name]:getWidth() / 2
-        self.character_positions[name] = points.new(get_x_pos(i, #names) - x_pos_adjust, screen.HEIGHT)
-        table.insert(self.trophy_positions, points.new(
-            get_x_pos(i, #names) - self.trophy.width / 2,
-            (screen.HEIGHT - self.trophy.height) / 2
-        ))
+        self.character_positions[name] = points.new(
+            get_x_pos(i, #names) - x_pos_adjust,
+            screen.HEIGHT
+        )
+        table.insert(
+            self.trophy_positions,
+            points.new(get_x_pos(i, #names) - self.trophy.width / 2, (screen.HEIGHT - self.trophy.height) / 2)
+        )
     end
     self.character_jump_velocity = vectors.new(0, -47)
     self.have_played_sound = false
@@ -77,7 +80,10 @@ function winner_scene.new(names: {CharacterName}): GameWinnerScene
     ): Vector, Animation
         local spark = animations.new_with_frames(spark_image, {2.7, 0.2, 0.2, 0.2})
         spark.timer = (2.7 - start_time) + lutro.math.random() * 0.1
-        local spark_dp = vectors.new(lutro.math.random(-1, 17), lutro.math.random(-1, 23))
+        local spark_dp = vectors.new(
+            lutro.math.random(-1, 17),
+            lutro.math.random(-1, 23)
+        )
         self.sparks[spark_dp] = spark
     end
 
@@ -124,7 +130,11 @@ function GameWinnerScene:draw()
     lutro.graphics.rectangle("fill", 0, 0, screen.WIDTH, screen.HEIGHT)
 
     for name, character_position in pairs(self.character_positions) do
-        lutro.graphics.draw(jump_animations[name], character_position.x, character_position.y)
+        lutro.graphics.draw(
+            jump_animations[name],
+            character_position.x,
+            character_position.y
+        )
     end
 
     for _, trophy_position in ipairs(self.trophy_positions) do

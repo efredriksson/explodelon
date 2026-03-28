@@ -84,7 +84,10 @@ function characters.new_selection(
     player_id: integer,
     sprite?: CharacterName
 ): CharacterSelection
-    local new_selection = CharacterSelection.new(player_id, sprite or characters.get_unused())
+    local new_selection = CharacterSelection.new(
+        player_id,
+        sprite or characters.get_unused()
+    )
     table.insert(character_selections, new_selection)
     return new_selection
 end

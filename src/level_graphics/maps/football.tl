@@ -41,10 +41,18 @@ end
 function FootballGraphics:load_assets()
     background = load_image("background.png")
     soft_block_animation = animations.new(load_image("soft-block.png"), 16, 0.1)
-    soft_block_revealed_animation = animations.new(load_image("soft-block-revealed.png"), 16, 0.1)
+    soft_block_revealed_animation = animations.new(
+        load_image("soft-block-revealed.png"),
+        16,
+        0.1
+    )
     soft_block_breaking_image = load_image("soft-block-breaking.png")
     hard_block_animation[false] = animations.new(load_image("hard-block.png"), 16, 1)
-    hard_block_animation[true] = animations.new(load_image("hard-block-tall.png"), 16, 1)
+    hard_block_animation[true] = animations.new(
+        load_image("hard-block-tall.png"),
+        16,
+        1
+    )
 end
 
 function football.new_graphics(): FootballGraphics

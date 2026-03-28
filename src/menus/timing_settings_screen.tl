@@ -25,19 +25,38 @@ function timing_settings_screen.new(previous_screen: Scene): MenuScreen
     local timings = settings.game_rules.timings
     local battle_idx = current_idx_by_time[timings.battle] or 5
     local sudden_death_idx = current_idx_by_time[timings.sudden_death] or 1
-    local nbr_battles_selection = items.new_integer_selection(settings.game_rules.timings.nbr_battles, 1, 20)
-    local battle_time_selection = items.new_time_selection(battle_idx, times_to_select_from)
-    local sudden_death_time_selection = items.new_time_selection(sudden_death_idx, times_to_select_from)
+    local nbr_battles_selection = items.new_integer_selection(
+        settings.game_rules.timings.nbr_battles,
+        1,
+        20
+    )
+    local battle_time_selection = items.new_time_selection(
+        battle_idx,
+        times_to_select_from
+    )
+    local sudden_death_time_selection = items.new_time_selection(
+        sudden_death_idx,
+        times_to_select_from
+    )
 
     return screens.new({
         choices.new_integer(
-            "nbr. battles", 50, nbr_battles_selection, settings.set_nbr_battles
+            "nbr. battles",
+            50,
+            nbr_battles_selection,
+            settings.set_nbr_battles
         ),
         choices.new_number(
-            "battle time", 70, battle_time_selection, settings.set_battle_time
+            "battle time",
+            70,
+            battle_time_selection,
+            settings.set_battle_time
         ),
         choices.new_number(
-            "sudden death time", 90, sudden_death_time_selection, settings.set_sudden_death_time
+            "sudden death time",
+            90,
+            sudden_death_time_selection,
+            settings.set_sudden_death_time
         ),
         choices.new_done("back", 180, done)
     }, done)

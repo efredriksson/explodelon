@@ -98,7 +98,9 @@ function PlayerSelection.new(): PlayerSelection
     local self: PlayerSelection = setmetatable({}, { __index = PlayerSelection })
     self.score_board = score_board.new_for_singles()
     self.game = battle.new(
-        self, self.score_board, win_condition.new_for_singles(self.score_board)
+        self,
+        self.score_board,
+        win_condition.new_for_singles(self.score_board)
     )
     self.team_selection = team_selection.new(self, music)
     self.going_back_to_game = false
@@ -158,7 +160,10 @@ function PlayerSelection:check_for_new_player_selecting()
     -- No player is selecting, check if anyone is pressing right or left
     -- indicating that they want to select a character
     for player_id = 1, joysticks.maxplayers() do
-        local trying_to_select = joysticks.is_pressed(player_id, joysticks.BUTTONS.RIGHT) or
+        local trying_to_select = joysticks.is_pressed(
+            player_id,
+            joysticks.BUTTONS.RIGHT
+        ) or
             joysticks.is_pressed(player_id, joysticks.BUTTONS.LEFT)
 
         if trying_to_select and characters.have_not_selected(player_id) then
@@ -202,7 +207,10 @@ function PlayerSelection:handle_player_input()
     elseif (joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.B) or
             joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.R)) then
 
-        local selected = table.remove(self.selectable_characters, self.selector:get_value())
+        local selected = table.remove(
+            self.selectable_characters,
+            self.selector:get_value()
+        )
         table.insert(self.walking_characters, selected)
         characters.new_selection(self.player_selecting, selected.sprite)
         self.selector:reduce_max_val()

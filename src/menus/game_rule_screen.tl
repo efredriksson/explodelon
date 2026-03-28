@@ -41,27 +41,13 @@ function game_rule_screen.new(previous_screen: Scene): MenuScreen
     end
 
     return screens.new({
-        choices.new_done(
-            "load ruleset", 50, enter_load_rules_screen
-        ),
-        choices.new_done(
-            "item rules", 70, enter_item_settings_screen
-        ),
-        choices.new_done(
-            "item drop rules", 90, enter_item_spawn_screen
-        ),
-        choices.new_done(
-            "dino rules", 110, enter_dino_settings_screen
-        ),
-        choices.new_done(
-            "player rules", 130, enter_player_settings_screen
-        ),
-        choices.new_done(
-            "timing rules", 150, enter_timing_settings_screen
-        ),
-        choices.new_done(
-            "ice rules", 170, enter_ice_settings_screen
-        ),
+        choices.new_done("load ruleset", 50, enter_load_rules_screen),
+        choices.new_done("item rules", 70, enter_item_settings_screen),
+        choices.new_done("item drop rules", 90, enter_item_spawn_screen),
+        choices.new_done("dino rules", 110, enter_dino_settings_screen),
+        choices.new_done("player rules", 130, enter_player_settings_screen),
+        choices.new_done("timing rules", 150, enter_timing_settings_screen),
+        choices.new_done("ice rules", 170, enter_ice_settings_screen),
 
         choices.new_done("back", 200, done)
     }, done)

@@ -246,7 +246,8 @@ function PlayerCart:draw()
     end
 
     local cart_half_size = vectors.new(
-        animation.width, animation.height
+        animation.width,
+        animation.height
     ):minus(total_padding()):scale(1 / 2)
     local head_pos = points.new(
         cart_pos.x + cart_half_size.x - head_image:getWidth() / 2,
@@ -357,11 +358,17 @@ function MadBombers:handle_cart_move_input(dt: number, cart: PlayerCart)
         cart:set_state("backward")
     end
 
-    if lutro.joystick.isDown(cart.id, joysticks.BUTTONS.R) and cart.cannon == "ready" then
+    if lutro.joystick.isDown(
+        cart.id,
+        joysticks.BUTTONS.R
+    ) and cart.cannon == "ready" then
         cart.cannon_powerup_for = cart.cannon_powerup_for + dt
     end
 
-    if joysticks.is_released(cart.id, joysticks.BUTTONS.R) or cart.cannon_powerup_for > 0.8 then
+    if joysticks.is_released(
+        cart.id,
+        joysticks.BUTTONS.R
+    ) or cart.cannon_powerup_for > 0.8 then
         local fire_from, fire_len = cart:fire_cannon()
         if fire_from then
             local fire_dir = THROW_BOMB_DIRECTION_BY_SIDE[side]

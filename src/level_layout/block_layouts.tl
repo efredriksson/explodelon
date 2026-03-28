@@ -65,7 +65,10 @@ local function place_soft_blocks(
         local i = lutro.math.random(dim.x_max + 1) - 1
         local j = lutro.math.random(dim.y_max + 1) - 1
         local cell: BlockType = layout[i][j]
-        if cell == "none" and not contains_point(exclusion_zone, grid.get_tile_position(i, j)) then
+        if cell == "none" and not contains_point(
+            exclusion_zone,
+            grid.get_tile_position(i, j)
+        ) then
             layout[i][j] = "soft"
             count = count + 1
         end

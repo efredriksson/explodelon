@@ -201,9 +201,18 @@ function Bomb:can_move(
     local test_hitbox = self:movementbox():shift(direction)
     local old_hitbox = self:movementbox()
     local can_move_bomb = CanMoveBomb.new(test_hitbox:top_left(), direction:normalize())
-    local close_occupies = lookup:in_box_and_group(old_hitbox:expand(grid.TILE_SIZE), occupies)
-    local close_players = lookup:in_box_and_group(old_hitbox:expand(grid.TILE_SIZE), players_)
-    local close_bombs = lookup:in_box_and_group(old_hitbox:expand(grid.TILE_SIZE), bombs)
+    local close_occupies = lookup:in_box_and_group(
+        old_hitbox:expand(grid.TILE_SIZE),
+        occupies
+    )
+    local close_players = lookup:in_box_and_group(
+        old_hitbox:expand(grid.TILE_SIZE),
+        players_
+    )
+    local close_bombs = lookup:in_box_and_group(
+        old_hitbox:expand(grid.TILE_SIZE),
+        bombs
+    )
     close_bombs = itertools.filter(close_bombs, not_this_bomb)
     local close_interacts: {Kinematic} = itertools.combine(close_bombs, close_players)
 
@@ -241,7 +250,8 @@ function Bomb:can_move(
     end
 
     local will_go_into_entity = overlaps_entity_significantly(
-        test_hitbox, itertools.combine(close_occupies, close_interacts)
+        test_hitbox,
+        itertools.combine(close_occupies, close_interacts)
     )
 
     if self.velocity:length() > 0 and not self.velocity:same_direction(direction) then
@@ -250,7 +260,10 @@ function Bomb:can_move(
         -- side kick by snapping the projected position/hitbox to corridor. This means
         -- a side kick can be done without things aligning exactly!
         local mock_dt = 1 / 60 -- TODO: Need to pass in 'dt' in here to properly calculate this
-        local passing = moving_into_new_block(self:movementbox(), self.velocity:scale(mock_dt))
+        local passing = moving_into_new_block(
+            self:movementbox(),
+            self.velocity:scale(mock_dt)
+        )
         if self.velocity:orthogonal(direction) and passing then
             if direction.x == 0 then
                 test_hitbox.x = grid.snap_to_x(test_hitbox.x)
@@ -272,7 +285,14 @@ function Bomb:can_move(
 
     for _, bomb in ipairs(close_bombs) do
         if overlaps_significantly(bomb, test_hitbox) then
-            if bomb:can_move(direction, occupies, players_, bombs, lookup, next_call_level).yes then
+            if bomb:can_move(
+                direction,
+                occupies,
+                players_,
+                bombs,
+                lookup,
+                next_call_level
+            ).yes then
                 can_move_bomb.will_hit = bomb
             end
         end
@@ -299,7 +319,14 @@ function Bomb:can_move(
 
         for _, bomb in ipairs(close_bombs) do
             if overlaps_significantly(bomb, new_block) then
-                if bomb:can_move(direction, occupies, players_, bombs, lookup, next_call_level).yes then
+                if bomb:can_move(
+                    direction,
+                    occupies,
+                    players_,
+                    bombs,
+                    lookup,
+                    next_call_level
+                ).yes then
                     can_move_bomb.will_hit = bomb
                 end
             end
@@ -375,7 +402,12 @@ function ThrownBomb.new(
     self.z_index = z_index.ABOVE
     self.target = target
     self.trajectory = physics.calc_trajectory(
-        start_height, 0, throw_height, throw_time, delegate.position, target
+        start_height,
+        0,
+        throw_height,
+        throw_time,
+        delegate.position,
+        target
     )
     return self
 end
@@ -383,7 +415,12 @@ end
 function ThrownBomb:bounce()
     self.target = self:get_position():move(self.trajectory:get_direction():scale(grid.TILE_SIZE))
     self.trajectory = physics.calc_trajectory(
-        0, 0, grid.TILE_SIZE * 0.8, 0.25, self.delegate.position, self.target
+        0,
+        0,
+        grid.TILE_SIZE * 0.8,
+        0.25,
+        self.delegate.position,
+        self.target
     )
 end
 
@@ -516,7 +553,10 @@ function Bombs:update(
     for _, bomb in pairs(self.in_air.set) do
         bomb:update(dt)
         if bomb:has_landed() then
-            local hitting_entities = lookup:collisions_between(collision.new_group({bomb}), bombs_bounce_on)
+            local hitting_entities = lookup:collisions_between(
+                collision.new_group({bomb}),
+                bombs_bounce_on
+            )
             local bomb_bouncing = false
             for _, hitting_entity in pairs(hitting_entities) do
                 hitting_entity:hit_with_bomb()

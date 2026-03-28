@@ -15,13 +15,22 @@ function debug_screen.new(previous_screen: Scene): MenuScreen
 
     return screens.new({
         choices.new_boolean(
-            "draw hitboxes", 50, settings.draw_hitboxes, settings.set_draw_hitboxs
+            "draw hitboxes",
+            50,
+            settings.draw_hitboxes,
+            settings.set_draw_hitboxs
         ),
         choices.new_boolean(
-            "log slow game loop", 70, settings.log_scene_perf, settings.set_log_scene_perf
+            "log slow game loop",
+            70,
+            settings.log_scene_perf,
+            settings.set_log_scene_perf
         ),
         choices.new_boolean(
-            "log memory usage", 90, settings.log_mem_usage, settings.set_log_mem_usage
+            "log memory usage",
+            90,
+            settings.log_mem_usage,
+            settings.set_log_mem_usage
         ),
         choices.new_done("back", 180, done)
     }, done)

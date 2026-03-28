@@ -103,11 +103,7 @@ function Animation:draw(x: number, y: number)
         tw, th,
         sw, sh)
 
-    lutro.graphics.draw(
-        self.image,
-        q,
-        x, y
-    )
+    lutro.graphics.draw(self.image, q, x, y)
 end
 
 return animations

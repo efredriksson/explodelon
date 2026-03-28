@@ -87,16 +87,28 @@ local function get_moves_from_input(player: Player, dt: number): {Movement}
     local result: {Movement} = {}
 
     if lutro.joystick.isDown(player.id, joysticks.BUTTONS.DOWN) then
-        table.insert(result, Movement.new(vectors.new(0, dt * player:get_speed()), "down"))
+        table.insert(
+            result,
+            Movement.new(vectors.new(0, dt * player:get_speed()), "down")
+        )
     end
     if lutro.joystick.isDown(player.id, joysticks.BUTTONS.UP) then
-        table.insert(result, Movement.new(vectors.new(0, -dt * player:get_speed()), "up"))
+        table.insert(
+            result,
+            Movement.new(vectors.new(0, -dt * player:get_speed()), "up")
+        )
     end
     if lutro.joystick.isDown(player.id, joysticks.BUTTONS.RIGHT) then
-        table.insert(result, Movement.new(vectors.new(dt * player:get_speed(), 0), "right"))
+        table.insert(
+            result,
+            Movement.new(vectors.new(dt * player:get_speed(), 0), "right")
+        )
     end
     if lutro.joystick.isDown(player.id, joysticks.BUTTONS.LEFT) then
-        table.insert(result, Movement.new(vectors.new(-dt * player:get_speed(), 0), "left"))
+        table.insert(
+            result,
+            Movement.new(vectors.new(-dt * player:get_speed(), 0), "left")
+        )
     end
 
     return result
@@ -186,7 +198,9 @@ local function restrict_player_movement(
         end
 
         local along_wall = around_corner_move(
-            movement_len, dist_to_corner, pos_and_block_lateral_diff
+            movement_len,
+            dist_to_corner,
+            pos_and_block_lateral_diff
         ):permutate_if(walk_along_y_axis)
 
         -- Using 'new_position' instead of 'player_pos' here is not a bug, this
@@ -208,7 +222,11 @@ local function restrict_player_movement(
 
     local function check_block_collision(block_box: Rectangle): CheckedMovement
         if movement.x == 0 then
-            return move_against_block(movement.y, player.position.x - block_box.x, false)
+            return move_against_block(
+                movement.y,
+                player.position.x - block_box.x,
+                false
+            )
         elseif movement.y == 0 then
             return move_against_block(movement.x, player.position.y - block_box.y, true)
         else
@@ -241,7 +259,11 @@ local function restrict_player_movement(
             return nil
         end
         local corner_cut_hitbox = player:movementbox():shift(player.position:vector_to(result.position))
-        local all_obstacles = itertools.combine(blocks, close_bombs, close_lightning_bombs)
+        local all_obstacles = itertools.combine(
+            blocks,
+            close_bombs,
+            close_lightning_bombs
+        )
         local function not_skipped(obstacle: Kinematic): boolean
             return obstacle ~= skip and not bombs_player_is_inside[obstacle]
         end
@@ -267,7 +289,11 @@ local function restrict_player_movement(
             if player.has_kick then
                 local kick_direction = movement:normalize()
                 local can_move = bomb:can_move(
-                    kick_direction:scale(grid.TILE_SIZE), blocks_bombs, players_, bombs_, lookup
+                    kick_direction:scale(grid.TILE_SIZE),
+                    blocks_bombs,
+                    players_,
+                    bombs_,
+                    lookup
                 )
                 if can_move.yes then
                     -- Walking into bomb and at edge of bomb then kick
@@ -359,13 +385,30 @@ local function get_new_player_orientation(
     local cur_position = player.position
     local cur_direction = player_dir
     local directions_checks: {MovementWithCheck} = {}
-    local close_bombs = lookup:in_box_and_group(player:movementbox():expand(grid.TILE_SIZE), bombs_)
-    local close_lightning_bombs = lookup:in_box_and_group(player:movementbox():expand(grid.TILE_SIZE), lightning_bombs_on_ground)
+    local close_bombs = lookup:in_box_and_group(
+        player:movementbox():expand(grid.TILE_SIZE),
+        bombs_
+    )
+    local close_lightning_bombs = lookup:in_box_and_group(
+        player:movementbox():expand(grid.TILE_SIZE),
+        lightning_bombs_on_ground
+    )
     for _, direction in ipairs(directions) do
         local check = restrict_player_movement(
-            player, direction.dxdy, blocks, close_lightning_bombs, blocks_bombs, close_bombs, players_, bombs_, lookup
+            player,
+            direction.dxdy,
+            blocks,
+            close_lightning_bombs,
+            blocks_bombs,
+            close_bombs,
+            players_,
+            bombs_,
+            lookup
         )
-        table.insert(directions_checks, MovementWithCheck.new(direction.dxdy, direction.dir, check))
+        table.insert(
+            directions_checks,
+            MovementWithCheck.new(direction.dxdy, direction.dir, check)
+        )
     end
 
     sort_directions_by_prio(directions_checks)
@@ -566,10 +609,24 @@ function movement.set_position_and_dir_from_input(
 
     local max_directions = (player.action == "slide" or player.action == "dash") and 1 or 2
     local new_dir, new_pos, constrained = get_new_player_orientation(
-        player.direction, moves, blocks, lightning_bombs_.on_ground, player, max_directions, blocks_bombs, players_, bombs_, lookup
+        player.direction,
+        moves,
+        blocks,
+        lightning_bombs_.on_ground,
+        player,
+        max_directions,
+        blocks_bombs,
+        players_,
+        bombs_,
+        lookup
     )
     local dominant_dir = direction_from_dominant_velocity(player.ice_velocity, new_dir)
-    local updated_dir = direction_for_diagonal(moves, player.direction, dominant_dir, constrained)
+    local updated_dir = direction_for_diagonal(
+        moves,
+        player.direction,
+        dominant_dir,
+        constrained
+    )
 
     player:set_movement(new_pos, updated_dir)
     player:set_action(player_action)

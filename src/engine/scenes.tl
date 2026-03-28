@@ -158,7 +158,10 @@ local record CheckPerformanceOfScene is Scene
 end
 
 function CheckPerformanceOfScene.new(to_wrap: Scene): CheckPerformanceOfScene
-   local self: CheckPerformanceOfScene = setmetatable({}, { __index = CheckPerformanceOfScene })
+   local self: CheckPerformanceOfScene = setmetatable(
+       {},
+       { __index = CheckPerformanceOfScene }
+   )
    self.to_wrap = to_wrap
    self.is_internal = true
    self.update_sample = PerformanceSample.new()

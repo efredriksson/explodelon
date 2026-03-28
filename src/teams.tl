@@ -45,7 +45,10 @@ function Team:color_darker_shade(): Color
 end
 
 function TeamSelectionGrouped.new(team: Team): TeamSelectionGrouped
-    local self: TeamSelectionGrouped = setmetatable({}, { __index = TeamSelectionGrouped })
+    local self: TeamSelectionGrouped = setmetatable(
+        {},
+        { __index = TeamSelectionGrouped }
+    )
     self.team = team
     self.selections = {}
     return self

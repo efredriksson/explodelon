@@ -289,16 +289,17 @@ local function get_character_on_dino_ground_position(
         down = 0,
     }
     local horizonal_displacement = horizonal_displacements[direction]
-    return original_pos:move(
-        vectors.new(horizonal_displacement, 0)
-    )
+    return original_pos:move(vectors.new(horizonal_displacement, 0))
 end
 
 local function get_character_position_on_top_of_dino(
     original_pos: Point,
     direction: Direction
 ): Point
-    local to_the_side_pos = get_character_on_dino_ground_position(original_pos, direction)
+    local to_the_side_pos = get_character_on_dino_ground_position(
+        original_pos,
+        direction
+    )
     return to_the_side_pos:move(vectors.new(0, -CHARACTER_HEIGHT_ON_DINO))
 end
 
@@ -336,7 +337,10 @@ function Player:jumps_onto(dino: Dino)
             self.dino = dino
         end
 
-        local character_ground_pos = get_character_on_dino_ground_position(self.dino.position, self.direction)
+        local character_ground_pos = get_character_on_dino_ground_position(
+            self.dino.position,
+            self.direction
+        )
         self.jump_trajectory = physics.calc_trajectory(
             character_distance_over_ground,
             CHARACTER_HEIGHT_ON_DINO,
@@ -356,9 +360,17 @@ function Player:jump_off_dino()
 
         self.jump_target = self.position
         -- Set current position as shifted by riding dino to jump from that position
-        self.position = get_character_on_dino_ground_position(self.position, self.direction)
+        self.position = get_character_on_dino_ground_position(
+            self.position,
+            self.direction
+        )
         self.jump_trajectory = physics.calc_trajectory(
-            CHARACTER_HEIGHT_ON_DINO, 0, JUMP_OFF_HEIGHT, JUMP_OFF_TIME, self.position, self.jump_target
+            CHARACTER_HEIGHT_ON_DINO,
+            0,
+            JUMP_OFF_HEIGHT,
+            JUMP_OFF_TIME,
+            self.position,
+            self.jump_target
         )
     end
 end
@@ -574,7 +586,10 @@ function Player:get_draw_position(): Point
         return self:get_jump_position()
     elseif self.action == "jump" then
         -- Adjust player sprite for jump height and being on top of its mount
-        return get_character_position_on_top_of_dino(self:get_jump_position(), self.direction)
+        return get_character_position_on_top_of_dino(
+            self:get_jump_position(),
+            self.direction
+        )
     elseif self.state == "mounted" then
         -- Adjust player sprite for being on top of its mount
         return get_character_position_on_top_of_dino(self.position, self.direction)
@@ -585,12 +600,20 @@ end
 
 function players.load_assets()
     for level = 1, 3 do
-        local sound = audio.new_source_pool("assets/tirras/level_" .. level .. "/roar.ogg", "static", 2)
+        local sound = audio.new_source_pool(
+            "assets/tirras/level_" .. level .. "/roar.ogg",
+            "static",
+            2
+        )
         sound:setPitch(0.1)
         sound:setVolume(1.25)
         stun_cry_sound[level] = sound
     end
-    sonic_blast_sound = audio.new_source_pool("assets/tirras/sonic-blast.ogg", "static", 2)
+    sonic_blast_sound = audio.new_source_pool(
+        "assets/tirras/sonic-blast.ogg",
+        "static",
+        2
+    )
     sonic_blast_sound:setPitch(0.005)
     sonic_blast_sound:setVolume(0.13)
 end

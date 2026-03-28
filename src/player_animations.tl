@@ -86,7 +86,11 @@ local function character_animation(
             character_animations[state][action] = {}
             local frame_duration = get_animation_frame_duration(action)
             for direction, sprite_image in pairs(by_direction) do
-                character_animations[state][action][direction] = animations.new(sprite_image, 18, frame_duration)
+                character_animations[state][action][direction] = animations.new(
+                    sprite_image,
+                    18,
+                    frame_duration
+                )
             end
         end
     end
@@ -188,7 +192,12 @@ local function draw_sonic_blasts(player: Player)
     end
 
     local function get_text_position(scaling: number, wave_image: Image): Point
-        local pos = get_image_pos_in_front_of_player(player, wave_image, scaling, scaling)
+        local pos = get_image_pos_in_front_of_player(
+            player,
+            wave_image,
+            scaling,
+            scaling
+        )
         return pos:move(DINO_SONIC_BLAST_POSITION[player.direction])
     end
 
@@ -582,7 +591,11 @@ end
 function PlayerAnimations:_draw_players_shadow(filter: function(Player): boolean)
     for _, entity in ipairs(self.entities) do
         if filter(entity.player) then
-            lutro.graphics.draw(jump_shadow_image, entity.player.position.x - 1, entity.player.position.y - 10)
+            lutro.graphics.draw(
+                jump_shadow_image,
+                entity.player.position.x - 1,
+                entity.player.position.y - 10
+            )
         end
     end
 end

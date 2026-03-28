@@ -73,7 +73,10 @@ end
 function grid.outside_on_opposite_side(out_pos: Point): Point
     if out_pos.y < PLAYER_AREA.y then
         -- exiting top
-        return points.new(out_pos.x, PLAYER_AREA.y + PLAYER_AREA.height + grid.TILE_SIZE)
+        return points.new(
+            out_pos.x,
+            PLAYER_AREA.y + PLAYER_AREA.height + grid.TILE_SIZE
+        )
     elseif out_pos.y > PLAYER_AREA.y + PLAYER_AREA.height then
         -- exiting bottom
         return points.new(out_pos.x, PLAYER_AREA.y - grid.TILE_SIZE * 2)
