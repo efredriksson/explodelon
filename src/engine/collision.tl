@@ -1,5 +1,5 @@
-local logger = require("engine.logger")
 local rectangles = require("engine.geometry.rectangles")
+local logger = require("engine.logger")
 local settings = require("engine.settings")
 
 local type Entity = require("engine.entity")

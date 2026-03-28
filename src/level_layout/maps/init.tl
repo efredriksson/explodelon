@@ -1,6 +1,6 @@
 local entities = require("level_layout.maps.entities")
-local football = require("level_layout.maps.football")
 local factory = require("level_layout.maps.factory")
+local football = require("level_layout.maps.football")
 local ice_rink = require("level_layout.maps.ice_rink")
 local settings = require("settings")
 

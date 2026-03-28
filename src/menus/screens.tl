@@ -1,9 +1,9 @@
 local audio = require("engine.audio")
-local choices = require("menus.choices")
-local fonts = require("fonts")
 local joysticks = require("engine.joysticks")
-local items = require("menus.items")
 local scenes = require("engine.scenes")
+local fonts = require("fonts")
+local choices = require("menus.choices")
+local items = require("menus.items")
 local screen = require("screen")
 
 local type MenuFont = fonts.MenuFont

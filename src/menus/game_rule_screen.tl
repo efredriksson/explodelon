@@ -1,13 +1,13 @@
 local scenes = require("engine.scenes")
 local choices = require("menus.choices")
-local screens = require("menus.screens")
 local dino_settings_screen = require("menus.dino_setting_screen")
 local ice_settings_screen = require("menus.ice_settings_screen")
 local item_spawn_screen = require("menus.item_drops_screen")
 local item_setting_screen = require("menus.item_setting_screen")
-local player_setting_screen = require("menus.player_setting_screen")
-local timing_settings_screen = require("menus.timing_settings_screen")
 local load_rules_screen = require("menus.load_rules_screen")
+local player_setting_screen = require("menus.player_setting_screen")
+local screens = require("menus.screens")
+local timing_settings_screen = require("menus.timing_settings_screen")
 
 local type Scene = scenes.Scene
 local type MenuScreen = screens.MenuScreen

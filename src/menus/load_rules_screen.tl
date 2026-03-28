@@ -1,7 +1,7 @@
 local scenes = require("engine.scenes")
-local settings = require("settings")
 local choices = require("menus.choices")
 local screens = require("menus.screens")
+local settings = require("settings")
 
 local type Scene = scenes.Scene
 local type MenuScreen = screens.MenuScreen

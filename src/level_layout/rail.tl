@@ -1,6 +1,6 @@
-local grid = require("level_layout.grid")
-local vectors = require("engine.geometry.vectors")
 local points = require("engine.geometry.points")
+local vectors = require("engine.geometry.vectors")
+local grid = require("level_layout.grid")
 
 local type Direction = vectors.Direction
 local type Vector = vectors.Vector

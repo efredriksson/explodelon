@@ -1,7 +1,7 @@
-local block_layouts = require("level_layout.block_layouts")
-local entities = require("level_layout.maps.entities")
-local grid = require("level_layout.grid")
 local vectors = require("engine.geometry.vectors")
+local block_layouts = require("level_layout.block_layouts")
+local grid = require("level_layout.grid")
+local entities = require("level_layout.maps.entities")
 
 local type MapLayout = entities.MapLayout
 local type BlockType = entities.BlockType

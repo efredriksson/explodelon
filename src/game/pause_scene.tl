@@ -1,10 +1,10 @@
 local audio = require("engine.audio")
-local fonts = require("fonts")
-local images = require("engine.images")
-local joysticks = require("engine.joysticks")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
+local images = require("engine.images")
+local joysticks = require("engine.joysticks")
 local scenes = require("engine.scenes")
+local fonts = require("fonts")
 local screen = require("screen")
 
 local type MenuFont = fonts.MenuFont

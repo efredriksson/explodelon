@@ -1,5 +1,5 @@
-local rectangles = require("engine.geometry.rectangles")
 local points = require("engine.geometry.points")
+local rectangles = require("engine.geometry.rectangles")
 local settings = require("engine.settings")
 
 local type Point = points.Point

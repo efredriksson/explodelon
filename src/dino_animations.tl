@@ -1,10 +1,10 @@
-local animations = require("engine.animations")
 local dinos = require("dinos")
-local grid = require("level_layout.grid")
-local images = require("engine.images")
+local animations = require("engine.animations")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
 local vectors = require("engine.geometry.vectors")
+local images = require("engine.images")
+local grid = require("level_layout.grid")
 local settings = require("settings")
 local z_index = require("z_index")
 

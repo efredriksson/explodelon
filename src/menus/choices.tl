@@ -1,8 +1,8 @@
-local fonts = require("fonts")
 local points = require("engine.geometry.points")
 local joysticks = require("engine.joysticks")
-local items = require("menus.items")
 local scenes = require("engine.scenes")
+local fonts = require("fonts")
+local items = require("menus.items")
 local screen = require("screen")
 
 local type MenuFont = fonts.MenuFont

@@ -1,11 +1,11 @@
+local dinos = require("dinos")
 local animations = require("engine.animations")
 local collision = require("engine.collision")
-local dinos = require("dinos")
-local grid = require("level_layout.grid")
-local hitboxes = require("engine.hitboxes")
-local players = require("players")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
+local hitboxes = require("engine.hitboxes")
+local grid = require("level_layout.grid")
+local players = require("players")
 local z_index = require("z_index")
 
 local type Animation = animations.Animation

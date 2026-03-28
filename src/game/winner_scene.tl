@@ -1,6 +1,6 @@
+local characters = require("characters")
 local animations = require("engine.animations")
 local audio = require("engine.audio")
-local characters = require("characters")
 local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
 local scenes = require("engine.scenes")

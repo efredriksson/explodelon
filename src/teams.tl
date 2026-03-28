@@ -1,6 +1,6 @@
 local characters = require("characters")
-local images = require("engine.images")
 local rectangles = require("engine.geometry.rectangles")
+local images = require("engine.images")
 
 local type CharacterName = characters.CharacterName
 local type CharacterSelection = characters.CharacterSelection

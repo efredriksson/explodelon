@@ -1,9 +1,9 @@
-local entities = require("level_layout.maps.entities")
-local grid = require("level_layout.grid")
-local itertools = require("itertools")
 local points = require("engine.geometry.points")
-local settings = require("settings")
+local itertools = require("itertools")
+local grid = require("level_layout.grid")
+local entities = require("level_layout.maps.entities")
 local maps = require("level_layout.maps.init")
+local settings = require("settings")
 
 local type Kinematic = require("kinematic")
 local type Point = points.Point

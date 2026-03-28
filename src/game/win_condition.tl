@@ -1,6 +1,6 @@
 local characters = require("characters")
-local players = require("players")
 local score_board = require("game.score_board")
+local players = require("players")
 local teams = require("teams")
 
 local type CharacterName = characters.CharacterName

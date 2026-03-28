@@ -1,11 +1,11 @@
 local bombs = require("bombs.bombs")
 local collision = require("engine.collision")
-local hitboxes = require("engine.hitboxes")
-local grid = require("level_layout.grid")
-local joysticks = require("engine.joysticks")
-local players = require("players")
-local vectors = require("engine.geometry.vectors")
 local points = require("engine.geometry.points")
+local vectors = require("engine.geometry.vectors")
+local hitboxes = require("engine.hitboxes")
+local joysticks = require("engine.joysticks")
+local grid = require("level_layout.grid")
+local players = require("players")
 
 local type Bomb = bombs.Bomb
 local type Bombs = bombs.Bombs

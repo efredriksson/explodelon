@@ -1,13 +1,13 @@
-local animations = require("engine.animations")
 local bombs = require("bombs.bombs")
 local characters = require("characters")
-local grid = require("level_layout.grid")
-local hitboxes = require("engine.hitboxes")
-local joysticks = require("engine.joysticks")
+local animations = require("engine.animations")
 local points = require("engine.geometry.points")
-local rail = require("level_layout.rail")
 local rectangles = require("engine.geometry.rectangles")
 local vectors = require("engine.geometry.vectors")
+local hitboxes = require("engine.hitboxes")
+local joysticks = require("engine.joysticks")
+local grid = require("level_layout.grid")
+local rail = require("level_layout.rail")
 local z_index = require("z_index")
 
 local type Animation = animations.Animation

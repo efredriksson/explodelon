@@ -1,5 +1,5 @@
-local vectors = require("engine.geometry.vectors")
 local points = require("engine.geometry.points")
+local vectors = require("engine.geometry.vectors")
 
 local type Vector = vectors.Vector
 local type Point = points.Point

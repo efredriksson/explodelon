@@ -1,6 +1,6 @@
-local logger = require("engine.logger")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
+local logger = require("engine.logger")
 
 local type Point = points.Point
 local type Rectangle = rectangles.Rectangle

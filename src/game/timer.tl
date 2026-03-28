@@ -1,9 +1,9 @@
-local audio = require("engine.audio")
 local clock_text = require("clock_text")
-local fonts = require("fonts")
-local itertools = require("itertools")
+local audio = require("engine.audio")
 local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
+local fonts = require("fonts")
+local itertools = require("itertools")
 local screen = require("screen")
 local settings = require("settings")
 

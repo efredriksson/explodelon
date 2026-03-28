@@ -1,16 +1,16 @@
-local audio = require("engine.audio")
 local characters = require("characters")
+local audio = require("engine.audio")
+local joysticks = require("engine.joysticks")
+local scenes = require("engine.scenes")
+local itertools = require("itertools")
 local choices = require("menus.choices")
 local debug_screen = require("menus.debug_screen")
 local game_rule_screen = require("menus.game_rule_screen")
 local items = require("menus.items")
-local itertools = require("itertools")
-local joysticks = require("engine.joysticks")
-local player_selection = require("player_selection")
-local scenes = require("engine.scenes")
 local screens = require("menus.screens")
-local settings = require("settings")
 local update_sceen = require("menus.update_screen")
+local player_selection = require("player_selection")
+local settings = require("settings")
 
 
 local type Scene = scenes.Scene

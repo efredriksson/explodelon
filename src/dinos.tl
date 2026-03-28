@@ -1,7 +1,7 @@
-local hitboxes = require("engine.hitboxes")
-local vectors = require("engine.geometry.vectors")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
+local vectors = require("engine.geometry.vectors")
+local hitboxes = require("engine.hitboxes")
 local settings = require("settings")
 
 local type Direction = vectors.Direction

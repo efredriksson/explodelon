@@ -1,8 +1,8 @@
-local items = require("menus.items")
 local scenes = require("engine.scenes")
-local settings = require("settings")
 local choices = require("menus.choices")
+local items = require("menus.items")
 local screens = require("menus.screens")
+local settings = require("settings")
 
 local type Scene = scenes.Scene
 local type MenuScreen = screens.MenuScreen

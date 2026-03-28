@@ -1,12 +1,12 @@
 local animations = require("engine.animations")
 local audio = require("engine.audio")
 local collision = require("engine.collision")
-local grid = require("level_layout.grid")
+local points = require("engine.geometry.points")
+local rectangles = require("engine.geometry.rectangles")
+local vectors = require("engine.geometry.vectors")
 local hitboxes = require("engine.hitboxes")
 local images = require("engine.images")
-local points = require("engine.geometry.points")
-local vectors = require("engine.geometry.vectors")
-local rectangles = require("engine.geometry.rectangles")
+local grid = require("level_layout.grid")
 local z_index = require("z_index")
 
 local type Animation = animations.Animation

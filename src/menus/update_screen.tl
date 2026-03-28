@@ -1,6 +1,6 @@
-local fonts = require("fonts")
 local joysticks = require("engine.joysticks")
 local scenes = require("engine.scenes")
+local fonts = require("fonts")
 local screen = require("screen")
 
 

@@ -1,19 +1,19 @@
+local lightnings = require("bombs.lightnings")
 local animations = require("engine.animations")
 local audio = require("engine.audio")
 local collision = require("engine.collision")
-local grid = require("level_layout.grid")
-local hitboxes = require("engine.hitboxes")
-local lightnings = require("bombs.lightnings")
-local players = require("players")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
 local vectors = require("engine.geometry.vectors")
+local hitboxes = require("engine.hitboxes")
+local grid = require("level_layout.grid")
+local players = require("players")
 local z_index = require("z_index")
 
 local type Animation = animations.Animation
 local type Explodable = require("bombs.explodable")
-local type Kinematic = require("kinematic")
 local type Entity = require("engine.entity")
+local type Kinematic = require("kinematic")
 local type Group = collision.Group
 local type Lightnings = lightnings.Lightnings
 local type Player = players.Player
