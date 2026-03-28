@@ -135,7 +135,10 @@ local function moving_outside_of_map(test_hitbox: Rectangle): boolean
     return not grid.area():contains(test_hitbox) and not bomb_in_goal
 end
 
-local function moving_into_new_block(movementbox: Rectangle, direction: Vector): Rectangle | nil
+local function moving_into_new_block(
+    movementbox: Rectangle,
+    direction: Vector
+): Rectangle | nil
     local snaps_to = grid.snap_to(movementbox:top_left())
     local new_movementbox = movementbox:shift(direction)
 
@@ -183,7 +186,14 @@ function CanMoveBomb:no(): CanMoveBomb
    return self
 end
 
-function Bomb:can_move(direction: Vector, occupies: ReadableGroup<Kinematic>, players_: ReadableGroup<Player>, bombs: ReadableGroup<Bomb>, lookup: Lookup, call_level?: integer): CanMoveBomb
+function Bomb:can_move(
+    direction: Vector,
+    occupies: ReadableGroup<Kinematic>,
+    players_: ReadableGroup<Player>,
+    bombs: ReadableGroup<Bomb>,
+    lookup: Lookup,
+    call_level?: integer
+): CanMoveBomb
     local function not_this_bomb(occupied: Kinematic): boolean
         return occupied ~= self
     end
@@ -218,7 +228,10 @@ function Bomb:can_move(direction: Vector, occupies: ReadableGroup<Kinematic>, pl
         return entity:hitbox():overlap(hitbox:shrink(3))
     end
 
-    local function overlaps_entity_significantly(hitbox: Rectangle, entities: {Kinematic}): boolean
+    local function overlaps_entity_significantly(
+        hitbox: Rectangle,
+        entities: {Kinematic}
+    ): boolean
         for _, occupied in ipairs(entities) do
             if overlaps_significantly(occupied, hitbox) then
                 return true
@@ -300,7 +313,13 @@ function Bomb:can_move(direction: Vector, occupies: ReadableGroup<Kinematic>, pl
     return can_move_bomb
 end
 
-function Bomb:update(dt: number, occupies: ReadableGroup<Kinematic>, players_: ReadableGroup<Player>, bombs: ReadableGroup<Bomb>, lookup: Lookup)
+function Bomb:update(
+    dt: number,
+    occupies: ReadableGroup<Kinematic>,
+    players_: ReadableGroup<Player>,
+    bombs: ReadableGroup<Bomb>,
+    lookup: Lookup
+)
     self.timer = self.timer - dt
 
     if self.velocity:length() > 0 then
@@ -344,7 +363,13 @@ local record ThrownBomb is Entity
     trajectory: ProjectileTrajectory
 end
 
-function ThrownBomb.new(delegate: Bomb, target: Point, start_height: number, throw_height: number, throw_time: number): ThrownBomb
+function ThrownBomb.new(
+    delegate: Bomb,
+    target: Point,
+    start_height: number,
+    throw_height: number,
+    throw_time: number
+): ThrownBomb
     local self: ThrownBomb = setmetatable({}, { __index = ThrownBomb })
     self.delegate = delegate
     self.z_index = z_index.ABOVE

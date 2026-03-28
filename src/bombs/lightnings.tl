@@ -95,7 +95,10 @@ local function clamp(val: number, min: number, max: number): number
     return math.min(math.max(val, min), max)
 end
 
-function Lightning:_update_active_tiles(blockers: ReadableGroup<Explodable>, lookup: Lookup)
+function Lightning:_update_active_tiles(
+    blockers: ReadableGroup<Explodable>,
+    lookup: Lookup
+)
     self.tiles = collision.new_group()
 
     -- Calculate how far the lightning have expanded
@@ -179,7 +182,11 @@ function Lightning:draw()
     end
 end
 
-function Lightning:update(dt: number, blockers: ReadableGroup<Explodable>, lookup: Lookup)
+function Lightning:update(
+    dt: number,
+    blockers: ReadableGroup<Explodable>,
+    lookup: Lookup
+)
     self.duration = self.duration + dt
     self:_update_active_tiles(blockers, lookup)
     self:_get_animation():update(dt)
@@ -212,7 +219,12 @@ function Lightnings:place_explosion(position: Point, range: number)
     table.insert(self.on_ground, explosion)
 end
 
-function Lightnings:update(dt: number, blockers: ReadableGroup<Explodable>, explodables: ReadableGroup<Player>, lookup: Lookup)
+function Lightnings:update(
+    dt: number,
+    blockers: ReadableGroup<Explodable>,
+    explodables: ReadableGroup<Player>,
+    lookup: Lookup
+)
     for i = #self.on_ground, 1, -1 do
         local explosion = self.on_ground[i]
 

@@ -277,7 +277,10 @@ function Player:movementbox(): Rectangle
     return hitboxes.new_block(self.position)
 end
 
-local function get_character_on_dino_ground_position(original_pos: Point, direction: Direction): Point
+local function get_character_on_dino_ground_position(
+    original_pos: Point,
+    direction: Direction
+): Point
     local horizonal_displacements: {Direction: integer} = {
         right = -5, left = 5, up = 0, down = 0,
     }
@@ -287,7 +290,10 @@ local function get_character_on_dino_ground_position(original_pos: Point, direct
     )
 end
 
-local function get_character_position_on_top_of_dino(original_pos: Point, direction: Direction): Point
+local function get_character_position_on_top_of_dino(
+    original_pos: Point,
+    direction: Direction
+): Point
     local to_the_side_pos = get_character_on_dino_ground_position(original_pos, direction)
     return to_the_side_pos:move(vectors.new(0, -CHARACTER_HEIGHT_ON_DINO))
 end

@@ -35,7 +35,12 @@ function animations.new_with_frames(image: Image, frame_durations: {number}): An
     return self
 end
 
-function animations.new(image: Image, width: number, frame_duration: number, idle_time?: number): Animation
+function animations.new(
+    image: Image,
+    width: number,
+    frame_duration: number,
+    idle_time?: number
+): Animation
     local steps = image:getWidth() / width
 
     local frame_durations: {number} = {}

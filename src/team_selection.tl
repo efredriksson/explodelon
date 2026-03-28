@@ -68,7 +68,11 @@ local record TeamPlayer
     walking: boolean
 end
 
-local function new_team_player(player_id: integer, sprite: CharacterName, position: Point): TeamPlayer
+local function new_team_player(
+    player_id: integer,
+    sprite: CharacterName,
+    position: Point
+): TeamPlayer
     local self: TeamPlayer = setmetatable({}, { __index = TeamPlayer })
     self.player_id = player_id
     self.sprite = sprite
@@ -272,7 +276,11 @@ end
 
 local team_selection = {TeamAssignment = TeamAssignment, TeamSelection = TeamSelection}
 
-local function get_image(is_walking: boolean, sprite: CharacterName, direction: Direction): Image
+local function get_image(
+    is_walking: boolean,
+    sprite: CharacterName,
+    direction: Direction
+): Image
     local walk_name = {
         [true] = "walk",
         [false] = "idle"
@@ -299,7 +307,10 @@ function team_selection.load_assets()
     end
 end
 
-function team_selection.new(player_selection_scene: Scene, music: Source): TeamSelectionScene
+function team_selection.new(
+    player_selection_scene: Scene,
+    music: Source
+): TeamSelectionScene
     local self: TeamSelectionScene = setmetatable({}, { __index = TeamSelectionScene })
     self.team_players = {}
     self.countdown_time = COUNTDOWN_DURATION

@@ -51,7 +51,11 @@ function TeamSelectionGrouped.new(team: Team): TeamSelectionGrouped
     return self
 end
 
-function teams.new_selection(team: Team, player_id: integer, sprite: CharacterName): TeamSelection
+function teams.new_selection(
+    team: Team,
+    player_id: integer,
+    sprite: CharacterName
+): TeamSelection
     local self: TeamSelection = setmetatable({}, { __index = TeamSelection })
     self.team = team
     self.player_id = player_id

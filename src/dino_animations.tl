@@ -50,7 +50,12 @@ local pixel_maps <total>: {DinoColor: {Color: Color}} = {
     },
 }
 
-local function dino_iamge(level: integer, action: DinoAction, direction: Direction, color: DinoColor): Image
+local function dino_iamge(
+    level: integer,
+    action: DinoAction,
+    direction: Direction,
+    color: DinoColor
+): Image
     local png_name = action .. "_" .. direction
     if action == "crashed" then
         level = 1 -- Only possible to crash with level 1 dino
@@ -68,7 +73,11 @@ local function dino_iamge(level: integer, action: DinoAction, direction: Directi
     return image
 end
 
-local function dino_images_for_level(action: DinoAction, direction: Direction, color: DinoColor): {integer: Image}
+local function dino_images_for_level(
+    action: DinoAction,
+    direction: Direction,
+    color: DinoColor
+): {integer: Image}
     return {
         [1] = dino_iamge(1, action, direction, color),
         [2] = dino_iamge(2, action, direction, color),
@@ -76,7 +85,10 @@ local function dino_images_for_level(action: DinoAction, direction: Direction, c
     }
 end
 
-local function dino_images_for_dir(direction: Direction, color: DinoColor): DinoImageByActionAndLevel
+local function dino_images_for_dir(
+    direction: Direction,
+    color: DinoColor
+): DinoImageByActionAndLevel
     local dino_animations <total>: DinoImageByActionAndLevel = {
         walk = dino_images_for_level("walk", direction, color),
         idle = dino_images_for_level("idle", direction, color),
@@ -129,7 +141,11 @@ end
 local function new_dino_animations(color: DinoColor): DinoAnimations
     local new_animations: DinoAnimations = {}
 
-    local function create_animations(image: Image, action: DinoAction, level: integer): Animation
+    local function create_animations(
+        image: Image,
+        action: DinoAction,
+        level: integer
+    ): Animation
         if action == "jump" then
             return animations.new_with_frames(image, {0.1, 10000})
         elseif action == "crashed" then

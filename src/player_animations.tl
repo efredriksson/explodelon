@@ -64,7 +64,8 @@ local function get_animation_frame_duration(action: Action): number
 end
 
 local function get_sprite_set(
-    character_asset: CharacterName, invulnerable: boolean
+    character_asset: CharacterName,
+    invulnerable: boolean
 ): SpriteImages
     if invulnerable then
         return sprites_invulnerable[character_asset]
@@ -73,7 +74,10 @@ local function get_sprite_set(
     end
 end
 
-local function character_animation(character_asset: CharacterName, invulnerable: boolean): {PlayerState: {Action: {Direction: Animation}}}
+local function character_animation(
+    character_asset: CharacterName,
+    invulnerable: boolean
+): {PlayerState: {Action: {Direction: Animation}}}
     local resolved_sprites = get_sprite_set(character_asset, invulnerable)
     local character_animations: {PlayerState: {Action: {Direction: Animation}}} = {}
     for state, by_action in pairs(resolved_sprites) do
@@ -164,7 +168,12 @@ local function stun_cry_displacement(player: Player): Vector
     end
 end
 
-local function get_image_pos_in_front_of_player(player: Player, image: Image, x_scaling: number, y_scaling: number): Point
+local function get_image_pos_in_front_of_player(
+    player: Player,
+    image: Image,
+    x_scaling: number,
+    y_scaling: number
+): Point
     local pos = player.position
     if player.direction == "left" or player.direction == "right" then
         pos = pos:move(vectors.new(0, -image:getHeight() * y_scaling / 2))
@@ -378,7 +387,11 @@ function PlayerAnimations:add_new(player: Player)
     table.insert(self.entities, PlayerEntity.new(player, self.dinos))
 end
 
-local function character_sprite_for_action(character_asset: CharacterName, state: PlayerState, action: Action): {Direction: Image}
+local function character_sprite_for_action(
+    character_asset: CharacterName,
+    state: PlayerState,
+    action: Action
+): {Direction: Image}
     if state == "mounted" then
         if action == "jump_on" or action == "jump_off" then
             -- Same sprite for 'jump' when on foot as when mounted
@@ -420,7 +433,10 @@ local function character_sprite_for_dying(character_asset: CharacterName): {Dire
     }
 end
 
-local function character_sprite_for_stunned(character_asset: CharacterName, state: PlayerState): {Direction: Image}
+local function character_sprite_for_stunned(
+    character_asset: CharacterName,
+    state: PlayerState
+): {Direction: Image}
     if state == "mounted" then
         -- Stunned when mounted has same sprite as for walking
         return character_sprite_for_action(character_asset, state, "walk")
@@ -436,7 +452,10 @@ local function character_sprite_for_stunned(character_asset: CharacterName, stat
     }
 end
 
-local function character_sprites_for_state(character_asset: CharacterName, state: PlayerState): {Action: {Direction: Image}}
+local function character_sprites_for_state(
+    character_asset: CharacterName,
+    state: PlayerState
+): {Action: {Direction: Image}}
     local sprite_images <total>: {Action: {Direction: Image}} = {
         walk = character_sprite_for_action(character_asset, state, "walk"),
         idle = character_sprite_for_action(character_asset, state, "idle"),

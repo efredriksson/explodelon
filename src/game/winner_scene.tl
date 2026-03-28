@@ -71,7 +71,10 @@ function winner_scene.new(names: {CharacterName}): GameWinnerScene
     self.waited_for = 0.0
 
     self.sparks = {}
-    local function add_random_spark(spark_image: Image, start_time: number): Vector, Animation
+    local function add_random_spark(
+        spark_image: Image,
+        start_time: number
+    ): Vector, Animation
         local spark = animations.new_with_frames(spark_image, {2.7, 0.2, 0.2, 0.2})
         spark.timer = (2.7 - start_time) + lutro.math.random() * 0.1
         local spark_dp = vectors.new(lutro.math.random(-1, 17), lutro.math.random(-1, 23))

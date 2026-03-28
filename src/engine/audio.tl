@@ -73,7 +73,11 @@ end
 
 -- For audio that can be played many times at same time.
 -- Should only be used for short audio as memory consumption could be very hight otherwise.
-function audio.new_source_pool(filename: string, source_type: SourceType, pool_size: integer): Source
+function audio.new_source_pool(
+    filename: string,
+    source_type: SourceType,
+    pool_size: integer
+): Source
     local in_pool: {Source} = {}
     for _ = 1, pool_size do
         local new_source = lutro.audio.newSource(filename, source_type)

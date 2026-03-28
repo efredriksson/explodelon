@@ -184,7 +184,11 @@ function Battle:load()
     )
 end
 
-function Battle.new(player_selection: Scene, score_board_: ScoreBoard, win_condition_: WinCondition): Battle
+function Battle.new(
+    player_selection: Scene,
+    score_board_: ScoreBoard,
+    win_condition_: WinCondition
+): Battle
    	local self: Battle = setmetatable({}, { __index = Battle })
     self.team_by_player_id = {}
     self.player_selection = player_selection
@@ -335,7 +339,11 @@ function Battle:check_if_finished(dt: number)
     end
 end
 
-function Battle:_handle_stun_cry(lookup: Lookup, alive_players: ReadableGroup<Player>, player: Player)
+function Battle:_handle_stun_cry(
+    lookup: Lookup,
+    alive_players: ReadableGroup<Player>,
+    player: Player
+)
     local hit_players = lookup:in_box_and_group(player:get_stun_cry_hitbox(), alive_players)
     for _, hit_player in ipairs(hit_players) do
         if hit_player.action ~= "stunned" then
@@ -346,7 +354,12 @@ function Battle:_handle_stun_cry(lookup: Lookup, alive_players: ReadableGroup<Pl
     end
 end
 
-function Battle:_handle_sonic_blast(lookup: Lookup, bombs_group: ReadableGroup<Bomb>, soft_blocks_group: ReadableGroup<SoftBlock>, player: Player)
+function Battle:_handle_sonic_blast(
+    lookup: Lookup,
+    bombs_group: ReadableGroup<Bomb>,
+    soft_blocks_group: ReadableGroup<SoftBlock>,
+    player: Player
+)
     local hit_bombs = lookup:in_box_and_group(player:get_sonic_blast_hitbox(), bombs_group)
     for _, hit_bomb in ipairs(hit_bombs) do
         hit_bomb:blow_up()
@@ -619,7 +632,11 @@ function battle.load_assets()
     music:setVolume(0.75)
 end
 
-function battle.new(player_selection: Scene, score_board_: ScoreBoard, win_condition_: WinCondition): Battle
+function battle.new(
+    player_selection: Scene,
+    score_board_: ScoreBoard,
+    win_condition_: WinCondition
+): Battle
     return Battle.new(player_selection, score_board_, win_condition_)
 end
 

@@ -22,7 +22,12 @@ function rectangles.new(x: number, y: number, width: number, height: number): Re
    return self
 end
 
-local function interval_overlap(xmin1: number, xmax1: number, xmin2: number, xmax2: number): boolean
+local function interval_overlap(
+    xmin1: number,
+    xmax1: number,
+    xmin2: number,
+    xmax2: number
+): boolean
     return xmax1 > xmin2 and xmax2 > xmin1
 end
 
@@ -31,7 +36,12 @@ function Rectangle:overlap(other: Rectangle): boolean
         interval_overlap(self.y, self.y + self.height, other.y, other.y + other.height)
 end
 
-local function interval_contained(xmin1: number, xmax1: number, xmin2: number, xmax2: number): boolean
+local function interval_contained(
+    xmin1: number,
+    xmax1: number,
+    xmin2: number,
+    xmax2: number
+): boolean
     return xmin1 >= xmin2 and xmax1 <= xmax2
 end
 

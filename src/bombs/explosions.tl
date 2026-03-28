@@ -60,7 +60,12 @@ local record ExplosionTile is Entity
     type: ExplosionTileType
 end
 
-function ExplosionTile.new(position: Point, reduction: integer, is_last: boolean, explosion_type: ExplosionTileType): ExplosionTile
+function ExplosionTile.new(
+    position: Point,
+    reduction: integer,
+    is_last: boolean,
+    explosion_type: ExplosionTileType
+): ExplosionTile
     local self: ExplosionTile = setmetatable({}, { __index = ExplosionTile })
     self.position = position
     self.z_index = z_index.LEVEL
@@ -133,7 +138,11 @@ function Explosion:has_reached_max_range(): boolean
     return self.duration >= self.range / self.speed
 end
 
-function Explosion:new_tile(position: Point, is_last: boolean, explosion_type: ExplosionTileType): ExplosionTile
+function Explosion:new_tile(
+    position: Point,
+    is_last: boolean,
+    explosion_type: ExplosionTileType
+): ExplosionTile
     local function tile_reduction(): integer
         local min_reduction = 3
         if not self:has_reached_max_range() then
@@ -154,7 +163,10 @@ local enum BlockingResult
     "nil"
 end
 
-function Explosion:_update_active_tiles(blockers: ReadableGroup<Explodable>, lookup: Lookup)
+function Explosion:_update_active_tiles(
+    blockers: ReadableGroup<Explodable>,
+    lookup: Lookup
+)
     self.tiles = collision.new_group()
 
     -- Calculate how far the explosion should expanded
@@ -280,7 +292,11 @@ function Explosion:update_end_animation(dt: number)
     self.animations.center:update(dt)
 end
 
-function Explosion:update(dt: number, blockers: ReadableGroup<Explodable>, lookup: Lookup)
+function Explosion:update(
+    dt: number,
+    blockers: ReadableGroup<Explodable>,
+    lookup: Lookup
+)
     if self.delay > 0 then
         self.delay = self.delay - dt
         return
@@ -340,7 +356,12 @@ function Explosions:place_explosion(position: Point, range: number, delay?: numb
     table.insert(self.on_ground, explosion)
 end
 
-function Explosions:update(dt: number, blockers: ReadableGroup<Explodable>, explodables: ReadableGroup<Explodable>, lookup: Lookup)
+function Explosions:update(
+    dt: number,
+    blockers: ReadableGroup<Explodable>,
+    explodables: ReadableGroup<Explodable>,
+    lookup: Lookup
+)
     for i = #self.on_ground, 1, -1 do
         local explosion = self.on_ground[i]
         explosion:update(dt, blockers, lookup)

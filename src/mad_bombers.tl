@@ -112,9 +112,7 @@ local record PlayerCart is Entity
     firing_animations: CartAnimations
 end
 
-function PlayerCart.new(
-    id: integer, position: number, head: CharacterName
-): PlayerCart
+function PlayerCart.new(id: integer, position: number, head: CharacterName): PlayerCart
     local self: PlayerCart = setmetatable({}, { __index = PlayerCart })
     self.id = id
     self.position = position

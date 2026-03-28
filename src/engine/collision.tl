@@ -137,7 +137,10 @@ function collision.new_lookup(...: {any: Entity}): Lookup
     return self
 end
 
-function Lookup:collisions_between<K is Entity, T>(entities: Group<K>, group: ReadableGroup<T>): {K: T}
+function Lookup:collisions_between<K is Entity, T>(
+    entities: Group<K>,
+    group: ReadableGroup<T>
+): {K: T}
     local collides_with: {K: T} = {}
     if group:is_empty() then
         return collides_with

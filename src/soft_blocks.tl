@@ -31,7 +31,13 @@ local record SoftBlock is Entity, Explodable, Kinematic
     is_revealed: boolean
 end
 
-function SoftBlock.new(position: Point, base_animation: Animation, revealed_animation: Animation, item: ItemType, egg: boolean): SoftBlock
+function SoftBlock.new(
+    position: Point,
+    base_animation: Animation,
+    revealed_animation: Animation,
+    item: ItemType,
+    egg: boolean
+): SoftBlock
     local self: SoftBlock = setmetatable({}, { __index = SoftBlock })
     self.position = position
     self.z_index = z_index.LEVEL

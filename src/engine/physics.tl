@@ -40,7 +40,11 @@ function ProjectileTrajectory:update(dt: number, ground_pos: Point): Point
     return new_position
 end
 
-function physics.calc_init_projectile_velocity(h_diff: number, h_max: number, t_end: number): number
+function physics.calc_init_projectile_velocity(
+    h_diff: number,
+    h_max: number,
+    t_end: number
+): number
     -- Derived from projectile equation, calculates initial velocity given the
     -- projectile height (h_max) and the time the arc will take (t_end) and the height
     -- difference of start and end position (h_diff).
@@ -54,7 +58,11 @@ function physics.calc_gravity(init_velocity: number, h_max: number): number
 end
 
 function physics.new_trajectory(
-    start_height: number, velocity: number, lateral_velocity: Vector, gravity: number, duration: number
+    start_height: number,
+    velocity: number,
+    lateral_velocity: Vector,
+    gravity: number,
+    duration: number
 ): ProjectileTrajectory
     local self: ProjectileTrajectory = setmetatable({}, { __index = ProjectileTrajectory })
     self.height = start_height
@@ -66,7 +74,12 @@ function physics.new_trajectory(
 end
 
 function physics.calc_trajectory(
-    start_height: number, end_height: number, h_max: number, duration: number, position: Point, target: Point
+    start_height: number,
+    end_height: number,
+    h_max: number,
+    duration: number,
+    position: Point,
+    target: Point
 ): ProjectileTrajectory
     local velocity = physics.calc_init_projectile_velocity(
         math.abs(start_height - end_height), h_max, duration

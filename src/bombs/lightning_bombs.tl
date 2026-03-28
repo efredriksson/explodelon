@@ -160,7 +160,12 @@ function LightningBombs:place_lightning_bomb(player: Player, occupied: {Entity})
     player.lightning_bomb = player.lightning_bomb - 1
 end
 
-function LightningBombs:update(dt: number, blockers: ReadableGroup<Explodable>, explodables: ReadableGroup<Player>, lookup: Lookup)
+function LightningBombs:update(
+    dt: number,
+    blockers: ReadableGroup<Explodable>,
+    explodables: ReadableGroup<Player>,
+    lookup: Lookup
+)
     for _, bomb in pairs(self.on_ground.set) do
         bomb:update(dt)
 

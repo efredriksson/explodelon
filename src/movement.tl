@@ -51,7 +51,10 @@ local record CheckedMovement
 end
 
 function CheckedMovement.new(
-    position: Point, spent: boolean, cuts_corner: boolean, bombs_kicked?: {{Bomb, Vector}}
+    position: Point,
+    spent: boolean,
+    cuts_corner: boolean,
+    bombs_kicked?: {{Bomb, Vector}}
 ): CheckedMovement
    local self: CheckedMovement = setmetatable({}, { __index = CheckedMovement })
    self.position = position
@@ -68,7 +71,11 @@ local record MovementWithCheck
     check: CheckedMovement
 end
 
-function MovementWithCheck.new(dxdy: Vector, dir: Direction, check: CheckedMovement): MovementWithCheck
+function MovementWithCheck.new(
+    dxdy: Vector,
+    dir: Direction,
+    check: CheckedMovement
+): MovementWithCheck
     local self: MovementWithCheck = setmetatable({}, { __index = MovementWithCheck })
     self.dir = dir
     self.dxdy = dxdy
@@ -107,7 +114,9 @@ end
 -- we are walking against the wall on the y-axis. If this is not the case
 -- the vector returned have to be permutated.
 local function around_corner_move(
-    movement_len: number, dist_to_corner: number, pos_and_block_lateral_diff: number
+    movement_len: number,
+    dist_to_corner: number,
+    pos_and_block_lateral_diff: number
 ): Vector
     local movement_dist = math.abs(movement_len)
     local movement_towards_corner = math.min(dist_to_corner, movement_dist)
@@ -120,7 +129,8 @@ local function around_corner_move(
 end
 
 local function in_corridor_and_walking_against_wall(
-    position: Point, walk_dir: Direction
+    position: Point,
+    walk_dir: Direction
 ): boolean
     local local_pos = grid.get_local_tile_position(position)
     local in_vertical_corridor = local_pos.x == 0 and local_pos.y > 0
@@ -131,7 +141,8 @@ local function in_corridor_and_walking_against_wall(
 end
 
 local function in_end_of_corridor_and_walking_out(
-    movement: MovementWithCheck, player_pos: Point
+    movement: MovementWithCheck,
+    player_pos: Point
 ): boolean
     local local_pos = grid.get_local_tile_position(player_pos)
 
@@ -221,7 +232,10 @@ local function restrict_player_movement(
     -- the path is clear of all blocks, bombs and lightning bombs, nil otherwise.
     -- skip excludes the obstacle being cut around. bombs_player_is_inside are
     -- also excluded since the player can freely overlap them during the cut.
-    local function try_corner_cut(hitbox: Rectangle, skip?: Kinematic): CheckedMovement | nil
+    local function try_corner_cut(
+        hitbox: Rectangle,
+        skip?: Kinematic
+    ): CheckedMovement | nil
         local result = check_block_collision(hitbox)
         if not result.cuts_corner then
             return nil
@@ -405,7 +419,11 @@ local function inputs_for_sliding(player: Player, move_inputs: {Movement}): bool
     return false
 end
 
-local function get_moves(player: Player, move_inputs: {Movement}, momentum: Movement): {Movement}
+local function get_moves(
+    player: Player,
+    move_inputs: {Movement},
+    momentum: Movement
+): {Movement}
     if player.action == "slide" then
         return {momentum}
     elseif player.action == "dash" then
@@ -447,7 +465,12 @@ local function any_move_has_direction(moves: {Movement}, dir: Direction): boolea
     return false
 end
 
-local function direction_for_diagonal(moves: {Movement}, current_dir: Direction, computed_dir: Direction, constrained: boolean): Direction
+local function direction_for_diagonal(
+    moves: {Movement},
+    current_dir: Direction,
+    computed_dir: Direction,
+    constrained: boolean
+): Direction
     if constrained then
         return computed_dir
     end
@@ -458,7 +481,10 @@ local function direction_for_diagonal(moves: {Movement}, current_dir: Direction,
     return computed_dir
 end
 
-local function direction_from_dominant_velocity(vel: Vector, current_dir: Direction): Direction
+local function direction_from_dominant_velocity(
+    vel: Vector,
+    current_dir: Direction
+): Direction
     if math.abs(vel.x) > math.abs(vel.y) then
         return vel.x > 0 and "right" or "left"
     elseif math.abs(vel.y) > math.abs(vel.x) then
@@ -472,7 +498,11 @@ local function direction_from_dominant_velocity(vel: Vector, current_dir: Direct
     end
 end
 
-local function get_ice_moves(player: Player, dt: number, move_inputs: {Movement}): {Movement}
+local function get_ice_moves(
+    player: Player,
+    dt: number,
+    move_inputs: {Movement}
+): {Movement}
     local max_speed = player:get_speed()
     local ice = settings.game_rules.ice
     local acceleration = max_speed * ice.acceleration_factor

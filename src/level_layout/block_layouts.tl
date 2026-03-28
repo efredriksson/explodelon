@@ -55,7 +55,10 @@ local function player_exclusion_zone(occupies: {Kinematic}): {Point}
     return close_to_entity
 end
 
-local function place_soft_blocks(layout: {integer: {integer: BlockType}}, exclusion_zone: {Point})
+local function place_soft_blocks(
+    layout: {integer: {integer: BlockType}},
+    exclusion_zone: {Point}
+)
     local dim = grid.dimensions()
     local count = 0
     while count < settings.game_rules.items.nbr_soft_blocks do
@@ -92,7 +95,12 @@ local record QuadrantCell
     j: integer
 end
 
-function QuadrantCell.new(i: integer, j: integer, corner_x: integer, corner_y: integer): QuadrantCell
+function QuadrantCell.new(
+    i: integer,
+    j: integer,
+    corner_x: integer,
+    corner_y: integer
+): QuadrantCell
     local self: QuadrantCell = setmetatable({}, { __index = QuadrantCell })
     self.i = i
     self.j = j
@@ -100,7 +108,10 @@ function QuadrantCell.new(i: integer, j: integer, corner_x: integer, corner_y: i
     return self
 end
 
-function QuadrantCell:can_place_soft_block(layout: {integer: {integer: BlockType}}, exclusion_zone: {Point}): boolean
+function QuadrantCell:can_place_soft_block(
+    layout: {integer: {integer: BlockType}},
+    exclusion_zone: {Point}
+): boolean
     return layout[self.i][self.j] == "none"
         and not contains_point(exclusion_zone, grid.get_tile_position(self.i, self.j))
 end
@@ -110,7 +121,14 @@ local function distance_to_corner(first: QuadrantCell, second: QuadrantCell): bo
     return first.i < second.i
 end
 
-local function quadrant_cells(x_min: integer, x_max: integer, y_min: integer, y_max: integer, corner_x: integer, corner_y: integer): {QuadrantCell}
+local function quadrant_cells(
+    x_min: integer,
+    x_max: integer,
+    y_min: integer,
+    y_max: integer,
+    corner_x: integer,
+    corner_y: integer
+): {QuadrantCell}
     local cells: {QuadrantCell} = {}
     for i = x_min, x_max do
         for j = y_min, y_max do

@@ -35,7 +35,11 @@ end
 
 local menu_items = {MenuLineColumn = MenuLineColumn, MenuLine = MenuLine, MenuSelection = MenuSelection}
 
-function menu_items.new_integer_selection(start: integer, min: integer, max: integer): MenuSelection<integer>
+function menu_items.new_integer_selection(
+    start: integer,
+    min: integer,
+    max: integer
+): MenuSelection<integer>
     local self: MenuSelection<integer> = setmetatable({}, { __index = MenuSelection })
     self.value = start
     self.min = min or 0
@@ -101,7 +105,10 @@ function menu_items.new_enum<T>(choices: {T}): MenuSelection<T>
     return self
 end
 
-function menu_items.new_time_selection(start_idx: integer, times: {number}): MenuSelection<number>
+function menu_items.new_time_selection(
+    start_idx: integer,
+    times: {number}
+): MenuSelection<number>
     local function value_as_clock_time(index: integer): string
         local time = times[index]
         return clock_text.from_time(time)
@@ -115,7 +122,10 @@ function menu_items.new_time_selection(start_idx: integer, times: {number}): Men
     return self
 end
 
-function menu_items.new_number_selection(start_idx: integer, choices: {number}): MenuSelection<number>
+function menu_items.new_number_selection(
+    start_idx: integer,
+    choices: {number}
+): MenuSelection<number>
     local function value_as_string(index: integer): string
         local val = choices[index]
         return tostring(val)

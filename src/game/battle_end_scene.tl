@@ -23,7 +23,10 @@ local record BattleEndScene is Scene
 end
 
 function BattleEndScene.new(
-    game_scene: Scene, next_scene: Scene, sound: Source, scene_lenght: number
+    game_scene: Scene,
+    next_scene: Scene,
+    sound: Source,
+    scene_lenght: number
 ): BattleEndScene
     local self: BattleEndScene = setmetatable({}, { __index = BattleEndScene })
     self.game_scene = game_scene
@@ -36,7 +39,9 @@ function BattleEndScene.new(
 end
 
 function battle_end_scene.new_for_winners(
-    game_scene: Scene, names: {CharacterName}, score_board_: ScoreBoard
+    game_scene: Scene,
+    names: {CharacterName},
+    score_board_: ScoreBoard
 ): BattleEndScene
     local function get_next_scene(): Scene
         if score_board_:game_finished() then
@@ -48,15 +53,11 @@ function battle_end_scene.new_for_winners(
     return BattleEndScene.new(game_scene, get_next_scene(), winner_sound, 3)
 end
 
-function battle_end_scene.new_for_draw(
-    game_scene: Scene
-): BattleEndScene
+function battle_end_scene.new_for_draw(game_scene: Scene): BattleEndScene
     return BattleEndScene.new(game_scene, game_scene, draw_sound, 4)
 end
 
-function battle_end_scene.new_for_timeout(
-    game_scene: Scene
-): BattleEndScene
+function battle_end_scene.new_for_timeout(game_scene: Scene): BattleEndScene
     return BattleEndScene.new(game_scene, game_scene, time_up_sound, 2)
 end
 
