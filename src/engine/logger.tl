@@ -7,11 +7,11 @@ function logger.setup(app_name: string)
 end
 
 function logger.info(msg: string)
-    print('[INFO] [' .. config_app_name .. ']: ' .. msg)
+    print("[INFO] [" .. config_app_name .. "]: " .. msg)
 end
 
 function logger.warning(msg: string)
-    print('[WARN] [' .. config_app_name .. ']: ' .. msg)
+    print("[WARN] [" .. config_app_name .. "]: " .. msg)
 end
 
 return logger

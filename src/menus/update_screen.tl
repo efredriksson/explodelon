@@ -13,8 +13,8 @@ local white_font: MenuFont
 local update_screen = {}
 
 local function capture(cmd: string): string
-    local f = assert(io.popen(cmd, 'r'))
-    local s = f:read('*a')
+    local f = assert(io.popen(cmd, "r"))
+    local s = f:read("*a")
     f:close()
     return s
 end
