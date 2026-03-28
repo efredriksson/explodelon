@@ -1,5 +1,4 @@
 
-
 local type CharacterName = enum
     "kotetsu"
     "honey"

@@ -1,6 +1,5 @@
 local init = require("level_graphics.maps.init")
 
-
 local background = {}
 
 function background.draw()

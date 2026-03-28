@@ -12,7 +12,6 @@ end
 
 local vectors = {Vector = Vector, Direction = Direction}
 
-
 function vectors.new(x: number, y: number): Vector
    local self: Vector = setmetatable({}, { __index = Vector })
    self.x = x or 0

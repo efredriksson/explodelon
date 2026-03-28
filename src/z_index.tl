@@ -4,5 +4,4 @@ local z_index = {
     ABOVE = 3,  -- Above/Flying above
 }
 
-
 return z_index

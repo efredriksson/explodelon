@@ -2,7 +2,6 @@
 -- from https://lutro.libretro.com/doc/usefullibs.html
 local logging = require("engine.logger")
 
-
 local record Animation
 	image: Image
     timer: number

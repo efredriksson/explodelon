@@ -520,7 +520,6 @@ function Bombs:update(
     self.explosions:update(dt, blockers, explodables, lookup)
 end
 
-
 local function draw_bomb_shadow(bomb: Bomb)
     lutro.graphics.draw(bomb_shadow, bomb.position.x - 1, bomb.position.y - 8)
 end

@@ -12,7 +12,6 @@ local update_sceen = require("menus.update_screen")
 local player_selection = require("player_selection")
 local settings = require("settings")
 
-
 local type Scene = scenes.Scene
 local type MenuScreen = screens.MenuScreen
 local type MenuChoice = choices.MenuChoice

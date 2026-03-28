@@ -46,7 +46,6 @@ function Group:get(object: any): T | nil
     return self.set[object]
 end
 
-
 function Group:is_empty(): boolean
     return next(self.set) == nil
 end

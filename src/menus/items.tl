@@ -1,7 +1,6 @@
 local clock_text = require("clock_text")
 local audio = require("engine.audio")
 
-
 local record MenuLineColumn
     text: string
     width: number

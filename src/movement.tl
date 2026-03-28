@@ -296,7 +296,6 @@ local function restrict_player_movement(
 	return CheckedMovement.new(new_position, true, false)
 end
 
-
 local function get_new_player_orientation(
 	player_dir: Direction,
 	directions: {Movement},

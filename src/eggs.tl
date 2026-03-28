@@ -112,7 +112,6 @@ function Eggs:spawn_at(position: Point)
     self.on_ground:add(Egg.new(position))
 end
 
-
 function Eggs:possible_hatcher(player: Player): Dino
     for _, egg in pairs(self.on_ground.set) do
         if player:hitbox():overlap(egg:hitbox()) then

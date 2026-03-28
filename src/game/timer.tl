@@ -10,7 +10,6 @@ local settings = require("settings")
 local type ShadedFont = fonts.ShadedFont
 local type Point = points.Point
 
-
 local TIMER_POS = points.new(18, 8)
 local WARNING_MARGIN = 2
 local TEXT_X_SPEED = vectors.new(-200, 0)

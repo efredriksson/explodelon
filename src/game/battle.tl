@@ -230,7 +230,6 @@ function Battle:get_available_spots(alive_players: {Player}): {Point}
 	return available_spots
 end
 
-
 function Battle:handle_bomb_drop_input(player: Player)
 	local placed_bombs: {Entity} = itertools.sets_as_list(
 		self.bombs.on_ground.set, self.lightning_bombs.on_ground.set

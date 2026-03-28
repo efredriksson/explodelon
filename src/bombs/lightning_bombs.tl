@@ -27,7 +27,6 @@ local lightning_bomb_image: Image
 local coild_1_effect: Image
 local coild_2_effect: Image
 
-
 local record LightningBomb is Entity, Kinematic
     position: Point
     timer: number
@@ -174,6 +173,5 @@ function LightningBombs:update(dt: number, blockers: ReadableGroup<Explodable>, 
 
     self.lightnings:update(dt, blockers, explodables, lookup)
 end
-
 
 return lightning_bombs

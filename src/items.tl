@@ -171,7 +171,6 @@ function Items:possible_pickup_by(player: Player)
     end
 end
 
-
 function items.load_assets()
     take_item_sound = audio.new_source_pool("assets/take_item.wav", "static", 5)
     take_item_sound:setVolume(0.75)

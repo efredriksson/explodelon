@@ -98,7 +98,6 @@ function map_entities.get_block_configs(occupied: {Kinematic}): BlockConfigs
     return BlockConfigs.new(hard, assign_items_to_positions(soft_positions), non_hard)
 end
 
-
 function map_entities.get_right_side_pressure_blocks(): {Point}
 	local blocks: {Point} = {}
 
@@ -126,7 +125,6 @@ function map_entities.get_left_side_pressure_blocks(): {Point}
 
 	return blocks
 end
-
 
 function map_entities.get_player_start_positions(number_of_players: integer): {Point}
 	local x_min = 0

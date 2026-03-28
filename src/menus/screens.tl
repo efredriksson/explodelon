@@ -17,7 +17,6 @@ local music: Source
 local ok_sound: Source
 local background: Image
 
-
 local record MenuScreen is Scene
     menu_choices: {MenuChoice}
     menu_selection: MenuSelection<integer>

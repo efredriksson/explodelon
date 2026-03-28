@@ -384,7 +384,6 @@ function MadBombers:update(dt: number)
 	end
 end
 
-
 function mad_bombers.load_assets()
     local folder = "assets/carts/"
 

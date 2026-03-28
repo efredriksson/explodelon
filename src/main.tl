@@ -12,7 +12,6 @@ local player_selection = require("player_selection")
 local screen = require("screen")
 local team_selection = require("team_selection")
 
-
 function lutro.conf(t: Configuration)
 	-- fmt: off
 	t.width  = screen.WIDTH

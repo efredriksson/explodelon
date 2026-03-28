@@ -68,7 +68,6 @@ local function dino_iamge(level: integer, action: DinoAction, direction: Directi
 	return image
 end
 
-
 local function dino_images_for_level(action: DinoAction, direction: Direction, color: DinoColor): {integer: Image}
 	return {
 		[1] = dino_iamge(1, action, direction, color),

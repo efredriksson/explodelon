@@ -3,7 +3,6 @@ local scenes = require("engine.scenes")
 local fonts = require("fonts")
 local screen = require("screen")
 
-
 local type MenuFont = fonts.MenuFont
 local type Scene = scenes.Scene
 

@@ -33,7 +33,6 @@ local explosion_small: Source
 local explosion_medium: Source
 local explosion_large: Source
 
-
 -- Explosion --
 
 local record ExplosionAnimations
