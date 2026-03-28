@@ -77,7 +77,7 @@ function winner_scene.new(names: {CharacterName}): GameWinnerScene
 		local spark_dp = vectors.new(lutro.math.random(-1, 17), lutro.math.random(-1, 23))
 		self.sparks[spark_dp] = spark
 	end
-	
+
 	for _=1, 4 do
 		add_random_spark(spark_1_image, 2.15)
 		add_random_spark(spark_2_image, 3.25)
@@ -123,7 +123,7 @@ function GameWinnerScene:draw()
 	for name, character_position in pairs(self.character_positions) do
 		lutro.graphics.draw(jump_animations[name], character_position.x, character_position.y)
 	end
-	
+
 	for _, trophy_position in ipairs(self.trophy_positions) do
 		local pos = trophy_position:move(vectors.new(0, self:_get_trophy_height_diff()))
 		self.trophy:draw(pos.x, pos.y)

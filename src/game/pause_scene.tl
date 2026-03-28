@@ -7,7 +7,7 @@ local rectangles = require("engine.geometry.rectangles")
 local scenes = require("engine.scenes")
 local screen = require("screen")
 
-local type MenuFont = fonts.MenuFont 
+local type MenuFont = fonts.MenuFont
 local type Scene = scenes.Scene
 local type Rectangle = rectangles.Rectangle
 

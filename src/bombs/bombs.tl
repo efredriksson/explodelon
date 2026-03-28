@@ -277,7 +277,7 @@ function Bomb:can_move(direction: Vector, occupies: ReadableGroup<Kinematic>, pl
         if self.stopping then
             return can_move_bomb:no()
         end
-        
+
         for _, occupied in ipairs(close_occupies) do
             if occupied:movementbox():overlap(test_hitbox) then
                 return can_move_bomb:no()
@@ -302,7 +302,7 @@ end
 
 function Bomb:update(dt: number, occupies: ReadableGroup<Kinematic>, players_: ReadableGroup<Player>, bombs: ReadableGroup<Bomb>, lookup: Lookup)
     self.timer = self.timer - dt
-    
+
     if self.velocity:length() > 0 then
         local belt_trigger = self:_trigger_belt()
         if not belt_trigger is nil then
@@ -438,7 +438,7 @@ function Bombs:place_bomb(player: Player, occupied: {Entity})
     if player.bombs == 0 then
         return
     end
-    
+
     local hand_back_bomb = function() player.bombs = player.bombs + 1 end
     local bomb = Bomb.new(position, player.fire, hand_back_bomb)
     self.on_ground:add(bomb)

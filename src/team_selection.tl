@@ -33,7 +33,7 @@ local COUNTDOWN_DURATION = 3.0
 
 local background: Image
 local font: MenuFont
-local player_animations: {boolean: {CharacterName: {Direction: Animation}}} = {} 
+local player_animations: {boolean: {CharacterName: {Direction: Animation}}} = {}
 
 local record TeamAssignment
 	player_id: integer
@@ -54,9 +54,9 @@ local function new_zone(team: Team, area: Rectangle): TeamZone
 end
 
 local ZONES: {TeamZone} = {
-	new_zone(teams.get(1), rectangles.new(24,  32,  112, 64)),
-	new_zone(teams.get(2), rectangles.new(184, 32,  112, 64)),
-	new_zone(teams.get(3), rectangles.new(24,  144, 112, 64)),
+	new_zone(teams.get(1), rectangles.new(24, 32, 112, 64)),
+	new_zone(teams.get(2), rectangles.new(184, 32, 112, 64)),
+	new_zone(teams.get(3), rectangles.new(24, 144, 112, 64)),
 	new_zone(teams.get(4), rectangles.new(184, 144, 112, 64)),
 }
 
@@ -218,7 +218,7 @@ function TeamSelectionScene:update(dt: number)
 				team, player.player_id, player.sprite
 			)
 			table.insert(selections, selection)
-			self.game.team_by_player_id[player.player_id] = team.id 
+			self.game.team_by_player_id[player.player_id] = team.id
 		end
 
 		self.music:stop()
@@ -275,7 +275,7 @@ local team_selection = {TeamAssignment = TeamAssignment, TeamSelection = TeamSel
 local function get_image(is_walking: boolean, sprite: CharacterName, direction: Direction): Image
 	local walk_name = {
 		[true] = "walk",
-		[false] = "idle" 
+		[false] = "idle"
 	}
 	local path = "assets/" .. sprite .. "/foot/" .. walk_name[is_walking] .. "_" .. direction .. ".png"
 	return lutro.graphics.newImage(path)
@@ -283,7 +283,7 @@ end
 
 function team_selection.load_assets()
 	local all_directions: {Direction} = {"up", "down", "left", "right"}
-	
+
 	background = lutro.graphics.newImage("assets/grass.png")
 	font = fonts.new_menu_white_outlined()
 

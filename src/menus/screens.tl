@@ -58,7 +58,7 @@ function MenuScreen:update(_: number)
             ok_action = line:update(self)
         end
     end
-    
+
     if joysticks.is_pressed_any(joysticks.BUTTONS.DOWN) then
         ok_action = self.menu_selection:increment()
     elseif joysticks.is_pressed_any(joysticks.BUTTONS.UP) then

@@ -21,14 +21,14 @@ local dino_inputs = {}
 local function handle_jump_input(dt: number, player: Player, blocks_jump: ReadableGroup<Kinematic>, lookup: Lookup)
 	local function jump_is_possible(jump_to: Point): boolean
 		local jump_landing_area = hitboxes.new_block(jump_to)
-		
+
 		-- Collision is done with hitboxes but here we care about
 		-- movementboxes, check in an area around and then manually
 		-- check for movementbox overlap
 		local blocks_jumps_close = lookup:in_box_and_group(
 			jump_landing_area:expand(grid.TILE_SIZE), blocks_jump
 		)
-		
+
 		for _, possible_jump_block in ipairs(blocks_jumps_close) do
 			if jump_landing_area:overlap(possible_jump_block:movementbox()) then
 				return false
@@ -86,7 +86,7 @@ local function handle_jump_input(dt: number, player: Player, blocks_jump: Readab
 			end
 		end
 	end
-	
+
 	if lutro.joystick.isDown(player.id, joysticks.BUTTONS.B) and player:can_jump() then
 		local dino = player.dino
 		dino.jump_powerup_for = dino.jump_powerup_for + dt

@@ -59,7 +59,7 @@ function tracing.start(name: string): Span
 
     local span_next_level = SpanTiming.new(name, current_level)
     table.insert(current_level.next_levels, span_next_level)
-    
+
     -- Then current level is next level until we stop/exit that level
     current_level = span_next_level
     return span_next_level

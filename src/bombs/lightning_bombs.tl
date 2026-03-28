@@ -154,7 +154,7 @@ function LightningBombs:place_lightning_bomb(player: Player, occupied: {Entity})
     if player.lightning_bomb == 0 then
         return
     end
-    
+
     local hand_back_bomb = function() player.lightning_bomb = player.lightning_bomb + 1 end
     local bomb = LightningBomb.new(position, hand_back_bomb)
     self.on_ground:add(bomb)

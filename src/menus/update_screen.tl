@@ -4,7 +4,7 @@ local scenes = require("engine.scenes")
 local screen = require("screen")
 
 
-local type MenuFont = fonts.MenuFont 
+local type MenuFont = fonts.MenuFont
 local type Scene = scenes.Scene
 
 local ROM_DIR = "/recalbox/share/roms/lutro"
@@ -26,13 +26,13 @@ local function run_script(script_name: string): (integer, string)
 end
 
 local function file_exists(name: string): boolean
-    local f = io.open(name,"r")
+    local f = io.open(name, "r")
     if f~=nil then io.close(f) return true else return false end
 end
 
 local function file_size(name: string): integer
-    local f = io.open(name,"r")
-    if f~=nil then 
+    local f = io.open(name, "r")
+    if f~=nil then
         local size = f:seek("end")
         io.close(f)
         return size

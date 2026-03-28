@@ -11,7 +11,7 @@ local SHOW_TIME_MARGIN = 1
 local record GameCountdown
 	animation: Animation
     have_played_sound: boolean
-	waited_for: number 
+	waited_for: number
 end
 
 local ready_set_go_image: Image

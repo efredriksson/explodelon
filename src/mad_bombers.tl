@@ -99,7 +99,7 @@ end
 
 local record PlayerCart is Entity
     id: integer
-    position: number -- 1D position on cart rail 
+    position: number -- 1D position on cart rail
     state: CartState
     previous_direction: CartState
     cannon: CannonState
@@ -223,7 +223,7 @@ function PlayerCart:draw()
         -- If not ready, head is blinking by only sometimes not rendering it below
         return
     end
-    
+
     local side = rail.get_side(self.position)
     local head_image = cart_heads[self.head][HEAD_DIR_BY_SIDE[side]]
     local cart_paddings = self:_get_cart_image_padding():abs()
@@ -257,11 +257,11 @@ function PlayerCart:draw()
         cart_pos.x + cart_half_size.x - head_image:getWidth() / 2,
         cart_pos.y + cart_paddings.y - head_image:getHeight() / 2
     ):move(pixel_tweaks())
-    
+
     if side == "right" then
         -- Note, special case for the right hand side. This is because
         -- the right/left cart sprites are not centered with equal padding
-        -- on both sides. 
+        -- on both sides.
         head_pos = head_pos:move(vectors.new(cart_paddings.x, 0))
     end
     lutro.graphics.draw(head_image, head_pos.x, head_pos.y)
@@ -361,7 +361,7 @@ function MadBombers:handle_cart_move_input(dt: number, cart: PlayerCart)
     if (side == "left" and down) or (side == "right" and up) then
         cart:set_state("backward")
     end
-    
+
     if lutro.joystick.isDown(cart.id, joysticks.BUTTONS.R) and cart.cannon == "ready" then
         cart.cannon_powerup_for = cart.cannon_powerup_for + dt
     end

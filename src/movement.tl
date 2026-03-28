@@ -379,7 +379,7 @@ local function get_new_player_orientation(
 		end
 		if check.spent then
 			directions_applied = directions_applied + 1
-			
+
 			if constrained or directions_applied >= max_directions then
 				break
 			end
@@ -422,7 +422,7 @@ local function get_moves(player: Player, move_inputs: {Movement}, momentum: Move
 				end
 			end
 		end
-		
+
 		return {momentum}
 	else
 		return move_inputs
@@ -534,7 +534,7 @@ function movement.set_position_and_dir_from_input(
 	if player:can_slide() and inputs_for_sliding(player, move_inputs) then
 		player:slide_with_dino()
 	end
-	
+
 	local max_directions = (player.action == "slide" or player.action == "dash") and 1 or 2
 	local new_dir, new_pos, constrained = get_new_player_orientation(
 		player.direction, moves, blocks, lightning_bombs_.on_ground, player, max_directions, blocks_bombs, players_, bombs_, lookup

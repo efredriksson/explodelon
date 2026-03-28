@@ -73,7 +73,7 @@ end
 local record Battle is Scene
 	score_board: ScoreBoard
 	player_selection: Scene
-	
+
 	hard_blocks: HardBlocks
 	non_hard_block_positions: {Point}
 	bombs: Bombs
@@ -198,7 +198,7 @@ function Battle:get_available_spots(alive_players: {Player}): {Point}
 	-- Return places an item/egg can drop. The spot needs to
 	-- be free and not too close to a player
 	local available_spots: {Point} = {}
-	
+
 	local occupied: {Entity} = itertools.sets_as_list(
 		self.eggs.on_ground.set,
 		self.items.on_ground.set,
@@ -462,7 +462,7 @@ function Battle:update(dt: number)
 		-- Remove all mad bombers
 		self.mad_bombers.by_player = {}
 	end
-	
+
 	self.mad_bombers:update(dt)
 	self.items:update(dt)
 	self.eggs:update(dt)
@@ -472,7 +472,7 @@ function Battle:update(dt: number)
 		-- Only consider generating these every 120 tic (2 seconds)
 		-- This also helps with performance!
 		local available_spots = self:get_available_spots(alive_players)
-		self.items:possible_drop(available_spots)	
+		self.items:possible_drop(available_spots)
 		self.items:drop_items_of(dead_players, available_spots)
 	end
 

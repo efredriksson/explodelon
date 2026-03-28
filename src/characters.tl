@@ -3,14 +3,14 @@
 local type CharacterName = enum
     "kotetsu"
     "honey"
-    "kinu" 
+    "kinu"
     "milon"
-    "black" 
-    "white" 
-    "kabuki" 
-    "master_higins" 
-    "manjimaru" 
-    "bonks" 
+    "black"
+    "white"
+    "kabuki"
+    "master_higins"
+    "manjimaru"
+    "bonks"
 end
 
 local ALL_SPRITES: {CharacterName} = {

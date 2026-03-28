@@ -175,7 +175,7 @@ function PlayerSelection:handle_player_input()
         else
             music:stop()
             self.score_board:update_avatars(characters.get_selections())
-            
+
             if self.going_back_to_game then
                 -- The game might have paused audio, make sure to unpause:
                 audio.unpause()
@@ -192,14 +192,14 @@ function PlayerSelection:handle_player_input()
         self:check_for_new_player_selecting()
         return
     end
-    
+
     local ok_action = false
 
     if joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.RIGHT) then
         ok_action = self.selector:increment()
     elseif joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.LEFT) then
         ok_action = self.selector:decrement()
-    elseif (joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.B) or 
+    elseif (joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.B) or
             joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.R)) then
 
         local selected = table.remove(self.selectable_characters, self.selector:get_value())

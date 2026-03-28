@@ -44,7 +44,7 @@ function load_rules_screen.new(previous_screen: Scene, start_screen: Scene): Men
         settings.set_debug_dinos()
         scenes.set(start_screen)
     end
-    
+
     return screens.new({
         choices.new_done("insanity", 50, load_insanity_rules),
         choices.new_done("dino madness", 65, load_dino_madness_rules),

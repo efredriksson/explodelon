@@ -47,7 +47,7 @@ function joysticks.is_pressed_any(button: integer): boolean
             return true
         end
     end
-    
+
     return false
 end
 
@@ -59,7 +59,7 @@ function joysticks.is_released(player_id: integer, button: integer): boolean
     return not is_currently_down and was_previously_down
 end
 
--- Used to check if a button has been pressed down 
+-- Used to check if a button has been pressed down
 function joysticks.is_down_for(player_id: integer, button: integer, time: number): boolean
     return down_for_states[player_id][button] >= time
 end
@@ -71,7 +71,7 @@ function joysticks.is_down_for_any(button: integer, time: number): boolean
             return true
         end
     end
-    
+
     return false
 end
 

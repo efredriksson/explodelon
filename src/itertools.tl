@@ -65,7 +65,7 @@ end
 
 function itertools.combine<T>(...: {T}): {T}
 	local combined_list: {T} = {}
-	
+
 	for _, list in ipairs({...}) do
 		for _, elem in ipairs(list) do
 			table.insert(combined_list, elem)

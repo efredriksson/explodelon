@@ -49,7 +49,7 @@ end
 
 function physics.calc_gravity(init_velocity: number, h_max: number): number
 	-- Calculates gravity from how the projectile arc should look like. Not very physical
-	-- but making up gravity coffecients that makes things look good is hard. 
+	-- but making up gravity coffecients that makes things look good is hard.
 	return init_velocity * init_velocity / (2 * h_max)
 end
 
@@ -72,7 +72,7 @@ function physics.calc_trajectory(
 		math.abs(start_height - end_height), h_max, duration
 	)
 	local gravity = physics.calc_gravity(velocity, h_max)
-	
+
     local throw_vector = vectors.new(
         target.x - position.x,
         target.y - position.y

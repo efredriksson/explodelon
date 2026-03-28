@@ -24,7 +24,7 @@ function images.change_colors(image: Image, color_mapping: {Color: Color})
 	end
 end
 
---- Scale 0-1 represent how far from current to max to increase color component 
+--- Scale 0-1 represent how far from current to max to increase color component
 local function increase_color(color: number, scale: number): number
 	return color + scale * (255 - color)
 end
@@ -49,7 +49,7 @@ function images.set_alpha(image: Image, alpha: number)
     local image_data = image:getData()
 	for i = 0, image:getWidth() - 1 do
 		for j = 0, image:getHeight() - 1 do
-			local r, g, b, old_alpha = image_data:getPixel(i, j)	
+			local r, g, b, old_alpha = image_data:getPixel(i, j)
             if old_alpha ~= 0 then
 				image_data:setPixel(i, j, r, g, b, alpha)
 			end

@@ -30,15 +30,15 @@ function Point:vector_to(other: Point): Vector
 end
 
 function Point:distance_to(other: Point): number
-   return math.sqrt((other.x - self.x) ^ 2 + (other.y - self.y) ^ 2) 
+   return math.sqrt((other.x - self.x) ^ 2 + (other.y - self.y) ^ 2)
 end
 
 function Point:in_radius_of(other: Point, radius: number): boolean
-   return self:distance_to(other) < radius 
+   return self:distance_to(other) < radius
 end
 
 function Point:equal(other: Point): boolean
-   return self.x == other.x and self.y == other.y 
+   return self.x == other.x and self.y == other.y
 end
 
 return points

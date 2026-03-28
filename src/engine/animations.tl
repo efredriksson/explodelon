@@ -38,7 +38,7 @@ end
 
 function animations.new(image: Image, width: number, frame_duration: number, idle_time?: number): Animation
     local steps = image:getWidth() / width
-    
+
     local frame_durations: {number} = {}
     for _=1, steps do
         table.insert(frame_durations, frame_duration)
@@ -58,7 +58,7 @@ function Animation:scale_frame_durations(scale: number)
     for i, frame_duration in ipairs(self.frame_durations) do
         self.frame_durations[i] = frame_duration * scale
         self.total_time = self.total_time + self.frame_durations[i]
-    end 
+    end
 end
 
 function Animation:_get_frame(): integer
@@ -70,7 +70,7 @@ function Animation:_get_frame(): integer
         clamped_time = clamped_time - frame_duration
     end
 
-    logging.warning("Could not find frame for time, using last frame") 
+    logging.warning("Could not find frame for time, using last frame")
     return #self.frame_durations
 end
 

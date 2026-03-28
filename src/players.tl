@@ -304,7 +304,7 @@ function Player:accepts_input(): boolean
 	return not self:is_jumping() and not self:is_stunned() and not self:is_roaring()
 end
 
--- Player jump constants 
+-- Player jump constants
 local JUMP_ON_TIME = 1.2               	   -- Unit: seconds
 local JUMP_OFF_TIME = 0.9                  -- Unit: seconds
 local JUMP_ON_HEIGHT = 2 * grid.TILE_SIZE  -- Unit: pixels (not SI unit!)
@@ -376,7 +376,7 @@ end
 function Player:jump_with_dino(jump_to: Point | nil)
 	if self.dino and self.dino.color == "pink" and not self:is_jumping() then
 		self:set_action("jump")
-		
+
 		self.jump_target = jump_to or self.position
 		local dino_jump_time = {
 			[1] = 0.9,

@@ -492,7 +492,7 @@ function player_animations.load_assets()
 
 	local vertical_image = get_stun_cry_text_for_dir("vertical")
 	local horizontal_image = get_stun_cry_text_for_dir("horizontal")
-	-- Right and up images are 
+	-- Right and up images are
 	stun_cry_text_images = {
 		up = vertical_image,
 		down = vertical_image,

@@ -6,7 +6,7 @@ local type MapGraphics = require("level_graphics.maps.interfaces")
 local football = {}
 
 local background: Image
-local soft_block_animation: Animation 
+local soft_block_animation: Animation
 local soft_block_revealed_animation: Animation
 local soft_block_breaking_image: Image
 local hard_block_animation: {boolean: Animation} = {}

@@ -131,10 +131,10 @@ function block_layouts.quadrant(occupies: {Kinematic}): {integer: {integer: Bloc
     local per_quadrant = math.floor(total / 4)
     local remainder = total - per_quadrant * 4
 
-    local top_left     = quadrant_cells(1,         x_mid     - 1,   1,         y_mid     - 1,   1,             1            )
-    local top_right    = quadrant_cells(x_mid + 1, dim.x_max - 1,   1,         y_mid     - 1,   dim.x_max - 1, 1            )
-    local bottom_left  = quadrant_cells(1,         x_mid     - 1,   y_mid + 1, dim.y_max - 1,   1,             dim.y_max - 1)
-    local bottom_right = quadrant_cells(x_mid + 1, dim.x_max - 1,   y_mid + 1, dim.y_max - 1,   dim.x_max - 1, dim.y_max - 1)
+    local top_left     = quadrant_cells(1, x_mid     - 1, 1, y_mid     - 1, 1, 1            )
+    local top_right    = quadrant_cells(x_mid + 1, dim.x_max - 1, 1, y_mid     - 1, dim.x_max - 1, 1            )
+    local bottom_left  = quadrant_cells(1, x_mid     - 1, y_mid + 1, dim.y_max - 1, 1, dim.y_max - 1)
+    local bottom_right = quadrant_cells(x_mid + 1, dim.x_max - 1, y_mid + 1, dim.y_max - 1, dim.x_max - 1, dim.y_max - 1)
     local all_quadrants = {top_left, top_right, bottom_left, bottom_right}
 
     for quadrant_index, cells in ipairs(all_quadrants) do

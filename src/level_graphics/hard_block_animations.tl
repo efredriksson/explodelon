@@ -1,5 +1,5 @@
 local animations = require("engine.animations")
-local init = require("level_graphics.maps.init") 
+local init = require("level_graphics.maps.init")
 
 local type Animation = animations.Animation
 

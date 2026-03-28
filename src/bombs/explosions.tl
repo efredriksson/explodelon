@@ -140,12 +140,12 @@ function Explosion:new_tile(position: Point, is_last: boolean, explosion_type: E
         if not self:has_reached_max_range() then
             return min_reduction
         end
-        
+
         local time_since_max_range = self.duration - self.range / self.speed
         local reduction = (1 + math.floor(time_since_max_range / FRAME_DURATION)) * 2
         return math.max(reduction, min_reduction)
     end
-    
+
     return ExplosionTile.new(position, tile_reduction(), is_last, explosion_type)
 end
 

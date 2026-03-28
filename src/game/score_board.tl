@@ -176,7 +176,7 @@ function TeamsScoreBoard:draw()
         local team_background = get_team_background_area(x, team)
         teams.draw_square(team.team, team_background)
         draw_team_boarder(team_background)
-        
+
         for _, avatar in ipairs(team.avatars) do
             lutro.graphics.draw(avatar_images[avatar.sprite], x, Y_START)
             x = x + AVATAR_WIDTH

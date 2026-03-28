@@ -54,7 +54,7 @@ function PressureBlock:hit_with_bomb()
 end
 
 function PressureBlock:hitbox(): Rectangle
-    -- Not for movement blocking but hitting entities 
+    -- Not for movement blocking but hitting entities
 	return hitboxes.new_block(self.position):shrink(4)
 end
 
