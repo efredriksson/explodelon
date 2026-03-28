@@ -6,9 +6,7 @@ local type Point = points.Point
 local type Rectangle = rectangles.Rectangle
 
 local PLAYER_AREA = rectangles.new(24, 32, 272, 176)
-local grid = {
-    TILE_SIZE = 16,
-}
+local grid = {TILE_SIZE = 16}
 
 local record GridDimensions
     x_min: integer

@@ -67,7 +67,11 @@ local record TeamsScoreBoard is ScoreBoard
     teams: {TeamScore}
 end
 
-local score_board = {ScoreBoard = ScoreBoard, SinglesScoreBoard = SinglesScoreBoard, TeamsScoreBoard = TeamsScoreBoard}
+local score_board = {
+    ScoreBoard = ScoreBoard,
+    SinglesScoreBoard = SinglesScoreBoard,
+    TeamsScoreBoard = TeamsScoreBoard,
+}
 
 function PlayerScore.new(id: integer, avatar: CharacterName): PlayerScore
     local self: PlayerScore = setmetatable({}, { __index = PlayerScore })

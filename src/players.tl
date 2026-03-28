@@ -27,11 +27,7 @@ local STUN_CRY_ROAR_FOR = 1.8
 local SONIC_BLAST_ROAR_FOR = 1.4
 local SLIDE_FOR_TIME = 0.4
 local CHARACTER_HEIGHT_ON_DINO = 8 -- How high up from ground player is when on dino
-local DASH_WITH_DINO_SPEED_BONUS = {
-    [1] = 50,
-    [2] = 70,
-    [3] = 90,
-}
+local DASH_WITH_DINO_SPEED_BONUS = {[1] = 50, [2] = 70, [3] = 90}
 
 local type Action = enum
    "walk"
@@ -123,7 +119,12 @@ local record Player is Explodable, Kinematic, Entity
     ice_velocity: Vector
 end
 
-local players = {Player = Player, Action = Action, PlayerState = PlayerState, SonicWaveColor = SonicWaveColor}
+local players = {
+    Player = Player,
+    Action = Action,
+    PlayerState = PlayerState,
+    SonicWaveColor = SonicWaveColor,
+}
 
 function players.new(id: integer, sprite: CharacterName, position: Point): Player
     local self: Player = setmetatable({}, { __index = Player })
@@ -282,7 +283,10 @@ local function get_character_on_dino_ground_position(
     direction: Direction
 ): Point
     local horizonal_displacements: {Direction: integer} = {
-        right = -5, left = 5, up = 0, down = 0,
+        right = -5,
+        left = 5,
+        up = 0,
+        down = 0,
     }
     local horizonal_displacement = horizonal_displacements[direction]
     return original_pos:move(

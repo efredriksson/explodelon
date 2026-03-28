@@ -48,7 +48,11 @@ function SoftBlockConfig.new(
     return self
 end
 
-local map_entities = {SoftBlockConfig = SoftBlockConfig, HardBlockConfig = HardBlockConfig, BlockConfigs = BlockConfigs}
+local map_entities = {
+    SoftBlockConfig = SoftBlockConfig,
+    HardBlockConfig = HardBlockConfig,
+    BlockConfigs = BlockConfigs,
+}
 
 local function assign_items_to_positions(blocks_positions: {Point}): {SoftBlockConfig}
     local item_settings = settings.game_rules.items

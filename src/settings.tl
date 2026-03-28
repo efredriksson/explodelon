@@ -31,20 +31,8 @@ end
 function ItemRules.new(): ItemRules
     local self: ItemRules = setmetatable({}, { __index = ItemRules })
     self.nbr_soft_blocks = 105
-    self.nbr_of_items = {
-        bomb = 8,
-        lightning_bomb = 0,
-        fire = 6,
-        speed = 4,
-        kick = 8,
-    }
-    self.spawn_rates = {
-        bomb = 0,
-        lightning_bomb = 0,
-        fire = 0,
-        speed = 0,
-        kick = 0,
-    }
+    self.nbr_of_items = {bomb = 8, lightning_bomb = 0, fire = 6, speed = 4, kick = 8}
+    self.spawn_rates = {bomb = 0, lightning_bomb = 0, fire = 0, speed = 0, kick = 0}
     return self
 end
 

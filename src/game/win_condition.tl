@@ -28,7 +28,10 @@ local record TeamsWinCondition is WinCondition
     teams_by_player_id: {integer: integer}
 end
 
-local win_condition = {WinCondition = WinCondition, TeamsWinCondition = TeamsWinCondition}
+local win_condition = {
+    WinCondition = WinCondition,
+    TeamsWinCondition = TeamsWinCondition,
+}
 local time_to_wait_to_end_game<const> = 2.0
 
 function SinglesWinCondition:update(dt: number, players_: {Player})

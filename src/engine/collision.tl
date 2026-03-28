@@ -40,7 +40,12 @@ local record CombinedGroup<T> is ReadableGroup<T>
     sub_groups: {ReadableGroup<T>}
 end
 
-local collision = {Group = Group, Lookup = Lookup, CombinedGroup = CombinedGroup, ReadableGroup = ReadableGroup}
+local collision = {
+    Group = Group,
+    Lookup = Lookup,
+    CombinedGroup = CombinedGroup,
+    ReadableGroup = ReadableGroup,
+}
 
 function Group:get(object: any): T | nil
     return self.set[object]

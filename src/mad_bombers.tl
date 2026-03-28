@@ -19,10 +19,7 @@ local type Vector = vectors.Vector
 local type Point = points.Point
 local type Rectangle = rectangles.Rectangle
 
-local CART_SPEEDS = {
-    [false] = 60,
-    [true] = 120,
-}
+local CART_SPEEDS = {[false] = 60, [true] = 120}
 local THROW_BOMB_DIRECTION_BY_SIDE: {Direction: Vector} = {
     up = vectors.new(0, 1),
     right = vectors.new(-1, 0),

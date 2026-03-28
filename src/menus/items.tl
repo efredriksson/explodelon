@@ -33,7 +33,11 @@ local record MenuSelection<T>
     convert: function(integer): T
 end
 
-local menu_items = {MenuLineColumn = MenuLineColumn, MenuLine = MenuLine, MenuSelection = MenuSelection}
+local menu_items = {
+    MenuLineColumn = MenuLineColumn,
+    MenuLine = MenuLine,
+    MenuSelection = MenuSelection,
+}
 
 function menu_items.new_integer_selection(
     start: integer,

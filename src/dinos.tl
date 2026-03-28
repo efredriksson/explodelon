@@ -35,7 +35,7 @@ local ROAR_BUILDUP_TIME = 0.4
 local dinos = {
     ROAR_BUILDUP_TIME = ROAR_BUILDUP_TIME,
     DinoAction = DinoAction,
-    Dino = Dino
+    Dino = Dino,
 }
 
 function dinos.new(position: Point, direction: Direction): Dino

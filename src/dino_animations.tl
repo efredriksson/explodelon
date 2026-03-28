@@ -240,7 +240,11 @@ local record AnimatedDinos
     mount_entity_by_dino: {Dino: MountAnimation}
 end
 
-local dino_animations = {AnimatedDinos = AnimatedDinos, AnimatedDino = AnimatedDino, MountAnimation = MountAnimation}
+local dino_animations = {
+    AnimatedDinos = AnimatedDinos,
+    AnimatedDino = AnimatedDino,
+    MountAnimation = MountAnimation,
+}
 
 function dino_animations.load_assets()
     dino_images = get_dino_images()

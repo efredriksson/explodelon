@@ -124,22 +124,14 @@ local DINO_AFTERIMGE_SHIFT = {
     right = vectors.new(-1, 0),
     left = vectors.new(1, 0)
 }
-local STUN_CRY_SHAKE_PERIOD_BY_LEVEL = {
-    [1] = 0.05,
-    [2] = 0.10,
-    [3] = 0.20,
-}
+local STUN_CRY_SHAKE_PERIOD_BY_LEVEL = {[1] = 0.05, [2] = 0.10, [3] = 0.20}
 local STUN_CRY_SHAKE_AXIS = {
     up = vectors.new(0, 1),
     down = vectors.new(0, -1),
     right = vectors.new(1, 0),
     left = vectors.new(-1, 0)
 }
-local STUN_CRY_REACH_BY_LEVEL = {
-    [1] = 1.0,
-    [2] = 1.75,
-    [3] = 2.5
-}
+local STUN_CRY_REACH_BY_LEVEL = {[1] = 1.0, [2] = 1.75, [3] = 2.5}
 
 local function block_to_anim_draw_pos(animation: Animation, pos: Point): Point
     -- y: +1 is because of the sprite, look over when doing animations
@@ -516,7 +508,7 @@ function player_animations.load_assets()
         up = vertical_image,
         down = vertical_image,
         right = horizontal_image,
-        left = horizontal_image
+        left = horizontal_image,
     }
 
     local function get_sonic_blast_for_dir(dir: string): {SonicWaveColor: Image}
@@ -534,7 +526,7 @@ function player_animations.load_assets()
         up = vertical_sonic_image,
         down = vertical_sonic_image,
         right = horizontal_sonic_image,
-        left = horizontal_sonic_image
+        left = horizontal_sonic_image,
     }
 
     for i = 1, 4 do
