@@ -14,8 +14,10 @@ local tracing = require("engine.tracing")
 
 
 function lutro.conf(t: Configuration)
+	-- fmt: off
 	t.width  = screen.WIDTH
 	t.height = screen.HEIGHT
+	-- fmt: on
 end
 
 function lutro.load()

@@ -52,12 +52,12 @@ local function assign_items_to_positions(blocks_positions: {Point}): {SoftBlockC
     -- Shuffle so items are assigned randomly to blocks
     blocks_positions = itertools.shuffle(blocks_positions)
     for item_type, quantity in pairs(item_settings.nbr_of_items) do
-        for _=1, math.min(quantity, #blocks_positions) do
+        for _ = 1, math.min(quantity, #blocks_positions) do
             local pos = table.remove(blocks_positions, 1)
             table.insert(soft, SoftBlockConfig.new(pos, item_type, false))
         end
     end
-    for _=1, math.min(settings.game_rules.dinos.nbr_of_eggs, #blocks_positions) do
+    for _ = 1, math.min(settings.game_rules.dinos.nbr_of_eggs, #blocks_positions) do
         local pos = table.remove(blocks_positions, 1)
         table.insert(soft, SoftBlockConfig.new(pos, nil, true))
     end

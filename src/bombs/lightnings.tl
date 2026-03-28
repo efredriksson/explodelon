@@ -114,9 +114,9 @@ function Lightning:_update_active_tiles(blockers: ReadableGroup<Explodable>, loo
             table.insert(manhattan_points, points.new(x - inv_offset, y + offset))
         end
 
-        for ring=0, radius-1 do
+        for ring = 0, radius - 1 do
             local radius_pixels = ring * grid.TILE_SIZE
-            for offset=0, ring do
+            for offset = 0, ring do
                 local offset_pixels = offset * grid.TILE_SIZE
                 add_points_for(offset_pixels, radius_pixels)
             end

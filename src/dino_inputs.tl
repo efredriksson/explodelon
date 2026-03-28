@@ -41,7 +41,7 @@ local function handle_jump_input(dt: number, player: Player, blocks_jump: Readab
 
 	local function try_all_jumps_for(jump_direction: Vector): Point | nil
 		-- Try to jump as far as possible first
-		for nbr_of_blocks_to_jump=player:get_max_jump_dist(), 1, -1 do
+		for nbr_of_blocks_to_jump = player:get_max_jump_dist(), 1, -1 do
 			local jump_to = player.position:move(
 				jump_direction:scale(grid.TILE_SIZE * nbr_of_blocks_to_jump)
 			)

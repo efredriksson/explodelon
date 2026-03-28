@@ -40,7 +40,7 @@ function animations.new(image: Image, width: number, frame_duration: number, idl
     local steps = image:getWidth() / width
 
     local frame_durations: {number} = {}
-    for _=1, steps do
+    for _ = 1, steps do
         table.insert(frame_durations, frame_duration)
     end
     frame_durations[1] = frame_durations[1] + (idle_time or 0)
@@ -94,7 +94,7 @@ function Animation:draw(x: number, y: number)
     local sh = self.image:getHeight()
 
     local q = lutro.graphics.newQuad(
-        ((id-1)%(sw/tw))*tw,
+        ((id - 1) % (sw / tw)) * tw,
         0,
         tw, th,
         sw, sh)

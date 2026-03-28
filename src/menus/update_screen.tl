@@ -27,12 +27,12 @@ end
 
 local function file_exists(name: string): boolean
     local f = io.open(name, "r")
-    if f~=nil then io.close(f) return true else return false end
+    if f ~= nil then io.close(f) return true else return false end
 end
 
 local function file_size(name: string): integer
     local f = io.open(name, "r")
-    if f~=nil then
+    if f ~= nil then
         local size = f:seek("end")
         io.close(f)
         return size

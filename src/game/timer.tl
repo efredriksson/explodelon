@@ -87,7 +87,7 @@ function GameTimer:update(dt: number)
 			self.hurry_text_position = self.hurry_text_position:move(TEXT_X_SPEED:scale(dt))
 		end
 		self.hurry_text_sin_pos = self.hurry_text_sin_pos + TEXT_SIN_PERIOD * dt
-		self.hurry_text_sin_pos = math.fmod(self.hurry_text_sin_pos, 2*math.pi)
+		self.hurry_text_sin_pos = math.fmod(self.hurry_text_sin_pos, 2 * math.pi)
 	end
 end
 

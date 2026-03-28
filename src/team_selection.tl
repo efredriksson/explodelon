@@ -293,7 +293,7 @@ function team_selection.load_assets()
 			player_animations[is_walking][sprite_name] = {}
 			for _, direction in ipairs(all_directions) do
 				local char_image = get_image(is_walking, sprite_name, direction)
-				player_animations[is_walking][sprite_name][direction] = animations.new(char_image, 18, 1/6)
+				player_animations[is_walking][sprite_name][direction] = animations.new(char_image, 18, 1 / 6)
 			end
 		end
 	end

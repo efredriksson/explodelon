@@ -16,7 +16,7 @@ function item_drops_screen.new(previous_screen: Scene): MenuScreen
 
     local current_idx_by_val: {number: integer} = {}
     local numbers_to_select_from: {number} = {}
-    for idx=1, 100 do
+    for idx = 1, 100 do
         local val = (idx - 1) * 0.01 -- Percentage resolution
         current_idx_by_val[val] = idx
         numbers_to_select_from[idx] = val

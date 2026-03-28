@@ -78,7 +78,7 @@ function winner_scene.new(names: {CharacterName}): GameWinnerScene
 		self.sparks[spark_dp] = spark
 	end
 
-	for _=1, 4 do
+	for _ = 1, 4 do
 		add_random_spark(spark_1_image, 2.15)
 		add_random_spark(spark_2_image, 3.25)
 	end

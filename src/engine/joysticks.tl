@@ -5,6 +5,7 @@ local down_for_states: {integer: {integer: number}} = {}
 local joysticks = {
     MAX_BUTTONS = 16,
     BUTTONS = {
+        -- fmt: off
         B        = 1,
         Y        = 2,
         SELECT   = 3,
@@ -21,6 +22,7 @@ local joysticks = {
         R2       = 14,
         L3       = 15,
         R3       = 16,
+        -- fmt: on
     },
 }
 
@@ -42,7 +44,7 @@ end
 
 -- Used to check if a button was just pressed this frame (not held) by any player
 function joysticks.is_pressed_any(button: integer): boolean
-    for player_id=1, joysticks.maxplayers() do
+    for player_id = 1, joysticks.maxplayers() do
         if joysticks.is_pressed(player_id, button) then
             return true
         end
@@ -66,7 +68,7 @@ end
 
 -- Used to check if a button has been pressed down by any player
 function joysticks.is_down_for_any(button: integer, time: number): boolean
-    for player_id=1, joysticks.maxplayers() do
+    for player_id = 1, joysticks.maxplayers() do
         if joysticks.is_down_for(player_id, button, time) then
             return true
         end

@@ -16,7 +16,7 @@ function timing_settings_screen.new(previous_screen: Scene): MenuScreen
 
     local current_idx_by_time: {number: integer} = {}
     local times_to_select_from: {number} = {}
-    for idx=1, 100 do
+    for idx = 1, 100 do
         local time = 60 + (idx - 1) * 5 -- Second resolution
         current_idx_by_time[time] = idx
         times_to_select_from[idx] = time

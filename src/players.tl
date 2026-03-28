@@ -574,7 +574,7 @@ function Player:get_draw_position(): Point
 end
 
 function players.load_assets()
-	for level=1, 3 do
+	for level = 1, 3 do
 		local sound = audio.new_source_pool("assets/tirras/level_" .. level .. "/roar.ogg", "static", 2)
 		sound:setPitch(0.1)
 		sound:setVolume(1.25)

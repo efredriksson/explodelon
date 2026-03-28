@@ -23,8 +23,8 @@ end
 
 function ShadedFont:draw(text: string, position: Point)
 	lutro.graphics.setFont(self.shade)
-    for dx=1, 0, -1 do
-        for dy=1, 0, -1 do
+    for dx = 1, 0, -1 do
+        for dy = 1, 0, -1 do
             if dx == 0 and dy == 0 then
                 lutro.graphics.setFont(self.main)
             end
@@ -74,8 +74,8 @@ end
 function MenuFont:print_centered(text: string, box_width: number, position: Point)
     if self.outline then
         lutro.graphics.setFont(self.outline)
-        for dx=-1, 1 do
-            for dy=-1, 1 do
+        for dx = -1, 1 do
+            for dy = -1, 1 do
                 lutro.graphics.printf(text, position.x + dx, position.y + dy, box_width, "center")
             end
         end

@@ -252,7 +252,7 @@ function PlayerCart:draw()
 
     local cart_half_size = vectors.new(
         animation.width, animation.height
-    ):minus(total_padding()):scale(1/2)
+    ):minus(total_padding()):scale(1 / 2)
     local head_pos = points.new(
         cart_pos.x + cart_half_size.x - head_image:getWidth() / 2,
         cart_pos.y + cart_paddings.y - head_image:getHeight() / 2

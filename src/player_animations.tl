@@ -167,15 +167,15 @@ end
 local function get_image_pos_in_front_of_player(player: Player, image: Image, x_scaling: number, y_scaling: number): Point
 	local pos = player.position
 	if player.direction == "left" or player.direction == "right" then
-		pos = pos:move(vectors.new(0, -image:getHeight()*y_scaling / 2))
+		pos = pos:move(vectors.new(0, -image:getHeight() * y_scaling / 2))
 	else
-		pos = pos:move(vectors.new(-image:getWidth()*x_scaling / 2, 0))
+		pos = pos:move(vectors.new(-image:getWidth() * x_scaling / 2, 0))
 	end
 
 	if player.direction == "left" then
-		pos = pos:move(vectors.new(-image:getWidth()*x_scaling, 0))
+		pos = pos:move(vectors.new(-image:getWidth() * x_scaling, 0))
 	elseif player.direction == "up" then
-		pos = pos:move(vectors.new(0, -image:getHeight()*y_scaling))
+		pos = pos:move(vectors.new(0, -image:getHeight() * y_scaling))
 	end
 
 	return pos
@@ -212,8 +212,8 @@ local function draw_stun_cry_text(player: Player)
 
 	local function get_text_x_y_scaling(): (number, number)
 		local text_len_max_scale = STUN_CRY_REACH_BY_LEVEL[player.dino.level]
-		local text_length_scale = math.min(since_roar_buildup*3, text_len_max_scale)
-		local text_height_scale = math.min(since_roar_buildup*4, 1.0)
+		local text_length_scale = math.min(since_roar_buildup * 3, text_len_max_scale)
+		local text_height_scale = math.min(since_roar_buildup * 4, 1.0)
 
 		if player.direction == "down" or player.direction == "up" then
 			return text_height_scale, text_length_scale
@@ -482,7 +482,7 @@ function player_animations.load_assets()
 
 	local function get_stun_cry_text_for_dir(dir: string): {integer: Image}
 		local result: {integer: Image} = {}
-		for level=1, 3 do
+		for level = 1, 3 do
 			local asset = "assets/tirras/level_" .. level .. "/stun_cry_text_" .. dir .. ".png"
 			result[level] = lutro.graphics.newImage(asset)
 		end
@@ -518,7 +518,7 @@ function player_animations.load_assets()
 		left = horizontal_sonic_image
 	}
 
-	for i=1, 4 do
+	for i = 1, 4 do
 		local flag_image = lutro.graphics.newImage("assets/team_flag.png")
 		images.change_colors(flag_image, flag_pixel_maps[i])
 		flag_animations[i] = {}
@@ -544,7 +544,7 @@ function PlayerAnimations:update(dt: number)
 		-- Update animations regardless if alive or not
 		entity:update(dt)
 	end
-	for i=1, 4 do
+	for i = 1, 4 do
 		for _, sprite in ipairs(characters.get_names()) do
 			flag_animations[i][sprite]:update(dt)
 		end

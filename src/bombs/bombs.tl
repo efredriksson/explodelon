@@ -139,8 +139,8 @@ local function moving_into_new_block(movementbox: Rectangle, direction: Vector):
     local snaps_to = grid.snap_to(movementbox:top_left())
     local new_movementbox = movementbox:shift(direction)
 
-    for i=-1, 1 do
-        for j=-1, 1 do
+    for i = -1, 1 do
+        for j = -1, 1 do
             local close_block = hitboxes.new_block(points.new(
                 snaps_to.x + i * grid.TILE_SIZE,
                 snaps_to.y + j * grid.TILE_SIZE
@@ -236,7 +236,7 @@ function Bomb:can_move(direction: Vector, occupies: ReadableGroup<Kinematic>, pl
         -- the bomb would otherwise have moved inot new block tile, then we help the
         -- side kick by snapping the projected position/hitbox to corridor. This means
         -- a side kick can be done without things aligning exactly!
-        local mock_dt = 1/60 -- TODO: Need to pass in 'dt' in here to properly calculate this
+        local mock_dt = 1 / 60 -- TODO: Need to pass in 'dt' in here to properly calculate this
         local passing = moving_into_new_block(self:movementbox(), self.velocity:scale(mock_dt))
         if self.velocity:orthogonal(direction) and passing then
             if direction.x == 0 then

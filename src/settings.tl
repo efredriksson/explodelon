@@ -98,11 +98,11 @@ end
 function DinoRules.new(): DinoRules
     local self: DinoRules = setmetatable({}, { __index = DinoRules })
     local enabled <total>: {DinoColor: boolean} = {
-        blue=true,
-        pink=true,
-        purple=true,
-        green=true,
-        yellow=true,
+        blue = true,
+        pink = true,
+        purple = true,
+        green = true,
+        yellow = true,
     }
 
     self.nbr_of_eggs = 4
