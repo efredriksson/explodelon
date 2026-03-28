@@ -194,7 +194,7 @@ function Group:cull_if_hit_by(lookup: Lookup, destroys: ReadableGroup<Entity>)
         if entity.clear then
             entity:clear()
         end
-        self:remove(entity as T)
+        self:remove(entity)
     end
 end
 
