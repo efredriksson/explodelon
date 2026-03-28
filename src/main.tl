@@ -20,27 +20,27 @@ function lutro.conf(t: Configuration)
 end
 
 function lutro.load()
-	logger.setup("EXPLODELON")
-	settings.set_block_size(grid.TILE_SIZE)
-	local load_start = lutro.timer.getTime()
-	joysticks.setup()
-	screens.load_assets()
-	player_selection.load_assets()
-	team_selection.load_assets()
-	battle.load_assets()
-	update_screen.load_assets()
-	local load_time = lutro.timer.getTime() - load_start
-	logger.info("Loading assets at start took " .. load_time .. "s")
-	scenes.set_start(start_screen.new())
+    logger.setup("EXPLODELON")
+    settings.set_block_size(grid.TILE_SIZE)
+    local load_start = lutro.timer.getTime()
+    joysticks.setup()
+    screens.load_assets()
+    player_selection.load_assets()
+    team_selection.load_assets()
+    battle.load_assets()
+    update_screen.load_assets()
+    local load_time = lutro.timer.getTime() - load_start
+    logger.info("Loading assets at start took " .. load_time .. "s")
+    scenes.set_start(start_screen.new())
 end
 
 function lutro.update(dt: number)
-	tracing.reset()
-	scenes.get():update(dt)
-	joysticks.update(dt)
+    tracing.reset()
+    scenes.get():update(dt)
+    joysticks.update(dt)
 end
 
 function lutro.draw()
-	tracing.reset()
-	scenes.get():draw()
+    tracing.reset()
+    scenes.get():draw()
 end

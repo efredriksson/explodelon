@@ -28,9 +28,9 @@ local SONIC_BLAST_ROAR_FOR = 1.4
 local SLIDE_FOR_TIME = 0.4
 local CHARACTER_HEIGHT_ON_DINO = 8 -- How high up from ground player is when on dino
 local DASH_WITH_DINO_SPEED_BONUS = {
-	[1] = 50,
-	[2] = 70,
-	[3] = 90,
+    [1] = 50,
+    [2] = 70,
+    [3] = 90,
 }
 
 local type Action = enum
@@ -48,260 +48,260 @@ local type Action = enum
 end
 
 local type PlayerState = enum
-	"foot"
-	"mounted"
+    "foot"
+    "mounted"
 end
 
 local type SonicWaveColor = enum
-	"white"
-	"purple"
-	"yellow"
+    "white"
+    "purple"
+    "yellow"
 end
 
 local SONIC_WAVE_COLOR_ORDERS: {SonicWaveColor} = {
-	"white",
-	"purple",
-	"white",
-	"yellow",
-	"white",
-	"yellow",
-	"purple",
-	"yellow",
-	"purple",
-	"yellow",
-	"purple",
-	"white",
-	"purple",
-	"white",
-	"yellow",
-	"white",
-	"yellow",
+    "white",
+    "purple",
+    "white",
+    "yellow",
+    "white",
+    "yellow",
+    "purple",
+    "yellow",
+    "purple",
+    "yellow",
+    "purple",
+    "white",
+    "purple",
+    "white",
+    "yellow",
+    "white",
+    "yellow",
 }
 
 local record SonicWave
-	duration: number
-	live_for: number
-	color: SonicWaveColor
+    duration: number
+    live_for: number
+    color: SonicWaveColor
 end
 
 function SonicWave.new(color: SonicWaveColor, live_for: number): SonicWave
-	local self: SonicWave = setmetatable({}, { __index = SonicWave })
-	self.duration = 0
-	self.live_for = live_for
-	self.color = color
-	return self
+    local self: SonicWave = setmetatable({}, { __index = SonicWave })
+    self.duration = 0
+    self.live_for = live_for
+    self.color = color
+    return self
 end
 
 local record Player is Explodable, Kinematic, Entity
-	id: integer
-	team_id: integer
-	sprite: CharacterName
+    id: integer
+    team_id: integer
+    sprite: CharacterName
    	position: Point
-	direction: Direction
-	action: Action
-	state: PlayerState
-	is_removed: boolean
-	speed: integer
-	bombs: integer
-	lightning_bomb: integer
-	fire: integer
-	has_kick: boolean
-	invulnerable_for: number
-	stunned_for: number
-	slide_for: number
-	roar_for: number
-	total_roar_time: number
-	after_image_shift: number
-	sonic_waves: {SonicWave}
-	last_time_adding_sonic_wave: number
-	sonic_wave_color_index: integer
-	play_dino_roar: boolean
-	dino: Dino
+    direction: Direction
+    action: Action
+    state: PlayerState
+    is_removed: boolean
+    speed: integer
+    bombs: integer
+    lightning_bomb: integer
+    fire: integer
+    has_kick: boolean
+    invulnerable_for: number
+    stunned_for: number
+    slide_for: number
+    roar_for: number
+    total_roar_time: number
+    after_image_shift: number
+    sonic_waves: {SonicWave}
+    last_time_adding_sonic_wave: number
+    sonic_wave_color_index: integer
+    play_dino_roar: boolean
+    dino: Dino
 
-	jump_trajectory: ProjectileTrajectory
-	jump_target: Point
-	ice_velocity: Vector
+    jump_trajectory: ProjectileTrajectory
+    jump_target: Point
+    ice_velocity: Vector
 end
 
 local players = {Player = Player, Action = Action, PlayerState = PlayerState, SonicWaveColor = SonicWaveColor}
 
 function players.new(id: integer, sprite: CharacterName, position: Point): Player
-	local self: Player = setmetatable({}, { __index = Player })
-	self.id = id
-	self.team_id = nil
-	self.sprite = sprite
-	self.position = position
-	self.z_index = z_index.LEVEL
-	self.direction = "down"
-	self.action = "idle"
-	self.state = "foot"
-	self.is_removed = false
-	local player_settings = settings.game_rules.players
-	self.speed = player_settings.start_speed
-	self.has_kick = player_settings.start_with_kick
-	self.bombs = player_settings.start_with_bombs
-	self.lightning_bomb = player_settings.start_with_lightning_bombs
-	self.fire = player_settings.start_with_fire
-	self.invulnerable_for = 0
-	self.stunned_for = 0
-	self.after_image_shift = 0
-	self.slide_for = 0
-	self.roar_for = 0
-	self.total_roar_time = 0
-	self.dino = nil
-	self.play_dino_roar = false
-	self.sonic_waves = {}
-	self.last_time_adding_sonic_wave = 0
-	self.sonic_wave_color_index = 1
-	self.ice_velocity = vectors.new(0, 0)
-	return self
+    local self: Player = setmetatable({}, { __index = Player })
+    self.id = id
+    self.team_id = nil
+    self.sprite = sprite
+    self.position = position
+    self.z_index = z_index.LEVEL
+    self.direction = "down"
+    self.action = "idle"
+    self.state = "foot"
+    self.is_removed = false
+    local player_settings = settings.game_rules.players
+    self.speed = player_settings.start_speed
+    self.has_kick = player_settings.start_with_kick
+    self.bombs = player_settings.start_with_bombs
+    self.lightning_bomb = player_settings.start_with_lightning_bombs
+    self.fire = player_settings.start_with_fire
+    self.invulnerable_for = 0
+    self.stunned_for = 0
+    self.after_image_shift = 0
+    self.slide_for = 0
+    self.roar_for = 0
+    self.total_roar_time = 0
+    self.dino = nil
+    self.play_dino_roar = false
+    self.sonic_waves = {}
+    self.last_time_adding_sonic_wave = 0
+    self.sonic_wave_color_index = 1
+    self.ice_velocity = vectors.new(0, 0)
+    return self
 end
 
 function Player:get_position(): Point
-	return self.position
+    return self.position
 end
 
 function Player:draw()
-	assert(false, "Not implemented")
+    assert(false, "Not implemented")
 end
 
 function Player:is_jumping_on_off_dino(): boolean
-	return self.action == "jump_on" or self.action == "jump_off"
+    return self.action == "jump_on" or self.action == "jump_off"
 end
 
 function Player:is_jumping(): boolean
-	return self:is_jumping_on_off_dino() or self.action == "jump"
+    return self:is_jumping_on_off_dino() or self.action == "jump"
 end
 
 function Player:is_stunned(): boolean
-	return self.stunned_for > 0
+    return self.stunned_for > 0
 end
 
 function Player:can_slide(): boolean
-	return self.action == "dash" and self.dino and self.dino.level >= 2
+    return self.action == "dash" and self.dino and self.dino.level >= 2
 end
 
 function Player:is_sliding(): boolean
-	return self.slide_for > 0
+    return self.slide_for > 0
 end
 
 function Player:have_roared_since_buildup_for(): number
-	return self.total_roar_time - self.roar_for - dinos.ROAR_BUILDUP_TIME
+    return self.total_roar_time - self.roar_for - dinos.ROAR_BUILDUP_TIME
 end
 
 function Player:is_roaring(): boolean
-	return self.roar_for > 0 and self.dino ~= nil
+    return self.roar_for > 0 and self.dino ~= nil
 end
 
 function Player:is_stun_crying(): boolean
-	return self:is_roaring() and self.dino.color == "yellow" and self:have_roared_since_buildup_for() > 0
+    return self:is_roaring() and self.dino.color == "yellow" and self:have_roared_since_buildup_for() > 0
 end
 
 function Player:is_sonic_blasting(): boolean
-	return self:is_roaring() and self.dino.color == "purple" and self:have_roared_since_buildup_for() > 0
+    return self:is_roaring() and self.dino.color == "purple" and self:have_roared_since_buildup_for() > 0
 end
 
 function Player:set_action(action: Action)
-	if self.action == "dying" or self:is_stunned() or self:is_sliding() then
-		-- Not able to perform new action due to conditions
-		return
-	end
+    if self.action == "dying" or self:is_stunned() or self:is_sliding() then
+        -- Not able to perform new action due to conditions
+        return
+    end
 
-	if (self.action == "dash" or action == "roar") and (action == "walk" or action == "idle") then
-		-- Not possible to exit dash action into walk or idle
-		return
-	end
+    if (self.action == "dash" or action == "roar") and (action == "walk" or action == "idle") then
+        -- Not possible to exit dash action into walk or idle
+        return
+    end
 
-	self.action = action
-	if self.dino then
-		if action == "walk" then
-			self.dino.action = "walk"
-		elseif action == "idle" then
-			self.dino.action = "idle"
-		elseif action == "stunned" then
-			self.dino.action = "stunned"
-		elseif action == "jump" then
-			self.dino.action = "jump"
-		elseif action == "dash" then
-			self.dino.action = "dash"
-		elseif action == "crashed" then
-			self.dino.action = "crashed"
-		elseif action == "slide" then
-			self.dino.action = "slide"
-		elseif action == "roar" then
-			self.dino.action = "roar"
-		end
-	end
+    self.action = action
+    if self.dino then
+        if action == "walk" then
+            self.dino.action = "walk"
+        elseif action == "idle" then
+            self.dino.action = "idle"
+        elseif action == "stunned" then
+            self.dino.action = "stunned"
+        elseif action == "jump" then
+            self.dino.action = "jump"
+        elseif action == "dash" then
+            self.dino.action = "dash"
+        elseif action == "crashed" then
+            self.dino.action = "crashed"
+        elseif action == "slide" then
+            self.dino.action = "slide"
+        elseif action == "roar" then
+            self.dino.action = "roar"
+        end
+    end
 end
 
 function Player:set_movement(position: Point, direction: Direction)
-	if self.action == "dash" and self.position:equal(position) then
+    if self.action == "dash" and self.position:equal(position) then
 
-		self:set_action("crashed")
-		if self.dino and self.dino.level == 1 then
-			self.stunned_for = 1.2
-		end
+        self:set_action("crashed")
+        if self.dino and self.dino.level == 1 then
+            self.stunned_for = 1.2
+        end
 
-		return
-	end
+        return
+    end
 
-	self.position = position
-	self.direction = direction
-	if self.dino then
-		self.dino.position = position
-		self.dino.direction = direction
-	end
+    self.position = position
+    self.direction = direction
+    if self.dino then
+        self.dino.position = position
+        self.dino.direction = direction
+    end
 end
 
 function Player:slide_with_dino()
-	self:set_action("slide")
-	self.slide_for = SLIDE_FOR_TIME
+    self:set_action("slide")
+    self.slide_for = SLIDE_FOR_TIME
 end
 
 function Player:stun_for(duration: number)
-	self:set_action("stunned")
-	self.stunned_for = duration
-	self.direction = "down"
+    self:set_action("stunned")
+    self.stunned_for = duration
+    self.direction = "down"
 end
 
 function Player:hit_with_bomb()
-	self:stun_for(1)
+    self:stun_for(1)
 end
 
 function Player:hitbox(): Rectangle
-	-- This hitbox is not for movement
-	return hitboxes.new_block(self.position):shrink(4)
+    -- This hitbox is not for movement
+    return hitboxes.new_block(self.position):shrink(4)
 end
 
 function Player:movementbox(): Rectangle
-	return hitboxes.new_block(self.position)
+    return hitboxes.new_block(self.position)
 end
 
 local function get_character_on_dino_ground_position(original_pos: Point, direction: Direction): Point
-	local horizonal_displacements: {Direction: integer} = {
-		right = -5, left = 5, up = 0, down = 0,
-	}
-	local horizonal_displacement = horizonal_displacements[direction]
-	return original_pos:move(
-		vectors.new(horizonal_displacement, 0)
-	)
+    local horizonal_displacements: {Direction: integer} = {
+        right = -5, left = 5, up = 0, down = 0,
+    }
+    local horizonal_displacement = horizonal_displacements[direction]
+    return original_pos:move(
+        vectors.new(horizonal_displacement, 0)
+    )
 end
 
 local function get_character_position_on_top_of_dino(original_pos: Point, direction: Direction): Point
-	local to_the_side_pos = get_character_on_dino_ground_position(original_pos, direction)
-	return to_the_side_pos:move(vectors.new(0, -CHARACTER_HEIGHT_ON_DINO))
+    local to_the_side_pos = get_character_on_dino_ground_position(original_pos, direction)
+    return to_the_side_pos:move(vectors.new(0, -CHARACTER_HEIGHT_ON_DINO))
 end
 
 function Player:is_riding_dino(): boolean
-	return self.dino and not self.dino.hatching
+    return self.dino and not self.dino.hatching
 end
 
 function Player:is_invulnerable(): boolean
-	return self.invulnerable_for > 0
+    return self.invulnerable_for > 0
 end
 
 function Player:accepts_input(): boolean
-	return not self:is_jumping() and not self:is_stunned() and not self:is_roaring()
+    return not self:is_jumping() and not self:is_stunned() and not self:is_roaring()
 end
 
 -- Player jump constants
@@ -311,278 +311,278 @@ local JUMP_ON_HEIGHT = 2 * grid.TILE_SIZE  -- Unit: pixels (not SI unit!)
 local JUMP_OFF_HEIGHT = 3 * grid.TILE_SIZE -- Unit: pixels (not SI unit!)
 
 function Player:jumps_onto(dino: Dino)
-	if not self:is_jumping() then
-		self:set_action("jump_on")
-		self.state = "mounted"
-		local character_distance_over_ground = 0.0
+    if not self:is_jumping() then
+        self:set_action("jump_on")
+        self.state = "mounted"
+        local character_distance_over_ground = 0.0
 
-		if self.dino then
-			-- Jump in place when upgrading existing dino
-			self.dino.action = "idle"
-			self.dino:level_up()
-			dino.level = 0 -- Dino is consumed into existing dino
-			character_distance_over_ground = CHARACTER_HEIGHT_ON_DINO
-		else
-			self.dino = dino
-		end
+        if self.dino then
+            -- Jump in place when upgrading existing dino
+            self.dino.action = "idle"
+            self.dino:level_up()
+            dino.level = 0 -- Dino is consumed into existing dino
+            character_distance_over_ground = CHARACTER_HEIGHT_ON_DINO
+        else
+            self.dino = dino
+        end
 
-		local character_ground_pos = get_character_on_dino_ground_position(self.dino.position, self.direction)
-		self.jump_trajectory = physics.calc_trajectory(
-			character_distance_over_ground,
-			CHARACTER_HEIGHT_ON_DINO,
-			JUMP_ON_HEIGHT,
-			JUMP_ON_TIME,
-			self.position,
-			character_ground_pos
-		)
-		self.jump_target = self.dino.position
-	end
+        local character_ground_pos = get_character_on_dino_ground_position(self.dino.position, self.direction)
+        self.jump_trajectory = physics.calc_trajectory(
+            character_distance_over_ground,
+            CHARACTER_HEIGHT_ON_DINO,
+            JUMP_ON_HEIGHT,
+            JUMP_ON_TIME,
+            self.position,
+            character_ground_pos
+        )
+        self.jump_target = self.dino.position
+    end
 end
 
 function Player:jump_off_dino()
-	if not self:is_jumping() then
-		self:set_action("jump_off")
-		self.state = "foot"
+    if not self:is_jumping() then
+        self:set_action("jump_off")
+        self.state = "foot"
 
-		self.jump_target = self.position
-		-- Set current position as shifted by riding dino to jump from that position
-		self.position = get_character_on_dino_ground_position(self.position, self.direction)
-		self.jump_trajectory = physics.calc_trajectory(
-			CHARACTER_HEIGHT_ON_DINO, 0, JUMP_OFF_HEIGHT, JUMP_OFF_TIME, self.position, self.jump_target
-		)
-	end
+        self.jump_target = self.position
+        -- Set current position as shifted by riding dino to jump from that position
+        self.position = get_character_on_dino_ground_position(self.position, self.direction)
+        self.jump_trajectory = physics.calc_trajectory(
+            CHARACTER_HEIGHT_ON_DINO, 0, JUMP_OFF_HEIGHT, JUMP_OFF_TIME, self.position, self.jump_target
+        )
+    end
 end
 
 local DINO_POWERUP_TIME_INTERVAL = 0.2
 
 function Player:can_jump(): boolean
-	return self.dino and self.dino.color == "pink" and not self:is_jumping()
+    return self.dino and self.dino.color == "pink" and not self:is_jumping()
 end
 
 function Player:get_max_jump_dist(): integer
-	local jump_dist = 2 * (math.floor(self.dino.jump_powerup_for / DINO_POWERUP_TIME_INTERVAL) + 1)
-	-- Clamp max jump dist
-	return math.min(jump_dist, self.dino.level * 2)
+    local jump_dist = 2 * (math.floor(self.dino.jump_powerup_for / DINO_POWERUP_TIME_INTERVAL) + 1)
+    -- Clamp max jump dist
+    return math.min(jump_dist, self.dino.level * 2)
 end
 
 function Player:_get_max_jump_powerup_time(): number
-	return self.dino.level * DINO_POWERUP_TIME_INTERVAL
+    return self.dino.level * DINO_POWERUP_TIME_INTERVAL
 end
 
 function Player:must_jump(): boolean
-	return self.dino and self.dino.jump_powerup_for > self:_get_max_jump_powerup_time()
+    return self.dino and self.dino.jump_powerup_for > self:_get_max_jump_powerup_time()
 end
 
 function Player:jump_with_dino(jump_to: Point | nil)
-	if self.dino and self.dino.color == "pink" and not self:is_jumping() then
-		self:set_action("jump")
+    if self.dino and self.dino.color == "pink" and not self:is_jumping() then
+        self:set_action("jump")
 
-		self.jump_target = jump_to or self.position
-		local dino_jump_time = {
-			[1] = 0.9,
-			[2] = 1.0,
-			[3] = 1.1,
-			[4] = 1.2,
-			[5] = 1.3,
-			[6] = 1.4,
-		}
-		local dino_jump_height = {
-			[1] = 1.2 * grid.TILE_SIZE,
-			[2] = 1.4 * grid.TILE_SIZE,
-			[3] = 1.7 * grid.TILE_SIZE,
-			[4] = 2.0 * grid.TILE_SIZE,
-			[5] = 2.3 * grid.TILE_SIZE,
-			[6] = 2.6 * grid.TILE_SIZE,
-		}
-		local jump_power = self:get_max_jump_dist()
-		assert(jump_power <= 6 and jump_power >= 1)
-		self.jump_trajectory = physics.calc_trajectory(
-			0,
-			0,
-			dino_jump_height[jump_power],
-			dino_jump_time[jump_power],
-			self.position,
-			self.jump_target
-		)
-		self.dino.jump_powerup_for = 0
-	end
+        self.jump_target = jump_to or self.position
+        local dino_jump_time = {
+            [1] = 0.9,
+            [2] = 1.0,
+            [3] = 1.1,
+            [4] = 1.2,
+            [5] = 1.3,
+            [6] = 1.4,
+        }
+        local dino_jump_height = {
+            [1] = 1.2 * grid.TILE_SIZE,
+            [2] = 1.4 * grid.TILE_SIZE,
+            [3] = 1.7 * grid.TILE_SIZE,
+            [4] = 2.0 * grid.TILE_SIZE,
+            [5] = 2.3 * grid.TILE_SIZE,
+            [6] = 2.6 * grid.TILE_SIZE,
+        }
+        local jump_power = self:get_max_jump_dist()
+        assert(jump_power <= 6 and jump_power >= 1)
+        self.jump_trajectory = physics.calc_trajectory(
+            0,
+            0,
+            dino_jump_height[jump_power],
+            dino_jump_time[jump_power],
+            self.position,
+            self.jump_target
+        )
+        self.dino.jump_powerup_for = 0
+    end
 end
 
 function Player:dash_with_dino()
-	self:set_action("dash")
+    self:set_action("dash")
 end
 
 function Player:stun_cry_with_dino()
-	self:set_action("roar")
-	self.roar_for = STUN_CRY_ROAR_FOR
-	self.total_roar_time = STUN_CRY_ROAR_FOR
-	self.play_dino_roar = true
+    self:set_action("roar")
+    self.roar_for = STUN_CRY_ROAR_FOR
+    self.total_roar_time = STUN_CRY_ROAR_FOR
+    self.play_dino_roar = true
 end
 
 function Player:sonic_blast_with_dino()
-	self:set_action("roar")
-	self.roar_for = SONIC_BLAST_ROAR_FOR
-	self.total_roar_time = SONIC_BLAST_ROAR_FOR
-	self.play_dino_roar = true
-	self.sonic_waves = {}
+    self:set_action("roar")
+    self.roar_for = SONIC_BLAST_ROAR_FOR
+    self.total_roar_time = SONIC_BLAST_ROAR_FOR
+    self.play_dino_roar = true
+    self.sonic_waves = {}
 end
 
 function Player:_get_hitbox_in_dir(from_position: Point, grid_reach: number): Rectangle
-	local x = from_position.x
-	local y = from_position.y
-	if self.direction == "up" then
-		return rectangles.new(x, y - grid_reach, grid.TILE_SIZE, grid_reach)
-	elseif self.direction == "down" then
-		return rectangles.new(x, y + grid.TILE_SIZE, grid.TILE_SIZE, grid_reach)
-	elseif self.direction == "right" then
-		return rectangles.new(x + grid.TILE_SIZE, y, grid_reach, grid.TILE_SIZE)
-	elseif self.direction == "left" then
-		return rectangles.new(x - grid_reach, y, grid_reach, grid.TILE_SIZE)
-	else
-		assert(false, "Bad direction")
-	end
+    local x = from_position.x
+    local y = from_position.y
+    if self.direction == "up" then
+        return rectangles.new(x, y - grid_reach, grid.TILE_SIZE, grid_reach)
+    elseif self.direction == "down" then
+        return rectangles.new(x, y + grid.TILE_SIZE, grid.TILE_SIZE, grid_reach)
+    elseif self.direction == "right" then
+        return rectangles.new(x + grid.TILE_SIZE, y, grid_reach, grid.TILE_SIZE)
+    elseif self.direction == "left" then
+        return rectangles.new(x - grid_reach, y, grid_reach, grid.TILE_SIZE)
+    else
+        assert(false, "Bad direction")
+    end
 end
 
 function Player:get_stun_cry_hitbox(): Rectangle
-	return self:_get_hitbox_in_dir(self.position, self.dino.level * 3 * grid.TILE_SIZE)
+    return self:_get_hitbox_in_dir(self.position, self.dino.level * 3 * grid.TILE_SIZE)
 end
 
 function Player:get_sonic_blast_hitbox(): Rectangle
-	local max_reach = (self.dino.level + 1) * grid.TILE_SIZE
-	local sound_traveled = self:have_roared_since_buildup_for() * 200
-	local reach = math.min(sound_traveled, max_reach)
-	return self:_get_hitbox_in_dir(grid.snap_to(self.position), reach)
+    local max_reach = (self.dino.level + 1) * grid.TILE_SIZE
+    local sound_traveled = self:have_roared_since_buildup_for() * 200
+    local reach = math.min(sound_traveled, max_reach)
+    return self:_get_hitbox_in_dir(grid.snap_to(self.position), reach)
 end
 
 function Player:get_speed(): number
-	if self.action == "dash" and self.dino then
-		return self.speed + DASH_WITH_DINO_SPEED_BONUS[self.dino.level]
-	elseif self.action == "slide" then
-		return self.speed * (self.slide_for / SLIDE_FOR_TIME)
-	else
-		return self.speed
-	end
+    if self.action == "dash" and self.dino then
+        return self.speed + DASH_WITH_DINO_SPEED_BONUS[self.dino.level]
+    elseif self.action == "slide" then
+        return self.speed * (self.slide_for / SLIDE_FOR_TIME)
+    else
+        return self.speed
+    end
 end
 
 function Player:kill()
-	if self:is_invulnerable() or self:is_jumping() then
-		return
-	end
+    if self:is_invulnerable() or self:is_jumping() then
+        return
+    end
 
-	if self.dino then
-		self.dino.action = "dying"
-		self.dino = nil
-		self.state = "foot"
+    if self.dino then
+        self.dino.action = "dying"
+        self.dino = nil
+        self.state = "foot"
 
-		self.invulnerable_for = 2
-		self:jump_off_dino()
-		return
-	end
+        self.invulnerable_for = 2
+        self:jump_off_dino()
+        return
+    end
 
-	self.action = "dying"
+    self.action = "dying"
 end
 
 function Player:remove()
-	self.is_removed = true
-	self.action = "dying"
+    self.is_removed = true
+    self.action = "dying"
 end
 
 function Player:blow_up()
-	self:kill()
+    self:kill()
 end
 
 function Player:is_alive(): boolean
-	return self.action ~= "dying"
+    return self.action ~= "dying"
 end
 
 function Player:get_jump_position(): Point
-	return self.jump_trajectory:in_air_position(self.position)
+    return self.jump_trajectory:in_air_position(self.position)
 end
 
 function Player:_new_sonic_wave(): SonicWave
-	local color = SONIC_WAVE_COLOR_ORDERS[self.sonic_wave_color_index]
-	local time_to_live = 0.4
-	self.sonic_wave_color_index = self.sonic_wave_color_index % #SONIC_WAVE_COLOR_ORDERS
-	self.sonic_wave_color_index = self.sonic_wave_color_index + 1
-	return SonicWave.new(color, time_to_live)
+    local color = SONIC_WAVE_COLOR_ORDERS[self.sonic_wave_color_index]
+    local time_to_live = 0.4
+    self.sonic_wave_color_index = self.sonic_wave_color_index % #SONIC_WAVE_COLOR_ORDERS
+    self.sonic_wave_color_index = self.sonic_wave_color_index + 1
+    return SonicWave.new(color, time_to_live)
 end
 
 function Player:update(dt: number)
-	self.invulnerable_for = self.invulnerable_for - dt
-	self.stunned_for = self.stunned_for - dt
-	self.slide_for = self.slide_for - dt
-	self.roar_for = self.roar_for - dt
-	self.last_time_adding_sonic_wave = self.last_time_adding_sonic_wave + dt
+    self.invulnerable_for = self.invulnerable_for - dt
+    self.stunned_for = self.stunned_for - dt
+    self.slide_for = self.slide_for - dt
+    self.roar_for = self.roar_for - dt
+    self.last_time_adding_sonic_wave = self.last_time_adding_sonic_wave + dt
 
-	self.after_image_shift = self.after_image_shift + self:get_speed() * dt + lutro.math.random(4)
-	self.after_image_shift = math.fmod(self.after_image_shift, 37)
+    self.after_image_shift = self.after_image_shift + self:get_speed() * dt + lutro.math.random(4)
+    self.after_image_shift = math.fmod(self.after_image_shift, 37)
 
-	if self:is_sonic_blasting() then
-		local time_between_waves = 0.1
-		if self.last_time_adding_sonic_wave > time_between_waves then
-			self.last_time_adding_sonic_wave = 0
-			table.insert(self.sonic_waves, self:_new_sonic_wave())
-		end
+    if self:is_sonic_blasting() then
+        local time_between_waves = 0.1
+        if self.last_time_adding_sonic_wave > time_between_waves then
+            self.last_time_adding_sonic_wave = 0
+            table.insert(self.sonic_waves, self:_new_sonic_wave())
+        end
 
-		for i = #self.sonic_waves, 1, -1 do
-			local sonic_wave = self.sonic_waves[i]
-			sonic_wave.duration = sonic_wave.duration + dt
-			if sonic_wave.duration > sonic_wave.live_for then
-				table.remove(self.sonic_waves, i)
-			end
-		end
-	end
+        for i = #self.sonic_waves, 1, -1 do
+            local sonic_wave = self.sonic_waves[i]
+            sonic_wave.duration = sonic_wave.duration + dt
+            if sonic_wave.duration > sonic_wave.live_for then
+                table.remove(self.sonic_waves, i)
+            end
+        end
+    end
 
-	if self.play_dino_roar and self:is_stun_crying() then
-		stun_cry_sound[self.dino.level]:play()
-		self.play_dino_roar = false
-	end
-	if self.play_dino_roar and self:is_sonic_blasting() then
-		sonic_blast_sound:play()
-		self.play_dino_roar = false
-	end
+    if self.play_dino_roar and self:is_stun_crying() then
+        stun_cry_sound[self.dino.level]:play()
+        self.play_dino_roar = false
+    end
+    if self.play_dino_roar and self:is_sonic_blasting() then
+        sonic_blast_sound:play()
+        self.play_dino_roar = false
+    end
 
-	if self.action == "stunned" or self.action == "slide" then
-		self:set_action("idle") -- Try to transition from stunned/slide
-	end
+    if self.action == "stunned" or self.action == "slide" then
+        self:set_action("idle") -- Try to transition from stunned/slide
+    end
 
-	if self:is_jumping() then
-		self.position = self.jump_trajectory:update(dt, self.position)
-		if self.jump_trajectory:finished() then
-			-- When distance from target not decreasing while falling we have landed
-			self:set_action("idle")
-			self.position = self.jump_target
-			if self.dino then
-				self.dino.hatching = false
-			end
-		end
-	end
+    if self:is_jumping() then
+        self.position = self.jump_trajectory:update(dt, self.position)
+        if self.jump_trajectory:finished() then
+            -- When distance from target not decreasing while falling we have landed
+            self:set_action("idle")
+            self.position = self.jump_target
+            if self.dino then
+                self.dino.hatching = false
+            end
+        end
+    end
 end
 
 function Player:get_draw_position(): Point
-	if self:is_jumping_on_off_dino() then
-		return self:get_jump_position()
-	elseif self.action == "jump" then
-		-- Adjust player sprite for jump height and being on top of its mount
-		return get_character_position_on_top_of_dino(self:get_jump_position(), self.direction)
-	elseif self.state == "mounted" then
-		-- Adjust player sprite for being on top of its mount
-		return get_character_position_on_top_of_dino(self.position, self.direction)
-	end
+    if self:is_jumping_on_off_dino() then
+        return self:get_jump_position()
+    elseif self.action == "jump" then
+        -- Adjust player sprite for jump height and being on top of its mount
+        return get_character_position_on_top_of_dino(self:get_jump_position(), self.direction)
+    elseif self.state == "mounted" then
+        -- Adjust player sprite for being on top of its mount
+        return get_character_position_on_top_of_dino(self.position, self.direction)
+    end
 
-	return self.position
+    return self.position
 end
 
 function players.load_assets()
-	for level = 1, 3 do
-		local sound = audio.new_source_pool("assets/tirras/level_" .. level .. "/roar.ogg", "static", 2)
-		sound:setPitch(0.1)
-		sound:setVolume(1.25)
-		stun_cry_sound[level] = sound
-	end
-	sonic_blast_sound = audio.new_source_pool("assets/tirras/sonic-blast.ogg", "static", 2)
-	sonic_blast_sound:setPitch(0.005)
-	sonic_blast_sound:setVolume(0.13)
+    for level = 1, 3 do
+        local sound = audio.new_source_pool("assets/tirras/level_" .. level .. "/roar.ogg", "static", 2)
+        sound:setPitch(0.1)
+        sound:setVolume(1.25)
+        stun_cry_sound[level] = sound
+    end
+    sonic_blast_sound = audio.new_source_pool("assets/tirras/sonic-blast.ogg", "static", 2)
+    sonic_blast_sound:setPitch(0.005)
+    sonic_blast_sound:setVolume(0.13)
 end
 
 return players

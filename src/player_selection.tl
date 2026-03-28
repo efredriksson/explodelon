@@ -240,7 +240,7 @@ function PlayerSelection:draw_slow_walking(character: Character)
 end
 
 function PlayerSelection:draw()
-	lutro.graphics.draw(background)
+    lutro.graphics.draw(background)
 
     for _, char in ipairs(self.selectable_characters) do
         self:draw_idle(char)
@@ -272,7 +272,7 @@ function PlayerSelection:draw()
 end
 
 function player_selection.setup(): Scene
-	return PlayerSelection.new()
+    return PlayerSelection.new()
 end
 
 return player_selection

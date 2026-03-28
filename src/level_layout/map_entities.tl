@@ -13,12 +13,12 @@ local type ItemType = settings.ItemType
 local type BlockType = entities.BlockType
 
 local record HardBlockConfig
-	position: Point
+    position: Point
     is_tall: boolean
 end
 
 local record SoftBlockConfig
-	position: Point
+    position: Point
     item: ItemType
     egg: boolean
 end
@@ -99,84 +99,84 @@ function map_entities.get_block_configs(occupied: {Kinematic}): BlockConfigs
 end
 
 function map_entities.get_right_side_pressure_blocks(): {Point}
-	local blocks: {Point} = {}
+    local blocks: {Point} = {}
 
-	for i, j in itertools.double_loop_inner_loopback({0, 3}, {0, 10}) do
-		table.insert(blocks, grid.get_tile_position(i, j))
-	end
+    for i, j in itertools.double_loop_inner_loopback({0, 3}, {0, 10}) do
+        table.insert(blocks, grid.get_tile_position(i, j))
+    end
 
-	for j, i in itertools.double_loop_inner_loopback({0, 1}, {4, 12}) do
-		table.insert(blocks, grid.get_tile_position(i, j))
-	end
+    for j, i in itertools.double_loop_inner_loopback({0, 1}, {4, 12}) do
+        table.insert(blocks, grid.get_tile_position(i, j))
+    end
 
-	return blocks
+    return blocks
 end
 
 function map_entities.get_left_side_pressure_blocks(): {Point}
-	local blocks: {Point} = {}
+    local blocks: {Point} = {}
 
-	for i, j in itertools.double_loop_inner_loopback({16, 13, -1}, {10, 0, -1}) do
-		table.insert(blocks, grid.get_tile_position(i, j))
-	end
+    for i, j in itertools.double_loop_inner_loopback({16, 13, -1}, {10, 0, -1}) do
+        table.insert(blocks, grid.get_tile_position(i, j))
+    end
 
-	for j, i in itertools.double_loop_inner_loopback({10, 9, -1}, {12, 4, -1}) do
-		table.insert(blocks, grid.get_tile_position(i, j))
-	end
+    for j, i in itertools.double_loop_inner_loopback({10, 9, -1}, {12, 4, -1}) do
+        table.insert(blocks, grid.get_tile_position(i, j))
+    end
 
-	return blocks
+    return blocks
 end
 
 function map_entities.get_player_start_positions(number_of_players: integer): {Point}
-	local x_min = 0
-	local x_max = 16
-	local y_min = 0
-	local y_max = 10
+    local x_min = 0
+    local x_max = 16
+    local y_min = 0
+    local y_max = 10
 
-	local corners = {
-		grid.get_tile_position(x_min, y_min),
-		grid.get_tile_position(x_max, y_max),
-		grid.get_tile_position(x_max, y_min),
-		grid.get_tile_position(x_min, y_max)
-	}
-	local center = {
-		grid.get_tile_position(
-			math.floor(x_max / 2), math.floor(y_max / 2)
-		)
-	}
-	local inner_positions = {
-		grid.get_tile_position(x_min + 5, y_min + 2),
-		grid.get_tile_position(x_max - 5, y_max - 2),
-		grid.get_tile_position(x_max - 5, y_min + 2),
-		grid.get_tile_position(x_min + 5, y_max - 2)
-	}
+    local corners = {
+        grid.get_tile_position(x_min, y_min),
+        grid.get_tile_position(x_max, y_max),
+        grid.get_tile_position(x_max, y_min),
+        grid.get_tile_position(x_min, y_max)
+    }
+    local center = {
+        grid.get_tile_position(
+            math.floor(x_max / 2), math.floor(y_max / 2)
+        )
+    }
+    local inner_positions = {
+        grid.get_tile_position(x_min + 5, y_min + 2),
+        grid.get_tile_position(x_max - 5, y_max - 2),
+        grid.get_tile_position(x_max - 5, y_min + 2),
+        grid.get_tile_position(x_min + 5, y_max - 2)
+    }
 
-	local function get_positions(): {Point}
-		if number_of_players == 5 then
-			-- Only if there are 5 players can you start dead in the middle
-			return itertools.combine(corners, center)
-		else
-			local extra_on_sides = {
-				grid.get_tile_position(x_min, math.floor(y_max / 2)),
-				grid.get_tile_position(x_max, math.floor(y_max / 2))
-			}
-			local result = itertools.combine(corners, inner_positions, extra_on_sides)
-			return {table.unpack(result, 1, number_of_players)}
-		end
-	end
+    local function get_positions(): {Point}
+        if number_of_players == 5 then
+            -- Only if there are 5 players can you start dead in the middle
+            return itertools.combine(corners, center)
+        else
+            local extra_on_sides = {
+                grid.get_tile_position(x_min, math.floor(y_max / 2)),
+                grid.get_tile_position(x_max, math.floor(y_max / 2))
+            }
+            local result = itertools.combine(corners, inner_positions, extra_on_sides)
+            return {table.unpack(result, 1, number_of_players)}
+        end
+    end
 
-	if settings.game_rules.players.start_position_shuffle then
-		return itertools.shuffle(get_positions())
-	else
-		return get_positions()
-	end
+    if settings.game_rules.players.start_position_shuffle then
+        return itertools.shuffle(get_positions())
+    else
+        return get_positions()
+    end
 end
 
 function map_entities.get_goals(): {Goal}
-	return maps.get_layout():get_goals()
+    return maps.get_layout():get_goals()
 end
 
 function map_entities.get_conveyor_belts(): {ConveyorBelt}
-	return maps.get_layout():get_conveyor_belts()
+    return maps.get_layout():get_conveyor_belts()
 end
 
 return map_entities

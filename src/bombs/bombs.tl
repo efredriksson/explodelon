@@ -74,7 +74,7 @@ function Bomb:hitbox(): Rectangle
 end
 
 function Bomb:movementbox(): Rectangle
-	return hitboxes.new_block(self.position)
+    return hitboxes.new_block(self.position)
 end
 
 function Bomb:blow_up()
@@ -82,7 +82,7 @@ function Bomb:blow_up()
 end
 
 function Bomb:hit_with_bomb()
-	-- Does nothing
+    -- Does nothing
 end
 
 function Bomb:get_goal(): Goal

@@ -14,7 +14,7 @@ local type Point = points.Point
 local type Rectangle = rectangles.Rectangle
 
 local record PressureBlock is Entity, Explodable, Kinematic
-	falling_position: Point
+    falling_position: Point
     position: Point
     in_explosion: boolean
 end
@@ -23,12 +23,12 @@ local pressure_block_image: Image
 local block_fall_shadow: Image
 
 function PressureBlock.new(target: Point): PressureBlock
-	local self: PressureBlock = setmetatable({}, { __index = PressureBlock })
-	self.falling_position = points.new(target.x, -grid.TILE_SIZE)
+    local self: PressureBlock = setmetatable({}, { __index = PressureBlock })
+    self.falling_position = points.new(target.x, -grid.TILE_SIZE)
     self.position = target
     self.z_index = z_index.LEVEL
     self.in_explosion = false
-	return self
+    return self
 end
 
 function PressureBlock:get_position(): Point
@@ -50,16 +50,16 @@ function PressureBlock:blow_up()
 end
 
 function PressureBlock:hit_with_bomb()
-	-- Does nothing
+    -- Does nothing
 end
 
 function PressureBlock:hitbox(): Rectangle
     -- Not for movement blocking but hitting entities
-	return hitboxes.new_block(self.position):shrink(4)
+    return hitboxes.new_block(self.position):shrink(4)
 end
 
 function PressureBlock:movementbox(): Rectangle
-	return hitboxes.new_block(self.position)
+    return hitboxes.new_block(self.position)
 end
 
 function PressureBlock:is_on_ground(): boolean
@@ -75,7 +75,7 @@ function PressureBlock:update(dt: number)
 end
 
 local record PressureBlocks
-	next_left_index: integer
+    next_left_index: integer
     next_right_index: integer
     left_positions: {Point}
     right_positions: {Point}
@@ -91,7 +91,7 @@ end
 local pressure_blocks = {PressureBlocks = PressureBlocks, PressureBlock = PressureBlock}
 
 function pressure_blocks.new(): PressureBlocks
-	local self: PressureBlocks = setmetatable({}, { __index = PressureBlocks })
+    local self: PressureBlocks = setmetatable({}, { __index = PressureBlocks })
     self.left_positions = map_entities.get_left_side_pressure_blocks()
     self.right_positions = map_entities.get_right_side_pressure_blocks()
     self.on_ground = collision.new_group()
@@ -103,7 +103,7 @@ function pressure_blocks.new(): PressureBlocks
     self.left_fall_finished = false
     self.no_more_falling_blocks = false
     self.sudden_death = false
-	return self
+    return self
 end
 
 function PressureBlocks:no_updates(): boolean

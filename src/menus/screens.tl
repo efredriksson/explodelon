@@ -76,7 +76,7 @@ function MenuScreen:draw()
     lutro.graphics.setColor(200, 200, 200, 175)
     local x_pad = 20
     local y_pad = 10
-	lutro.graphics.rectangle(
+    lutro.graphics.rectangle(
         "fill", x_pad, y_pad, screen.WIDTH - 2 * x_pad, screen.HEIGHT - 2 * y_pad
     )
 

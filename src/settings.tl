@@ -256,8 +256,8 @@ end
 
 function Settings.clear_mad_bombers(is_suddent_death: boolean): boolean
     local mad_bombers = settings.game_rules.players.mad_bombers
-	local clear_bombers = is_suddent_death and not mad_bombers.after_sudden_death
-	return not mad_bombers.enabled or clear_bombers
+    local clear_bombers = is_suddent_death and not mad_bombers.after_sudden_death
+    return not mad_bombers.enabled or clear_bombers
 end
 
 function Settings.set_start_speed(value: integer)

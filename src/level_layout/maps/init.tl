@@ -8,9 +8,9 @@ local type Map = settings.Map
 local type MapLayout = entities.MapLayout
 
 local map_layouts <total>: {Map: MapLayout} = {
-	football = football,
-	factory = factory,
-	ice_rink = ice_rink,
+    football = football,
+    factory = factory,
+    ice_rink = ice_rink,
 }
 
 local init = {}

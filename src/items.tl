@@ -49,7 +49,7 @@ function Item:blow_up()
 end
 
 function Item:hitbox(): Rectangle
-	return hitboxes.new_block(self.position):shrink(4)
+    return hitboxes.new_block(self.position):shrink(4)
 end
 
 function Item:draw()
@@ -60,9 +60,9 @@ function Item:draw()
     local item_icon = item_icons[self.type]
     local y_draw = self.position.y - 9
     local x_draw = self.position.x - 1
-	frame_animation:draw(x_draw, y_draw)
-	lutro.graphics.draw(item_icon, x_draw, y_draw)
-	lutro.graphics.draw(item_shadow, x_draw, y_draw)
+    frame_animation:draw(x_draw, y_draw)
+    lutro.graphics.draw(item_icon, x_draw, y_draw)
+    lutro.graphics.draw(item_shadow, x_draw, y_draw)
 end
 
 function Item:is_destroyed(): boolean
@@ -175,8 +175,8 @@ function items.load_assets()
     take_item_sound = audio.new_source_pool("assets/take_item.wav", "static", 5)
     take_item_sound:setVolume(0.75)
     frame_animation = animations.new(lutro.graphics.newImage("assets/items/frame.png"), 18, 1 / 30)
-	item_shadow = lutro.graphics.newImage("assets/items/shadow.png")
-	item_icons = {
+    item_shadow = lutro.graphics.newImage("assets/items/shadow.png")
+    item_icons = {
         speed = lutro.graphics.newImage("assets/items/speed.png"),
         bomb = lutro.graphics.newImage("assets/items/bomb.png"),
         lightning_bomb = lutro.graphics.newImage("assets/items/lightning-bomb.png"),

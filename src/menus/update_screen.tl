@@ -41,7 +41,7 @@ local function file_size(name: string): integer
 end
 
 local record UpdateCheckScene is Scene
-	ctx: Scene
+    ctx: Scene
     since_last_connection_check: number
     have_connection: boolean
     download_url: string
@@ -118,8 +118,8 @@ local function show(left: string, right: string, y_cord: number)
 end
 
 function UpdateCheckScene:draw()
-	lutro.graphics.setColor(72, 72, 72)
-	lutro.graphics.rectangle("fill", 0, 0, screen.WIDTH, screen.HEIGHT)
+    lutro.graphics.setColor(72, 72, 72)
+    lutro.graphics.rectangle("fill", 0, 0, screen.WIDTH, screen.HEIGHT)
 
     local function connection_str(): string
         if self.have_connection then return "ok" else return "  " end

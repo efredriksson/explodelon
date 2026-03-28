@@ -68,7 +68,7 @@ function battle_end_scene.load_assets()
 end
 
 function BattleEndScene:draw()
-	self.game_scene:draw()
+    self.game_scene:draw()
 end
 
 function BattleEndScene:update(dt: number)

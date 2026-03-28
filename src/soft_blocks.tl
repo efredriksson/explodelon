@@ -20,7 +20,7 @@ local type SoftBlockConfig = map_entities.SoftBlockConfig
 local type ItemType = settings.ItemType
 
 local record SoftBlock is Entity, Explodable, Kinematic
-	position: Point
+    position: Point
     is_exploding: boolean
     in_explosion: boolean
     base_animation: Animation
@@ -51,21 +51,21 @@ function SoftBlock:get_position(): Point
 end
 
 function SoftBlock:hit_with_bomb()
-	-- Does nothing
+    -- Does nothing
 end
 
 function SoftBlock:reveal()
     if self.egg or self.item then
-	    self.is_revealed = true
+        self.is_revealed = true
     end
 end
 
 function SoftBlock:hitbox(): Rectangle
-	return hitboxes.new_block(self.position):shrink(4)
+    return hitboxes.new_block(self.position):shrink(4)
 end
 
 function SoftBlock:movementbox(): Rectangle
-	return hitboxes.new_block(self.position)
+    return hitboxes.new_block(self.position)
 end
 
 function SoftBlock:update(dt: number)
@@ -75,9 +75,9 @@ function SoftBlock:update(dt: number)
 end
 
 local function center_animation_on_block(animation: Animation, position: Point): Point
-	return points.new(
-		position.x - (animation.width - grid.TILE_SIZE) / 2,
-		position.y - (animation.height - grid.TILE_SIZE) / 2
+    return points.new(
+        position.x - (animation.width - grid.TILE_SIZE) / 2,
+        position.y - (animation.height - grid.TILE_SIZE) / 2
     )
 end
 
@@ -105,7 +105,7 @@ function SoftBlock:is_destroyed(): boolean
 end
 
 local record SoftBlocks
-	on_ground: Group<SoftBlock>
+    on_ground: Group<SoftBlock>
     rigid_animation: Animation
     revealed_animation: Animation
 end

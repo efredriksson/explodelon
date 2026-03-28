@@ -60,8 +60,8 @@ local cart_firing_images: {Direction: Image} = {}
 local cart_heads: {CharacterName: {Direction: Image}} = {}
 
 local function cart_animation(image: Image): Animation
-	local nbr_steps = 2
-	return animations.new(image, image:getWidth() / nbr_steps, 0.05)
+    local nbr_steps = 2
+    return animations.new(image, image:getWidth() / nbr_steps, 0.05)
 end
 
 local function get_firing_animation(side: Direction): Animation
@@ -379,9 +379,9 @@ end
 
 function MadBombers:update(dt: number)
     for _, cart in pairs(self.by_player) do
-		self:handle_cart_move_input(dt, cart)
-		cart:update(dt)
-	end
+        self:handle_cart_move_input(dt, cart)
+        cart:update(dt)
+    end
 end
 
 function mad_bombers.load_assets()

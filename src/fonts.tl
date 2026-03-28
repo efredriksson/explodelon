@@ -22,7 +22,7 @@ function fonts.new_shaded(main: Font, shade: Font): ShadedFont
 end
 
 function ShadedFont:draw(text: string, position: Point)
-	lutro.graphics.setFont(self.shade)
+    lutro.graphics.setFont(self.shade)
     for dx = 1, 0, -1 do
         for dy = 1, 0, -1 do
             if dx == 0 and dy == 0 then
@@ -36,8 +36,8 @@ end
 function fonts.new_shaded_numbers(): ShadedFont
     local font_symbols = " 0123456789:\""
     local clock_main = lutro.graphics.newImageFont("assets/imgfont/numbers.png", font_symbols)
-	local clock_shade = lutro.graphics.newImageFont("assets/imgfont/numbers_blue_tint.png", font_symbols)
-	return fonts.new_shaded(clock_main, clock_shade)
+    local clock_shade = lutro.graphics.newImageFont("assets/imgfont/numbers_blue_tint.png", font_symbols)
+    return fonts.new_shaded(clock_main, clock_shade)
 end
 
 function MenuFont.new(main: Font, outline: Font): MenuFont
@@ -82,7 +82,7 @@ function MenuFont:print_centered(text: string, box_width: number, position: Poin
     end
 
     lutro.graphics.setFont(self.main)
-	lutro.graphics.printf(text, position.x, position.y, box_width, "center")
+    lutro.graphics.printf(text, position.x, position.y, box_width, "center")
 end
 
 return fonts

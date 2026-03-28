@@ -46,7 +46,7 @@ function Egg:get_position(): Point
 end
 
 function Egg:get_position_to_draw_egg(): Point
-	return points.new(
+    return points.new(
         self.position.x + (grid.TILE_SIZE - self.animation.width) / 2,
         self.position.y + grid.TILE_SIZE - self.animation.height
     )
@@ -63,7 +63,7 @@ function Egg:blow_up()
 end
 
 function Egg:hitbox(): Rectangle
-	return hitboxes.new_block(self.position):shrink(4)
+    return hitboxes.new_block(self.position):shrink(4)
 end
 
 function Egg:draw()
@@ -72,7 +72,7 @@ function Egg:draw()
     end
 
     local draw_pos = self:get_position_to_draw_egg()
-	self.animation:draw(draw_pos.x, draw_pos.y)
+    self.animation:draw(draw_pos.x, draw_pos.y)
 end
 
 function Egg:update(dt: number)
@@ -115,10 +115,10 @@ end
 function Eggs:possible_hatcher(player: Player): Dino
     for _, egg in pairs(self.on_ground.set) do
         if player:hitbox():overlap(egg:hitbox()) then
-			if not egg.breaking and not egg.is_exploding then
-				egg:open()
+            if not egg.breaking and not egg.is_exploding then
+                egg:open()
                 return dinos.new(egg.position, player.direction)
-			end
+            end
         end
     end
 

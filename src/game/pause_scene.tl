@@ -65,7 +65,7 @@ function GamePauseScene:_time_to_exit(): integer
 end
 
 function GamePauseScene:draw()
-	self.paused_scene:draw()
+    self.paused_scene:draw()
     local window = get_pause_square()
     lutro.graphics.draw(pause_menu_image, window.x, window.y)
     local header_pos = points.new(window.x, window.y + 10)
@@ -89,9 +89,9 @@ function GamePauseScene:draw()
 end
 
 function GamePauseScene:update(dt: number)
-	if joysticks.is_pressed(self.player_id, joysticks.BUTTONS.START) then
-		scenes.set(self.paused_scene, true)
-	end
+    if joysticks.is_pressed(self.player_id, joysticks.BUTTONS.START) then
+        scenes.set(self.paused_scene, true)
+    end
     if joysticks.is_pressed(self.player_id, joysticks.BUTTONS.L) then
         self.toggle_if_playing(self.player_id)
     end

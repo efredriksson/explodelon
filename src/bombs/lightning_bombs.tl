@@ -70,7 +70,7 @@ function LightningBomb:hitbox(): Rectangle
 end
 
 function LightningBomb:movementbox(): Rectangle
-	return hitboxes.new_block(self.position)
+    return hitboxes.new_block(self.position)
 end
 
 function LightningBomb:blow_up()
@@ -78,7 +78,7 @@ function LightningBomb:blow_up()
 end
 
 function LightningBomb:hit_with_bomb()
-	-- Does nothing
+    -- Does nothing
 end
 
 function LightningBomb:is_complete(): boolean

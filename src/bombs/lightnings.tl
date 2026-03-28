@@ -92,7 +92,7 @@ function Lightning:has_reached_max_range(): boolean
 end
 
 local function clamp(val: number, min: number, max: number): number
-	return math.min(math.max(val, min), max)
+    return math.min(math.max(val, min), max)
 end
 
 function Lightning:_update_active_tiles(blockers: ReadableGroup<Explodable>, lookup: Lookup)

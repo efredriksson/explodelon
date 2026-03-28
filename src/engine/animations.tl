@@ -3,9 +3,9 @@
 local logging = require("engine.logger")
 
 local record Animation
-	image: Image
+    image: Image
     timer: number
-	width: number
+    width: number
     height: number
     playing: boolean
     frame_durations: {number}

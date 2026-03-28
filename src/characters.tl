@@ -74,9 +74,9 @@ function characters.get_unused(): CharacterName
     assert(#character_selections < #ALL_SPRITES, "All sprites are selected!")
 
     for _, sprite in ipairs(characters.get_names()) do
-		if characters.is_unused(sprite) then
-			return sprite
-		end
+        if characters.is_unused(sprite) then
+            return sprite
+        end
     end
 end
 
@@ -138,12 +138,12 @@ function characters.queue_selection_for(player_id: integer)
 end
 
 function characters.next_player_selecting(): integer
-	for i, player_joining in ipairs(in_queue_to_join) do
-		table.remove(in_queue_to_join, i)
-		return player_joining
-	end
+    for i, player_joining in ipairs(in_queue_to_join) do
+        table.remove(in_queue_to_join, i)
+        return player_joining
+    end
 
-	return nil
+    return nil
 end
 
 return characters

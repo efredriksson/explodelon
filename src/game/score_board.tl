@@ -78,22 +78,22 @@ function PlayerScore.new(id: integer, avatar: CharacterName): PlayerScore
 end
 
 local function get_avatar_position(avatar_num: number, num_avatars: number): Point
-	local space_for_avatar = AVATAR_WIDTH + SCORE_WIDTH
+    local space_for_avatar = AVATAR_WIDTH + SCORE_WIDTH
 
-	local padding = (TOTAL_WIDTH - space_for_avatar * num_avatars) / (num_avatars + 1)
-	local x_pos = X_START + padding * avatar_num + space_for_avatar * (avatar_num - 1)
-	return points.new(x_pos, Y_START)
+    local padding = (TOTAL_WIDTH - space_for_avatar * num_avatars) / (num_avatars + 1)
+    local x_pos = X_START + padding * avatar_num + space_for_avatar * (avatar_num - 1)
+    return points.new(x_pos, Y_START)
 end
 
 function SinglesScoreBoard:draw()
     local score_adjust = vectors.new(AVATAR_WIDTH, Y_SCORE_ADJUST)
 
     for nbr, player in ipairs(self.players) do
-		local avatar_pos = get_avatar_position(nbr, #self.players)
-		local score_pos = avatar_pos:move(score_adjust)
-		lutro.graphics.draw(avatar_images[player.avatar], avatar_pos.x, avatar_pos.y)
-		score_font:draw(tostring(player.score), score_pos)
-	end
+        local avatar_pos = get_avatar_position(nbr, #self.players)
+        local score_pos = avatar_pos:move(score_adjust)
+        lutro.graphics.draw(avatar_images[player.avatar], avatar_pos.x, avatar_pos.y)
+        score_font:draw(tostring(player.score), score_pos)
+    end
 end
 
 function SinglesScoreBoard:add_point(player_id: integer)

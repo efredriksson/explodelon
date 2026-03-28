@@ -18,8 +18,8 @@ local type Rectangle = rectangles.Rectangle
 local type HardBlockConfig = map_entities.HardBlockConfig
 
 local record HardBlock is Explodable, Kinematic, Entity
-	position: Point
-	in_explosion: boolean
+    position: Point
+    in_explosion: boolean
     animation: Animation
 end
 
@@ -33,7 +33,7 @@ function HardBlock.new(position: Point, is_tall: boolean): HardBlock
 end
 
 function HardBlock:get_position(): Point
-	return self.position
+    return self.position
 end
 
 function HardBlock:draw()
@@ -42,23 +42,23 @@ function HardBlock:draw()
 end
 
 function HardBlock:hit_with_bomb()
-	-- Does nothing
+    -- Does nothing
 end
 
 function HardBlock:blow_up()
-	-- Does nothing
+    -- Does nothing
 end
 
 function HardBlock:hitbox(): Rectangle
-	return hitboxes.new_block(self.position):shrink(4)
+    return hitboxes.new_block(self.position):shrink(4)
 end
 
 function HardBlock:movementbox(): Rectangle
-	return hitboxes.new_block(self.position)
+    return hitboxes.new_block(self.position)
 end
 
 local record HardBlocks
-	on_ground: Group<HardBlock>
+    on_ground: Group<HardBlock>
 end
 
 local hard_blocks = {HardBlock = HardBlock, HardBlocks = HardBlocks}
