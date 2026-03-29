@@ -296,7 +296,11 @@ function Battle:handle_pause_input(): boolean
             self.audio_paused = true
             audio.pause()
             scenes.set(pause_scene.new(
-                self, player_id, characters.exist_selection_for(player_id), toggle_if_playing)
+                self,
+                player_id,
+                characters.exist_selection_for(player_id),
+                toggle_if_playing
+            )
             )
             return true
         end
@@ -331,7 +335,10 @@ function Battle:check_if_finished(dt: number)
         self.state = "finished"
         music:stop()
         scenes.set(battle_end_scene.new_for_winners(
-            self, self.win_condition.winners, self.score_board)
+            self,
+            self.win_condition.winners,
+            self.score_board
+        )
         )
     elseif self.win_condition.is_draw then
         self.state = "finished"

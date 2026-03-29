@@ -97,11 +97,7 @@ function Animation:draw(x: number, y: number)
     local sw = self.image:getWidth()
     local sh = self.image:getHeight()
 
-    local q = lutro.graphics.newQuad(
-        ((id - 1) % (sw / tw)) * tw,
-        0,
-        tw, th,
-        sw, sh)
+    local q = lutro.graphics.newQuad(((id - 1) % (sw / tw)) * tw, 0, tw, th, sw, sh)
 
     lutro.graphics.draw(self.image, q, x, y)
 end

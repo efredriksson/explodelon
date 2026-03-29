@@ -257,7 +257,12 @@ function Explosion:_update_active_tiles(
 
     -- Propagate in all four directions
     for direction, delta in pairs(directions) do
-        for _, tile in ipairs(propagate(self.position, delta:scale(grid.TILE_SIZE), 1, direction)) do
+        for _, tile in ipairs(propagate(
+            self.position,
+            delta:scale(grid.TILE_SIZE),
+            1,
+            direction
+        )) do
             self.tiles:add(tile)
         end
     end

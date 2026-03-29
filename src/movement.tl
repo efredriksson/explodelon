@@ -566,8 +566,16 @@ local function get_ice_moves(
     end
 
     local new_vel = vectors.new(
-        update_axis(player.ice_velocity.x, any_move_has_direction(move_inputs, "right"), any_move_has_direction(move_inputs, "left")),
-        update_axis(player.ice_velocity.y, any_move_has_direction(move_inputs, "down"), any_move_has_direction(move_inputs, "up"))
+        update_axis(
+            player.ice_velocity.x,
+            any_move_has_direction(move_inputs, "right"),
+            any_move_has_direction(move_inputs, "left")
+        ),
+        update_axis(
+            player.ice_velocity.y,
+            any_move_has_direction(move_inputs, "down"),
+            any_move_has_direction(move_inputs, "up")
+        )
     )
     player.ice_velocity = new_vel
 

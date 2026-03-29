@@ -133,7 +133,10 @@ function Lightning:_update_active_tiles(
             return false
         end
 
-        for _, _ in pairs(lookup:collisions_between(collision.new_group({tile}), blockers)) do
+        for _, _ in pairs(lookup:collisions_between(
+            collision.new_group({tile}),
+            blockers
+        )) do
             return false
         end
 

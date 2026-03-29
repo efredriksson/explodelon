@@ -210,7 +210,8 @@ local function block_to_anim_draw_pos(animation: Animation, pos: Point): Point
     -- y: +1 is because of the sprite, look over when doing animations
     return points.new(
         pos.x + (grid.TILE_SIZE - animation.width) / 2,
-        pos.y - animation.height + grid.TILE_SIZE + 1)
+        pos.y - animation.height + grid.TILE_SIZE + 1
+    )
 end
 
 local record MountAnimation is Entity

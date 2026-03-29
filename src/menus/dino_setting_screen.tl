@@ -22,8 +22,11 @@ function dino_settings_screen.new(previous_screen: Scene): MenuScreen
     )
     return screens.new({
             choices.new_integer(
-            "nbr. of eggs", 50, nbr_eggs_selected, settings.set_nbr_of_eggs
-        ),
+                "nbr. of eggs",
+                50,
+                nbr_eggs_selected,
+                settings.set_nbr_of_eggs
+            ),
         choices.new_boolean(
             "blue dinos",
             65,
