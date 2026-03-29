@@ -143,7 +143,7 @@ function PressureBlocks:falling(): {PressureBlock: PressureBlock}
     end
     return {
         [self.left_falling] = self.left_falling,
-        [self.right_falling] = self.right_falling
+        [self.right_falling] = self.right_falling,
     }
 end
 

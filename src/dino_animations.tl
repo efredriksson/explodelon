@@ -98,7 +98,7 @@ local function dino_images_for_dir(
         slide = dino_images_for_level("slide", direction, color),
         jump = dino_images_for_level("jump", direction, color),
         dash = dino_images_for_level("dash", direction, color),
-        roar = dino_images_for_level("roar", direction, color)
+        roar = dino_images_for_level("roar", direction, color),
     }
     return dino_animations
 end

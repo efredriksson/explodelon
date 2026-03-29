@@ -148,7 +148,7 @@ function map_entities.get_player_start_positions(number_of_players: integer): {P
         grid.get_tile_position(x_min, y_min),
         grid.get_tile_position(x_max, y_max),
         grid.get_tile_position(x_max, y_min),
-        grid.get_tile_position(x_min, y_max)
+        grid.get_tile_position(x_min, y_max),
     }
     local center = {
         grid.get_tile_position(math.floor(x_max / 2), math.floor(y_max / 2))
@@ -157,7 +157,7 @@ function map_entities.get_player_start_positions(number_of_players: integer): {P
         grid.get_tile_position(x_min + 5, y_min + 2),
         grid.get_tile_position(x_max - 5, y_max - 2),
         grid.get_tile_position(x_max - 5, y_min + 2),
-        grid.get_tile_position(x_min + 5, y_max - 2)
+        grid.get_tile_position(x_min + 5, y_max - 2),
     }
 
     local function get_positions(): {Point}
@@ -167,7 +167,7 @@ function map_entities.get_player_start_positions(number_of_players: integer): {P
         else
             local extra_on_sides = {
                 grid.get_tile_position(x_min, math.floor(y_max / 2)),
-                grid.get_tile_position(x_max, math.floor(y_max / 2))
+                grid.get_tile_position(x_max, math.floor(y_max / 2)),
             }
             local result = itertools.combine(corners, inner_positions, extra_on_sides)
             return {table.unpack(result, 1, number_of_players)}

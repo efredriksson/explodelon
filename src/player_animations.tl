@@ -47,7 +47,7 @@ local function get_flag_pixel_map(team_index: integer): {Color: Color}
     return {
         [flag_base_color] = team.color,
         [flag_dark_color] = team:color_shade(),
-        [flag_darker_color] = team:color_darker_shade()
+        [flag_darker_color] = team:color_darker_shade(),
     }
 end
 
@@ -102,38 +102,38 @@ local SLIDE_WIHT_DINO_DIR_MAP: {Direction: Direction} = {
     up = "left",
     down = "right",
     left = "down",
-    right = "down"
+    right = "down",
 }
 local DINO_SLIDE_CHARACTER_ADJUST = {
     up = vectors.new(7, 0),
     down = vectors.new(-7, 0),
     right = vectors.new(9, 0),
-    left = vectors.new(-9, 0)
+    left = vectors.new(-9, 0),
 }
 local DINO_STUN_CRY_TEXT_POSITION = {
     up = vectors.new(8, -4),
     down = vectors.new(8, 18),
     right = vectors.new(18, 6),
-    left = vectors.new(-4, 6)
+    left = vectors.new(-4, 6),
 }
 local DINO_SONIC_BLAST_POSITION = {
     up = vectors.new(8, -4),
     down = vectors.new(8, 12),
     right = vectors.new(14, 6),
-    left = vectors.new(0, 6)
+    left = vectors.new(0, 6),
 }
 local DINO_AFTERIMGE_SHIFT = {
     up = vectors.new(0, 1),
     down = vectors.new(0, -1),
     right = vectors.new(-1, 0),
-    left = vectors.new(1, 0)
+    left = vectors.new(1, 0),
 }
 local STUN_CRY_SHAKE_PERIOD_BY_LEVEL = {[1] = 0.05, [2] = 0.10, [3] = 0.20}
 local STUN_CRY_SHAKE_AXIS = {
     up = vectors.new(0, 1),
     down = vectors.new(0, -1),
     right = vectors.new(1, 0),
-    left = vectors.new(-1, 0)
+    left = vectors.new(-1, 0),
 }
 local STUN_CRY_REACH_BY_LEVEL = {[1] = 1.0, [2] = 1.75, [3] = 2.5}
 
@@ -468,7 +468,7 @@ local function character_sprites_for_state(
         stunned = character_sprite_for_stunned(character_asset, state),
         crashed = character_sprite_for_stunned(character_asset, state),
         slide = character_sprite_for_stunned(character_asset, state),
-        roar = character_sprite_for_stunned(character_asset, state)
+        roar = character_sprite_for_stunned(character_asset, state),
     }
     return sprite_images
 end
@@ -524,7 +524,7 @@ function player_animations.load_assets()
         local sonic_images<total>: {SonicWaveColor: Image} = {
             purple = lutro.graphics.newImage("assets/tirras/sonic-" .. dir .. "-purple.png"),
             white = lutro.graphics.newImage("assets/tirras/sonic-" .. dir .. "-white.png"),
-            yellow = lutro.graphics.newImage("assets/tirras/sonic-" .. dir .. "-yellow.png")
+            yellow = lutro.graphics.newImage("assets/tirras/sonic-" .. dir .. "-yellow.png"),
         }
         return sonic_images
     end

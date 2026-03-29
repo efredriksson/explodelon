@@ -73,7 +73,7 @@ function Lightning.new(position: Point, range: number): Lightning
     self.speed = 8
     self.animations = {
         initial = animations.new(lightning_initial_image, 16, FRAME_DURATION / 2),
-        ending = animations.new(lightning_ending_image, 16, FRAME_DURATION)
+        ending = animations.new(lightning_ending_image, 16, FRAME_DURATION),
     }
 
     return self

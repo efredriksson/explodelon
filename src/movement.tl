@@ -449,7 +449,7 @@ local INVERTED_DIRECTIONS: {Direction: Direction} = {
     up = "down",
     down = "up",
     left = "right",
-    right = "left"
+    right = "left",
 }
 
 local function inputs_for_sliding(player: Player, move_inputs: {Movement}): boolean

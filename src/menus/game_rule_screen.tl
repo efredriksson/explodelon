@@ -48,8 +48,7 @@ function game_rule_screen.new(previous_screen: Scene): MenuScreen
         choices.new_done("player rules", 130, enter_player_settings_screen),
         choices.new_done("timing rules", 150, enter_timing_settings_screen),
         choices.new_done("ice rules", 170, enter_ice_settings_screen),
-
-        choices.new_done("back", 200, done)
+        choices.new_done("back", 200, done),
     }, done)
 end
 

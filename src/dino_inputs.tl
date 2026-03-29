@@ -51,9 +51,7 @@ local function handle_jump_input(
             local jump_to = player.position:move(
                 jump_direction:scale(grid.TILE_SIZE * nbr_of_blocks_to_jump)
             )
-            local jump_candidates = {
-                jump_to, grid.snap_to(jump_to)
-            }
+            local jump_candidates = {jump_to, grid.snap_to(jump_to)}
 
             for _, jump_candiated in ipairs(jump_candidates) do
                 if jump_is_possible(jump_candiated) then

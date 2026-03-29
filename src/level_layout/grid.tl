@@ -24,7 +24,7 @@ function grid.dimensions(): GridDimensions
         x_min = 0,
         x_max = 16,
         y_min = 0,
-        y_max = 10
+        y_max = 10,
     }
 end
 
