@@ -66,7 +66,10 @@ function winner_scene.new(names: {CharacterName}): GameWinnerScene
         )
         table.insert(
             self.trophy_positions,
-            points.new(get_x_pos(i, #names) - self.trophy.width / 2, (screen.HEIGHT - self.trophy.height) / 2)
+            points.new(
+                get_x_pos(i, #names) - self.trophy.width / 2,
+                (screen.HEIGHT - self.trophy.height) / 2
+            )
         )
     end
     self.character_jump_velocity = vectors.new(0, -47)
