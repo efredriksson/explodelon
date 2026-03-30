@@ -143,9 +143,7 @@ function Explosion:has_reached_max_range(): boolean
 end
 
 function Explosion:new_tile(
-    position: Point,
-    is_last: boolean,
-    explosion_type: ExplosionTileType
+    position: Point, is_last: boolean, explosion_type: ExplosionTileType
 ): ExplosionTile
     local function tile_reduction(): integer
         local min_reduction = 3
@@ -168,8 +166,7 @@ local enum BlockingResult
 end
 
 function Explosion:_update_active_tiles(
-    blockers: ReadableGroup<Explodable>,
-    lookup: Lookup
+    blockers: ReadableGroup<Explodable>, lookup: Lookup
 )
     self.tiles = collision.new_group()
 
@@ -191,8 +188,7 @@ function Explosion:_update_active_tiles(
         end
 
         local colliding_blockers = lookup:collisions_between(
-            collision.new_group({tile}),
-            blockers
+            collision.new_group({tile}), blockers
         )
         for _, blocker in pairs(colliding_blockers) do
             if blocker.in_explosion then
@@ -232,10 +228,7 @@ function Explosion:_update_active_tiles(
         end
 
         local remaining_tiles = propagate(
-            next_pos,
-            delta,
-            distance_traveled + 1,
-            explosion_type
+            next_pos, delta, distance_traveled + 1, explosion_type
         )
         local is_last = #remaining_tiles == 0
 
@@ -310,9 +303,7 @@ function Explosion:update_end_animation(dt: number)
 end
 
 function Explosion:update(
-    dt: number,
-    blockers: ReadableGroup<Explodable>,
-    lookup: Lookup
+    dt: number, blockers: ReadableGroup<Explodable>, lookup: Lookup
 )
     if self.delay > 0 then
         self.delay = self.delay - dt
@@ -351,9 +342,7 @@ function explosions.load_assets()
 
     local function get_explosion_audio(size: string): Source
         local explosion_audio = audio.new_source_pool(
-            "assets/bomb/explosion/" .. size .. ".wav",
-            "static",
-            5
+            "assets/bomb/explosion/" .. size .. ".wav", "static", 5
         )
         explosion_audio:setVolume(0.4)
         explosion_audio:setPitch(0.25)

@@ -27,8 +27,7 @@ end
 function FactoryLayout:get_conveyor_belts(): {ConveyorBelt}
     local function create_belt(i: integer, j: integer, dir: Direction): ConveyorBelt
         return ConveyorBelt.new(
-            grid.get_tile_position(i, j),
-            vectors.from_direction(dir)
+            grid.get_tile_position(i, j), vectors.from_direction(dir)
         )
     end
 

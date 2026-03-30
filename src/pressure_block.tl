@@ -37,9 +37,7 @@ end
 
 function PressureBlock:draw()
     lutro.graphics.draw(
-        pressure_block_image,
-        self.falling_position.x,
-        self.falling_position.y
+        pressure_block_image, self.falling_position.x, self.falling_position.y
     )
 end
 
@@ -73,8 +71,7 @@ end
 function PressureBlock:update(dt: number)
     local block_fall_speed = 285
     self.falling_position.y = math.min(
-        self.position.y,
-        self.falling_position.y + dt * block_fall_speed
+        self.position.y, self.falling_position.y + dt * block_fall_speed
     )
     if self:is_on_ground() then
         self.z_index = z_index.BELOW

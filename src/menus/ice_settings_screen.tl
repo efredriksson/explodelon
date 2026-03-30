@@ -26,12 +26,10 @@ function ice_settings_screen.new(previous_screen: Scene): MenuScreen
 
     local ice = settings.game_rules.ice
     local acceleration_selection = items.new_number_selection(
-        find_index(acceleration_options, ice.acceleration_factor),
-        acceleration_options
+        find_index(acceleration_options, ice.acceleration_factor), acceleration_options
     )
     local friction_selection = items.new_number_selection(
-        find_index(friction_options, ice.friction_factor),
-        friction_options
+        find_index(friction_options, ice.friction_factor), friction_options
     )
 
     return screens.new({

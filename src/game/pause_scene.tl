@@ -29,10 +29,7 @@ local function get_pause_square(): Rectangle
     local height = 50
     local width = 180
     return rectangles.new(
-        (screen.WIDTH - width) / 2,
-        (screen.HEIGHT - height) / 2,
-        width,
-        height
+        (screen.WIDTH - width) / 2, (screen.HEIGHT - height) / 2, width, height
     )
 end
 
@@ -70,9 +67,7 @@ function GamePauseScene:draw()
     lutro.graphics.draw(pause_menu_image, window.x, window.y)
     local header_pos = points.new(window.x, window.y + 10)
     white_font:print_centered(
-        "game paused by player " .. self.player_id,
-        window.width,
-        header_pos
+        "game paused by player " .. self.player_id, window.width, header_pos
     )
 
     local toggle_msg_pos = points.new(window.x, window.y + 22)
@@ -85,15 +80,11 @@ function GamePauseScene:draw()
     local exit_msg_pos = points.new(window.x, window.y + 34)
     if self.exit_counter < 0.1 then
         white_font:print_centered(
-            "hold select down to exit",
-            window.width,
-            exit_msg_pos
+            "hold select down to exit", window.width, exit_msg_pos
         )
     else
         white_font:print_centered(
-            "exiting game in " .. self:_time_to_exit(),
-            window.width,
-            exit_msg_pos
+            "exiting game in " .. self:_time_to_exit(), window.width, exit_msg_pos
         )
     end
 end

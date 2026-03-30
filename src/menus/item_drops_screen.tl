@@ -28,24 +28,19 @@ function item_drops_screen.new(previous_screen: Scene): MenuScreen
 
     local spawn_settings = settings.game_rules.items.spawn_rates
     local nbr_bombs_selected = items.new_number_selection(
-        get_start(spawn_settings.bomb),
-        numbers_to_select_from
+        get_start(spawn_settings.bomb), numbers_to_select_from
     )
     local nbr_fires_selected = items.new_number_selection(
-        get_start(spawn_settings.fire),
-        numbers_to_select_from
+        get_start(spawn_settings.fire), numbers_to_select_from
     )
     local nbr_speeds_selected = items.new_number_selection(
-        get_start(spawn_settings.speed),
-        numbers_to_select_from
+        get_start(spawn_settings.speed), numbers_to_select_from
     )
     local nbr_kicks_selected = items.new_number_selection(
-        get_start(spawn_settings.kick),
-        numbers_to_select_from
+        get_start(spawn_settings.kick), numbers_to_select_from
     )
     local nbr_lightning_bombs_selected = items.new_number_selection(
-        get_start(spawn_settings.lightning_bomb),
-        numbers_to_select_from
+        get_start(spawn_settings.lightning_bomb), numbers_to_select_from
     )
     return screens.new({
         choices.new_number(

@@ -98,9 +98,7 @@ function PlayerSelection.new(): PlayerSelection
     local self: PlayerSelection = setmetatable({}, { __index = PlayerSelection })
     self.score_board = score_board.new_for_singles()
     self.game = battle.new(
-        self,
-        self.score_board,
-        win_condition.new_for_singles(self.score_board)
+        self, self.score_board, win_condition.new_for_singles(self.score_board)
     )
     self.team_selection = team_selection.new(self, music)
     self.going_back_to_game = false
@@ -208,8 +206,7 @@ function PlayerSelection:handle_player_input()
             joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.R)) then
 
         local selected = table.remove(
-            self.selectable_characters,
-            self.selector:get_value()
+            self.selectable_characters, self.selector:get_value()
         )
         table.insert(self.walking_characters, selected)
         characters.new_selection(self.player_selecting, selected.sprite)

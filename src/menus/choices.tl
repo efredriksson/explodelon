@@ -138,9 +138,7 @@ function MenuAction:draw(font: MenuFont)
 end
 
 function choices.new_done(
-    menu_text: string,
-    y_pos: integer,
-    callback: function(ctx: Scene)
+    menu_text: string, y_pos: integer, callback: function(ctx: Scene)
 ): MenuAction
     local self: MenuAction = setmetatable({}, { __index = MenuAction })
     self.y_pos = y_pos

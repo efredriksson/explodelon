@@ -16,34 +16,22 @@ function item_settings_screen.new(previous_screen: Scene): MenuScreen
 
     local item_settings = settings.game_rules.items
     local nbr_soft_blocks_selected = items.new_integer_selection(
-        item_settings.nbr_soft_blocks,
-        0,
-        120
+        item_settings.nbr_soft_blocks, 0, 120
     )
     local nbr_bombs_selected = items.new_integer_selection(
-        item_settings.nbr_of_items.bomb,
-        0,
-        30
+        item_settings.nbr_of_items.bomb, 0, 30
     )
     local nbr_fires_selected = items.new_integer_selection(
-        item_settings.nbr_of_items.fire,
-        0,
-        30
+        item_settings.nbr_of_items.fire, 0, 30
     )
     local nbr_speeds_selected = items.new_integer_selection(
-        item_settings.nbr_of_items.speed,
-        0,
-        30
+        item_settings.nbr_of_items.speed, 0, 30
     )
     local nbr_kicks_selected = items.new_integer_selection(
-        item_settings.nbr_of_items.kick,
-        0,
-        30
+        item_settings.nbr_of_items.kick, 0, 30
     )
     local nbr_lightning_bombs_selected = items.new_integer_selection(
-        item_settings.nbr_of_items.lightning_bomb,
-        0,
-        30
+        item_settings.nbr_of_items.lightning_bomb, 0, 30
     )
     return screens.new({
         choices.new_integer(

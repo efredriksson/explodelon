@@ -90,8 +90,7 @@ end
 function SoftBlock:draw()
     if self.is_exploding then
         local position = center_animation_on_block(
-            self.breaking_animation,
-            self.position
+            self.breaking_animation, self.position
         )
         self.breaking_animation:draw(position.x, position.y)
     elseif self.is_revealed then

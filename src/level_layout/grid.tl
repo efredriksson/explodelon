@@ -53,8 +53,7 @@ end
 function grid.get_random_tile(): Point
     local dim = grid.dimensions()
     return grid.get_tile_position(
-        lutro.math.random(dim.x_max + 1) - 1,
-        lutro.math.random(dim.y_max + 1) - 1
+        lutro.math.random(dim.x_max + 1) - 1, lutro.math.random(dim.y_max + 1) - 1
     )
 end
 
@@ -74,8 +73,7 @@ function grid.outside_on_opposite_side(out_pos: Point): Point
     if out_pos.y < PLAYER_AREA.y then
         -- exiting top
         return points.new(
-            out_pos.x,
-            PLAYER_AREA.y + PLAYER_AREA.height + grid.TILE_SIZE
+            out_pos.x, PLAYER_AREA.y + PLAYER_AREA.height + grid.TILE_SIZE
         )
     elseif out_pos.y > PLAYER_AREA.y + PLAYER_AREA.height then
         -- exiting bottom

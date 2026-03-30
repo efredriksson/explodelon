@@ -96,8 +96,7 @@ local function clamp(val: number, min: number, max: number): number
 end
 
 function Lightning:_update_active_tiles(
-    blockers: ReadableGroup<Explodable>,
-    lookup: Lookup
+    blockers: ReadableGroup<Explodable>, lookup: Lookup
 )
     self.tiles = collision.new_group()
 
@@ -186,9 +185,7 @@ function Lightning:draw()
 end
 
 function Lightning:update(
-    dt: number,
-    blockers: ReadableGroup<Explodable>,
-    lookup: Lookup
+    dt: number, blockers: ReadableGroup<Explodable>, lookup: Lookup
 )
     self.duration = self.duration + dt
     self:_update_active_tiles(blockers, lookup)
@@ -207,9 +204,7 @@ function lightnings.load_assets()
     lightning_ending_image = lutro.graphics.newImage("assets/lightning-bomb/explosion/explosion_end.png")
 
     lightning_sound = audio.new_source_pool(
-        "assets/lightning-bomb/explosion/detonate.ogg",
-        "static",
-        5
+        "assets/lightning-bomb/explosion/detonate.ogg", "static", 5
     )
     lightning_sound:setPitch(0.75)
 end

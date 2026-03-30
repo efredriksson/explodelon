@@ -16,9 +16,7 @@ function dino_settings_screen.new(previous_screen: Scene): MenuScreen
 
     local dino_settings = settings.game_rules.dinos
     local nbr_eggs_selected = items.new_integer_selection(
-        dino_settings.nbr_of_eggs,
-        0,
-        30
+        dino_settings.nbr_of_eggs, 0, 30
     )
     return screens.new({
             choices.new_integer(

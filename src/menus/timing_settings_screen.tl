@@ -26,17 +26,13 @@ function timing_settings_screen.new(previous_screen: Scene): MenuScreen
     local battle_idx = current_idx_by_time[timings.battle] or 5
     local sudden_death_idx = current_idx_by_time[timings.sudden_death] or 1
     local nbr_battles_selection = items.new_integer_selection(
-        settings.game_rules.timings.nbr_battles,
-        1,
-        20
+        settings.game_rules.timings.nbr_battles, 1, 20
     )
     local battle_time_selection = items.new_time_selection(
-        battle_idx,
-        times_to_select_from
+        battle_idx, times_to_select_from
     )
     local sudden_death_time_selection = items.new_time_selection(
-        sudden_death_idx,
-        times_to_select_from
+        sudden_death_idx, times_to_select_from
     )
 
     return screens.new({

@@ -56,8 +56,7 @@ local function player_exclusion_zone(occupies: {Kinematic}): {Point}
 end
 
 local function place_soft_blocks(
-    layout: {integer: {integer: BlockType}},
-    exclusion_zone: {Point}
+    layout: {integer: {integer: BlockType}}, exclusion_zone: {Point}
 )
     local dim = grid.dimensions()
     local count = 0
@@ -99,10 +98,7 @@ local record QuadrantCell
 end
 
 function QuadrantCell.new(
-    i: integer,
-    j: integer,
-    corner_x: integer,
-    corner_y: integer
+    i: integer, j: integer, corner_x: integer, corner_y: integer
 ): QuadrantCell
     local self: QuadrantCell = setmetatable({}, { __index = QuadrantCell })
     self.i = i
@@ -112,8 +108,7 @@ function QuadrantCell.new(
 end
 
 function QuadrantCell:can_place_soft_block(
-    layout: {integer: {integer: BlockType}},
-    exclusion_zone: {Point}
+    layout: {integer: {integer: BlockType}}, exclusion_zone: {Point}
 ): boolean
     return layout[self.i][self.j] == "none"
         and not contains_point(exclusion_zone, grid.get_tile_position(self.i, self.j))

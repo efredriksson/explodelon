@@ -27,9 +27,7 @@ end
 local screens = {MenuScreen = MenuScreen}
 
 function screens.new(
-    menu_choices: {MenuChoice},
-    go_back?: function(Scene),
-    on_load?: function()
+    menu_choices: {MenuChoice}, go_back?: function(Scene), on_load?: function()
 ): MenuScreen
     local self: MenuScreen = setmetatable({}, { __index = MenuScreen })
     self.menu_choices = menu_choices
@@ -81,11 +79,7 @@ function MenuScreen:draw()
     local x_pad = 20
     local y_pad = 10
     lutro.graphics.rectangle(
-        "fill",
-        x_pad,
-        y_pad,
-        screen.WIDTH - 2 * x_pad,
-        screen.HEIGHT - 2 * y_pad
+        "fill", x_pad, y_pad, screen.WIDTH - 2 * x_pad, screen.HEIGHT - 2 * y_pad
     )
 
     local function get_font(line_idx): MenuFont

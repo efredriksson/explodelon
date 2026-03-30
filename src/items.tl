@@ -175,9 +175,7 @@ function items.load_assets()
     take_item_sound = audio.new_source_pool("assets/take_item.wav", "static", 5)
     take_item_sound:setVolume(0.75)
     frame_animation = animations.new(
-        lutro.graphics.newImage("assets/items/frame.png"),
-        18,
-        1 / 30
+        lutro.graphics.newImage("assets/items/frame.png"), 18, 1 / 30
     )
     item_shadow = lutro.graphics.newImage("assets/items/shadow.png")
     item_icons = {

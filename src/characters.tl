@@ -40,8 +40,7 @@ local character_selections: {CharacterSelection} = {}
 local in_queue_to_join: {integer} = {}
 
 function CharacterSelection.new(
-    player_id: integer,
-    sprite: CharacterName
+    player_id: integer, sprite: CharacterName
 ): CharacterSelection
     local self: CharacterSelection = setmetatable({}, { __index = CharacterSelection })
     self.player_id = player_id
@@ -81,12 +80,10 @@ function characters.get_unused(): CharacterName
 end
 
 function characters.new_selection(
-    player_id: integer,
-    sprite?: CharacterName
+    player_id: integer, sprite?: CharacterName
 ): CharacterSelection
     local new_selection = CharacterSelection.new(
-        player_id,
-        sprite or characters.get_unused()
+        player_id, sprite or characters.get_unused()
     )
     table.insert(character_selections, new_selection)
     return new_selection

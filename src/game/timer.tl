@@ -56,8 +56,7 @@ function timer.load_assets()
     end
     hurry_letters_mid = (screen.WIDTH - letter_box_width) / 2
     hurry_letters_start = points.new(
-        screen.WIDTH,
-        (screen.HEIGHT - hurry_letters[1]:getHeight()) / 2
+        screen.WIDTH, (screen.HEIGHT - hurry_letters[1]:getHeight()) / 2
     )
 end
 

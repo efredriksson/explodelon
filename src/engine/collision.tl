@@ -143,8 +143,7 @@ function collision.new_lookup(...: {any: Entity}): Lookup
 end
 
 function Lookup:collisions_between<K is Entity, T>(
-    entities: Group<K>,
-    group: ReadableGroup<T>
+    entities: Group<K>, group: ReadableGroup<T>
 ): {K: T}
     local collides_with: {K: T} = {}
     if group:is_empty() then

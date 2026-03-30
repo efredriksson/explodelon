@@ -19,10 +19,7 @@ local type Point = points.Point
 local dino_inputs = {}
 
 local function handle_jump_input(
-    dt: number,
-    player: Player,
-    blocks_jump: ReadableGroup<Kinematic>,
-    lookup: Lookup
+    dt: number, player: Player, blocks_jump: ReadableGroup<Kinematic>, lookup: Lookup
 )
     local function jump_is_possible(jump_to: Point): boolean
         local jump_landing_area = hitboxes.new_block(jump_to)
@@ -31,8 +28,7 @@ local function handle_jump_input(
         -- movementboxes, check in an area around and then manually
         -- check for movementbox overlap
         local blocks_jumps_close = lookup:in_box_and_group(
-            jump_landing_area:expand(grid.TILE_SIZE),
-            blocks_jump
+            jump_landing_area:expand(grid.TILE_SIZE), blocks_jump
         )
 
         for _, possible_jump_block in ipairs(blocks_jumps_close) do

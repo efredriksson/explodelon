@@ -31,8 +31,7 @@ function LoopIndex:values(): function(): integer
 end
 
 function itertools.double_loop_inner_loopback(
-    outer_range: {integer, integer, integer},
-    inner_range: {integer, integer, integer}
+    outer_range: {integer, integer, integer}, inner_range: {integer, integer, integer}
 ): function(): integer, integer
     local outer = itertools.new_loop(outer_range[1], outer_range[2], outer_range[3])
     local inner = itertools.new_loop(inner_range[1], inner_range[2], inner_range[3])

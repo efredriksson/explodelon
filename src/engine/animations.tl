@@ -36,10 +36,7 @@ function animations.new_with_frames(image: Image, frame_durations: {number}): An
 end
 
 function animations.new(
-    image: Image,
-    width: number,
-    frame_duration: number,
-    idle_time?: number
+    image: Image, width: number, frame_duration: number, idle_time?: number
 ): Animation
     local steps = image:getWidth() / width
 

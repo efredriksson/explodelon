@@ -37,9 +37,7 @@ function HardBlockConfig.new(position: Point, is_tall: boolean): HardBlockConfig
 end
 
 function SoftBlockConfig.new(
-    position: Point,
-    item: ItemType,
-    egg: boolean
+    position: Point, item: ItemType, egg: boolean
 ): SoftBlockConfig
     local self: SoftBlockConfig = setmetatable({}, { __index = SoftBlockConfig })
     self.position = position
@@ -76,9 +74,7 @@ local function assign_items_to_positions(blocks_positions: {Point}): {SoftBlockC
 end
 
 function BlockConfigs.new(
-    hard: {HardBlockConfig},
-    soft: {SoftBlockConfig},
-    non_hard: {Point}
+    hard: {HardBlockConfig}, soft: {SoftBlockConfig}, non_hard: {Point}
 ): BlockConfigs
     local self: BlockConfigs = setmetatable({}, { __index = BlockConfigs })
     self.hard = hard

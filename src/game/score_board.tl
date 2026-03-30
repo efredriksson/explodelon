@@ -155,10 +155,7 @@ end
 local function get_team_background_area(x_pos: number, team: TeamScore): Rectangle
     local color_background_y = Y_START - 2 -- Need to cover more space
     return rectangles.new(
-        x_pos,
-        color_background_y,
-        get_team_width(team),
-        COLOR_BLOCK_SIZE
+        x_pos, color_background_y, get_team_width(team), COLOR_BLOCK_SIZE
     )
 end
 
@@ -229,8 +226,7 @@ function TeamsScoreBoard:update_avatars(selections: {TeamSelection})
     self.teams = {}
     for _, selection_group in ipairs(teams.grouped_selections(selections)) do
         table.insert(
-            self.teams,
-            TeamScore.new(selection_group.team, selection_group.selections)
+            self.teams, TeamScore.new(selection_group.team, selection_group.selections)
         )
     end
 end

@@ -21,9 +21,7 @@ local start_screen = {}
 
 function start_screen.new(): MenuScreen
     local nbr_player_selected = items.new_integer_selection(
-        settings.number_of_players,
-        2,
-        joysticks.maxplayers()
+        settings.number_of_players, 2, joysticks.maxplayers()
     )
     local choices_values: {PlayerSelectionMethod} = {"on", "off", "keep"}
     local player_selection_choice = items.new_enum(choices_values)
@@ -69,8 +67,7 @@ function start_screen.new(): MenuScreen
     local function on_load()
         nbr_player_selected.value = settings.number_of_players
         player_selection_choice.value = itertools.find(
-            settings.player_selection,
-            choices_values
+            settings.player_selection, choices_values
         )
         update_player_selection_choices()
     end

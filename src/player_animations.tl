@@ -64,8 +64,7 @@ local function get_animation_frame_duration(action: Action): number
 end
 
 local function get_sprite_set(
-    character_asset: CharacterName,
-    invulnerable: boolean
+    character_asset: CharacterName, invulnerable: boolean
 ): SpriteImages
     if invulnerable then
         return sprites_invulnerable[character_asset]
@@ -75,8 +74,7 @@ local function get_sprite_set(
 end
 
 local function character_animation(
-    character_asset: CharacterName,
-    invulnerable: boolean
+    character_asset: CharacterName, invulnerable: boolean
 ): {PlayerState: {Action: {Direction: Animation}}}
     local resolved_sprites = get_sprite_set(character_asset, invulnerable)
     local character_animations: {PlayerState: {Action: {Direction: Animation}}} = {}
@@ -87,9 +85,7 @@ local function character_animation(
             local frame_duration = get_animation_frame_duration(action)
             for direction, sprite_image in pairs(by_direction) do
                 character_animations[state][action][direction] = animations.new(
-                    sprite_image,
-                    18,
-                    frame_duration
+                    sprite_image, 18, frame_duration
                 )
             end
         end
@@ -166,10 +162,7 @@ local function stun_cry_displacement(player: Player): Vector
 end
 
 local function get_image_pos_in_front_of_player(
-    player: Player,
-    image: Image,
-    x_scaling: number,
-    y_scaling: number
+    player: Player, image: Image, x_scaling: number, y_scaling: number
 ): Point
     local pos = player.position
     if player.direction == "left" or player.direction == "right" then
@@ -194,10 +187,7 @@ local function draw_sonic_blasts(player: Player)
 
     local function get_text_position(scaling: number, wave_image: Image): Point
         local pos = get_image_pos_in_front_of_player(
-            player,
-            wave_image,
-            scaling,
-            scaling
+            player, wave_image, scaling, scaling
         )
         return pos:move(DINO_SONIC_BLAST_POSITION[player.direction])
     end
@@ -390,9 +380,7 @@ function PlayerAnimations:add_new(player: Player)
 end
 
 local function character_sprite_for_action(
-    character_asset: CharacterName,
-    state: PlayerState,
-    action: Action
+    character_asset: CharacterName, state: PlayerState, action: Action
 ): {Direction: Image}
     if state == "mounted" then
         if action == "jump_on" or action == "jump_off" then
@@ -436,8 +424,7 @@ local function character_sprite_for_dying(character_asset: CharacterName): {Dire
 end
 
 local function character_sprite_for_stunned(
-    character_asset: CharacterName,
-    state: PlayerState
+    character_asset: CharacterName, state: PlayerState
 ): {Direction: Image}
     if state == "mounted" then
         -- Stunned when mounted has same sprite as for walking
@@ -455,8 +442,7 @@ local function character_sprite_for_stunned(
 end
 
 local function character_sprites_for_state(
-    character_asset: CharacterName,
-    state: PlayerState
+    character_asset: CharacterName, state: PlayerState
 ): {Action: {Direction: Image}}
     local sprite_images <total>: {Action: {Direction: Image}} = {
         walk = character_sprite_for_action(character_asset, state, "walk"),

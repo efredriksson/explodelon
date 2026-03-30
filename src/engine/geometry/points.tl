@@ -16,8 +16,7 @@ end
 
 function points.new(x: number, y: number): Point
    local self: Point = setmetatable(
-       {},
-       { __index = Point, __tostring = point_to_string }
+       {}, { __index = Point, __tostring = point_to_string }
    )
    self.x = x or 0
    self.y = y or 0

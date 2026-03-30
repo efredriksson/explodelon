@@ -174,8 +174,7 @@ function Battle:load()
         self.hard_blocks.on_ground.set
     )
     self.lightning_blockers = collision.new_combined_group(
-        self.pressure_blocks.on_ground.set,
-        self.hard_blocks.on_ground.set
+        self.pressure_blocks.on_ground.set, self.hard_blocks.on_ground.set
     )
     self.blocking_blocks_group = collision.new_combined_group(
         self.soft_blocks.on_ground.set,
@@ -185,9 +184,7 @@ function Battle:load()
 end
 
 function Battle.new(
-    player_selection: Scene,
-    score_board_: ScoreBoard,
-    win_condition_: WinCondition
+    player_selection: Scene, score_board_: ScoreBoard, win_condition_: WinCondition
 ): Battle
    	local self: Battle = setmetatable({}, { __index = Battle })
     self.team_by_player_id = {}
@@ -236,8 +233,7 @@ end
 
 function Battle:handle_bomb_drop_input(player: Player)
     local placed_bombs: {Entity} = itertools.sets_as_list(
-        self.bombs.on_ground.set,
-        self.lightning_bombs.on_ground.set
+        self.bombs.on_ground.set, self.lightning_bombs.on_ground.set
     )
     if joysticks.is_pressed(player.id, joysticks.BUTTONS.R) then
         self.bombs:place_bomb(player, placed_bombs)
@@ -335,9 +331,7 @@ function Battle:check_if_finished(dt: number)
         self.state = "finished"
         music:stop()
         scenes.set(battle_end_scene.new_for_winners(
-            self,
-            self.win_condition.winners,
-            self.score_board
+            self, self.win_condition.winners, self.score_board
         )
         )
     elseif self.win_condition.is_draw then
@@ -348,13 +342,10 @@ function Battle:check_if_finished(dt: number)
 end
 
 function Battle:_handle_stun_cry(
-    lookup: Lookup,
-    alive_players: ReadableGroup<Player>,
-    player: Player
+    lookup: Lookup, alive_players: ReadableGroup<Player>, player: Player
 )
     local hit_players = lookup:in_box_and_group(
-        player:get_stun_cry_hitbox(),
-        alive_players
+        player:get_stun_cry_hitbox(), alive_players
     )
     for _, hit_player in ipairs(hit_players) do
         if hit_player.action ~= "stunned" then
@@ -372,16 +363,14 @@ function Battle:_handle_sonic_blast(
     player: Player
 )
     local hit_bombs = lookup:in_box_and_group(
-        player:get_sonic_blast_hitbox(),
-        bombs_group
+        player:get_sonic_blast_hitbox(), bombs_group
     )
     for _, hit_bomb in ipairs(hit_bombs) do
         hit_bomb:blow_up()
     end
 
     local hit_blocks = lookup:in_box_and_group(
-        player:get_sonic_blast_hitbox(),
-        soft_blocks_group
+        player:get_sonic_blast_hitbox(), soft_blocks_group
     )
     for _, hit_block in ipairs(hit_blocks) do
         hit_block:reveal()
@@ -443,10 +432,7 @@ function Battle:update(dt: number)
         lookup
     )
     self.lightning_bombs:update(
-        dt,
-        self.lightning_blockers,
-        self.alive_players_group,
-        lookup
+        dt, self.lightning_blockers, self.alive_players_group, lookup
     )
     trace_bombs:stop()
 
@@ -460,8 +446,7 @@ function Battle:update(dt: number)
             self:handle_bomb_drop_input(player)
             local area_close_to_player = player:movementbox():expand(grid.TILE_SIZE / 2)
             local close_blocks = lookup:in_box_and_group(
-                area_close_to_player,
-                self.blocking_blocks_group
+                area_close_to_player, self.blocking_blocks_group
             )
             movement.set_position_and_dir_from_input(
                 player,
@@ -475,12 +460,7 @@ function Battle:update(dt: number)
                 maps.get_layout():has_ice()
             )
             dino_inputs.handle(
-                dt,
-                player,
-                self.bombs,
-                self.blocks_jump,
-                self.bombs.on_ground,
-                lookup
+                dt, player, self.bombs, self.blocks_jump, self.bombs.on_ground, lookup
             )
         end
         trace_player_movement:stop()
@@ -499,10 +479,7 @@ function Battle:update(dt: number)
         end
         if player:is_sonic_blasting() then
             self:_handle_sonic_blast(
-                lookup,
-                self.bombs.on_ground,
-                self.soft_blocks.on_ground,
-                player
+                lookup, self.bombs.on_ground, self.soft_blocks.on_ground, player
             )
         end
         trace_player_interaction:stop()
@@ -511,8 +488,7 @@ function Battle:update(dt: number)
 
     local trace_entities = tracing.start("entities")
     local hit_players = lookup:collisions_between(
-        self.alive_players_group,
-        self.pressure_blocks_group
+        self.alive_players_group, self.pressure_blocks_group
     )
     for player, _ in pairs(hit_players) do
         player:kill()
@@ -689,9 +665,7 @@ function battle.load_assets()
 end
 
 function battle.new(
-    player_selection: Scene,
-    score_board_: ScoreBoard,
-    win_condition_: WinCondition
+    player_selection: Scene, score_board_: ScoreBoard, win_condition_: WinCondition
 ): Battle
     return Battle.new(player_selection, score_board_, win_condition_)
 end
