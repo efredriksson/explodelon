@@ -63,7 +63,7 @@ function physics.new_trajectory(
     duration: number
 ): ProjectileTrajectory
     local self: ProjectileTrajectory = setmetatable(
-        {}, { __index = ProjectileTrajectory }
+        {}, {__index = ProjectileTrajectory}
     )
     self.height = start_height
     self.velocity = velocity

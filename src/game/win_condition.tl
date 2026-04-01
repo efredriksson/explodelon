@@ -66,9 +66,7 @@ function SinglesWinCondition:reset()
 end
 
 function win_condition.new_for_singles(score_board_: ScoreBoard): SinglesWinCondition
-    local self: SinglesWinCondition = setmetatable(
-        {}, { __index = SinglesWinCondition }
-    )
+    local self: SinglesWinCondition = setmetatable({}, {__index = SinglesWinCondition})
     self.score_board = score_board_
     self:reset()
     return self

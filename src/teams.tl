@@ -46,7 +46,7 @@ end
 
 function TeamSelectionGrouped.new(team: Team): TeamSelectionGrouped
     local self: TeamSelectionGrouped = setmetatable(
-        {}, { __index = TeamSelectionGrouped }
+        {}, {__index = TeamSelectionGrouped}
     )
     self.team = team
     self.selections = {}
