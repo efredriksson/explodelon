@@ -25,7 +25,7 @@ end
 function BattleEndScene.new(
     game_scene: Scene, next_scene: Scene, sound: Source, scene_lenght: number
 ): BattleEndScene
-    local self: BattleEndScene = setmetatable({}, { __index = BattleEndScene })
+    local self: BattleEndScene = setmetatable({}, {__index = BattleEndScene})
     self.game_scene = game_scene
     self.next_scene = next_scene
     self.played_sound = false

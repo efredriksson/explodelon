@@ -17,11 +17,11 @@ local TEXT_SIN_PERIOD = 9
 local TEXT_SIN_AMPLITUDE = 5
 
 local record GameTimer
-   time_left: number
-   have_played_hurry_up_sound: boolean
-   hurry_text_position: Point
-   hurry_text_sin_pos: number
-   hurry_text_mid_countdown: number
+    time_left: number
+    have_played_hurry_up_sound: boolean
+    hurry_text_position: Point
+    hurry_text_sin_pos: number
+    hurry_text_mid_countdown: number
 end
 
 local clock_font: ShadedFont
@@ -32,13 +32,13 @@ local hurry_up_sound: Source
 local timer = {GameTimer = GameTimer}
 
 function timer.new(): GameTimer
-   local self: GameTimer = setmetatable({}, { __index = GameTimer })
-   self.time_left = settings.game_rules.timings.battle
-   self.have_played_hurry_up_sound = false
-   self.hurry_text_position = hurry_letters_start
-   self.hurry_text_sin_pos = math.pi
-   self.hurry_text_mid_countdown = 1
-   return self
+    local self: GameTimer = setmetatable({}, {__index = GameTimer})
+    self.time_left = settings.game_rules.timings.battle
+    self.have_played_hurry_up_sound = false
+    self.hurry_text_position = hurry_letters_start
+    self.hurry_text_sin_pos = math.pi
+    self.hurry_text_mid_countdown = 1
+    return self
 end
 
 function timer.load_assets()
