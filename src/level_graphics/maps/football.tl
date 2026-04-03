@@ -16,6 +16,7 @@ local function load_image(rel_path: string): Image
 end
 
 local record FootballGraphics is MapGraphics
+
 end
 
 function FootballGraphics:get_soft_block_exploding(): Animation
@@ -52,7 +53,7 @@ function FootballGraphics:load_assets()
 end
 
 function football.new_graphics(): FootballGraphics
-    local self: FootballGraphics = setmetatable({}, { __index = FootballGraphics })
+    local self: FootballGraphics = setmetatable({}, {__index = FootballGraphics})
     return self
 end
 

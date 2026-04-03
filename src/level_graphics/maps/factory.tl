@@ -16,6 +16,7 @@ local function load_image(rel_path: string): Image
 end
 
 local record FactoryGraphics is MapGraphics
+
 end
 
 function FactoryGraphics:get_soft_block_exploding(): Animation
@@ -52,7 +53,7 @@ function FactoryGraphics:load_assets()
 end
 
 function factory.new_graphics(): FactoryGraphics
-    local self: FactoryGraphics = setmetatable({}, { __index = FactoryGraphics })
+    local self: FactoryGraphics = setmetatable({}, {__index = FactoryGraphics})
     return self
 end
 

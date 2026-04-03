@@ -33,7 +33,7 @@ function choices.new_boolean(
 ): MenuChoiceImpl<boolean>
     local selection = items.new_boolean_selection(on_by_default)
 
-    local self: MenuChoiceImpl<boolean> = setmetatable({}, { __index = MenuChoiceImpl })
+    local self: MenuChoiceImpl<boolean> = setmetatable({}, {__index = MenuChoiceImpl})
     self.y_pos = y_pos
     self.selection = selection
     self.menu_text = menu_text
@@ -46,8 +46,9 @@ function MenuChoiceImpl:update(_: Scene): boolean
 
     local function active_button(button: integer): boolean
         local time_until_fast_change = 0.3
-        return joysticks.is_pressed_any(button) or
-            joysticks.is_down_for_any(button, time_until_fast_change)
+        return joysticks.is_pressed_any(button) or joysticks.is_down_for_any(
+            button, time_until_fast_change
+        )
     end
 
     if active_button(joysticks.BUTTONS.RIGHT) then
@@ -61,14 +62,16 @@ function MenuChoiceImpl:update(_: Scene): boolean
 end
 
 function MenuChoiceImpl:draw(font: MenuFont)
-    local line = MenuLine.new({
-        MenuLineColumn.new("", 20),
-        MenuLineColumn.new(self.menu_text, 170),
-        MenuLineColumn.new("-", 30),
-        MenuLineColumn.new(self.selection:as_menu_string(), 50),
-        MenuLineColumn.new("", 50),
-    }, self.y_pos)
-
+    local line = MenuLine.new(
+        {
+            MenuLineColumn.new("", 20),
+            MenuLineColumn.new(self.menu_text, 170),
+            MenuLineColumn.new("-", 30),
+            MenuLineColumn.new(self.selection:as_menu_string(), 50),
+            MenuLineColumn.new("", 50),
+        },
+        self.y_pos
+    )
     local x_pos = 0.0
     for _, column in ipairs(line.columns) do
         font:print_centered(column.text, column.width, points.new(x_pos, self.y_pos))
@@ -82,7 +85,7 @@ function choices.new_integer(
     selection: MenuSelection<integer>,
     callback: function(integer)
 ): MenuChoiceImpl<integer>
-    local self: MenuChoiceImpl<integer> = setmetatable({}, { __index = MenuChoiceImpl })
+    local self: MenuChoiceImpl<integer> = setmetatable({}, {__index = MenuChoiceImpl})
     self.y_pos = y_pos
     self.selection = selection
     self.menu_text = menu_text
@@ -96,7 +99,7 @@ function choices.new_number(
     selection: MenuSelection<number>,
     callback: function(number)
 ): MenuChoiceImpl<number>
-    local self: MenuChoiceImpl<number> = setmetatable({}, { __index = MenuChoiceImpl })
+    local self: MenuChoiceImpl<number> = setmetatable({}, {__index = MenuChoiceImpl})
     self.y_pos = y_pos
     self.selection = selection
     self.menu_text = menu_text
@@ -110,7 +113,7 @@ function choices.new_enum<T>(
     selection: MenuSelection<T>,
     callback: function(T)
 ): MenuChoiceImpl<T>
-    local self: MenuChoiceImpl<T> = setmetatable({}, { __index = MenuChoiceImpl })
+    local self: MenuChoiceImpl<T> = setmetatable({}, {__index = MenuChoiceImpl})
     self.y_pos = y_pos
     self.selection = selection
     self.menu_text = menu_text
@@ -140,7 +143,7 @@ end
 function choices.new_done(
     menu_text: string, y_pos: integer, callback: function(ctx: Scene)
 ): MenuAction
-    local self: MenuAction = setmetatable({}, { __index = MenuAction })
+    local self: MenuAction = setmetatable({}, {__index = MenuAction})
     self.y_pos = y_pos
     self.menu_text = menu_text
     self.on_select = callback

@@ -16,6 +16,7 @@ local function load_image(rel_path: string): Image
 end
 
 local record IceRinkGraphics is MapGraphics
+
 end
 
 function IceRinkGraphics:get_soft_block_exploding(): Animation
@@ -52,7 +53,7 @@ function IceRinkGraphics:load_assets()
 end
 
 function ice_rink.new_graphics(): IceRinkGraphics
-    local self: IceRinkGraphics = setmetatable({}, { __index = IceRinkGraphics })
+    local self: IceRinkGraphics = setmetatable({}, {__index = IceRinkGraphics})
     return self
 end
 

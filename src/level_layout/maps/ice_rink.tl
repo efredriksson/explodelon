@@ -13,7 +13,7 @@ local record IceRinkLayout is MapLayout
 end
 
 function IceRinkLayout.new(): IceRinkLayout
-    local self: IceRinkLayout = setmetatable({}, { __index = IceRinkLayout })
+    local self: IceRinkLayout = setmetatable({}, {__index = IceRinkLayout})
     return self
 end
 
