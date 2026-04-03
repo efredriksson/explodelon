@@ -2,7 +2,7 @@ local animations = require("engine.animations")
 
 local type Animation = animations.Animation
 
-local type MapGraphics = interface
+local interface MapGraphics
     draw_background: function(self)
     get_soft_block_rigid: function(self): Animation
     get_soft_block_revealed: function(self): Animation
