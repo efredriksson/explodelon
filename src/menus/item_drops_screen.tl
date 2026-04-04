@@ -42,39 +42,42 @@ function item_drops_screen.new(previous_screen: Scene): MenuScreen
     local nbr_lightning_bombs_selected = items.new_number_selection(
         get_start(spawn_settings.lightning_bomb), numbers_to_select_from
     )
-    return screens.new({
-        choices.new_number(
-            "drop pct. of bombs",
-            50,
-            nbr_bombs_selected,
-            settings.set_spawn_of_bombs
-        ),
-        choices.new_number(
-            "drop pct. of fire",
-            65,
-            nbr_fires_selected,
-            settings.set_spawn_of_fire
-        ),
-        choices.new_number(
-            "drop pct. of speed",
-            80,
-            nbr_speeds_selected,
-            settings.set_spawn_of_speed
-        ),
-        choices.new_number(
-            "drop pct. of kicks",
-            95,
-            nbr_kicks_selected,
-            settings.set_spawn_of_kick
-        ),
-        choices.new_number(
-            "drop pct. of lightning-bombs",
-            110,
-            nbr_lightning_bombs_selected,
-            settings.set_spawn_of_lightning_bombs
-        ),
-        choices.new_done("back", 180, done)
-    }, done)
+    return screens.new(
+        {
+            choices.new_number(
+                "drop pct. of bombs",
+                50,
+                nbr_bombs_selected,
+                settings.set_spawn_of_bombs
+            ),
+            choices.new_number(
+                "drop pct. of fire",
+                65,
+                nbr_fires_selected,
+                settings.set_spawn_of_fire
+            ),
+            choices.new_number(
+                "drop pct. of speed",
+                80,
+                nbr_speeds_selected,
+                settings.set_spawn_of_speed
+            ),
+            choices.new_number(
+                "drop pct. of kicks",
+                95,
+                nbr_kicks_selected,
+                settings.set_spawn_of_kick
+            ),
+            choices.new_number(
+                "drop pct. of lightning-bombs",
+                110,
+                nbr_lightning_bombs_selected,
+                settings.set_spawn_of_lightning_bombs
+            ),
+            choices.new_done("back", 180, done),
+        },
+        done
+    )
 end
 
 return item_drops_screen

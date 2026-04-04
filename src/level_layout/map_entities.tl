@@ -30,7 +30,7 @@ local record BlockConfigs
 end
 
 function HardBlockConfig.new(position: Point, is_tall: boolean): HardBlockConfig
-    local self: HardBlockConfig = setmetatable({}, { __index = HardBlockConfig })
+    local self: HardBlockConfig = setmetatable({}, {__index = HardBlockConfig})
     self.position = position
     self.is_tall = is_tall
     return self
@@ -39,7 +39,7 @@ end
 function SoftBlockConfig.new(
     position: Point, item: ItemType, egg: boolean
 ): SoftBlockConfig
-    local self: SoftBlockConfig = setmetatable({}, { __index = SoftBlockConfig })
+    local self: SoftBlockConfig = setmetatable({}, {__index = SoftBlockConfig})
     self.position = position
     self.item = item
     self.egg = egg
@@ -76,7 +76,7 @@ end
 function BlockConfigs.new(
     hard: {HardBlockConfig}, soft: {SoftBlockConfig}, non_hard: {Point}
 ): BlockConfigs
-    local self: BlockConfigs = setmetatable({}, { __index = BlockConfigs })
+    local self: BlockConfigs = setmetatable({}, {__index = BlockConfigs})
     self.hard = hard
     self.soft = soft
     self.non_hard = non_hard
@@ -146,9 +146,9 @@ function map_entities.get_player_start_positions(number_of_players: integer): {P
         grid.get_tile_position(x_max, y_min),
         grid.get_tile_position(x_min, y_max),
     }
-    local center = {
-        grid.get_tile_position(math.floor(x_max / 2), math.floor(y_max / 2))
-    }
+    local center = {grid.get_tile_position(
+        math.floor(x_max / 2), math.floor(y_max / 2)
+    )}
     local inner_positions = {
         grid.get_tile_position(x_min + 5, y_min + 2),
         grid.get_tile_position(x_max - 5, y_max - 2),

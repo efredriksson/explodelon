@@ -30,7 +30,7 @@ local record Egg is Entity, Explodable
 end
 
 function Egg.new(position: Point): Egg
-    local self: Egg = setmetatable({}, { __index = Egg })
+    local self: Egg = setmetatable({}, {__index = Egg})
     self.position = position
     self.z_index = z_index.LEVEL
     self.breaking = false
@@ -94,9 +94,9 @@ end
 local eggs = {Eggs = Eggs}
 
 function eggs.new(): Eggs
-   local self: Eggs = setmetatable({}, { __index = Eggs })
-   self.on_ground = collision.new_group()
-   return self
+    local self: Eggs = setmetatable({}, {__index = Eggs})
+    self.on_ground = collision.new_group()
+    return self
 end
 
 function Eggs:update(dt: number)

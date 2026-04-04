@@ -2,13 +2,13 @@ local audio = {}
 local loaded_audio_sources: {Source} = {}
 
 local record SourcePool is Source
-   delegates: {Source}
+    delegates: {Source}
 end
 
 function SourcePool.new(delegates: {Source}): SourcePool
-   local self: SourcePool = setmetatable({}, { __index = SourcePool })
-   self.delegates = delegates
-   return self
+    local self: SourcePool = setmetatable({}, {__index = SourcePool})
+    self.delegates = delegates
+    return self
 end
 
 function SourcePool:setVolume(volume: number)
