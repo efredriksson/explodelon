@@ -29,7 +29,7 @@ local screens = {MenuScreen = MenuScreen}
 function screens.new(
     menu_choices: {MenuChoice}, go_back?: function(Scene), on_load?: function()
 ): MenuScreen
-    local self: MenuScreen = setmetatable({}, { __index = MenuScreen })
+    local self: MenuScreen = setmetatable({}, {__index = MenuScreen})
     self.menu_choices = menu_choices
     self.menu_selection = items.new_integer_selection(1, 1, #self.menu_choices)
     self.on_load = on_load or function() end

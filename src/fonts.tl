@@ -3,22 +3,22 @@ local points = require("engine.geometry.points")
 local type Point = points.Point
 
 local record ShadedFont
-   main: Font
-   shade: Font
+    main: Font
+    shade: Font
 end
 
 local record MenuFont
-   main: Font
-   outline: Font
+    main: Font
+    outline: Font
 end
 
 local fonts = {ShadedFont = ShadedFont, MenuFont = MenuFont}
 
 function fonts.new_shaded(main: Font, shade: Font): ShadedFont
-   local self: ShadedFont = setmetatable({}, { __index = ShadedFont })
-   self.main = main
-   self.shade = shade
-   return self
+    local self: ShadedFont = setmetatable({}, {__index = ShadedFont})
+    self.main = main
+    self.shade = shade
+    return self
 end
 
 function ShadedFont:draw(text: string, position: Point)
@@ -45,10 +45,10 @@ function fonts.new_shaded_numbers(): ShadedFont
 end
 
 function MenuFont.new(main: Font, outline: Font): MenuFont
-   local self: MenuFont = setmetatable({}, { __index = MenuFont })
-   self.main = main
-   self.outline = outline
-   return self
+    local self: MenuFont = setmetatable({}, {__index = MenuFont})
+    self.main = main
+    self.outline = outline
+    return self
 end
 
 local FONT_SYMBOLS = " abcdefghijklmnopqrstuvwxyz0123456789.!'-:*"

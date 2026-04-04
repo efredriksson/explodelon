@@ -82,7 +82,9 @@ function GameTimer:update(dt: number)
         if self.hurry_text_position.x < hurry_letters_mid and self.hurry_text_mid_countdown > 0 then
             self.hurry_text_mid_countdown = self.hurry_text_mid_countdown - dt
         else
-            self.hurry_text_position = self.hurry_text_position:move(TEXT_X_SPEED:scale(dt))
+            self.hurry_text_position = self.hurry_text_position:move(
+                TEXT_X_SPEED:scale(dt)
+            )
         end
         self.hurry_text_sin_pos = self.hurry_text_sin_pos + TEXT_SIN_PERIOD * dt
         self.hurry_text_sin_pos = math.fmod(self.hurry_text_sin_pos, 2 * math.pi)

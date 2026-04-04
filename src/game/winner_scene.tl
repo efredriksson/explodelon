@@ -53,7 +53,7 @@ local function get_x_pos(nbr: integer, total: integer): number
 end
 
 function winner_scene.new(names: {CharacterName}): GameWinnerScene
-    local self: GameWinnerScene = setmetatable({}, { __index = GameWinnerScene })
+    local self: GameWinnerScene = setmetatable({}, {__index = GameWinnerScene})
     self.names = names
     self.trophy = animations.new_with_frames(trophy_image, {2, 0.1, 0.1, 1, 0.1})
     self.trophy_positions = {}
@@ -107,7 +107,9 @@ function GameWinnerScene:update(dt: number)
     local gravity = vectors.new(0, 10):scale(dt)
     self.character_jump_velocity = self.character_jump_velocity:plus(gravity)
     for name, character_position in pairs(self.character_positions) do
-        self.character_positions[name] = character_position:move(self.character_jump_velocity:scale(dt))
+        self.character_positions[name] = character_position:move(
+            self.character_jump_velocity:scale(dt)
+        )
     end
 
     self.trophy:update(dt)
