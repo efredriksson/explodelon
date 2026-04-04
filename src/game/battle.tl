@@ -107,7 +107,9 @@ end
 function Battle:load()
     self.players = {}
     local character_selections = characters.get_selections()
-    local start_positions = map_entities.get_player_start_positions(#character_selections)
+    local start_positions = map_entities.get_player_start_positions(
+        #character_selections
+    )
     for i, character_selection in ipairs(character_selections) do
         local created_player = players.new(
             character_selection.player_id,
@@ -136,7 +138,9 @@ function Battle:load()
     self.tic_counter = 0
     self.audio_paused = false
     music:stop()
-    self.pressure_blocks_group = collision.new_group_from_set(self.pressure_blocks.on_ground.set)
+    self.pressure_blocks_group = collision.new_group_from_set(
+        self.pressure_blocks.on_ground.set
+    )
     self.bomb_entities_group = collision.new_group_from_set(self.bombs.on_ground.set)
     self.alive_players_group = collision.new_group(self.players)
     self.bombs_bounce_on = collision.new_combined_group(

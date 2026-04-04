@@ -65,7 +65,9 @@ local function dino_iamge(
         png_name = action
     end
 
-    local image = lutro.graphics.newImage("assets/tirras/level_" .. level .. "/" .. png_name .. ".png")
+    local image = lutro.graphics.newImage(
+        "assets/tirras/level_" .. level .. "/" .. png_name .. ".png"
+    )
     images.change_colors(image, pixel_maps[color])
     return image
 end

@@ -117,7 +117,9 @@ function Bomb:_trigger_belt(direction?: Vector): ConveyorBelt | nil
     for _, belt in ipairs(belts) do
         if self.position:distance_to(grid.snap_to(self.position)) <= 3 then
             local snap_pos = grid.snap_to(self.position)
-            if snap_pos:equal(belt.position) and not belt.direction:same_direction(bomb_move_dir) then
+            if snap_pos:equal(
+                belt.position
+            ) and not belt.direction:same_direction(bomb_move_dir) then
                 return belt
             end
         end
@@ -147,7 +149,9 @@ local function moving_into_new_block(
                 snaps_to.x + i * grid.TILE_SIZE,
                 snaps_to.y + j * grid.TILE_SIZE
             ))
-            if new_movementbox:overlap(close_block) and not movementbox:overlap(close_block) then
+            if new_movementbox:overlap(
+                close_block
+            ) and not movementbox:overlap(close_block) then
                 return close_block
             end
         end
@@ -401,7 +405,9 @@ function ThrownBomb.new(
 end
 
 function ThrownBomb:bounce()
-    self.target = self:get_position():move(self.trajectory:get_direction():scale(grid.TILE_SIZE))
+    self.target = self:get_position():move(
+        self.trajectory:get_direction():scale(grid.TILE_SIZE)
+    )
     self.trajectory = physics.calc_trajectory(
         0, 0, grid.TILE_SIZE * 0.8, 0.25, self.delegate.position, self.target
     )
@@ -545,14 +551,18 @@ function Bombs:update(
                 bomb_bouncing = true
             end
 
-            if not grid.area():contains(bomb:hitbox()) and not bomb.delegate:get_goal() then
+            if not grid.area():contains(
+                bomb:hitbox()
+            ) and not bomb.delegate:get_goal() then
                 bomb_bouncing = true
             end
 
             if bomb_bouncing then
                 if grid.outside_visible_area(bomb:hitbox()) then
                     -- Bomb outside seen map, loops around
-                    bomb.delegate.position = grid.outside_on_opposite_side(bomb:get_position())
+                    bomb.delegate.position = grid.outside_on_opposite_side(
+                        bomb:get_position()
+                    )
                     bomb.trajectory:reverse()
                 end
 

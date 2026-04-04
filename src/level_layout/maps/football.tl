@@ -14,7 +14,7 @@ local record FootballLayout is MapLayout
 end
 
 function FootballLayout.new(): FootballLayout
-    local self: FootballLayout = setmetatable({}, { __index = FootballLayout })
+    local self: FootballLayout = setmetatable({}, {__index = FootballLayout})
     return self
 end
 

@@ -31,7 +31,7 @@ local record Item is Entity, Explodable
 end
 
 function Item.new(item_type: ItemType, position: Point): Item
-    local self: Item = setmetatable({}, { __index = Item })
+    local self: Item = setmetatable({}, {__index = Item})
     self.type = item_type
     self.position = position
     self.z_index = z_index.LEVEL
@@ -77,10 +77,10 @@ end
 local items = {Items = Items}
 
 function items.new(): Items
-   local self: Items = setmetatable({}, { __index = Items })
-   self.on_ground = collision.new_group()
-   self.by_players = {}
-   return self
+    local self: Items = setmetatable({}, {__index = Items})
+    self.on_ground = collision.new_group()
+    self.by_players = {}
+    return self
 end
 
 function Items:possible_drop(available_spots: {Point})
@@ -133,8 +133,10 @@ function Items:drop_items_of(players_: {Player}, available_spots: {Point})
             self.by_players[player.id] = nil
             for i, item in ipairs(shuffled_items) do
                 if i <= max_items_to_drop then
-                   local spot_to_drop = available_spots[lutro.math.random(#available_spots)]
-                   self:drop_at(spot_to_drop, item)
+                    local spot_to_drop = available_spots[lutro.math.random(
+                        #available_spots
+                    )]
+                    self:drop_at(spot_to_drop, item)
                 end
             end
         end

@@ -91,17 +91,17 @@ end
 
 function GamePauseScene:update(dt: number)
     if joysticks.is_pressed(
-       self.player_id, joysticks.BUTTONS.START
+        self.player_id, joysticks.BUTTONS.START
     ) then
         scenes.set(self.paused_scene, true)
     end
     if joysticks.is_pressed(
-       self.player_id, joysticks.BUTTONS.L
+        self.player_id, joysticks.BUTTONS.L
     ) then
         self.toggle_if_playing(self.player_id)
     end
     if lutro.joystick.isDown(
-       self.player_id, joysticks.BUTTONS.SELECT
+        self.player_id, joysticks.BUTTONS.SELECT
     ) then
         self.exit_counter = self.exit_counter + dt
     else

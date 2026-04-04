@@ -79,7 +79,7 @@ function SpanTiming:_reqursive_report(indentation: string): string
     table.insert(
         parts,
         indentation .. self.name .. ": " .. string.format(
-           "%.1f", self.elapsed * 1000
+            "%.1f", self.elapsed * 1000
         ) .. "ms"
     )
     for _, next_level in ipairs(self.next_levels) do

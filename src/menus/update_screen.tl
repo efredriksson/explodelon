@@ -82,7 +82,9 @@ function UpdateCheckScene:download_finished(): boolean
 end
 
 function UpdateCheckScene:update(dt: number)
-    if joysticks.is_pressed_any(joysticks.BUTTONS.L) or joysticks.is_pressed_any(joysticks.BUTTONS.A) then
+    if joysticks.is_pressed_any(
+        joysticks.BUTTONS.L
+    ) or joysticks.is_pressed_any(joysticks.BUTTONS.A) then
         scenes.set(self.ctx)
         return
     end

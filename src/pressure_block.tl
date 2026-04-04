@@ -117,7 +117,9 @@ end
 function PressureBlocks:set_next_right_falling_block()
     self.right_fall_finished = false
     if self.next_right_index <= #self.right_positions then
-        self.right_falling = PressureBlock.new(self.right_positions[self.next_right_index])
+        self.right_falling = PressureBlock.new(
+            self.right_positions[self.next_right_index]
+        )
         self.next_right_index = self.next_right_index + 1
     else
         self.no_more_falling_blocks = true

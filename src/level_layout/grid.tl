@@ -58,11 +58,15 @@ function grid.get_random_tile(): Point
 end
 
 function grid.snap_to_x(x: number): number
-    return math.floor((x - PLAYER_AREA.x) / grid.TILE_SIZE + 0.5) * grid.TILE_SIZE + PLAYER_AREA.x
+    return math.floor(
+        (x - PLAYER_AREA.x) / grid.TILE_SIZE + 0.5
+    ) * grid.TILE_SIZE + PLAYER_AREA.x
 end
 
 function grid.snap_to_y(y: number): number
-    return math.floor((y - PLAYER_AREA.y) / grid.TILE_SIZE + 0.5) * grid.TILE_SIZE + PLAYER_AREA.y
+    return math.floor(
+        (y - PLAYER_AREA.y) / grid.TILE_SIZE + 0.5
+    ) * grid.TILE_SIZE + PLAYER_AREA.y
 end
 
 function grid.snap_to(pos: Point): Point

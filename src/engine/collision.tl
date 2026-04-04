@@ -13,8 +13,12 @@ end
 
 local function get_indexes(hitbox: Rectangle): (integer, integer, integer, integer)
     local block_size = settings.block_size
-    local x_min, y_min = math.ceil(hitbox.x / block_size), math.ceil(hitbox.y / block_size)
-    local x_max, y_max = math.ceil((hitbox.x + hitbox.width) / block_size), math.ceil((hitbox.y + hitbox.height) / block_size)
+    local x_min, y_min = math.ceil(
+        hitbox.x / block_size
+    ), math.ceil(hitbox.y / block_size)
+    local x_max, y_max = math.ceil(
+        (hitbox.x + hitbox.width) / block_size
+    ), math.ceil((hitbox.y + hitbox.height) / block_size)
 
     if y_max >= LIMIT_Y_TILES then
         logger.warning("Tile out of bound, collision checking will not work")
@@ -156,7 +160,9 @@ function Lookup:collisions_between<K is Entity, T>(
             for j = y_min, y_max do
                 local index = index_2d_to_1d(i, j)
                 for _, check_against in ipairs(self.map[index] or {}) do
-                    if entity ~= check_against and entity:hitbox():overlap(check_against:hitbox()) then
+                    if entity ~= check_against and entity:hitbox():overlap(
+                        check_against:hitbox()
+                    ) then
                         local in_group = group:get(check_against)
                         if not in_group is nil then
                             collides_with[entity] = in_group

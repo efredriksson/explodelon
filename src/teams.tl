@@ -27,7 +27,7 @@ end
 local teams = {Team = Team, TeamSelection = TeamSelection}
 
 function Team.new(id: integer, name: string, color: Color): Team
-    local self: Team = setmetatable({}, { __index = Team })
+    local self: Team = setmetatable({}, {__index = Team})
     self.id = id
     self.name = name
     self.color = color
@@ -56,7 +56,7 @@ end
 function teams.new_selection(
     team: Team, player_id: integer, sprite: CharacterName
 ): TeamSelection
-    local self: TeamSelection = setmetatable({}, { __index = TeamSelection })
+    local self: TeamSelection = setmetatable({}, {__index = TeamSelection})
     self.team = team
     self.player_id = player_id
     self.sprite = sprite

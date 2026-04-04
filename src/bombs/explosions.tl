@@ -327,7 +327,9 @@ local explosions = {Explosions = Explosions}
 
 function explosions.load_assets()
     local function get_explosion_image(tile: string): Image
-        local image = lutro.graphics.newImage("assets/bomb/explosion/explosion_" .. tile .. ".png")
+        local image = lutro.graphics.newImage(
+            "assets/bomb/explosion/explosion_" .. tile .. ".png"
+        )
         images.set_alpha(image, 175)
         return image
     end

@@ -7,7 +7,7 @@ local record MenuLineColumn
 end
 
 function MenuLineColumn.new(text: string, width: number): MenuLineColumn
-    local self: MenuLineColumn = setmetatable({}, { __index = MenuLineColumn })
+    local self: MenuLineColumn = setmetatable({}, {__index = MenuLineColumn})
     self.text = text
     self.width = width
     return self
@@ -19,7 +19,7 @@ local record MenuLine
 end
 
 function MenuLine.new(columns: {MenuLineColumn}, y_pos: number): MenuLine
-    local self: MenuLine = setmetatable({}, { __index = MenuLine })
+    local self: MenuLine = setmetatable({}, {__index = MenuLine})
     self.columns = columns
     self.y_pos = y_pos
     return self
@@ -42,7 +42,7 @@ local menu_items = {
 function menu_items.new_integer_selection(
     start: integer, min: integer, max: integer
 ): MenuSelection<integer>
-    local self: MenuSelection<integer> = setmetatable({}, { __index = MenuSelection })
+    local self: MenuSelection<integer> = setmetatable({}, {__index = MenuSelection})
     self.value = start
     self.min = min or 0
     self.max = max or 100
@@ -85,7 +85,7 @@ function menu_items.new_boolean_selection(on_by_default: boolean): MenuSelection
         end
     end
     local start_val = on_by_default and 1 or 2
-    local self: MenuSelection<boolean> = setmetatable({}, { __index = MenuSelection })
+    local self: MenuSelection<boolean> = setmetatable({}, {__index = MenuSelection})
     self.value = start_val
     self.min = 1
     self.max = 2
@@ -98,7 +98,7 @@ function menu_items.new_enum<T>(choices: {T}): MenuSelection<T>
     local function value_as_enum(value: integer): string
         return (tostring(choices[value]):gsub("_", " "))
     end
-    local self: MenuSelection<T> = setmetatable({}, { __index = MenuSelection })
+    local self: MenuSelection<T> = setmetatable({}, {__index = MenuSelection})
     self.value = 1
     self.min = 1
     self.max = #choices
@@ -114,7 +114,7 @@ function menu_items.new_time_selection(
         local time = times[index]
         return clock_text.from_time(time)
     end
-    local self: MenuSelection<number> = setmetatable({}, { __index = MenuSelection })
+    local self: MenuSelection<number> = setmetatable({}, {__index = MenuSelection})
     self.value = start_idx
     self.min = 1
     self.max = #times
@@ -130,7 +130,7 @@ function menu_items.new_number_selection(
         local val = choices[index]
         return tostring(val)
     end
-    local self: MenuSelection<number> = setmetatable({}, { __index = MenuSelection })
+    local self: MenuSelection<number> = setmetatable({}, {__index = MenuSelection})
     self.value = start_idx
     self.min = 1
     self.max = #choices

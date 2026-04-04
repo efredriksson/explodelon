@@ -200,8 +200,12 @@ end
 local lightnings = {Lightnings = Lightnings}
 
 function lightnings.load_assets()
-    lightning_initial_image = lutro.graphics.newImage("assets/lightning-bomb/explosion/explosion_center.png")
-    lightning_ending_image = lutro.graphics.newImage("assets/lightning-bomb/explosion/explosion_end.png")
+    lightning_initial_image = lutro.graphics.newImage(
+        "assets/lightning-bomb/explosion/explosion_center.png"
+    )
+    lightning_ending_image = lutro.graphics.newImage(
+        "assets/lightning-bomb/explosion/explosion_end.png"
+    )
 
     lightning_sound = audio.new_source_pool(
         "assets/lightning-bomb/explosion/detonate.ogg", "static", 5

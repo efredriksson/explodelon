@@ -261,8 +261,12 @@ function PlayerEntity:hitbox(): Rectangle
 end
 
 function PlayerEntity:update(dt: number)
-    self.regular[self.player.state][self.player.action][self.player.direction]:update(dt)
-    self.invulnerable[self.player.state][self.player.action][self.player.direction]:update(dt)
+    self.regular[self.player.state][self.player.action][self.player.direction]:update(
+        dt
+    )
+    self.invulnerable[self.player.state][self.player.action][self.player.direction]:update(
+        dt
+    )
 end
 
 function PlayerEntity:_get_animation(): Animation
@@ -332,13 +336,17 @@ function PlayerEntity:_draw_mounted()
     end
 
     if self.player.action == "dash" and self.player.dino and self.player.dino.level == 3 then
-        local shift_vector = DINO_AFTERIMGE_SHIFT[self.player.direction]:scale(self.player.after_image_shift)
+        local shift_vector = DINO_AFTERIMGE_SHIFT[self.player.direction]:scale(
+            self.player.after_image_shift
+        )
         -- Draw after image shifted behind when dashing
         draw(dino_animation, dino_position():move(shift_vector))
     end
 
     if self.player.action == "slide" and self.player.dino and self.player.dino.level == 2 then
-        local character_pos = draw_position:move(DINO_SLIDE_CHARACTER_ADJUST[self.player.direction])
+        local character_pos = draw_position:move(
+            DINO_SLIDE_CHARACTER_ADJUST[self.player.direction]
+        )
         if self.player.direction == "right" or self.player.direction == "left" then
             -- Need to draw dino in front of player sliding left or right with level 2 dino
             draw(player_animation, character_pos, true)
@@ -509,9 +517,15 @@ function player_animations.load_assets()
 
     local function get_sonic_blast_for_dir(dir: string): {SonicWaveColor: Image}
         local sonic_images<total>: {SonicWaveColor: Image} = {
-            purple = lutro.graphics.newImage("assets/tirras/sonic-" .. dir .. "-purple.png"),
-            white = lutro.graphics.newImage("assets/tirras/sonic-" .. dir .. "-white.png"),
-            yellow = lutro.graphics.newImage("assets/tirras/sonic-" .. dir .. "-yellow.png"),
+            purple = lutro.graphics.newImage(
+                "assets/tirras/sonic-" .. dir .. "-purple.png"
+            ),
+            white = lutro.graphics.newImage(
+                "assets/tirras/sonic-" .. dir .. "-white.png"
+            ),
+            yellow = lutro.graphics.newImage(
+                "assets/tirras/sonic-" .. dir .. "-yellow.png"
+            ),
         }
         return sonic_images
     end
@@ -569,7 +583,9 @@ function PlayerAnimations:get_all(): {Entity: Entity}
             entity_set_to_draw[entity] = entity
         end
     end
-    for _, mount in pairs(self.dinos:get_mount_entities_except(dinos_drawn_with_player)) do
+    for _, mount in pairs(
+        self.dinos:get_mount_entities_except(dinos_drawn_with_player)
+    ) do
         entity_set_to_draw[mount] = mount
     end
     return entity_set_to_draw
