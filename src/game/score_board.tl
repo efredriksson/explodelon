@@ -19,14 +19,14 @@ local type TeamSelection = teams.TeamSelection
 
 local score_font: ShadedFont
 local avatar_images: {CharacterName: Image}
-local COLOR_BLOCK_SIZE<const> = 19
-local AVATAR_WIDTH<const> = 18
-local SCORE_WIDTH<const> = 17
-local X_START<const> = 75
-local Y_START<const> = 3
-local Y_SCORE_ADJUST<const> = 5
-local AVATAR_SPACE_PADDING<const> = 10
-local TOTAL_WIDTH<const> = screen.WIDTH - X_START - AVATAR_SPACE_PADDING
+local COLOR_BLOCK_SIZE <const> = 19
+local AVATAR_WIDTH <const> = 18
+local SCORE_WIDTH <const> = 17
+local X_START <const> = 75
+local Y_START <const> = 3
+local Y_SCORE_ADJUST <const> = 5
+local AVATAR_SPACE_PADDING <const> = 10
+local TOTAL_WIDTH <const> = screen.WIDTH - X_START - AVATAR_SPACE_PADDING
 
 local interface ScoreBoard
     draw: function(self)
@@ -52,7 +52,7 @@ local record TeamScore
 end
 
 function TeamScore.new(team: Team, avatars: {CharacterSelection}): TeamScore
-    local self: TeamScore = setmetatable({}, { __index = TeamScore })
+    local self: TeamScore = setmetatable({}, {__index = TeamScore})
     self.team = team
     self.score = 0
     self.avatars = avatars
@@ -74,7 +74,7 @@ local score_board = {
 }
 
 function PlayerScore.new(id: integer, avatar: CharacterName): PlayerScore
-    local self: PlayerScore = setmetatable({}, { __index = PlayerScore })
+    local self: PlayerScore = setmetatable({}, {__index = PlayerScore})
     self.id = id
     self.score = 0
     self.avatar = avatar
@@ -143,7 +143,7 @@ function SinglesScoreBoard:game_finished(): boolean
 end
 
 function score_board.new_for_singles(): SinglesScoreBoard
-    local self: SinglesScoreBoard = setmetatable({}, { __index = SinglesScoreBoard })
+    local self: SinglesScoreBoard = setmetatable({}, {__index = SinglesScoreBoard})
     self.players = {}
     return self
 end
@@ -232,7 +232,7 @@ function TeamsScoreBoard:update_avatars(selections: {TeamSelection})
 end
 
 function score_board.new_for_teams(): TeamsScoreBoard
-    local self: TeamsScoreBoard = setmetatable({}, { __index = TeamsScoreBoard })
+    local self: TeamsScoreBoard = setmetatable({}, {__index = TeamsScoreBoard})
     self.teams = {}
     return self
 end

@@ -1,11 +1,11 @@
 local engine_settings = require("engine.settings")
 
 local enum ItemType
-   "speed"
-   "bomb"
-   "kick"
-   "fire"
-   "lightning_bomb"
+    "speed"
+    "bomb"
+    "kick"
+    "fire"
+    "lightning_bomb"
 end
 
 local record TimingRules
@@ -15,7 +15,7 @@ local record TimingRules
 end
 
 function TimingRules.new(): TimingRules
-    local self: TimingRules = setmetatable({}, { __index = TimingRules })
+    local self: TimingRules = setmetatable({}, {__index = TimingRules})
     self.nbr_battles = 3
     self.battle = 180
     self.sudden_death = 60
@@ -29,7 +29,7 @@ local record ItemRules
 end
 
 function ItemRules.new(): ItemRules
-    local self: ItemRules = setmetatable({}, { __index = ItemRules })
+    local self: ItemRules = setmetatable({}, {__index = ItemRules})
     self.nbr_soft_blocks = 105
     self.nbr_of_items = {bomb = 8, lightning_bomb = 0, fire = 6, speed = 4, kick = 8}
     self.spawn_rates = {bomb = 0, lightning_bomb = 0, fire = 0, speed = 0, kick = 0}
@@ -42,7 +42,7 @@ local record MadBombers
 end
 
 function MadBombers.new(): MadBombers
-    local self: MadBombers = setmetatable({}, { __index = MadBombers })
+    local self: MadBombers = setmetatable({}, {__index = MadBombers})
     self.enabled = true
     self.after_sudden_death = false
     return self
@@ -59,7 +59,7 @@ local record PlayerRules
 end
 
 function PlayerRules.new(): PlayerRules
-    local self: PlayerRules = setmetatable({}, { __index = PlayerRules })
+    local self: PlayerRules = setmetatable({}, {__index = PlayerRules})
     self.start_position_shuffle = true
     self.mad_bombers = MadBombers.new()
     self.start_speed = 60
@@ -84,7 +84,7 @@ local record DinoRules
 end
 
 function DinoRules.new(): DinoRules
-    local self: DinoRules = setmetatable({}, { __index = DinoRules })
+    local self: DinoRules = setmetatable({}, {__index = DinoRules})
     local enabled <total>: {DinoColor: boolean} = {
         blue = true,
         pink = true,
@@ -104,7 +104,7 @@ local record IceRules
 end
 
 function IceRules.new(): IceRules
-    local self: IceRules = setmetatable({}, { __index = IceRules })
+    local self: IceRules = setmetatable({}, {__index = IceRules})
     self.acceleration_factor = 4
     self.friction_factor = 1
     return self
@@ -119,7 +119,7 @@ local record GameRules
 end
 
 function GameRules.new(): GameRules
-    local self: GameRules = setmetatable({}, { __index = GameRules })
+    local self: GameRules = setmetatable({}, {__index = GameRules})
     self.players = PlayerRules.new()
     self.items = ItemRules.new()
     self.timings = TimingRules.new()
@@ -129,15 +129,15 @@ function GameRules.new(): GameRules
 end
 
 local type PlayerSelectionMethod = enum
-   "on"
-   "off"
-   "keep"
+    "on"
+    "off"
+    "keep"
 end
 
 local type Map = enum
-   "football"
-   "factory"
-   "ice_rink"
+    "football"
+    "factory"
+    "ice_rink"
 end
 
 local record Settings
@@ -146,7 +146,6 @@ local record Settings
     teams: boolean
     map: Map
     game_rules: GameRules
-    -- Type export
     ItemType: ItemType
     DinoColor: DinoColor
     PlayerSelectionMethod: PlayerSelectionMethod
@@ -154,7 +153,7 @@ local record Settings
 end
 
 function Settings.new(): Settings
-    local self: Settings = setmetatable({}, { __index = Settings })
+    local self: Settings = setmetatable({}, {__index = Settings})
     self.number_of_players = 4
     self.player_selection = "on"
     self.teams = false
@@ -293,9 +292,7 @@ function Settings.get_enabled_dinos(): {DinoColor}
 end
 
 function Settings.set_dino_enabled(color: DinoColor): function(value: boolean)
-    return function(value: boolean)
-        settings.game_rules.dinos.enabled[color] = value
-    end
+    return function(value: boolean) settings.game_rules.dinos.enabled[color] = value end
 end
 
 function Settings.set_teams(value: boolean)
