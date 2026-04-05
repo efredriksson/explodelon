@@ -38,7 +38,7 @@ function SoftBlock.new(
     item: ItemType,
     egg: boolean
 ): SoftBlock
-    local self: SoftBlock = setmetatable({}, { __index = SoftBlock })
+    local self: SoftBlock = setmetatable({}, {__index = SoftBlock})
     self.position = position
     self.z_index = z_index.LEVEL
     self.base_animation = base_animation
@@ -119,7 +119,7 @@ end
 local soft_blocks = {SoftBlocks = SoftBlocks, SoftBlock = SoftBlock}
 
 function soft_blocks.new(configs: {SoftBlockConfig}): SoftBlocks
-    local self: SoftBlocks = setmetatable({}, { __index = SoftBlocks })
+    local self: SoftBlocks = setmetatable({}, {__index = SoftBlocks})
     self.on_ground = collision.new_group()
     self.rigid_animation = soft_block_animations.get_rigid()
     self.revealed_animation = soft_block_animations.get_revealed()

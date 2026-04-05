@@ -39,7 +39,7 @@ local record LightningBomb is Entity, Kinematic
 end
 
 function LightningBomb.new(position: Point, hand_back: function()): LightningBomb
-    local self: LightningBomb = setmetatable({}, { __index = LightningBomb })
+    local self: LightningBomb = setmetatable({}, {__index = LightningBomb})
     self.position = position
     self.z_index = z_index.BELOW
     self.range = 6
@@ -129,7 +129,7 @@ function lightning_bombs.load_assets()
 end
 
 function lightning_bombs.new(): LightningBombs
-    local self: LightningBombs = setmetatable({}, { __index = LightningBombs })
+    local self: LightningBombs = setmetatable({}, {__index = LightningBombs})
     self.on_ground = collision.new_group()
     self.lightnings = lightnings.new()
     return self
@@ -154,7 +154,9 @@ function LightningBombs:place_lightning_bomb(player: Player, occupied: {Entity})
         return
     end
 
-    local hand_back_bomb = function() player.lightning_bomb = player.lightning_bomb + 1 end
+    local hand_back_bomb = function()
+        player.lightning_bomb = player.lightning_bomb + 1
+    end
     local bomb = LightningBomb.new(position, hand_back_bomb)
     self.on_ground:add(bomb)
     player.lightning_bomb = player.lightning_bomb - 1

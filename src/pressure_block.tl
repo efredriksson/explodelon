@@ -23,7 +23,7 @@ local pressure_block_image: Image
 local block_fall_shadow: Image
 
 function PressureBlock.new(target: Point): PressureBlock
-    local self: PressureBlock = setmetatable({}, { __index = PressureBlock })
+    local self: PressureBlock = setmetatable({}, {__index = PressureBlock})
     self.falling_position = points.new(target.x, -grid.TILE_SIZE)
     self.position = target
     self.z_index = z_index.LEVEL
@@ -95,7 +95,7 @@ end
 local pressure_blocks = {PressureBlocks = PressureBlocks, PressureBlock = PressureBlock}
 
 function pressure_blocks.new(): PressureBlocks
-    local self: PressureBlocks = setmetatable({}, { __index = PressureBlocks })
+    local self: PressureBlocks = setmetatable({}, {__index = PressureBlocks})
     self.left_positions = map_entities.get_left_side_pressure_blocks()
     self.right_positions = map_entities.get_right_side_pressure_blocks()
     self.on_ground = collision.new_group()

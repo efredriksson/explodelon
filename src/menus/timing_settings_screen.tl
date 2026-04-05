@@ -38,16 +38,10 @@ function timing_settings_screen.new(previous_screen: Scene): MenuScreen
     return screens.new(
         {
             choices.new_integer(
-                "nbr. battles",
-                50,
-                nbr_battles_selection,
-                settings.set_nbr_battles
+                "nbr. battles", 50, nbr_battles_selection, settings.set_nbr_battles
             ),
             choices.new_number(
-                "battle time",
-                70,
-                battle_time_selection,
-                settings.set_battle_time
+                "battle time", 70, battle_time_selection, settings.set_battle_time
             ),
             choices.new_number(
                 "sudden death time",

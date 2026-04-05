@@ -24,12 +24,12 @@ local record HardBlock is Explodable, Kinematic, Entity
 end
 
 function HardBlock.new(position: Point, is_tall: boolean): HardBlock
-   local self: HardBlock = setmetatable({}, { __index = HardBlock })
-   self.position = position
-   self.z_index = z_index.LEVEL
-   self.in_explosion = false
-   self.animation = hard_block_animations.get(is_tall)
-   return self
+    local self: HardBlock = setmetatable({}, {__index = HardBlock})
+    self.position = position
+    self.z_index = z_index.LEVEL
+    self.in_explosion = false
+    self.animation = hard_block_animations.get(is_tall)
+    return self
 end
 
 function HardBlock:get_position(): Point
@@ -64,7 +64,7 @@ end
 local hard_blocks = {HardBlock = HardBlock, HardBlocks = HardBlocks}
 
 function hard_blocks.new(configs: {HardBlockConfig}): HardBlocks
-    local self: HardBlocks = setmetatable({}, { __index = HardBlocks })
+    local self: HardBlocks = setmetatable({}, {__index = HardBlocks})
     self.on_ground = collision.new_group()
     for _, config in ipairs(configs) do
         self.on_ground:add(HardBlock.new(config.position, config.is_tall))

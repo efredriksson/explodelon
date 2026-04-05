@@ -1,4 +1,3 @@
-
 local interface Span
     name: string
     elapsed: number
@@ -17,7 +16,7 @@ local current_level: SpanTiming = nil
 local tracing = {Span = Span}
 
 function SpanTiming.new(name: string, previous_level: SpanTiming): SpanTiming
-    local self: SpanTiming = setmetatable({}, { __index = SpanTiming })
+    local self: SpanTiming = setmetatable({}, {__index = SpanTiming})
     self.name = name
     self.previous_level = previous_level
     self.next_levels = {}
@@ -30,7 +29,7 @@ local record SpanDummy is Span
 end
 
 function SpanDummy.new(): SpanDummy
-    local self: SpanDummy = setmetatable({}, { __index = SpanDummy })
+    local self: SpanDummy = setmetatable({}, {__index = SpanDummy})
     self.name = "dummy"
     self.elapsed = 1234
     return self
@@ -49,7 +48,7 @@ function SpanTiming:stop()
     current_level = self.previous_level
 end
 
-local DUMMY_TRACE_SPAM<const> = SpanDummy.new()
+local DUMMY_TRACE_SPAM <const> = SpanDummy.new()
 
 function tracing.start(name: string): Span
     if not current_level then

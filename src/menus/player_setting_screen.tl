@@ -48,10 +48,7 @@ function player_settings_screen.new(previous_screen: Scene): MenuScreen
                 settings.set_mad_bombers_after_sudden_death
             ),
             choices.new_integer(
-                "start speed",
-                95,
-                start_speed_selected,
-                settings.set_start_speed
+                "start speed", 95, start_speed_selected, settings.set_start_speed
             ),
             choices.new_boolean(
                 "start with kick",

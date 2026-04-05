@@ -16,10 +16,7 @@ function debug_screen.new(previous_screen: Scene): MenuScreen
     return screens.new(
         {
             choices.new_boolean(
-                "draw hitboxes",
-                50,
-                settings.draw_hitboxes,
-                settings.set_draw_hitboxs
+                "draw hitboxes", 50, settings.draw_hitboxes, settings.set_draw_hitboxs
             ),
             choices.new_boolean(
                 "log slow game loop",

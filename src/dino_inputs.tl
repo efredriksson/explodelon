@@ -92,9 +92,8 @@ local function handle_jump_input(
         dino.jump_powerup_for = dino.jump_powerup_for + dt
     end
 
-    if (joysticks.is_released(
-        player.id, joysticks.BUTTONS.B
-    ) and player:can_jump()) or player:must_jump() then
+    if (joysticks.is_released(player.id, joysticks.BUTTONS.B) and player:can_jump()) or
+        player:must_jump() then
         local jump_to = get_jump_target()
         player:jump_with_dino(jump_to)
     end
@@ -145,8 +144,7 @@ local function handle_throw_input(
             dino.throw_powerup_for / powerup_time_interval
         ) + 2
         nbr_blocks_to_throw = math.min(
-            nbr_blocks_to_throw,
-            dino.level * 2
+            nbr_blocks_to_throw, dino.level * 2
         ) -- clamp max throw dist
 
         local throw_bomb_from = get_position_throwing_from()

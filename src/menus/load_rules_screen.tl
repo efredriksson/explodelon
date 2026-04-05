@@ -54,9 +54,7 @@ function load_rules_screen.new(previous_screen: Scene, start_screen: Scene): Men
             choices.new_done("debug dinos", 110, load_debug_dino_rules),
             choices.new_done("debug kick", 125, load_debug_kick_rules),
             choices.new_done(
-                "debug lightning-bomb",
-                140,
-                load_debug_lightning_bomb_rules
+                "debug lightning-bomb", 140, load_debug_lightning_bomb_rules
             ),
             choices.new_done("debug performance", 155, load_debug_performance_rules),
             choices.new_done("back", 195, done),

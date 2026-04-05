@@ -42,10 +42,7 @@ function item_settings_screen.new(previous_screen: Scene): MenuScreen
                 settings.set_nbr_soft_blocks
             ),
             choices.new_integer(
-                "nbr. of bombs",
-                65,
-                nbr_bombs_selected,
-                settings.set_nbr_of_bombs
+                "nbr. of bombs", 65, nbr_bombs_selected, settings.set_nbr_of_bombs
             ),
             choices.new_integer(
                 "nbr. of lightning-bombs",
@@ -54,22 +51,13 @@ function item_settings_screen.new(previous_screen: Scene): MenuScreen
                 settings.set_nbr_of_lightning_bombs
             ),
             choices.new_integer(
-                "nbr. of fire",
-                95,
-                nbr_fires_selected,
-                settings.set_nbr_of_fire
+                "nbr. of fire", 95, nbr_fires_selected, settings.set_nbr_of_fire
             ),
             choices.new_integer(
-                "nbr. of speed",
-                110,
-                nbr_speeds_selected,
-                settings.set_nbr_of_speed
+                "nbr. of speed", 110, nbr_speeds_selected, settings.set_nbr_of_speed
             ),
             choices.new_integer(
-                "nbr. of kick",
-                125,
-                nbr_kicks_selected,
-                settings.set_nbr_of_kick
+                "nbr. of kick", 125, nbr_kicks_selected, settings.set_nbr_of_kick
             ),
             choices.new_done("back", 180, done),
         },

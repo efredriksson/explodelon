@@ -51,10 +51,7 @@ function item_drops_screen.new(previous_screen: Scene): MenuScreen
                 settings.set_spawn_of_bombs
             ),
             choices.new_number(
-                "drop pct. of fire",
-                65,
-                nbr_fires_selected,
-                settings.set_spawn_of_fire
+                "drop pct. of fire", 65, nbr_fires_selected, settings.set_spawn_of_fire
             ),
             choices.new_number(
                 "drop pct. of speed",
@@ -63,10 +60,7 @@ function item_drops_screen.new(previous_screen: Scene): MenuScreen
                 settings.set_spawn_of_speed
             ),
             choices.new_number(
-                "drop pct. of kicks",
-                95,
-                nbr_kicks_selected,
-                settings.set_spawn_of_kick
+                "drop pct. of kicks", 95, nbr_kicks_selected, settings.set_spawn_of_kick
             ),
             choices.new_number(
                 "drop pct. of lightning-bombs",

@@ -31,7 +31,6 @@ local type Goal = maps_entities.Goal
 local type ConveyorBelt = maps_entities.ConveyorBelt
 
 -- Bomb --
-
 local BOMB_TIMER_START = 2.5
 local bomb_shadow: Image
 local bomb_image: Image
@@ -48,17 +47,17 @@ local record Bomb is Entity, Kinematic, Explodable
 end
 
 function Bomb.new(position: Point, range: integer, hand_back: function()): Bomb
-   local self: Bomb = setmetatable({}, { __index = Bomb })
-   self.position = position
-   self.z_index = z_index.BELOW
-   self.velocity = vectors.new(0, 0)
-   self.range = range
-   self.timer = BOMB_TIMER_START
-   self.hand_back = hand_back
-   self.has_been_kicked = false
-   self.stopping = false
-   self.animation = animations.new(bomb_image, 16, 0.25)
-   return self
+    local self: Bomb = setmetatable({}, {__index = Bomb})
+    self.position = position
+    self.z_index = z_index.BELOW
+    self.velocity = vectors.new(0, 0)
+    self.range = range
+    self.timer = BOMB_TIMER_START
+    self.hand_back = hand_back
+    self.has_been_kicked = false
+    self.stopping = false
+    self.animation = animations.new(bomb_image, 16, 0.25)
+    return self
 end
 
 function Bomb:get_position(): Point
@@ -117,9 +116,8 @@ function Bomb:_trigger_belt(direction?: Vector): ConveyorBelt | nil
     for _, belt in ipairs(belts) do
         if self.position:distance_to(grid.snap_to(self.position)) <= 3 then
             local snap_pos = grid.snap_to(self.position)
-            if snap_pos:equal(
-                belt.position
-            ) and not belt.direction:same_direction(bomb_move_dir) then
+            if snap_pos:equal(belt.position) and
+                not belt.direction:same_direction(bomb_move_dir) then
                 return belt
             end
         end
@@ -145,13 +143,13 @@ local function moving_into_new_block(
 
     for i = -1, 1 do
         for j = -1, 1 do
-            local close_block = hitboxes.new_block(points.new(
-                snaps_to.x + i * grid.TILE_SIZE,
-                snaps_to.y + j * grid.TILE_SIZE
-            ))
-            if new_movementbox:overlap(
-                close_block
-            ) and not movementbox:overlap(close_block) then
+            local close_block = hitboxes.new_block(
+                points.new(
+                    snaps_to.x + i * grid.TILE_SIZE, snaps_to.y + j * grid.TILE_SIZE
+                )
+            )
+            if new_movementbox:overlap(close_block) and
+                not movementbox:overlap(close_block) then
                 return close_block
             end
         end
@@ -175,18 +173,18 @@ local record CanMoveBomb
 end
 
 function CanMoveBomb.new(new_position: Point, in_direction: Vector): CanMoveBomb
-   local self: CanMoveBomb = setmetatable({}, { __index = CanMoveBomb })
-   self.yes = true
-   self.new_position = new_position
-   self.in_direction = in_direction
-   self.will_hit = nil
-   self.should_stop = false
-   return self
+    local self: CanMoveBomb = setmetatable({}, {__index = CanMoveBomb})
+    self.yes = true
+    self.new_position = new_position
+    self.in_direction = in_direction
+    self.will_hit = nil
+    self.should_stop = false
+    return self
 end
 
 function CanMoveBomb:no(): CanMoveBomb
-   self.yes = false
-   return self
+    self.yes = false
+    return self
 end
 
 function Bomb:can_move(
@@ -224,7 +222,7 @@ function Bomb:can_move(
     end
 
     local belt_trigger = self:_trigger_belt(direction)
-    if not belt_trigger is nil then
+    if not (belt_trigger is nil) then
         direction = belt_trigger.direction:scale(direction:length())
         can_move_bomb.in_direction = direction:normalize()
     end
@@ -283,12 +281,7 @@ function Bomb:can_move(
     for _, bomb in ipairs(close_bombs) do
         if overlaps_significantly(bomb, test_hitbox) then
             if bomb:can_move(
-                direction,
-                occupies,
-                players_,
-                bombs,
-                lookup,
-                next_call_level
+                direction, occupies, players_, bombs, lookup, next_call_level
             ).yes then
                 can_move_bomb.will_hit = bomb
             end
@@ -303,7 +296,7 @@ function Bomb:can_move(
     end
 
     local new_block = moving_into_new_block(self:movementbox(), direction)
-    if not new_block is nil then
+    if not (new_block is nil) then
         if self.stopping then
             return can_move_bomb:no()
         end
@@ -317,12 +310,7 @@ function Bomb:can_move(
         for _, bomb in ipairs(close_bombs) do
             if overlaps_significantly(bomb, new_block) then
                 if bomb:can_move(
-                    direction,
-                    occupies,
-                    players_,
-                    bombs,
-                    lookup,
-                    next_call_level
+                    direction, occupies, players_, bombs, lookup, next_call_level
                 ).yes then
                     can_move_bomb.will_hit = bomb
                 end
@@ -348,7 +336,7 @@ function Bomb:update(
 
     if self.velocity:length() > 0 then
         local belt_trigger = self:_trigger_belt()
-        if not belt_trigger is nil then
+        if not (belt_trigger is nil) then
             self.position = belt_trigger.position
             self.velocity = belt_trigger.direction:scale(self.velocity:length())
         end
@@ -370,7 +358,7 @@ function Bomb:update(
         end
 
         local bomb_hit = can_move.will_hit
-        if not bomb_hit is nil then
+        if not (bomb_hit is nil) then
             bomb_hit:kick(dx:normalize())
         end
         if can_move.should_stop then
@@ -394,7 +382,7 @@ function ThrownBomb.new(
     throw_height: number,
     throw_time: number
 ): ThrownBomb
-    local self: ThrownBomb = setmetatable({}, { __index = ThrownBomb })
+    local self: ThrownBomb = setmetatable({}, {__index = ThrownBomb})
     self.delegate = delegate
     self.z_index = z_index.ABOVE
     self.target = target
@@ -449,7 +437,6 @@ function ThrownBomb:update(dt: number)
 end
 
 -- Bombs --
-
 local record Bombs
     on_ground: Group<Bomb>
     in_air: Group<ThrownBomb>
@@ -464,7 +451,7 @@ function bombs.load_assets()
 end
 
 function bombs.new(): Bombs
-    local self: Bombs = setmetatable({}, { __index = Bombs })
+    local self: Bombs = setmetatable({}, {__index = Bombs})
     self.on_ground = collision.new_group()
     self.in_air = collision.new_group()
     self.explosions = explosions.new()
@@ -551,9 +538,8 @@ function Bombs:update(
                 bomb_bouncing = true
             end
 
-            if not grid.area():contains(
-                bomb:hitbox()
-            ) and not bomb.delegate:get_goal() then
+            if not grid.area():contains(bomb:hitbox()) and
+                not bomb.delegate:get_goal() then
                 bomb_bouncing = true
             end
 

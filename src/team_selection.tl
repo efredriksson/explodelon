@@ -242,9 +242,9 @@ function TeamSelectionScene:get_players_to_draw(): {TeamPlayer}
     end
     table.sort(
         players_to_draw,
-        function(
-            a: TeamPlayer, b: TeamPlayer
-        ): boolean return a.position.y < b.position.y end
+        function(a: TeamPlayer, b: TeamPlayer): boolean
+            return a.position.y < b.position.y
+        end
     )
     return players_to_draw
 end
