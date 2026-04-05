@@ -2,11 +2,11 @@ local record EngineSettings
     draw_hitboxes: boolean
     log_scene_perf: boolean
     log_mem_usage: boolean
-    block_size: integer -- Used for default hitbox size and fast collision detection
+    block_size: integer
 end
 
 function EngineSettings.new(): EngineSettings
-    local self: EngineSettings = setmetatable({}, { __index = EngineSettings })
+    local self: EngineSettings = setmetatable({}, {__index = EngineSettings})
     self.draw_hitboxes = false
     self.log_scene_perf = false
     self.log_mem_usage = false

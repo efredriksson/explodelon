@@ -16,7 +16,6 @@ local function load_image(rel_path: string): Image
 end
 
 local record IceRinkGraphics is MapGraphics
-
 end
 
 function IceRinkGraphics:get_soft_block_exploding(): Animation

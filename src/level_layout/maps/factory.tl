@@ -16,7 +16,7 @@ local record FactoryLayout is MapLayout
 end
 
 function FactoryLayout.new(): FactoryLayout
-    local self: FactoryLayout = setmetatable({}, { __index = FactoryLayout })
+    local self: FactoryLayout = setmetatable({}, {__index = FactoryLayout})
     return self
 end
 

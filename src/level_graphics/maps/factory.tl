@@ -16,7 +16,6 @@ local function load_image(rel_path: string): Image
 end
 
 local record FactoryGraphics is MapGraphics
-
 end
 
 function FactoryGraphics:get_soft_block_exploding(): Animation

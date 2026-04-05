@@ -93,8 +93,7 @@ local function handle_jump_input(
     end
 
     if (joysticks.is_released(
-        player.id,
-        joysticks.BUTTONS.B
+        player.id, joysticks.BUTTONS.B
     ) and player:can_jump()) or player:must_jump() then
         local jump_to = get_jump_target()
         player:jump_with_dino(jump_to)
@@ -116,9 +115,9 @@ local function handle_throw_input(
 )
     local dino = player.dino
     local powerup_time_interval = 0.1
-    local block_from_player_dir = vectors.from_direction(
-        player.direction
-    ):scale(grid.TILE_SIZE)
+    local block_from_player_dir = vectors.from_direction(player.direction):scale(
+        grid.TILE_SIZE
+    )
 
     local function get_position_throwing_from(): Point
         local snaped_pos = grid.snap_to(player.position)
@@ -152,7 +151,7 @@ local function handle_throw_input(
 
         local throw_bomb_from = get_position_throwing_from()
         local bomb_to_throw = get_bomb_to_throw(throw_bomb_from)
-        if not bomb_to_throw is nil then
+        if not (bomb_to_throw is nil) then
             local throw_to = throw_bomb_from:move(
                 block_from_player_dir:scale(nbr_blocks_to_throw)
             )
@@ -161,7 +160,7 @@ local function handle_throw_input(
         dino.throw_powerup_for = 0
     elseif lutro.joystick.isDown(player.id, joysticks.BUTTONS.B) then
         local bomb_to_throw = get_bomb_to_throw(get_position_throwing_from())
-        if not bomb_to_throw is nil then
+        if not (bomb_to_throw is nil) then
             dino.throw_powerup_for = dino.throw_powerup_for + dt
         end
     else

@@ -47,7 +47,7 @@ local record TeamZone
 end
 
 local function new_zone(team: Team, area: Rectangle): TeamZone
-    local self: TeamZone = setmetatable({}, { __index = TeamZone })
+    local self: TeamZone = setmetatable({}, {__index = TeamZone})
     self.team = team
     self.bounds = area
     return self
@@ -71,7 +71,7 @@ end
 local function new_team_player(
     player_id: integer, sprite: CharacterName, position: Point
 ): TeamPlayer
-    local self: TeamPlayer = setmetatable({}, { __index = TeamPlayer })
+    local self: TeamPlayer = setmetatable({}, {__index = TeamPlayer})
     self.player_id = player_id
     self.sprite = sprite
     self.position = position
@@ -240,10 +240,12 @@ function TeamSelectionScene:get_players_to_draw(): {TeamPlayer}
     for _, p in pairs(self.team_players) do
         table.insert(players_to_draw, p)
     end
-    table.sort(players_to_draw, function(a: TeamPlayer, b: TeamPlayer): boolean
-        return a.position.y < b.position.y
-    end)
-
+    table.sort(
+        players_to_draw,
+        function(
+            a: TeamPlayer, b: TeamPlayer
+        ): boolean return a.position.y < b.position.y end
+    )
     return players_to_draw
 end
 
@@ -304,7 +306,7 @@ end
 function team_selection.new(
     player_selection_scene: Scene, music: Source
 ): TeamSelectionScene
-    local self: TeamSelectionScene = setmetatable({}, { __index = TeamSelectionScene })
+    local self: TeamSelectionScene = setmetatable({}, {__index = TeamSelectionScene})
     self.team_players = {}
     self.countdown_time = COUNTDOWN_DURATION
     self.music = music

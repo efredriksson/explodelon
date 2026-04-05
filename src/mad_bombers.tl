@@ -34,16 +34,16 @@ local HEAD_DIR_BY_SIDE: {Direction: Direction} = {
 }
 
 local type CartState = enum
-   "forward" -- Moving clockwise
-   "backward" -- Moving anti-clockwise
-   "idle"
+    "forward" -- Moving clockwise
+    "backward" -- Moving anti-clockwise
+    "idle"
 end
 
 local type CannonState = enum
-   "ready"
-   "pre-fire"
-   "firing"
-   "loading"
+    "ready"
+    "pre-fire"
+    "firing"
+    "loading"
 end
 
 local type CartAnimations = {Direction: {CartState: Animation}}
@@ -110,7 +110,7 @@ local record PlayerCart is Entity
 end
 
 function PlayerCart.new(id: integer, position: number, head: CharacterName): PlayerCart
-    local self: PlayerCart = setmetatable({}, { __index = PlayerCart })
+    local self: PlayerCart = setmetatable({}, {__index = PlayerCart})
     self.id = id
     self.position = position
     self.z_index = z_index.ABOVE
@@ -194,9 +194,9 @@ function PlayerCart:_get_draw_offset(): Vector
 end
 
 function PlayerCart:_get_x_y_draw_position(): Point
-    return rail.get_x_y_position(self.position):move(
-        self:_get_draw_offset()
-    ):move(self:_get_cart_image_padding())
+    return rail.get_x_y_position(self.position):move(self:_get_draw_offset()):move(
+        self:_get_cart_image_padding()
+    )
 end
 
 function PlayerCart:get_position(): Point
@@ -246,13 +246,16 @@ function PlayerCart:draw()
     end
 
     local cart_half_size = vectors.new(
-        animation.width,
-        animation.height
-    ):minus(total_padding()):scale(1 / 2)
+        animation.width, animation.height
+    ):minus(total_padding()):scale(
+        1 / 2
+    )
     local head_pos = points.new(
         cart_pos.x + cart_half_size.x - head_image:getWidth() / 2,
         cart_pos.y + cart_paddings.y - head_image:getHeight() / 2
-    ):move(pixel_tweaks())
+    ):move(
+        pixel_tweaks()
+    )
 
     if side == "right" then
         -- Note, special case for the right hand side. This is because
@@ -311,7 +314,7 @@ end
 local mad_bombers = {MadBombers = MadBombers}
 
 function mad_bombers.new(bombs_: Bombs): MadBombers
-    local self: MadBombers = setmetatable({}, { __index = MadBombers })
+    local self: MadBombers = setmetatable({}, {__index = MadBombers})
     self.by_player = {}
     self.bombs = bombs_
     return self
@@ -359,15 +362,13 @@ function MadBombers:handle_cart_move_input(dt: number, cart: PlayerCart)
     end
 
     if lutro.joystick.isDown(
-        cart.id,
-        joysticks.BUTTONS.R
+        cart.id, joysticks.BUTTONS.R
     ) and cart.cannon == "ready" then
         cart.cannon_powerup_for = cart.cannon_powerup_for + dt
     end
 
     if joysticks.is_released(
-        cart.id,
-        joysticks.BUTTONS.R
+        cart.id, joysticks.BUTTONS.R
     ) or cart.cannon_powerup_for > 0.8 then
         local fire_from, fire_len = cart:fire_cannon()
         if fire_from then

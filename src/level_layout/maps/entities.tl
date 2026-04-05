@@ -13,7 +13,7 @@ local record Goal
 end
 
 function Goal.new(position: Point, pair: Point): Goal
-    local self: Goal = setmetatable({}, { __index = Goal })
+    local self: Goal = setmetatable({}, {__index = Goal})
     self.position = position
     self.pair = pair
     return self
@@ -29,7 +29,7 @@ local record ConveyorBelt
 end
 
 function ConveyorBelt.new(position: Point, direction: Vector): ConveyorBelt
-    local self: ConveyorBelt = setmetatable({}, { __index = ConveyorBelt })
+    local self: ConveyorBelt = setmetatable({}, {__index = ConveyorBelt})
     self.position = position
     self.direction = direction
     return self

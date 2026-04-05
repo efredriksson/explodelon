@@ -1,4 +1,3 @@
-
 local type CharacterName = enum
     "kotetsu"
     "honey"
@@ -42,7 +41,7 @@ local in_queue_to_join: {integer} = {}
 function CharacterSelection.new(
     player_id: integer, sprite: CharacterName
 ): CharacterSelection
-    local self: CharacterSelection = setmetatable({}, { __index = CharacterSelection })
+    local self: CharacterSelection = setmetatable({}, {__index = CharacterSelection})
     self.player_id = player_id
     self.sprite = sprite
     return self
