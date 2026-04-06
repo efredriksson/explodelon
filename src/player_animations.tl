@@ -243,7 +243,7 @@ local record PlayerEntity is Entity
 end
 
 function PlayerEntity.new(player: Player, animated_dinos: AnimatedDinos): PlayerEntity
-    local self: PlayerEntity = setmetatable({}, { __index = PlayerEntity })
+    local self: PlayerEntity = setmetatable({}, {__index = PlayerEntity})
     self.z_index = z_index.LEVEL
     self.player = player
     self.regular = character_animation(player.sprite, false)
@@ -271,7 +271,9 @@ end
 
 function PlayerEntity:_get_animation(): Animation
     local function get_direction(): Direction
-        if self.player.dino and self.player.dino.action == "slide" and self.player.dino.level == 2 then
+        if self.player.dino
+            and self.player.dino.action == "slide"
+            and self.player.dino.level == 2 then
             -- For level 2 dino sliding the character riding it should turn depending
             -- on the direction sliding for it to look like they bracing sliding to a stop:
             return SLIDE_WIHT_DINO_DIR_MAP[self.player.direction]
@@ -335,7 +337,9 @@ function PlayerEntity:_draw_mounted()
         draw_sonic_blasts(self.player)
     end
 
-    if self.player.action == "dash" and self.player.dino and self.player.dino.level == 3 then
+    if self.player.action == "dash"
+        and self.player.dino
+        and self.player.dino.level == 3 then
         local shift_vector = DINO_AFTERIMGE_SHIFT[self.player.direction]:scale(
             self.player.after_image_shift
         )
@@ -343,7 +347,9 @@ function PlayerEntity:_draw_mounted()
         draw(dino_animation, dino_position():move(shift_vector))
     end
 
-    if self.player.action == "slide" and self.player.dino and self.player.dino.level == 2 then
+    if self.player.action == "slide"
+        and self.player.dino
+        and self.player.dino.level == 2 then
         local character_pos = draw_position:move(
             DINO_SLIDE_CHARACTER_ADJUST[self.player.direction]
         )
@@ -516,7 +522,7 @@ function player_animations.load_assets()
     }
 
     local function get_sonic_blast_for_dir(dir: string): {SonicWaveColor: Image}
-        local sonic_images<total>: {SonicWaveColor: Image} = {
+        local sonic_images <total>: {SonicWaveColor: Image} = {
             purple = lutro.graphics.newImage(
                 "assets/tirras/sonic-" .. dir .. "-purple.png"
             ),
@@ -550,7 +556,7 @@ function player_animations.load_assets()
 end
 
 function player_animations.new(initial_players: {Player}): PlayerAnimations
-    local self: PlayerAnimations = setmetatable({}, { __index = PlayerAnimations })
+    local self: PlayerAnimations = setmetatable({}, {__index = PlayerAnimations})
     self.entities = {}
     self.dinos = dino_animations.new()
     for _, player in ipairs(initial_players) do
@@ -605,7 +611,8 @@ end
 
 function PlayerAnimations:draw_lateral_jump_shadows()
     local function jumps_lateral(player: Player): boolean
-        return player.action == "jump" and player.jump_trajectory.lateral_velocity:length() > 0
+        return player.action == "jump"
+            and player.jump_trajectory.lateral_velocity:length() > 0
     end
 
     self:_draw_players_shadow(jumps_lateral)
@@ -613,7 +620,8 @@ end
 
 function PlayerAnimations:draw_vertical_jump_shadows()
     local function jumps_vertically(player: Player): boolean
-        return player.action == "jump" and player.jump_trajectory.lateral_velocity:length() == 0
+        return player.action == "jump"
+            and player.jump_trajectory.lateral_velocity:length() == 0
     end
 
     self:_draw_players_shadow(jumps_vertically)

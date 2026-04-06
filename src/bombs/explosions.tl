@@ -34,7 +34,6 @@ local explosion_medium: Source
 local explosion_large: Source
 
 -- Explosion --
-
 local record ExplosionAnimations
     right_end: Animation
     left_end: Animation
@@ -66,7 +65,7 @@ function ExplosionTile.new(
     is_last: boolean,
     explosion_type: ExplosionTileType
 ): ExplosionTile
-    local self: ExplosionTile = setmetatable({}, { __index = ExplosionTile })
+    local self: ExplosionTile = setmetatable({}, {__index = ExplosionTile})
     self.position = position
     self.z_index = z_index.LEVEL
     self.reduction = reduction
@@ -99,7 +98,7 @@ local record Explosion
 end
 
 function Explosion.new(position: Point, range: number, delay?: number): Explosion
-    local self: Explosion = setmetatable({}, { __index = Explosion })
+    local self: Explosion = setmetatable({}, {__index = Explosion})
     self.position = position
     self.blocked_at = {}
     self.range = range
@@ -113,12 +112,10 @@ function Explosion.new(position: Point, range: number, delay?: number): Explosio
         top_end = animations.new(explosion_end_top_image, 16, FRAME_DURATION),
         bottom_end = animations.new(explosion_end_bottom_image, 16, FRAME_DURATION),
         middle_horizontal = animations.new(
-            explosion_horizontal_image,
-            16,
-            FRAME_DURATION
+            explosion_horizontal_image, 16, FRAME_DURATION
         ),
         middle_vertical = animations.new(explosion_vertical_image, 16, FRAME_DURATION),
-        center = animations.new(explosion_center_image, 16, FRAME_DURATION)
+        center = animations.new(explosion_center_image, 16, FRAME_DURATION),
     }
 
     return self
@@ -250,12 +247,9 @@ function Explosion:_update_active_tiles(
 
     -- Propagate in all four directions
     for direction, delta in pairs(directions) do
-        for _, tile in ipairs(propagate(
-            self.position,
-            delta:scale(grid.TILE_SIZE),
-            1,
-            direction
-        )) do
+        for _, tile in ipairs(
+            propagate(self.position, delta:scale(grid.TILE_SIZE), 1, direction)
+        ) do
             self.tiles:add(tile)
         end
     end
@@ -267,10 +261,18 @@ function Explosion:get_tile_animation(tile: ExplosionTile): Animation
     end
 
     if tile.is_last then
-        if tile.type == "right" then return self.animations.right_end end
-        if tile.type == "left" then return self.animations.left_end end
-        if tile.type == "up" then return self.animations.top_end end
-        if tile.type == "down" then return self.animations.bottom_end end
+        if tile.type == "right" then
+            return self.animations.right_end
+        end
+        if tile.type == "left" then
+            return self.animations.left_end
+        end
+        if tile.type == "up" then
+            return self.animations.top_end
+        end
+        if tile.type == "down" then
+            return self.animations.bottom_end
+        end
     end
 
     if tile.type == "right" or tile.type == "left" then
@@ -357,9 +359,9 @@ function explosions.load_assets()
 end
 
 function explosions.new(): Explosions
-   local self: Explosions = setmetatable({}, { __index = Explosions })
-   self.on_ground = {}
-   return self
+    local self: Explosions = setmetatable({}, {__index = Explosions})
+    self.on_ground = {}
+    return self
 end
 
 function Explosions:place_explosion(position: Point, range: number, delay?: number)

@@ -36,7 +36,7 @@ local record LightningTile is Entity
 end
 
 function LightningTile.new(position: Point): LightningTile
-    local self: LightningTile = setmetatable({}, { __index = LightningTile })
+    local self: LightningTile = setmetatable({}, {__index = LightningTile})
     self.position = position
     self.z_index = z_index.LEVEL
     self.reduction = 4
@@ -65,7 +65,7 @@ local record Lightning
 end
 
 function Lightning.new(position: Point, range: number): Lightning
-    local self: Lightning = setmetatable({}, { __index = Lightning })
+    local self: Lightning = setmetatable({}, {__index = Lightning})
     self.position = position
     self.range = range
     self.tiles = collision.new_group()
@@ -132,10 +132,9 @@ function Lightning:_update_active_tiles(
             return false
         end
 
-        for _, _ in pairs(lookup:collisions_between(
-            collision.new_group({tile}),
-            blockers
-        )) do
+        for _, _ in pairs(
+            lookup:collisions_between(collision.new_group({tile}), blockers)
+        ) do
             return false
         end
 
@@ -214,9 +213,9 @@ function lightnings.load_assets()
 end
 
 function lightnings.new(): Lightnings
-   local self: Lightnings = setmetatable({}, { __index = Lightnings })
-   self.on_ground = {}
-   return self
+    local self: Lightnings = setmetatable({}, {__index = Lightnings})
+    self.on_ground = {}
+    return self
 end
 
 function Lightnings:place_explosion(position: Point, range: number)
