@@ -30,17 +30,17 @@ local CHARACTER_HEIGHT_ON_DINO = 8 -- How high up from ground player is when on 
 local DASH_WITH_DINO_SPEED_BONUS = {[1] = 50, [2] = 70, [3] = 90}
 
 local type Action = enum
-   "walk"
-   "jump_on"
-   "jump_off"
-   "jump"
-   "idle"
-   "dying"
-   "stunned"
-   "dash"
-   "crashed"
-   "slide"
-   "roar"
+    "walk"
+    "jump_on"
+    "jump_off"
+    "jump"
+    "idle"
+    "dying"
+    "stunned"
+    "dash"
+    "crashed"
+    "slide"
+    "roar"
 end
 
 local type PlayerState = enum
@@ -81,7 +81,7 @@ local record SonicWave
 end
 
 function SonicWave.new(color: SonicWaveColor, live_for: number): SonicWave
-    local self: SonicWave = setmetatable({}, { __index = SonicWave })
+    local self: SonicWave = setmetatable({}, {__index = SonicWave})
     self.duration = 0
     self.live_for = live_for
     self.color = color
@@ -92,7 +92,7 @@ local record Player is Explodable, Kinematic, Entity
     id: integer
     team_id: integer
     sprite: CharacterName
-   	position: Point
+    position: Point
     direction: Direction
     action: Action
     state: PlayerState
@@ -113,7 +113,6 @@ local record Player is Explodable, Kinematic, Entity
     sonic_wave_color_index: integer
     play_dino_roar: boolean
     dino: Dino
-
     jump_trajectory: ProjectileTrajectory
     jump_target: Point
     ice_velocity: Vector
@@ -127,7 +126,7 @@ local players = {
 }
 
 function players.new(id: integer, sprite: CharacterName, position: Point): Player
-    local self: Player = setmetatable({}, { __index = Player })
+    local self: Player = setmetatable({}, {__index = Player})
     self.id = id
     self.team_id = nil
     self.sprite = sprite
@@ -208,7 +207,8 @@ function Player:set_action(action: Action)
         return
     end
 
-    if (self.action == "dash" or action == "roar") and (action == "walk" or action == "idle") then
+    if (self.action == "dash" or action == "roar") and
+        (action == "walk" or action == "idle") then
         -- Not possible to exit dash action into walk or idle
         return
     end
@@ -237,7 +237,6 @@ end
 
 function Player:set_movement(position: Point, direction: Direction)
     if self.action == "dash" and self.position:equal(position) then
-
         self:set_action("crashed")
         if self.dino and self.dino.level == 1 then
             self.stunned_for = 1.2
@@ -313,9 +312,9 @@ function Player:accepts_input(): boolean
 end
 
 -- Player jump constants
-local JUMP_ON_TIME = 1.2               	   -- Unit: seconds
-local JUMP_OFF_TIME = 0.9                  -- Unit: seconds
-local JUMP_ON_HEIGHT = 2 * grid.TILE_SIZE  -- Unit: pixels (not SI unit!)
+local JUMP_ON_TIME = 1.2 -- Unit: seconds
+local JUMP_OFF_TIME = 0.9 -- Unit: seconds
+local JUMP_ON_HEIGHT = 2 * grid.TILE_SIZE -- Unit: pixels (not SI unit!)
 local JUMP_OFF_HEIGHT = 3 * grid.TILE_SIZE -- Unit: pixels (not SI unit!)
 
 function Player:jumps_onto(dino: Dino)

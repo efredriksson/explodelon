@@ -17,7 +17,7 @@ end
 local animations = {Animation = Animation}
 
 function animations.new_with_frames(image: Image, frame_durations: {number}): Animation
-    local self: Animation = setmetatable({}, { __index = Animation })
+    local self: Animation = setmetatable({}, {__index = Animation})
     self.image = image
     self.timer = 0
     self.width = image:getWidth() / #frame_durations

@@ -148,6 +148,7 @@ local function moving_into_new_block(
                     snaps_to.x + i * grid.TILE_SIZE, snaps_to.y + j * grid.TILE_SIZE
                 )
             )
+
             if new_movementbox:overlap(close_block) and
                 not movementbox:overlap(close_block) then
                 return close_block

@@ -171,12 +171,12 @@ local function new_dino_animations(color: DinoColor): DinoAnimations
 end
 
 function AnimatedDino.new(dino: Dino): AnimatedDino
-   	local self: AnimatedDino = setmetatable({}, { __index = AnimatedDino })
-   	self.dino = dino
+    local self: AnimatedDino = setmetatable({}, {__index = AnimatedDino})
+    self.dino = dino
     self.finished = false
     self.previous_action = "idle"
-   	self.animations = new_dino_animations(dino.color)
-   	return self
+    self.animations = new_dino_animations(dino.color)
+    return self
 end
 
 function AnimatedDino:get_animation(): Animation
@@ -212,7 +212,7 @@ local record MountAnimation is Entity
 end
 
 function MountAnimation.new(animated_dino: AnimatedDino, dino: Dino): MountAnimation
-    local self: MountAnimation = setmetatable({}, { __index = MountAnimation })
+    local self: MountAnimation = setmetatable({}, {__index = MountAnimation})
     self.z_index = z_index.LEVEL
     self.dino = dino
     self.animated_dino = animated_dino
@@ -248,9 +248,9 @@ function dino_animations.load_assets()
 end
 
 function dino_animations.new(): AnimatedDinos
-   local self: AnimatedDinos = setmetatable({}, { __index = AnimatedDinos })
-   self.mount_entity_by_dino = {}
-   return self
+    local self: AnimatedDinos = setmetatable({}, {__index = AnimatedDinos})
+    self.mount_entity_by_dino = {}
+    return self
 end
 
 function AnimatedDinos:update(dt: number)

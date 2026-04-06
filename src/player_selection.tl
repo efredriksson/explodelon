@@ -23,13 +23,13 @@ local type Scene = scenes.Scene
 local type Point = points.Point
 
 local record Character
-   sprite: CharacterName
-   number: integer
-   y_shift: number
+    sprite: CharacterName
+    number: integer
+    y_shift: number
 end
 
 function Character.new(sprite: CharacterName, number: integer): Character
-    local self: Character = setmetatable({}, { __index = Character })
+    local self: Character = setmetatable({}, {__index = Character})
     self.sprite = sprite
     self.number = number
     self.y_shift = 0.0
@@ -95,7 +95,7 @@ local record PlayerSelection is Scene
 end
 
 function PlayerSelection.new(): PlayerSelection
-    local self: PlayerSelection = setmetatable({}, { __index = PlayerSelection })
+    local self: PlayerSelection = setmetatable({}, {__index = PlayerSelection})
     self.score_board = score_board.new_for_singles()
     self.game = battle.new(
         self, self.score_board, win_condition.new_for_singles(self.score_board)
@@ -159,10 +159,8 @@ function PlayerSelection:check_for_new_player_selecting()
     -- indicating that they want to select a character
     for player_id = 1, joysticks.maxplayers() do
         local trying_to_select = joysticks.is_pressed(
-            player_id,
-            joysticks.BUTTONS.RIGHT
-        ) or
-            joysticks.is_pressed(player_id, joysticks.BUTTONS.LEFT)
+            player_id, joysticks.BUTTONS.RIGHT
+        ) or joysticks.is_pressed(player_id, joysticks.BUTTONS.LEFT)
 
         if trying_to_select and characters.have_not_selected(player_id) then
             self.player_selecting = player_id
@@ -203,8 +201,7 @@ function PlayerSelection:handle_player_input()
     elseif joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.LEFT) then
         ok_action = self.selector:decrement()
     elseif (joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.B) or
-            joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.R)) then
-
+        joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.R)) then
         local selected = table.remove(
             self.selectable_characters, self.selector:get_value()
         )

@@ -64,16 +64,15 @@ local type WinCondition = win_condition.WinCondition
 local music: Source
 
 local type BattleState = enum
-   "starting"
-   "ongoing"
-   "restarting"
-   "finished"
+    "starting"
+    "ongoing"
+    "restarting"
+    "finished"
 end
 
 local record Battle is Scene
     score_board: ScoreBoard
     player_selection: Scene
-
     hard_blocks: HardBlocks
     non_hard_block_positions: {Point}
     bombs: Bombs
@@ -190,13 +189,13 @@ end
 function Battle.new(
     player_selection: Scene, score_board_: ScoreBoard, win_condition_: WinCondition
 ): Battle
-   	local self: Battle = setmetatable({}, { __index = Battle })
+    local self: Battle = setmetatable({}, {__index = Battle})
     self.team_by_player_id = {}
     self.player_selection = player_selection
     self.score_board = score_board_
     self.win_condition = win_condition_
     self:load()
-   	return self
+    return self
 end
 
 function Battle:get_available_spots(alive_players: {Player}): {Point}
@@ -295,13 +294,15 @@ function Battle:handle_pause_input(): boolean
             self.countdown = countdown.new()
             self.audio_paused = true
             audio.pause()
-            scenes.set(pause_scene.new(
-                self,
-                player_id,
-                characters.exist_selection_for(player_id),
-                toggle_if_playing
+            scenes.set(
+                pause_scene.new(
+                    self,
+                    player_id,
+                    characters.exist_selection_for(player_id),
+                    toggle_if_playing
+                )
             )
-            )
+
             return true
         end
     end
@@ -309,13 +310,9 @@ function Battle:handle_pause_input(): boolean
     return false
 end
 
-local is_alive = function(player: Player): boolean
-    return player:is_alive()
-end
+local is_alive = function(player: Player): boolean return player:is_alive() end
 
-local is_dead = function(player: Player): boolean
-    return not player:is_alive()
-end
+local is_dead = function(player: Player): boolean return not player:is_alive() end
 
 function Battle:check_if_finished(dt: number)
     if self.state == "finished" then
@@ -334,9 +331,10 @@ function Battle:check_if_finished(dt: number)
     if self.win_condition.have_winner then
         self.state = "finished"
         music:stop()
-        scenes.set(battle_end_scene.new_for_winners(
-            self, self.win_condition.winners, self.score_board
-        )
+        scenes.set(
+            battle_end_scene.new_for_winners(
+                self, self.win_condition.winners, self.score_board
+            )
         )
     elseif self.win_condition.is_draw then
         self.state = "finished"
@@ -536,6 +534,7 @@ function Battle:update(dt: number)
     self.soft_blocks:update(dt)
     for _, soft_block in pairs(self.soft_blocks.on_ground.set) do
         if not soft_block.is_exploding then
+
             -- Do nothing
         elseif soft_block.item then
             self.items:drop_at(soft_block.position, soft_block.item)
