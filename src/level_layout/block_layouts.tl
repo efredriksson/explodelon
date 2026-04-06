@@ -64,10 +64,8 @@ local function place_soft_blocks(
         local i = lutro.math.random(dim.x_max + 1) - 1
         local j = lutro.math.random(dim.y_max + 1) - 1
         local cell: BlockType = layout[i][j]
-        if cell == "none" and not contains_point(
-            exclusion_zone,
-            grid.get_tile_position(i, j)
-        ) then
+        if cell == "none"
+            and not contains_point(exclusion_zone, grid.get_tile_position(i, j)) then
             layout[i][j] = "soft"
             count = count + 1
         end
@@ -100,7 +98,7 @@ end
 function QuadrantCell.new(
     i: integer, j: integer, corner_x: integer, corner_y: integer
 ): QuadrantCell
-    local self: QuadrantCell = setmetatable({}, { __index = QuadrantCell })
+    local self: QuadrantCell = setmetatable({}, {__index = QuadrantCell})
     self.i = i
     self.j = j
     self.distance = math.abs(i - corner_x) + math.abs(j - corner_y)
@@ -115,7 +113,9 @@ function QuadrantCell:can_place_soft_block(
 end
 
 local function distance_to_corner(first: QuadrantCell, second: QuadrantCell): boolean
-    if first.distance ~= second.distance then return first.distance < second.distance end
+    if first.distance ~= second.distance then
+        return first.distance < second.distance
+    end
     return first.i < second.i
 end
 
@@ -159,7 +159,9 @@ function block_layouts.quadrant(occupies: {Kinematic}): {integer: {integer: Bloc
         local count = per_quadrant + (quadrant_index <= remainder and 1 or 0)
         local placed = 0
         for _, cell in ipairs(cells) do
-            if placed >= count then break end
+            if placed >= count then
+                break
+            end
             if cell:can_place_soft_block(layout, exclusion_zone) then
                 layout[cell.i][cell.j] = "soft"
                 placed = placed + 1
