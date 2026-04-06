@@ -79,8 +79,8 @@ function GameTimer:update(dt: number)
         hurry_up_sound:play()
     end
     if self:warn_for_sudden_death() then
-        if self.hurry_text_position.x < hurry_letters_mid and
-            self.hurry_text_mid_countdown > 0 then
+        if self.hurry_text_position.x < hurry_letters_mid
+            and self.hurry_text_mid_countdown > 0 then
             self.hurry_text_mid_countdown = self.hurry_text_mid_countdown - dt
         else
             self.hurry_text_position = self.hurry_text_position:move(

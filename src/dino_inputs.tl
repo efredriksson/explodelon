@@ -92,8 +92,8 @@ local function handle_jump_input(
         dino.jump_powerup_for = dino.jump_powerup_for + dt
     end
 
-    if (joysticks.is_released(player.id, joysticks.BUTTONS.B) and player:can_jump()) or
-        player:must_jump() then
+    if (joysticks.is_released(player.id, joysticks.BUTTONS.B) and player:can_jump())
+        or player:must_jump() then
         local jump_to = get_jump_target()
         player:jump_with_dino(jump_to)
     end

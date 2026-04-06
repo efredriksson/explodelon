@@ -200,8 +200,8 @@ function PlayerSelection:handle_player_input()
         ok_action = self.selector:increment()
     elseif joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.LEFT) then
         ok_action = self.selector:decrement()
-    elseif (joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.B) or
-        joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.R)) then
+    elseif (joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.B)
+        or joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.R)) then
         local selected = table.remove(
             self.selectable_characters, self.selector:get_value()
         )

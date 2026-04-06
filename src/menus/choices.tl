@@ -46,9 +46,8 @@ function MenuChoiceImpl:update(_: Scene): boolean
 
     local function active_button(button: integer): boolean
         local time_until_fast_change = 0.3
-        return joysticks.is_pressed_any(button) or joysticks.is_down_for_any(
-            button, time_until_fast_change
-        )
+        return joysticks.is_pressed_any(button)
+            or joysticks.is_down_for_any(button, time_until_fast_change)
     end
 
     if active_button(joysticks.BUTTONS.RIGHT) then

@@ -47,8 +47,8 @@ function SinglesWinCondition:update(dt: number, players_: {Player})
         self.is_standing_count = true
     end
 
-    if not self.have_winner and
-        self.time_of_1_alive_player > time_to_wait_to_end_game then
+    if not self.have_winner
+        and self.time_of_1_alive_player > time_to_wait_to_end_game then
         local winner = alive_players[1]
         self.score_board:add_point(winner.id)
         self.have_winner = true
@@ -92,8 +92,8 @@ function TeamsWinCondition:update(dt: number, players_: {Player})
         self.is_standing_count = true
     end
 
-    if not self.have_winner and
-        self.time_of_1_alive_team > time_to_wait_to_end_game then
+    if not self.have_winner
+        and self.time_of_1_alive_team > time_to_wait_to_end_game then
         for winning_team, _ in pairs(alive_teams) do
             self.score_board:add_point(winning_team)
         end

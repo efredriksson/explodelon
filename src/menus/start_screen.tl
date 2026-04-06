@@ -39,7 +39,8 @@ function start_screen.new(): MenuScreen
         end
         scenes.set(player_selection.setup())
     end
-    local function go_back(_: Scene) end -- Does nothing at start screen
+    local function go_back(_: Scene)
+    end -- Does nothing at start screen
     local function enter_debug_screen(ctx: Scene)
         scenes.set(debug_screen.new(ctx))
     end
@@ -74,10 +75,7 @@ function start_screen.new(): MenuScreen
 
     local menu_choices: {MenuChoice} = {
         choices.new_integer(
-            "number of players",
-            50,
-            nbr_player_selected,
-            set_number_of_players
+            "number of players", 50, nbr_player_selected, set_number_of_players
         ),
         choices.new_enum(
             "player selection",

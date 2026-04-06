@@ -26,7 +26,12 @@ end
 
 local function file_exists(name: string): boolean
     local f = io.open(name, "r")
-    if f ~= nil then io.close(f) return true else return false end
+    if f ~= nil then
+        io.close(f)
+        return true
+    else
+        return false
+    end
 end
 
 local function file_size(name: string): integer
@@ -52,7 +57,7 @@ local record UpdateCheckScene is Scene
 end
 
 function update_screen.new(ctx: Scene): UpdateCheckScene
-    local self: UpdateCheckScene = setmetatable({}, { __index = UpdateCheckScene })
+    local self: UpdateCheckScene = setmetatable({}, {__index = UpdateCheckScene})
     self.ctx = ctx
     self.since_last_connection_check = 0
     self.have_connection = false
@@ -82,9 +87,8 @@ function UpdateCheckScene:download_finished(): boolean
 end
 
 function UpdateCheckScene:update(dt: number)
-    if joysticks.is_pressed_any(
-        joysticks.BUTTONS.L
-    ) or joysticks.is_pressed_any(joysticks.BUTTONS.A) then
+    if joysticks.is_pressed_any(joysticks.BUTTONS.L)
+        or joysticks.is_pressed_any(joysticks.BUTTONS.A) then
         scenes.set(self.ctx)
         return
     end
@@ -124,13 +128,21 @@ function UpdateCheckScene:draw()
     lutro.graphics.rectangle("fill", 0, 0, screen.WIDTH, screen.HEIGHT)
 
     local function connection_str(): string
-        if self.have_connection then return "ok" else return "  " end
+        if self.have_connection then
+            return "ok"
+        else
+            return "  "
+        end
     end
 
     show("checking connection... ", connection_str(), 40)
 
     local function is_up_to_date_str(): string
-        if self.is_up_to_date then return "yes" else return "no " end
+        if self.is_up_to_date then
+            return "yes"
+        else
+            return "no "
+        end
     end
 
     if self.have_connection then

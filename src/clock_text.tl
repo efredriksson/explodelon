@@ -16,7 +16,11 @@ function clock_text.from_time(time_in_sec: number): string
     end
 
     local function left_pad(n: integer, pad_char: string): string
-        if n < 10 then return pad_char .. n else return tostring(n) end
+        if n < 10 then
+            return pad_char .. n
+        else
+            return tostring(n)
+        end
     end
 
     return left_pad(first_num, " ") .. delimiter .. left_pad(second_num, "0")

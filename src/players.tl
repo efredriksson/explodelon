@@ -194,11 +194,15 @@ function Player:is_roaring(): boolean
 end
 
 function Player:is_stun_crying(): boolean
-    return self:is_roaring() and self.dino.color == "yellow" and self:have_roared_since_buildup_for() > 0
+    return self:is_roaring()
+        and self.dino.color == "yellow"
+        and self:have_roared_since_buildup_for() > 0
 end
 
 function Player:is_sonic_blasting(): boolean
-    return self:is_roaring() and self.dino.color == "purple" and self:have_roared_since_buildup_for() > 0
+    return self:is_roaring()
+        and self.dino.color == "purple"
+        and self:have_roared_since_buildup_for() > 0
 end
 
 function Player:set_action(action: Action)
@@ -207,8 +211,8 @@ function Player:set_action(action: Action)
         return
     end
 
-    if (self.action == "dash" or action == "roar") and
-        (action == "walk" or action == "idle") then
+    if (self.action == "dash" or action == "roar")
+        and (action == "walk" or action == "idle") then
         -- Not possible to exit dash action into walk or idle
         return
     end

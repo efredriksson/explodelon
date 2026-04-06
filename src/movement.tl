@@ -29,15 +29,15 @@ local record Movement
 end
 
 function Movement.new(dxdy: Vector, dir: Direction): Movement
-    local self: Movement = setmetatable({}, { __index = Movement })
+    local self: Movement = setmetatable({}, {__index = Movement})
     self.dir = dir
     self.dxdy = dxdy
     return self
 end
 
 function Movement.new_from_player(dt: number, player: Player): Movement
-   	local self: Movement = setmetatable({}, { __index = Movement })
-   	self.dir = player.direction
+    local self: Movement = setmetatable({}, {__index = Movement})
+    self.dir = player.direction
     self.dxdy = vectors.from_direction(self.dir):scale(dt * player:get_speed())
     return self
 end
@@ -46,7 +46,7 @@ local record CheckedMovement
     position: Point
     spent: boolean
     cuts_corner: boolean
-    constrained: boolean  -- true if anything was touched: block, bomb, boundary, or corner cut
+    constrained: boolean -- true if anything was touched: block, bomb, boundary, or corner cut
     bombs_kicked: {{Bomb, Vector}}
 end
 
@@ -56,13 +56,13 @@ function CheckedMovement.new(
     cuts_corner: boolean,
     bombs_kicked?: {{Bomb, Vector}}
 ): CheckedMovement
-   local self: CheckedMovement = setmetatable({}, { __index = CheckedMovement })
-   self.position = position
-   self.spent = spent
-   self.cuts_corner = cuts_corner
-   self.constrained = not spent or cuts_corner
-   self.bombs_kicked = bombs_kicked or {}
-   return self
+    local self: CheckedMovement = setmetatable({}, {__index = CheckedMovement})
+    self.position = position
+    self.spent = spent
+    self.cuts_corner = cuts_corner
+    self.constrained = not spent or cuts_corner
+    self.bombs_kicked = bombs_kicked or {}
+    return self
 end
 
 local record MovementWithCheck
@@ -74,7 +74,7 @@ end
 function MovementWithCheck.new(
     dxdy: Vector, dir: Direction, check: CheckedMovement
 ): MovementWithCheck
-    local self: MovementWithCheck = setmetatable({}, { __index = MovementWithCheck })
+    local self: MovementWithCheck = setmetatable({}, {__index = MovementWithCheck})
     self.dir = dir
     self.dxdy = dxdy
     self.check = check
@@ -139,8 +139,8 @@ local function in_corridor_and_walking_against_wall(
     local in_vertical_corridor = local_pos.x == 0 and local_pos.y > 0
     local in_horizontal_corridor = local_pos.y == 0 and local_pos.x > 0
 
-    return (in_vertical_corridor and (walk_dir == "left" or walk_dir == "right")) or
-        (in_horizontal_corridor and (walk_dir == "up" or walk_dir == "down"))
+    return (in_vertical_corridor and (walk_dir == "left" or walk_dir == "right"))
+        or (in_horizontal_corridor and (walk_dir == "up" or walk_dir == "down"))
 end
 
 local function in_end_of_corridor_and_walking_out(
@@ -155,10 +155,10 @@ local function in_end_of_corridor_and_walking_out(
         return val > grid.TILE_SIZE / 2
     end
 
-    return (movement.dir == "down" and second_half_of_block(local_pos.y)) or
-        (movement.dir == "up" and first_half_of_block(local_pos.y)) or
-        (movement.dir == "right" and second_half_of_block(local_pos.x)) or
-        (movement.dir == "left" and first_half_of_block(local_pos.x))
+    return (movement.dir == "down" and second_half_of_block(local_pos.y))
+        or (movement.dir == "up" and first_half_of_block(local_pos.y))
+        or (movement.dir == "right" and second_half_of_block(local_pos.x))
+        or (movement.dir == "left" and first_half_of_block(local_pos.x))
 end
 
 local function restrict_player_movement(
@@ -188,9 +188,7 @@ local function restrict_player_movement(
         end
 
         local along_wall = around_corner_move(
-            movement_len,
-            dist_to_corner,
-            pos_and_block_lateral_diff
+            movement_len, dist_to_corner, pos_and_block_lateral_diff
         ):permutate_if(walk_along_y_axis)
 
         -- Using 'new_position' instead of 'player_pos' here is not a bug, this
@@ -224,9 +222,8 @@ local function restrict_player_movement(
 
     local bombs_player_is_inside: {Kinematic: Kinematic} = {}
     for _, bomb in ipairs(close_bombs) do
-        if bomb.position:distance_to(
-            player.position
-        ) <= grid.TILE_SIZE * (3 / 4) and not bomb.has_been_kicked then
+        if bomb.position:distance_to(player.position) <= grid.TILE_SIZE * (3 / 4)
+            and not bomb.has_been_kicked then
             bombs_player_is_inside[bomb] = bomb
         end
     end
@@ -266,9 +263,8 @@ local function restrict_player_movement(
 
     for _, bomb in ipairs(close_bombs) do
         local bomb_hitbox = bomb:movementbox()
-        if walking_further_into_block(
-            bomb_hitbox
-        ) and not bombs_player_is_inside[bomb] then
+        if walking_further_into_block(bomb_hitbox)
+            and not bombs_player_is_inside[bomb] then
             -- If a bomb has been kicked then it is no longer to move
             -- freely in far inside it. This is to stop moving through
             -- bombs that are kicked against a player.
@@ -298,9 +294,8 @@ local function restrict_player_movement(
 
     for _, bomb in ipairs(close_lightning_bombs) do
         local bomb_hitbox = bomb:movementbox()
-        if walking_further_into_block(
-            bomb_hitbox
-        ) and not bombs_player_is_inside[bomb] then
+        if walking_further_into_block(bomb_hitbox)
+            and not bombs_player_is_inside[bomb] then
             local corner_cut = try_corner_cut(bomb_hitbox, bomb)
             if corner_cut then
                 return corner_cut
@@ -341,7 +336,6 @@ local function get_new_player_orientation(
     bombs_: ReadableGroup<Bomb>,
     lookup: Lookup
 ): Direction, Point, boolean
-
     --- Get movement priority, lower number is higher priority.
     -- For example walking out of corridor and cutting corner
     -- have a low priority and should be tried last. This is
@@ -406,7 +400,9 @@ local function get_new_player_orientation(
 
     local function any_constrained(checks: {MovementWithCheck}): boolean
         for _, dc in ipairs(checks) do
-            if dc.check.constrained then return true end
+            if dc.check.constrained then
+                return true
+            end
         end
         return false
     end
@@ -462,7 +458,6 @@ local function get_moves(
         if player.dino and player.dino.level >= 3 then
             -- For level 3 dinos then check if direction is changed which is
             -- allowed for highest level dino
-
             for _, move in ipairs(move_inputs) do
                 if move.dir ~= player.direction then
                     -- Also return move to continue with dash which will be used
@@ -482,8 +477,12 @@ local function is_diagonal(moves: {Movement}): boolean
     local has_x = false
     local has_y = false
     for _, move in ipairs(moves) do
-        if move.dxdy.x ~= 0 then has_x = true end
-        if move.dxdy.y ~= 0 then has_y = true end
+        if move.dxdy.x ~= 0 then
+            has_x = true
+        end
+        if move.dxdy.y ~= 0 then
+            has_y = true
+        end
     end
     return has_x and has_y
 end
@@ -563,6 +562,7 @@ local function get_ice_moves(
             any_move_has_direction(move_inputs, "up")
         )
     )
+
     player.ice_velocity = new_vel
 
     local result: {Movement} = {}
@@ -601,7 +601,8 @@ function movement.set_position_and_dir_from_input(
         player:slide_with_dino()
     end
 
-    local max_directions = (player.action == "slide" or player.action == "dash") and 1 or 2
+    local max_directions = (player.action == "slide" or player.action == "dash") and 1
+        or 2
     local new_dir, new_pos, constrained = get_new_player_orientation(
         player.direction,
         moves,

@@ -19,7 +19,9 @@ function ice_settings_screen.new(previous_screen: Scene): MenuScreen
 
     local function find_index(options: {number}, target: number): integer
         for i, v in ipairs(options) do
-            if v == target then return i end
+            if v == target then
+                return i
+            end
         end
         return 1
     end
@@ -32,21 +34,21 @@ function ice_settings_screen.new(previous_screen: Scene): MenuScreen
         find_index(friction_options, ice.friction_factor), friction_options
     )
 
-    return screens.new({
-        choices.new_number(
-            "acceleration",
-            50,
-            acceleration_selection,
-            settings.set_ice_acceleration_factor
-        ),
-        choices.new_number(
-            "friction",
-            70,
-            friction_selection,
-            settings.set_ice_friction_factor
-        ),
-        choices.new_done("back", 180, done)
-    }, done)
+    return screens.new(
+        {
+            choices.new_number(
+                "acceleration",
+                50,
+                acceleration_selection,
+                settings.set_ice_acceleration_factor
+            ),
+            choices.new_number(
+                "friction", 70, friction_selection, settings.set_ice_friction_factor
+            ),
+            choices.new_done("back", 180, done),
+        },
+        done
+    )
 end
 
 return ice_settings_screen

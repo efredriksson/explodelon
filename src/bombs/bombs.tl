@@ -116,8 +116,8 @@ function Bomb:_trigger_belt(direction?: Vector): ConveyorBelt | nil
     for _, belt in ipairs(belts) do
         if self.position:distance_to(grid.snap_to(self.position)) <= 3 then
             local snap_pos = grid.snap_to(self.position)
-            if snap_pos:equal(belt.position) and
-                not belt.direction:same_direction(bomb_move_dir) then
+            if snap_pos:equal(belt.position)
+                and not belt.direction:same_direction(bomb_move_dir) then
                 return belt
             end
         end
@@ -149,8 +149,8 @@ local function moving_into_new_block(
                 )
             )
 
-            if new_movementbox:overlap(close_block) and
-                not movementbox:overlap(close_block) then
+            if new_movementbox:overlap(close_block)
+                and not movementbox:overlap(close_block) then
                 return close_block
             end
         end
@@ -539,8 +539,8 @@ function Bombs:update(
                 bomb_bouncing = true
             end
 
-            if not grid.area():contains(bomb:hitbox()) and
-                not bomb.delegate:get_goal() then
+            if not grid.area():contains(bomb:hitbox())
+                and not bomb.delegate:get_goal() then
                 bomb_bouncing = true
             end
 
