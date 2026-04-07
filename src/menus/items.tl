@@ -76,7 +76,9 @@ function MenuSelection:as_menu_string(): string
     return self.tostring(self.value)
 end
 
-function menu_items.new_boolean_selection(on_by_default: boolean): MenuSelection<boolean>
+function menu_items.new_boolean_selection(
+    on_by_default: boolean
+): MenuSelection<boolean>
     local function value_as_on_off(value: integer): string
         if value == 1 then
             return "on"

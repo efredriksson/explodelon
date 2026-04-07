@@ -54,7 +54,9 @@ function FactoryLayout:get_conveyor_belts(): {ConveyorBelt}
     }
 end
 
-function FactoryLayout:get_block_layout(occupies: {Kinematic}): {integer: {integer: BlockType}}
+function FactoryLayout:get_block_layout(
+    occupies: {Kinematic}
+): {integer: {integer: BlockType}}
     return block_layouts.grid(occupies)
 end
 

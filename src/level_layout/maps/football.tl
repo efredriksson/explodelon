@@ -31,7 +31,9 @@ function FootballLayout:get_conveyor_belts(): {ConveyorBelt}
     return {}
 end
 
-function FootballLayout:get_block_layout(occupies: {Kinematic}): {integer: {integer: BlockType}}
+function FootballLayout:get_block_layout(
+    occupies: {Kinematic}
+): {integer: {integer: BlockType}}
     return block_layouts.grid(occupies)
 end
 

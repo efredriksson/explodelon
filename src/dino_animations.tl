@@ -99,7 +99,9 @@ local function dino_images_for_dir(
     return dino_animations
 end
 
-local function dino_images_for_color(color: DinoColor): {Direction : {DinoAction : {integer : Image}}}
+local function dino_images_for_color(
+    color: DinoColor
+): {Direction : {DinoAction : {integer : Image}}}
     return {
         up = dino_images_for_dir("up", color),
         down = dino_images_for_dir("down", color),
@@ -278,7 +280,9 @@ function AnimatedDinos:get_from(dino: Dino): Animation
     end
 end
 
-function AnimatedDinos:get_mount_entities_except(exclude: {Dino}): {Dino: MountAnimation}
+function AnimatedDinos:get_mount_entities_except(
+    exclude: {Dino}
+): {Dino: MountAnimation}
     local to_return: {Dino: MountAnimation} = {}
     for dino, mount in pairs(self.mount_entity_by_dino) do
         local is_excluded = false

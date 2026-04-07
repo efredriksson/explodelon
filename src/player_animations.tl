@@ -426,7 +426,9 @@ local function character_sprite_for_action(
     }
 end
 
-local function character_sprite_for_dying(character_asset: CharacterName): {Direction: Image}
+local function character_sprite_for_dying(
+    character_asset: CharacterName
+): {Direction: Image}
     local asset_file = "assets/" .. character_asset .. "/foot/dying.png"
     local image = lutro.graphics.newImage(asset_file)
     return {
