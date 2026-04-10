@@ -101,7 +101,7 @@ end
 
 local function dino_images_for_color(
     color: DinoColor
-): {Direction : {DinoAction : {integer : Image}}}
+): {Direction: {DinoAction: {integer: Image}}}
     return {
         up = dino_images_for_dir("up", color),
         down = dino_images_for_dir("down", color),
