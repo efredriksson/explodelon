@@ -7,11 +7,11 @@ end
 local itertools = {}
 
 function itertools.new_loop(start: integer, end_: integer, step?: integer): LoopIndex
-   local self: LoopIndex = setmetatable({}, { __index = LoopIndex })
-   self.start = start
-   self.end_ = end_
-   self.step = step or 1
-   return self
+    local self: LoopIndex = setmetatable({}, {__index = LoopIndex})
+    self.start = start
+    self.end_ = end_
+    self.step = step or 1
+    return self
 end
 
 function LoopIndex:reverse(): LoopIndex
@@ -22,7 +22,8 @@ function LoopIndex:values(): function(): integer
     local val = self.start - self.step
     local function value_iterator(): integer
         val = val + self.step
-        if (val <= self.end_ and self.step > 0) or (val >= self.end_ and self.step < 0) then
+        if (val <= self.end_ and self.step > 0)
+            or (val >= self.end_ and self.step < 0) then
             return val
         end
     end
@@ -45,9 +46,11 @@ function itertools.double_loop_inner_loopback(
 
     local i = 0
     local n = #values
-    return function (): integer, integer
+    return function(): integer, integer
         i = i + 1
-        if i <= n then return values[i][1], values[i][2] end
+        if i <= n then
+            return values[i][1], values[i][2]
+        end
     end
 end
 
@@ -72,7 +75,7 @@ function itertools.combine<T>(...: {T}): {T}
         end
     end
 
-   	return combined_list
+    return combined_list
 end
 
 function itertools.find<T>(value: T, list: {T}): integer
@@ -106,7 +109,9 @@ end
 function itertools.shuffle<T>(t: {T}): {T}
     -- https://stackoverflow.com/a/68486276
     local s = {}
-    for i = 1, #t do s[i] = t[i] end
+    for i = 1, #t do
+        s[i] = t[i]
+    end
     for i = #t, 2, -1 do
         local j = lutro.math.random(i)
         s[i], s[j] = s[j], s[i]
