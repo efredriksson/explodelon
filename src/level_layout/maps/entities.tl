@@ -52,8 +52,7 @@ local type MapLayout = interface
     get_conveyor_belts: function(self): {ConveyorBelt}
     get_goals: function(self): {Goal}
     get_block_layout: function(
-        self,
-        occupies: {Kinematic}
+        self, occupies: {Kinematic}
     ): {integer: {integer: BlockType}}
     has_ice: function(self): boolean
 end
