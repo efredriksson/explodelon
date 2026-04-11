@@ -146,9 +146,9 @@ function map_entities.get_player_start_positions(number_of_players: integer): {P
         grid.get_tile_position(x_max, y_min),
         grid.get_tile_position(x_min, y_max),
     }
-    local center = {grid.get_tile_position(
-        math.floor(x_max / 2), math.floor(y_max / 2)
-    )}
+    local center = {
+        grid.get_tile_position(math.floor(x_max / 2), math.floor(y_max / 2))
+    }
     local inner_positions = {
         grid.get_tile_position(x_min + 5, y_min + 2),
         grid.get_tile_position(x_max - 5, y_max - 2),
