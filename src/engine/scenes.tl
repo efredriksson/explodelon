@@ -20,7 +20,7 @@ local record MemorySample
 end
 
 function MemorySample.new(): MemorySample
-    local self: MemorySample = setmetatable({}, { __index = MemorySample })
+    local self: MemorySample = setmetatable({}, {__index = MemorySample})
     self.frame_count = 0
     self.accumulated_kb = 0
     return self
@@ -59,7 +59,7 @@ local record CheckMemoryOfScene is Scene
 end
 
 function CheckMemoryOfScene.new(to_wrap: Scene): CheckMemoryOfScene
-    local self: CheckMemoryOfScene = setmetatable({}, { __index = CheckMemoryOfScene })
+    local self: CheckMemoryOfScene = setmetatable({}, {__index = CheckMemoryOfScene})
     self.to_wrap = to_wrap
     self.is_internal = true
     self.update_sample = MemorySample.new()
@@ -92,10 +92,10 @@ local record WrapperScene is Scene
 end
 
 function WrapperScene.new(to_wrap: Scene): WrapperScene
-   local self: WrapperScene = setmetatable({}, { __index = WrapperScene })
-   self.to_wrap = to_wrap
-   self.is_internal = true
-   return self
+    local self: WrapperScene = setmetatable({}, {__index = WrapperScene})
+    self.to_wrap = to_wrap
+    self.is_internal = true
+    return self
 end
 
 function WrapperScene:load()
@@ -122,7 +122,7 @@ local record PerformanceSample
 end
 
 function PerformanceSample.new(): PerformanceSample
-    local self: PerformanceSample = setmetatable({}, { __index = PerformanceSample })
+    local self: PerformanceSample = setmetatable({}, {__index = PerformanceSample})
     self.frame_count = 0
     self.accumulated_seconds = 0
     return self
@@ -158,12 +158,14 @@ local record CheckPerformanceOfScene is Scene
 end
 
 function CheckPerformanceOfScene.new(to_wrap: Scene): CheckPerformanceOfScene
-   local self: CheckPerformanceOfScene = setmetatable({}, { __index = CheckPerformanceOfScene })
-   self.to_wrap = to_wrap
-   self.is_internal = true
-   self.update_sample = PerformanceSample.new()
-   self.draw_sample = PerformanceSample.new()
-   return self
+    local self: CheckPerformanceOfScene = setmetatable(
+        {}, {__index = CheckPerformanceOfScene}
+    )
+    self.to_wrap = to_wrap
+    self.is_internal = true
+    self.update_sample = PerformanceSample.new()
+    self.draw_sample = PerformanceSample.new()
+    return self
 end
 
 function CheckPerformanceOfScene:load()

@@ -1,24 +1,24 @@
+local explosions = require("bombs.explosions")
 local animations = require("engine.animations")
 local collision = require("engine.collision")
-local maps_entities = require("level_layout.maps.entities")
-local explosions = require("bombs.explosions")
-local map_entities = require("level_layout.map_entities")
-local grid = require("level_layout.grid")
-local hitboxes = require("engine.hitboxes")
-local itertools = require("itertools")
-local logger = require("engine.logger")
-local physics = require("engine.physics")
-local players = require("players")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
 local vectors = require("engine.geometry.vectors")
+local hitboxes = require("engine.hitboxes")
+local logger = require("engine.logger")
+local physics = require("engine.physics")
+local itertools = require("itertools")
+local grid = require("level_layout.grid")
+local map_entities = require("level_layout.map_entities")
+local maps_entities = require("level_layout.maps.entities")
+local players = require("players")
 local z_index = require("z_index")
 
 local type Animation = animations.Animation
 local type Explodable = require("bombs.explodable")
 local type Explosions = explosions.Explosions
-local type Kinematic = require("kinematic")
 local type Entity = require("engine.entity")
+local type Kinematic = require("kinematic")
 local type Group = collision.Group
 local type Player = players.Player
 local type ReadableGroup = collision.ReadableGroup
@@ -31,7 +31,6 @@ local type Goal = maps_entities.Goal
 local type ConveyorBelt = maps_entities.ConveyorBelt
 
 -- Bomb --
-
 local BOMB_TIMER_START = 2.5
 local bomb_shadow: Image
 local bomb_image: Image
@@ -48,17 +47,17 @@ local record Bomb is Entity, Kinematic, Explodable
 end
 
 function Bomb.new(position: Point, range: integer, hand_back: function()): Bomb
-   local self: Bomb = setmetatable({}, { __index = Bomb })
-   self.position = position
-   self.z_index = z_index.BELOW
-   self.velocity = vectors.new(0, 0)
-   self.range = range
-   self.timer = BOMB_TIMER_START
-   self.hand_back = hand_back
-   self.has_been_kicked = false
-   self.stopping = false
-   self.animation = animations.new(bomb_image, 16, 0.25)
-   return self
+    local self: Bomb = setmetatable({}, {__index = Bomb})
+    self.position = position
+    self.z_index = z_index.BELOW
+    self.velocity = vectors.new(0, 0)
+    self.range = range
+    self.timer = BOMB_TIMER_START
+    self.hand_back = hand_back
+    self.has_been_kicked = false
+    self.stopping = false
+    self.animation = animations.new(bomb_image, 16, 0.25)
+    return self
 end
 
 function Bomb:get_position(): Point
@@ -74,7 +73,7 @@ function Bomb:hitbox(): Rectangle
 end
 
 function Bomb:movementbox(): Rectangle
-	return hitboxes.new_block(self.position)
+    return hitboxes.new_block(self.position)
 end
 
 function Bomb:blow_up()
@@ -82,7 +81,7 @@ function Bomb:blow_up()
 end
 
 function Bomb:hit_with_bomb()
-	-- Does nothing
+    -- Does nothing
 end
 
 function Bomb:get_goal(): Goal
@@ -117,7 +116,8 @@ function Bomb:_trigger_belt(direction?: Vector): ConveyorBelt | nil
     for _, belt in ipairs(belts) do
         if self.position:distance_to(grid.snap_to(self.position)) <= 3 then
             local snap_pos = grid.snap_to(self.position)
-            if snap_pos:equal(belt.position) and not belt.direction:same_direction(bomb_move_dir) then
+            if snap_pos:equal(belt.position)
+                and not belt.direction:same_direction(bomb_move_dir) then
                 return belt
             end
         end
@@ -135,17 +135,21 @@ local function moving_outside_of_map(test_hitbox: Rectangle): boolean
     return not grid.area():contains(test_hitbox) and not bomb_in_goal
 end
 
-local function moving_into_new_block(movementbox: Rectangle, direction: Vector): Rectangle | nil
+local function moving_into_new_block(
+    movementbox: Rectangle, direction: Vector
+): Rectangle | nil
     local snaps_to = grid.snap_to(movementbox:top_left())
     local new_movementbox = movementbox:shift(direction)
 
-    for i=-1, 1 do
-        for j=-1, 1 do
-            local close_block = hitboxes.new_block(points.new(
-                snaps_to.x + i * grid.TILE_SIZE,
-                snaps_to.y + j * grid.TILE_SIZE
-            ))
-            if new_movementbox:overlap(close_block) and not movementbox:overlap(close_block) then
+    for i = -1, 1 do
+        for j = -1, 1 do
+            local close_block = hitboxes.new_block(
+                points.new(
+                    snaps_to.x + i * grid.TILE_SIZE, snaps_to.y + j * grid.TILE_SIZE
+                )
+            )
+            if new_movementbox:overlap(close_block)
+                and not movementbox:overlap(close_block) then
                 return close_block
             end
         end
@@ -169,21 +173,28 @@ local record CanMoveBomb
 end
 
 function CanMoveBomb.new(new_position: Point, in_direction: Vector): CanMoveBomb
-   local self: CanMoveBomb = setmetatable({}, { __index = CanMoveBomb })
-   self.yes = true
-   self.new_position = new_position
-   self.in_direction = in_direction
-   self.will_hit = nil
-   self.should_stop = false
-   return self
+    local self: CanMoveBomb = setmetatable({}, {__index = CanMoveBomb})
+    self.yes = true
+    self.new_position = new_position
+    self.in_direction = in_direction
+    self.will_hit = nil
+    self.should_stop = false
+    return self
 end
 
 function CanMoveBomb:no(): CanMoveBomb
-   self.yes = false
-   return self
+    self.yes = false
+    return self
 end
 
-function Bomb:can_move(direction: Vector, occupies: ReadableGroup<Kinematic>, players_: ReadableGroup<Player>, bombs: ReadableGroup<Bomb>, lookup: Lookup, call_level?: integer): CanMoveBomb
+function Bomb:can_move(
+    direction: Vector,
+    occupies: ReadableGroup<Kinematic>,
+    players_: ReadableGroup<Player>,
+    bombs: ReadableGroup<Bomb>,
+    lookup: Lookup,
+    call_level?: integer
+): CanMoveBomb
     local function not_this_bomb(occupied: Kinematic): boolean
         return occupied ~= self
     end
@@ -191,9 +202,15 @@ function Bomb:can_move(direction: Vector, occupies: ReadableGroup<Kinematic>, pl
     local test_hitbox = self:movementbox():shift(direction)
     local old_hitbox = self:movementbox()
     local can_move_bomb = CanMoveBomb.new(test_hitbox:top_left(), direction:normalize())
-    local close_occupies = lookup:in_box_and_group(old_hitbox:expand(grid.TILE_SIZE), occupies)
-    local close_players = lookup:in_box_and_group(old_hitbox:expand(grid.TILE_SIZE), players_)
-    local close_bombs = lookup:in_box_and_group(old_hitbox:expand(grid.TILE_SIZE), bombs)
+    local close_occupies = lookup:in_box_and_group(
+        old_hitbox:expand(grid.TILE_SIZE), occupies
+    )
+    local close_players = lookup:in_box_and_group(
+        old_hitbox:expand(grid.TILE_SIZE), players_
+    )
+    local close_bombs = lookup:in_box_and_group(
+        old_hitbox:expand(grid.TILE_SIZE), bombs
+    )
     close_bombs = itertools.filter(close_bombs, not_this_bomb)
     local close_interacts: {Kinematic} = itertools.combine(close_bombs, close_players)
 
@@ -205,7 +222,7 @@ function Bomb:can_move(direction: Vector, occupies: ReadableGroup<Kinematic>, pl
     end
 
     local belt_trigger = self:_trigger_belt(direction)
-    if not belt_trigger is nil then
+    if not (belt_trigger is nil) then
         direction = belt_trigger.direction:scale(direction:length())
         can_move_bomb.in_direction = direction:normalize()
     end
@@ -218,7 +235,9 @@ function Bomb:can_move(direction: Vector, occupies: ReadableGroup<Kinematic>, pl
         return entity:hitbox():overlap(hitbox:shrink(3))
     end
 
-    local function overlaps_entity_significantly(hitbox: Rectangle, entities: {Kinematic}): boolean
+    local function overlaps_entity_significantly(
+        hitbox: Rectangle, entities: {Kinematic}
+    ): boolean
         for _, occupied in ipairs(entities) do
             if overlaps_significantly(occupied, hitbox) then
                 return true
@@ -236,8 +255,10 @@ function Bomb:can_move(direction: Vector, occupies: ReadableGroup<Kinematic>, pl
         -- the bomb would otherwise have moved inot new block tile, then we help the
         -- side kick by snapping the projected position/hitbox to corridor. This means
         -- a side kick can be done without things aligning exactly!
-        local mock_dt = 1/60 -- TODO: Need to pass in 'dt' in here to properly calculate this
-        local passing = moving_into_new_block(self:movementbox(), self.velocity:scale(mock_dt))
+        local mock_dt = 1 / 60 -- TODO: Need to pass in 'dt' in here to properly calculate this
+        local passing = moving_into_new_block(
+            self:movementbox(), self.velocity:scale(mock_dt)
+        )
         if self.velocity:orthogonal(direction) and passing then
             if direction.x == 0 then
                 test_hitbox.x = grid.snap_to_x(test_hitbox.x)
@@ -259,7 +280,9 @@ function Bomb:can_move(direction: Vector, occupies: ReadableGroup<Kinematic>, pl
 
     for _, bomb in ipairs(close_bombs) do
         if overlaps_significantly(bomb, test_hitbox) then
-            if bomb:can_move(direction, occupies, players_, bombs, lookup, next_call_level).yes then
+            if bomb:can_move(
+                direction, occupies, players_, bombs, lookup, next_call_level
+            ).yes then
                 can_move_bomb.will_hit = bomb
             end
         end
@@ -273,11 +296,11 @@ function Bomb:can_move(direction: Vector, occupies: ReadableGroup<Kinematic>, pl
     end
 
     local new_block = moving_into_new_block(self:movementbox(), direction)
-    if not new_block is nil then
+    if not (new_block is nil) then
         if self.stopping then
             return can_move_bomb:no()
         end
-        
+
         for _, occupied in ipairs(close_occupies) do
             if occupied:movementbox():overlap(test_hitbox) then
                 return can_move_bomb:no()
@@ -286,7 +309,9 @@ function Bomb:can_move(direction: Vector, occupies: ReadableGroup<Kinematic>, pl
 
         for _, bomb in ipairs(close_bombs) do
             if overlaps_significantly(bomb, new_block) then
-                if bomb:can_move(direction, occupies, players_, bombs, lookup, next_call_level).yes then
+                if bomb:can_move(
+                    direction, occupies, players_, bombs, lookup, next_call_level
+                ).yes then
                     can_move_bomb.will_hit = bomb
                 end
             end
@@ -300,12 +325,18 @@ function Bomb:can_move(direction: Vector, occupies: ReadableGroup<Kinematic>, pl
     return can_move_bomb
 end
 
-function Bomb:update(dt: number, occupies: ReadableGroup<Kinematic>, players_: ReadableGroup<Player>, bombs: ReadableGroup<Bomb>, lookup: Lookup)
+function Bomb:update(
+    dt: number,
+    occupies: ReadableGroup<Kinematic>,
+    players_: ReadableGroup<Player>,
+    bombs: ReadableGroup<Bomb>,
+    lookup: Lookup
+)
     self.timer = self.timer - dt
-    
+
     if self.velocity:length() > 0 then
         local belt_trigger = self:_trigger_belt()
-        if not belt_trigger is nil then
+        if not (belt_trigger is nil) then
             self.position = belt_trigger.position
             self.velocity = belt_trigger.direction:scale(self.velocity:length())
         end
@@ -327,7 +358,7 @@ function Bomb:update(dt: number, occupies: ReadableGroup<Kinematic>, players_: R
         end
 
         local bomb_hit = can_move.will_hit
-        if not bomb_hit is nil then
+        if not (bomb_hit is nil) then
             bomb_hit:kick(dx:normalize())
         end
         if can_move.should_stop then
@@ -344,8 +375,14 @@ local record ThrownBomb is Entity
     trajectory: ProjectileTrajectory
 end
 
-function ThrownBomb.new(delegate: Bomb, target: Point, start_height: number, throw_height: number, throw_time: number): ThrownBomb
-    local self: ThrownBomb = setmetatable({}, { __index = ThrownBomb })
+function ThrownBomb.new(
+    delegate: Bomb,
+    target: Point,
+    start_height: number,
+    throw_height: number,
+    throw_time: number
+): ThrownBomb
+    local self: ThrownBomb = setmetatable({}, {__index = ThrownBomb})
     self.delegate = delegate
     self.z_index = z_index.ABOVE
     self.target = target
@@ -356,7 +393,9 @@ function ThrownBomb.new(delegate: Bomb, target: Point, start_height: number, thr
 end
 
 function ThrownBomb:bounce()
-    self.target = self:get_position():move(self.trajectory:get_direction():scale(grid.TILE_SIZE))
+    self.target = self:get_position():move(
+        self.trajectory:get_direction():scale(grid.TILE_SIZE)
+    )
     self.trajectory = physics.calc_trajectory(
         0, 0, grid.TILE_SIZE * 0.8, 0.25, self.delegate.position, self.target
     )
@@ -398,7 +437,6 @@ function ThrownBomb:update(dt: number)
 end
 
 -- Bombs --
-
 local record Bombs
     on_ground: Group<Bomb>
     in_air: Group<ThrownBomb>
@@ -413,7 +451,7 @@ function bombs.load_assets()
 end
 
 function bombs.new(): Bombs
-    local self: Bombs = setmetatable({}, { __index = Bombs })
+    local self: Bombs = setmetatable({}, {__index = Bombs})
     self.on_ground = collision.new_group()
     self.in_air = collision.new_group()
     self.explosions = explosions.new()
@@ -438,7 +476,7 @@ function Bombs:place_bomb(player: Player, occupied: {Entity})
     if player.bombs == 0 then
         return
     end
-    
+
     local hand_back_bomb = function() player.bombs = player.bombs + 1 end
     local bomb = Bomb.new(position, player.fire, hand_back_bomb)
     self.on_ground:add(bomb)
@@ -491,21 +529,26 @@ function Bombs:update(
     for _, bomb in pairs(self.in_air.set) do
         bomb:update(dt)
         if bomb:has_landed() then
-            local hitting_entities = lookup:collisions_between(collision.new_group({bomb}), bombs_bounce_on)
+            local hitting_entities = lookup:collisions_between(
+                collision.new_group({bomb}), bombs_bounce_on
+            )
             local bomb_bouncing = false
             for _, hitting_entity in pairs(hitting_entities) do
                 hitting_entity:hit_with_bomb()
                 bomb_bouncing = true
             end
 
-            if not grid.area():contains(bomb:hitbox()) and not bomb.delegate:get_goal() then
+            if not grid.area():contains(bomb:hitbox())
+                and not bomb.delegate:get_goal() then
                 bomb_bouncing = true
             end
 
             if bomb_bouncing then
                 if grid.outside_visible_area(bomb:hitbox()) then
                     -- Bomb outside seen map, loops around
-                    bomb.delegate.position = grid.outside_on_opposite_side(bomb:get_position())
+                    bomb.delegate.position = grid.outside_on_opposite_side(
+                        bomb:get_position()
+                    )
                     bomb.trajectory:reverse()
                 end
 
@@ -519,7 +562,6 @@ function Bombs:update(
 
     self.explosions:update(dt, blockers, explodables, lookup)
 end
-
 
 local function draw_bomb_shadow(bomb: Bomb)
     lutro.graphics.draw(bomb_shadow, bomb.position.x - 1, bomb.position.y - 8)

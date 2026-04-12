@@ -1,5 +1,5 @@
-local logger = require("engine.logger")
 local rectangles = require("engine.geometry.rectangles")
+local logger = require("engine.logger")
 local settings = require("engine.settings")
 
 local type Entity = require("engine.entity")
@@ -13,8 +13,12 @@ end
 
 local function get_indexes(hitbox: Rectangle): (integer, integer, integer, integer)
     local block_size = settings.block_size
-    local x_min, y_min = math.ceil(hitbox.x / block_size), math.ceil(hitbox.y / block_size)
-    local x_max, y_max = math.ceil((hitbox.x + hitbox.width) / block_size), math.ceil((hitbox.y + hitbox.height) / block_size)
+    local x_min, y_min = math.ceil(hitbox.x / block_size), math.ceil(
+        hitbox.y / block_size
+    )
+    local x_max, y_max = math.ceil((hitbox.x + hitbox.width) / block_size), math.ceil(
+        (hitbox.y + hitbox.height) / block_size
+    )
 
     if y_max >= LIMIT_Y_TILES then
         logger.warning("Tile out of bound, collision checking will not work")
@@ -40,12 +44,16 @@ local record CombinedGroup<T> is ReadableGroup<T>
     sub_groups: {ReadableGroup<T>}
 end
 
-local collision = {Group = Group, Lookup = Lookup, CombinedGroup = CombinedGroup, ReadableGroup = ReadableGroup}
+local collision = {
+    Group = Group,
+    Lookup = Lookup,
+    CombinedGroup = CombinedGroup,
+    ReadableGroup = ReadableGroup,
+}
 
 function Group:get(object: any): T | nil
     return self.set[object]
 end
-
 
 function Group:is_empty(): boolean
     return next(self.set) == nil
@@ -60,7 +68,9 @@ function Group:remove(entity: T)
 end
 
 function Group:rebuild(list: {T})
-    for k in pairs(self.set) do self.set[k] = nil end
+    for k in pairs(self.set) do
+        self.set[k] = nil
+    end
     for _, entity in ipairs(list) do
         self.set[entity] = entity
     end
@@ -86,7 +96,7 @@ function CombinedGroup:is_empty(): boolean
 end
 
 function collision.new_group<T>(...: {T}): Group<T>
-    local self: Group<T> = setmetatable({}, { __index = Group })
+    local self: Group<T> = setmetatable({}, {__index = Group})
 
     self.set = {}
     for _, entity_list in ipairs({...}) do
@@ -98,7 +108,7 @@ function collision.new_group<T>(...: {T}): Group<T>
 end
 
 function collision.new_group_from_set<T>(set: {any: T}): Group<T>
-    local self: Group<T> = setmetatable({}, { __index = Group })
+    local self: Group<T> = setmetatable({}, {__index = Group})
 
     self.set = set
     return self
@@ -108,7 +118,7 @@ end
 -- membership changes made by the owning code (add/remove on the source Group) are
 -- immediately visible through this view without any rebuild step.
 function collision.new_combined_group<T>(...: {any: T}): CombinedGroup<T>
-    local self: CombinedGroup<T> = setmetatable({}, { __index = CombinedGroup })
+    local self: CombinedGroup<T> = setmetatable({}, {__index = CombinedGroup})
 
     self.sub_groups = {}
     for _, set in ipairs({...}) do
@@ -118,7 +128,7 @@ function collision.new_combined_group<T>(...: {any: T}): CombinedGroup<T>
 end
 
 function collision.new_lookup(...: {any: Entity}): Lookup
-    local self: Lookup = setmetatable({}, { __index = Lookup })
+    local self: Lookup = setmetatable({}, {__index = Lookup})
     self.map = {}
 
     for _, entity_set in ipairs({...}) do
@@ -138,21 +148,24 @@ function collision.new_lookup(...: {any: Entity}): Lookup
     return self
 end
 
-function Lookup:collisions_between<K is Entity,T>(entities: Group<K>, group: ReadableGroup<T>): {K: T}
+function Lookup:collisions_between<K is Entity, T>(
+    entities: Group<K>, group: ReadableGroup<T>
+): {K: T}
     local collides_with: {K: T} = {}
     if group:is_empty() then
         return collides_with
     end
 
     for _, entity in pairs(entities.set) do
-       local x_min, x_max, y_min, y_max = get_indexes(entity:hitbox())
+        local x_min, x_max, y_min, y_max = get_indexes(entity:hitbox())
         for i = x_min, x_max do
             for j = y_min, y_max do
                 local index = index_2d_to_1d(i, j)
                 for _, check_against in ipairs(self.map[index] or {}) do
-                    if entity ~= check_against and entity:hitbox():overlap(check_against:hitbox()) then
+                    if entity ~= check_against
+                        and entity:hitbox():overlap(check_against:hitbox()) then
                         local in_group = group:get(check_against)
-                        if not in_group is nil then
+                        if not (in_group is nil) then
                             collides_with[entity] = in_group
                         end
                     end

@@ -1,6 +1,6 @@
 local characters = require("characters")
-local players = require("players")
 local score_board = require("game.score_board")
+local players = require("players")
 local teams = require("teams")
 
 local type CharacterName = characters.CharacterName
@@ -28,8 +28,10 @@ local record TeamsWinCondition is WinCondition
     teams_by_player_id: {integer: integer}
 end
 
-local win_condition = {WinCondition = WinCondition, TeamsWinCondition = TeamsWinCondition}
-local time_to_wait_to_end_game<const> = 2.0
+local win_condition = {
+    WinCondition = WinCondition, TeamsWinCondition = TeamsWinCondition
+}
+local time_to_wait_to_end_game <const> = 2.0
 
 function SinglesWinCondition:update(dt: number, players_: {Player})
     local alive_players: {Player} = {}
@@ -44,7 +46,8 @@ function SinglesWinCondition:update(dt: number, players_: {Player})
         self.is_standing_count = true
     end
 
-    if not self.have_winner and self.time_of_1_alive_player > time_to_wait_to_end_game then
+    if not self.have_winner
+        and self.time_of_1_alive_player > time_to_wait_to_end_game then
         local winner = alive_players[1]
         self.score_board:add_point(winner.id)
         self.have_winner = true
@@ -63,7 +66,7 @@ function SinglesWinCondition:reset()
 end
 
 function win_condition.new_for_singles(score_board_: ScoreBoard): SinglesWinCondition
-    local self: SinglesWinCondition = setmetatable({}, { __index = SinglesWinCondition })
+    local self: SinglesWinCondition = setmetatable({}, {__index = SinglesWinCondition})
     self.score_board = score_board_
     self:reset()
     return self
@@ -88,7 +91,8 @@ function TeamsWinCondition:update(dt: number, players_: {Player})
         self.is_standing_count = true
     end
 
-    if not self.have_winner and self.time_of_1_alive_team > time_to_wait_to_end_game then
+    if not self.have_winner
+        and self.time_of_1_alive_team > time_to_wait_to_end_game then
         for winning_team, _ in pairs(alive_teams) do
             self.score_board:add_point(winning_team)
         end
@@ -104,11 +108,11 @@ function TeamsWinCondition:update(dt: number, players_: {Player})
 end
 
 function TeamsWinCondition:reset()
-   self.time_of_1_alive_team = 0
-   self.is_standing_count = false
-   self.is_draw = false
-   self.have_winner = false
-   self.winners = {}
+    self.time_of_1_alive_team = 0
+    self.is_standing_count = false
+    self.is_draw = false
+    self.have_winner = false
+    self.winners = {}
 end
 
 function TeamsWinCondition:update_team_mapping(selections: {TeamSelection})
@@ -119,11 +123,11 @@ function TeamsWinCondition:update_team_mapping(selections: {TeamSelection})
 end
 
 function win_condition.new_for_teams(score_board_: ScoreBoard): TeamsWinCondition
-   local self: TeamsWinCondition = setmetatable({}, { __index = TeamsWinCondition })
-   self.score_board = score_board_
-   self.teams_by_player_id = {}
-   self:reset()
-   return self
+    local self: TeamsWinCondition = setmetatable({}, {__index = TeamsWinCondition})
+    self.score_board = score_board_
+    self.teams_by_player_id = {}
+    self:reset()
+    return self
 end
 
 return win_condition

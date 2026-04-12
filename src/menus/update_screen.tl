@@ -1,10 +1,9 @@
-local fonts = require("fonts")
 local joysticks = require("engine.joysticks")
 local scenes = require("engine.scenes")
+local fonts = require("fonts")
 local screen = require("screen")
 
-
-local type MenuFont = fonts.MenuFont 
+local type MenuFont = fonts.MenuFont
 local type Scene = scenes.Scene
 
 local ROM_DIR = "/recalbox/share/roms/lutro"
@@ -13,8 +12,8 @@ local white_font: MenuFont
 local update_screen = {}
 
 local function capture(cmd: string): string
-    local f = assert(io.popen(cmd, 'r'))
-    local s = f:read('*a')
+    local f = assert(io.popen(cmd, "r"))
+    local s = f:read("*a")
     f:close()
     return s
 end
@@ -26,13 +25,18 @@ local function run_script(script_name: string): (integer, string)
 end
 
 local function file_exists(name: string): boolean
-    local f = io.open(name,"r")
-    if f~=nil then io.close(f) return true else return false end
+    local f = io.open(name, "r")
+    if f ~= nil then
+        io.close(f)
+        return true
+    else
+        return false
+    end
 end
 
 local function file_size(name: string): integer
-    local f = io.open(name,"r")
-    if f~=nil then 
+    local f = io.open(name, "r")
+    if f ~= nil then
         local size = f:seek("end")
         io.close(f)
         return size
@@ -42,7 +46,7 @@ local function file_size(name: string): integer
 end
 
 local record UpdateCheckScene is Scene
-	ctx: Scene
+    ctx: Scene
     since_last_connection_check: number
     have_connection: boolean
     download_url: string
@@ -53,7 +57,7 @@ local record UpdateCheckScene is Scene
 end
 
 function update_screen.new(ctx: Scene): UpdateCheckScene
-    local self: UpdateCheckScene = setmetatable({}, { __index = UpdateCheckScene })
+    local self: UpdateCheckScene = setmetatable({}, {__index = UpdateCheckScene})
     self.ctx = ctx
     self.since_last_connection_check = 0
     self.have_connection = false
@@ -83,7 +87,8 @@ function UpdateCheckScene:download_finished(): boolean
 end
 
 function UpdateCheckScene:update(dt: number)
-    if joysticks.is_pressed_any(joysticks.BUTTONS.L) or joysticks.is_pressed_any(joysticks.BUTTONS.A) then
+    if joysticks.is_pressed_any(joysticks.BUTTONS.L)
+        or joysticks.is_pressed_any(joysticks.BUTTONS.A) then
         scenes.set(self.ctx)
         return
     end
@@ -119,17 +124,25 @@ local function show(left: string, right: string, y_cord: number)
 end
 
 function UpdateCheckScene:draw()
-	lutro.graphics.setColor(72, 72, 72)
-	lutro.graphics.rectangle("fill", 0, 0, screen.WIDTH, screen.HEIGHT)
+    lutro.graphics.setColor(72, 72, 72)
+    lutro.graphics.rectangle("fill", 0, 0, screen.WIDTH, screen.HEIGHT)
 
     local function connection_str(): string
-        if self.have_connection then return "ok" else return "  " end
+        if self.have_connection then
+            return "ok"
+        else
+            return "  "
+        end
     end
 
     show("checking connection... ", connection_str(), 40)
 
     local function is_up_to_date_str(): string
-        if self.is_up_to_date then return "yes" else return "no " end
+        if self.is_up_to_date then
+            return "yes"
+        else
+            return "no "
+        end
     end
 
     if self.have_connection then

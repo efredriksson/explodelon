@@ -13,7 +13,7 @@ local record IceRinkLayout is MapLayout
 end
 
 function IceRinkLayout.new(): IceRinkLayout
-    local self: IceRinkLayout = setmetatable({}, { __index = IceRinkLayout })
+    local self: IceRinkLayout = setmetatable({}, {__index = IceRinkLayout})
     return self
 end
 
@@ -25,7 +25,9 @@ function IceRinkLayout:get_conveyor_belts(): {ConveyorBelt}
     return {}
 end
 
-function IceRinkLayout:get_block_layout(occupies: {Kinematic}): {integer: {integer: BlockType}}
+function IceRinkLayout:get_block_layout(
+    occupies: {Kinematic}
+): {integer: {integer: BlockType}}
     return block_layouts.quadrant(occupies)
 end
 

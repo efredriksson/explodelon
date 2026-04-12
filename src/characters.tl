@@ -1,16 +1,14 @@
-
-
 local type CharacterName = enum
     "kotetsu"
     "honey"
-    "kinu" 
+    "kinu"
     "milon"
-    "black" 
-    "white" 
-    "kabuki" 
-    "master_higins" 
-    "manjimaru" 
-    "bonks" 
+    "black"
+    "white"
+    "kabuki"
+    "master_higins"
+    "manjimaru"
+    "bonks"
 end
 
 local ALL_SPRITES: {CharacterName} = {
@@ -41,10 +39,9 @@ local character_selections: {CharacterSelection} = {}
 local in_queue_to_join: {integer} = {}
 
 function CharacterSelection.new(
-    player_id: integer,
-    sprite: CharacterName
+    player_id: integer, sprite: CharacterName
 ): CharacterSelection
-    local self: CharacterSelection = setmetatable({}, { __index = CharacterSelection })
+    local self: CharacterSelection = setmetatable({}, {__index = CharacterSelection})
     self.player_id = player_id
     self.sprite = sprite
     return self
@@ -75,17 +72,18 @@ function characters.get_unused(): CharacterName
     assert(#character_selections < #ALL_SPRITES, "All sprites are selected!")
 
     for _, sprite in ipairs(characters.get_names()) do
-		if characters.is_unused(sprite) then
-			return sprite
-		end
+        if characters.is_unused(sprite) then
+            return sprite
+        end
     end
 end
 
 function characters.new_selection(
-    player_id: integer,
-    sprite?: CharacterName
+    player_id: integer, sprite?: CharacterName
 ): CharacterSelection
-    local new_selection = CharacterSelection.new(player_id, sprite or characters.get_unused())
+    local new_selection = CharacterSelection.new(
+        player_id, sprite or characters.get_unused()
+    )
     table.insert(character_selections, new_selection)
     return new_selection
 end
@@ -139,12 +137,12 @@ function characters.queue_selection_for(player_id: integer)
 end
 
 function characters.next_player_selecting(): integer
-	for i, player_joining in ipairs(in_queue_to_join) do
-		table.remove(in_queue_to_join, i)
-		return player_joining
-	end
+    for i, player_joining in ipairs(in_queue_to_join) do
+        table.remove(in_queue_to_join, i)
+        return player_joining
+    end
 
-	return nil
+    return nil
 end
 
 return characters

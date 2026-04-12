@@ -1,6 +1,6 @@
 local characters = require("characters")
-local images = require("engine.images")
 local rectangles = require("engine.geometry.rectangles")
+local images = require("engine.images")
 
 local type CharacterName = characters.CharacterName
 local type CharacterSelection = characters.CharacterSelection
@@ -27,7 +27,7 @@ end
 local teams = {Team = Team, TeamSelection = TeamSelection}
 
 function Team.new(id: integer, name: string, color: Color): Team
-    local self: Team = setmetatable({}, { __index = Team })
+    local self: Team = setmetatable({}, {__index = Team})
     self.id = id
     self.name = name
     self.color = color
@@ -45,14 +45,18 @@ function Team:color_darker_shade(): Color
 end
 
 function TeamSelectionGrouped.new(team: Team): TeamSelectionGrouped
-    local self: TeamSelectionGrouped = setmetatable({}, { __index = TeamSelectionGrouped })
+    local self: TeamSelectionGrouped = setmetatable(
+        {}, {__index = TeamSelectionGrouped}
+    )
     self.team = team
     self.selections = {}
     return self
 end
 
-function teams.new_selection(team: Team, player_id: integer, sprite: CharacterName): TeamSelection
-    local self: TeamSelection = setmetatable({}, { __index = TeamSelection })
+function teams.new_selection(
+    team: Team, player_id: integer, sprite: CharacterName
+): TeamSelection
+    local self: TeamSelection = setmetatable({}, {__index = TeamSelection})
     self.team = team
     self.player_id = player_id
     self.sprite = sprite

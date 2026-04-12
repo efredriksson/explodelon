@@ -1,12 +1,12 @@
 local animations = require("engine.animations")
 local collision = require("engine.collision")
-local grid = require("level_layout.grid")
-local hitboxes = require("engine.hitboxes")
-local map_entities = require("level_layout.map_entities")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
-local settings = require("settings")
+local hitboxes = require("engine.hitboxes")
 local soft_block_animations = require("level_graphics.soft_block_animations")
+local grid = require("level_layout.grid")
+local map_entities = require("level_layout.map_entities")
+local settings = require("settings")
 local z_index = require("z_index")
 
 local type Animation = animations.Animation
@@ -20,7 +20,7 @@ local type SoftBlockConfig = map_entities.SoftBlockConfig
 local type ItemType = settings.ItemType
 
 local record SoftBlock is Entity, Explodable, Kinematic
-	position: Point
+    position: Point
     is_exploding: boolean
     in_explosion: boolean
     base_animation: Animation
@@ -31,8 +31,14 @@ local record SoftBlock is Entity, Explodable, Kinematic
     is_revealed: boolean
 end
 
-function SoftBlock.new(position: Point, base_animation: Animation, revealed_animation: Animation, item: ItemType, egg: boolean): SoftBlock
-    local self: SoftBlock = setmetatable({}, { __index = SoftBlock })
+function SoftBlock.new(
+    position: Point,
+    base_animation: Animation,
+    revealed_animation: Animation,
+    item: ItemType,
+    egg: boolean
+): SoftBlock
+    local self: SoftBlock = setmetatable({}, {__index = SoftBlock})
     self.position = position
     self.z_index = z_index.LEVEL
     self.base_animation = base_animation
@@ -51,21 +57,21 @@ function SoftBlock:get_position(): Point
 end
 
 function SoftBlock:hit_with_bomb()
-	-- Does nothing
+    -- Does nothing
 end
 
 function SoftBlock:reveal()
     if self.egg or self.item then
-	    self.is_revealed = true
+        self.is_revealed = true
     end
 end
 
 function SoftBlock:hitbox(): Rectangle
-	return hitboxes.new_block(self.position):shrink(4)
+    return hitboxes.new_block(self.position):shrink(4)
 end
 
 function SoftBlock:movementbox(): Rectangle
-	return hitboxes.new_block(self.position)
+    return hitboxes.new_block(self.position)
 end
 
 function SoftBlock:update(dt: number)
@@ -75,9 +81,9 @@ function SoftBlock:update(dt: number)
 end
 
 local function center_animation_on_block(animation: Animation, position: Point): Point
-	return points.new(
-		position.x - (animation.width - grid.TILE_SIZE) / 2,
-		position.y - (animation.height - grid.TILE_SIZE) / 2
+    return points.new(
+        position.x - (animation.width - grid.TILE_SIZE) / 2,
+        position.y - (animation.height - grid.TILE_SIZE) / 2
     )
 end
 
@@ -105,7 +111,7 @@ function SoftBlock:is_destroyed(): boolean
 end
 
 local record SoftBlocks
-	on_ground: Group<SoftBlock>
+    on_ground: Group<SoftBlock>
     rigid_animation: Animation
     revealed_animation: Animation
 end
@@ -113,7 +119,7 @@ end
 local soft_blocks = {SoftBlocks = SoftBlocks, SoftBlock = SoftBlock}
 
 function soft_blocks.new(configs: {SoftBlockConfig}): SoftBlocks
-    local self: SoftBlocks = setmetatable({}, { __index = SoftBlocks })
+    local self: SoftBlocks = setmetatable({}, {__index = SoftBlocks})
     self.on_ground = collision.new_group()
     self.rigid_animation = soft_block_animations.get_rigid()
     self.revealed_animation = soft_block_animations.get_revealed()

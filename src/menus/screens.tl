@@ -1,9 +1,9 @@
 local audio = require("engine.audio")
-local choices = require("menus.choices")
-local fonts = require("fonts")
 local joysticks = require("engine.joysticks")
-local items = require("menus.items")
 local scenes = require("engine.scenes")
+local fonts = require("fonts")
+local choices = require("menus.choices")
+local items = require("menus.items")
 local screen = require("screen")
 
 local type MenuFont = fonts.MenuFont
@@ -17,7 +17,6 @@ local music: Source
 local ok_sound: Source
 local background: Image
 
-
 local record MenuScreen is Scene
     menu_choices: {MenuChoice}
     menu_selection: MenuSelection<integer>
@@ -27,8 +26,10 @@ end
 
 local screens = {MenuScreen = MenuScreen}
 
-function screens.new(menu_choices: {MenuChoice}, go_back?: function(Scene), on_load?: function()): MenuScreen
-    local self: MenuScreen = setmetatable({}, { __index = MenuScreen })
+function screens.new(
+    menu_choices: {MenuChoice}, go_back?: function(Scene), on_load?: function()
+): MenuScreen
+    local self: MenuScreen = setmetatable({}, {__index = MenuScreen})
     self.menu_choices = menu_choices
     self.menu_selection = items.new_integer_selection(1, 1, #self.menu_choices)
     self.on_load = on_load or function() end
@@ -58,7 +59,7 @@ function MenuScreen:update(_: number)
             ok_action = line:update(self)
         end
     end
-    
+
     if joysticks.is_pressed_any(joysticks.BUTTONS.DOWN) then
         ok_action = self.menu_selection:increment()
     elseif joysticks.is_pressed_any(joysticks.BUTTONS.UP) then
@@ -77,8 +78,8 @@ function MenuScreen:draw()
     lutro.graphics.setColor(200, 200, 200, 175)
     local x_pad = 20
     local y_pad = 10
-	lutro.graphics.rectangle(
-        "fill", x_pad, y_pad, screen.WIDTH - 2*x_pad, screen.HEIGHT - 2*y_pad
+    lutro.graphics.rectangle(
+        "fill", x_pad, y_pad, screen.WIDTH - 2 * x_pad, screen.HEIGHT - 2 * y_pad
     )
 
     local function get_font(line_idx): MenuFont

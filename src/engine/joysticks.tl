@@ -5,22 +5,22 @@ local down_for_states: {integer: {integer: number}} = {}
 local joysticks = {
     MAX_BUTTONS = 16,
     BUTTONS = {
-        B        = 1,
-        Y        = 2,
-        SELECT   = 3,
-        START    = 4,
-        UP       = 5,
-        DOWN     = 6,
-        LEFT     = 7,
-        RIGHT    = 8,
-        A        = 9,
-        X        = 10,
-        L        = 11,
-        R        = 12,
-        L2       = 13,
-        R2       = 14,
-        L3       = 15,
-        R3       = 16,
+        B = 1,
+        Y = 2,
+        SELECT = 3,
+        START = 4,
+        UP = 5,
+        DOWN = 6,
+        LEFT = 7,
+        RIGHT = 8,
+        A = 9,
+        X = 10,
+        L = 11,
+        R = 12,
+        L2 = 13,
+        R2 = 14,
+        L3 = 15,
+        R3 = 16,
     },
 }
 
@@ -42,12 +42,12 @@ end
 
 -- Used to check if a button was just pressed this frame (not held) by any player
 function joysticks.is_pressed_any(button: integer): boolean
-    for player_id=1, joysticks.maxplayers() do
+    for player_id = 1, joysticks.maxplayers() do
         if joysticks.is_pressed(player_id, button) then
             return true
         end
     end
-    
+
     return false
 end
 
@@ -59,19 +59,21 @@ function joysticks.is_released(player_id: integer, button: integer): boolean
     return not is_currently_down and was_previously_down
 end
 
--- Used to check if a button has been pressed down 
-function joysticks.is_down_for(player_id: integer, button: integer, time: number): boolean
+-- Used to check if a button has been pressed down
+function joysticks.is_down_for(
+    player_id: integer, button: integer, time: number
+): boolean
     return down_for_states[player_id][button] >= time
 end
 
 -- Used to check if a button has been pressed down by any player
 function joysticks.is_down_for_any(button: integer, time: number): boolean
-    for player_id=1, joysticks.maxplayers() do
+    for player_id = 1, joysticks.maxplayers() do
         if joysticks.is_down_for(player_id, button, time) then
             return true
         end
     end
-    
+
     return false
 end
 

@@ -6,7 +6,7 @@ local record EngineSettings
 end
 
 function EngineSettings.new(): EngineSettings
-    local self: EngineSettings = setmetatable({}, { __index = EngineSettings })
+    local self: EngineSettings = setmetatable({}, {__index = EngineSettings})
     self.draw_hitboxes = false
     self.log_scene_perf = false
     self.log_mem_usage = false
