@@ -20,7 +20,7 @@ end
 
 local function run_script(script_name: string): (integer, string)
     local output = capture("sh -c '" .. script_name .. "; echo EXIT_CODE:$?'")
-    local ok = tonumber(output:match("EXIT_CODE:(%d+)")) as integer
+    local ok = math.floor(tonumber(output:match("EXIT_CODE:(%d+)")))
     return ok, output
 end
 
