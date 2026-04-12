@@ -1,6 +1,6 @@
 include $(wildcard .env)
 
-SRCS := $(shell find src -type f)
+SRCS := $(shell find src -type f -name "*.tl")
 SRCS_LINT := $(patsubst src/%, ./src/%, $(SRCS))
 TRANSPILED := $(patsubst src/%.tl, dist/%.lua, $(SRCS))
 ASSETS := $(shell find assets -type f)
