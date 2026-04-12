@@ -2,13 +2,13 @@ local audio = {}
 local loaded_audio_sources: {Source} = {}
 
 local record SourcePool is Source
-   delegates: {Source}
+    delegates: {Source}
 end
 
 function SourcePool.new(delegates: {Source}): SourcePool
-   local self: SourcePool = setmetatable({}, { __index = SourcePool })
-   self.delegates = delegates
-   return self
+    local self: SourcePool = setmetatable({}, {__index = SourcePool})
+    self.delegates = delegates
+    return self
 end
 
 function SourcePool:setVolume(volume: number)
@@ -73,9 +73,11 @@ end
 
 -- For audio that can be played many times at same time.
 -- Should only be used for short audio as memory consumption could be very hight otherwise.
-function audio.new_source_pool(filename: string, source_type: SourceType, pool_size: integer): Source
+function audio.new_source_pool(
+    filename: string, source_type: SourceType, pool_size: integer
+): Source
     local in_pool: {Source} = {}
-    for _=1, pool_size do
+    for _ = 1, pool_size do
         local new_source = lutro.audio.newSource(filename, source_type)
         table.insert(in_pool, new_source)
         table.insert(loaded_audio_sources, new_source)

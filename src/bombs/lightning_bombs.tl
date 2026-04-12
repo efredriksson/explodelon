@@ -1,19 +1,19 @@
+local lightnings = require("bombs.lightnings")
 local animations = require("engine.animations")
 local audio = require("engine.audio")
 local collision = require("engine.collision")
-local grid = require("level_layout.grid")
-local hitboxes = require("engine.hitboxes")
-local lightnings = require("bombs.lightnings")
-local players = require("players")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
 local vectors = require("engine.geometry.vectors")
+local hitboxes = require("engine.hitboxes")
+local grid = require("level_layout.grid")
+local players = require("players")
 local z_index = require("z_index")
 
 local type Animation = animations.Animation
 local type Explodable = require("bombs.explodable")
-local type Kinematic = require("kinematic")
 local type Entity = require("engine.entity")
+local type Kinematic = require("kinematic")
 local type Group = collision.Group
 local type Lightnings = lightnings.Lightnings
 local type Player = players.Player
@@ -27,7 +27,6 @@ local lightning_bomb_image: Image
 local coild_1_effect: Image
 local coild_2_effect: Image
 
-
 local record LightningBomb is Entity, Kinematic
     position: Point
     timer: number
@@ -40,7 +39,7 @@ local record LightningBomb is Entity, Kinematic
 end
 
 function LightningBomb.new(position: Point, hand_back: function()): LightningBomb
-    local self: LightningBomb = setmetatable({}, { __index = LightningBomb })
+    local self: LightningBomb = setmetatable({}, {__index = LightningBomb})
     self.position = position
     self.z_index = z_index.BELOW
     self.range = 6
@@ -71,7 +70,7 @@ function LightningBomb:hitbox(): Rectangle
 end
 
 function LightningBomb:movementbox(): Rectangle
-	return hitboxes.new_block(self.position)
+    return hitboxes.new_block(self.position)
 end
 
 function LightningBomb:blow_up()
@@ -79,7 +78,7 @@ function LightningBomb:blow_up()
 end
 
 function LightningBomb:hit_with_bomb()
-	-- Does nothing
+    -- Does nothing
 end
 
 function LightningBomb:is_complete(): boolean
@@ -130,7 +129,7 @@ function lightning_bombs.load_assets()
 end
 
 function lightning_bombs.new(): LightningBombs
-    local self: LightningBombs = setmetatable({}, { __index = LightningBombs })
+    local self: LightningBombs = setmetatable({}, {__index = LightningBombs})
     self.on_ground = collision.new_group()
     self.lightnings = lightnings.new()
     return self
@@ -154,14 +153,21 @@ function LightningBombs:place_lightning_bomb(player: Player, occupied: {Entity})
     if player.lightning_bomb == 0 then
         return
     end
-    
-    local hand_back_bomb = function() player.lightning_bomb = player.lightning_bomb + 1 end
+
+    local hand_back_bomb = function()
+        player.lightning_bomb = player.lightning_bomb + 1
+    end
     local bomb = LightningBomb.new(position, hand_back_bomb)
     self.on_ground:add(bomb)
     player.lightning_bomb = player.lightning_bomb - 1
 end
 
-function LightningBombs:update(dt: number, blockers: ReadableGroup<Explodable>, explodables: ReadableGroup<Player>, lookup: Lookup)
+function LightningBombs:update(
+    dt: number,
+    blockers: ReadableGroup<Explodable>,
+    explodables: ReadableGroup<Player>,
+    lookup: Lookup
+)
     for _, bomb in pairs(self.on_ground.set) do
         bomb:update(dt)
 
@@ -174,6 +180,5 @@ function LightningBombs:update(dt: number, blockers: ReadableGroup<Explodable>, 
 
     self.lightnings:update(dt, blockers, explodables, lookup)
 end
-
 
 return lightning_bombs

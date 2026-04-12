@@ -1,13 +1,13 @@
-local animations = require("engine.animations")
 local bombs = require("bombs.bombs")
 local characters = require("characters")
-local grid = require("level_layout.grid")
-local hitboxes = require("engine.hitboxes")
-local joysticks = require("engine.joysticks")
+local animations = require("engine.animations")
 local points = require("engine.geometry.points")
-local rail = require("level_layout.rail")
 local rectangles = require("engine.geometry.rectangles")
 local vectors = require("engine.geometry.vectors")
+local hitboxes = require("engine.hitboxes")
+local joysticks = require("engine.joysticks")
+local grid = require("level_layout.grid")
+local rail = require("level_layout.rail")
 local z_index = require("z_index")
 
 local type Animation = animations.Animation
@@ -37,16 +37,16 @@ local HEAD_DIR_BY_SIDE: {Direction: Direction} = {
 }
 
 local type CartState = enum
-   "forward" -- Moving clockwise
-   "backward" -- Moving anti-clockwise
-   "idle"
+    "forward" -- Moving clockwise
+    "backward" -- Moving anti-clockwise
+    "idle"
 end
 
 local type CannonState = enum
-   "ready"
-   "pre-fire"
-   "firing"
-   "loading"
+    "ready"
+    "pre-fire"
+    "firing"
+    "loading"
 end
 
 local type CartAnimations = {Direction: {CartState: Animation}}
@@ -60,8 +60,8 @@ local cart_firing_images: {Direction: Image} = {}
 local cart_heads: {CharacterName: {Direction: Image}} = {}
 
 local function cart_animation(image: Image): Animation
-	local nbr_steps = 2
-	return animations.new(image, image:getWidth() / nbr_steps, 0.05)
+    local nbr_steps = 2
+    return animations.new(image, image:getWidth() / nbr_steps, 0.05)
 end
 
 local function get_firing_animation(side: Direction): Animation
@@ -99,7 +99,7 @@ end
 
 local record PlayerCart is Entity
     id: integer
-    position: number -- 1D position on cart rail 
+    position: number -- 1D position on cart rail
     state: CartState
     previous_direction: CartState
     cannon: CannonState
@@ -112,10 +112,8 @@ local record PlayerCart is Entity
     firing_animations: CartAnimations
 end
 
-function PlayerCart.new(
-    id: integer, position: number, head: CharacterName
-): PlayerCart
-    local self: PlayerCart = setmetatable({}, { __index = PlayerCart })
+function PlayerCart.new(id: integer, position: number, head: CharacterName): PlayerCart
+    local self: PlayerCart = setmetatable({}, {__index = PlayerCart})
     self.id = id
     self.position = position
     self.z_index = z_index.ABOVE
@@ -199,9 +197,9 @@ function PlayerCart:_get_draw_offset(): Vector
 end
 
 function PlayerCart:_get_x_y_draw_position(): Point
-    return rail.get_x_y_position(self.position):move(
-        self:_get_draw_offset()
-    ):move(self:_get_cart_image_padding())
+    return rail.get_x_y_position(self.position):move(self:_get_draw_offset()):move(
+        self:_get_cart_image_padding()
+    )
 end
 
 function PlayerCart:get_position(): Point
@@ -223,7 +221,7 @@ function PlayerCart:draw()
         -- If not ready, head is blinking by only sometimes not rendering it below
         return
     end
-    
+
     local side = rail.get_side(self.position)
     local head_image = cart_heads[self.head][HEAD_DIR_BY_SIDE[side]]
     local cart_paddings = self:_get_cart_image_padding():abs()
@@ -250,18 +248,18 @@ function PlayerCart:draw()
         end
     end
 
-    local cart_half_size = vectors.new(
-        animation.width, animation.height
-    ):minus(total_padding()):scale(1/2)
+    local cart_half_size = vectors.new(animation.width, animation.height):minus(
+        total_padding()
+    ):scale(1 / 2)
     local head_pos = points.new(
         cart_pos.x + cart_half_size.x - head_image:getWidth() / 2,
         cart_pos.y + cart_paddings.y - head_image:getHeight() / 2
     ):move(pixel_tweaks())
-    
+
     if side == "right" then
         -- Note, special case for the right hand side. This is because
         -- the right/left cart sprites are not centered with equal padding
-        -- on both sides. 
+        -- on both sides.
         head_pos = head_pos:move(vectors.new(cart_paddings.x, 0))
     end
     lutro.graphics.draw(head_image, head_pos.x, head_pos.y)
@@ -315,7 +313,7 @@ end
 local mad_bombers = {MadBombers = MadBombers}
 
 function mad_bombers.new(bombs_: Bombs): MadBombers
-    local self: MadBombers = setmetatable({}, { __index = MadBombers })
+    local self: MadBombers = setmetatable({}, {__index = MadBombers})
     self.by_player = {}
     self.bombs = bombs_
     return self
@@ -361,12 +359,14 @@ function MadBombers:handle_cart_move_input(dt: number, cart: PlayerCart)
     if (side == "left" and down) or (side == "right" and up) then
         cart:set_state("backward")
     end
-    
-    if lutro.joystick.isDown(cart.id, joysticks.BUTTONS.R) and cart.cannon == "ready" then
+
+    if lutro.joystick.isDown(cart.id, joysticks.BUTTONS.R)
+        and cart.cannon == "ready" then
         cart.cannon_powerup_for = cart.cannon_powerup_for + dt
     end
 
-    if joysticks.is_released(cart.id, joysticks.BUTTONS.R) or cart.cannon_powerup_for > 0.8 then
+    if joysticks.is_released(cart.id, joysticks.BUTTONS.R)
+        or cart.cannon_powerup_for > 0.8 then
         local fire_from, fire_len = cart:fire_cannon()
         if fire_from then
             local fire_dir = THROW_BOMB_DIRECTION_BY_SIDE[side]
@@ -379,11 +379,10 @@ end
 
 function MadBombers:update(dt: number)
     for _, cart in pairs(self.by_player) do
-		self:handle_cart_move_input(dt, cart)
-		cart:update(dt)
-	end
+        self:handle_cart_move_input(dt, cart)
+        cart:update(dt)
+    end
 end
-
 
 function mad_bombers.load_assets()
     local folder = "assets/carts/"

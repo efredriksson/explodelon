@@ -9,9 +9,9 @@ local type MapGraphics = require("level_graphics.maps.interfaces")
 local init = {}
 
 local map_graphics <total>: {Map: MapGraphics} = {
-	football = football.new_graphics(),
-	factory = factory.new_graphics(),
-	ice_rink = ice_rink.new_graphics(),
+    football = football.new_graphics(),
+    factory = factory.new_graphics(),
+    ice_rink = ice_rink.new_graphics(),
 }
 
 function init.get_graphics(): MapGraphics

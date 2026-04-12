@@ -2,11 +2,10 @@
 -- from https://lutro.libretro.com/doc/usefullibs.html
 local logging = require("engine.logger")
 
-
 local record Animation
-	image: Image
+    image: Image
     timer: number
-	width: number
+    width: number
     height: number
     playing: boolean
     frame_durations: {number}
@@ -18,7 +17,7 @@ end
 local animations = {Animation = Animation}
 
 function animations.new_with_frames(image: Image, frame_durations: {number}): Animation
-    local self: Animation = setmetatable({}, { __index = Animation })
+    local self: Animation = setmetatable({}, {__index = Animation})
     self.image = image
     self.timer = 0
     self.width = image:getWidth() / #frame_durations
@@ -36,11 +35,13 @@ function animations.new_with_frames(image: Image, frame_durations: {number}): An
     return self
 end
 
-function animations.new(image: Image, width: number, frame_duration: number, idle_time?: number): Animation
+function animations.new(
+    image: Image, width: number, frame_duration: number, idle_time?: number
+): Animation
     local steps = image:getWidth() / width
-    
+
     local frame_durations: {number} = {}
-    for _=1, steps do
+    for _ = 1, steps do
         table.insert(frame_durations, frame_duration)
     end
     frame_durations[1] = frame_durations[1] + (idle_time or 0)
@@ -58,7 +59,7 @@ function Animation:scale_frame_durations(scale: number)
     for i, frame_duration in ipairs(self.frame_durations) do
         self.frame_durations[i] = frame_duration * scale
         self.total_time = self.total_time + self.frame_durations[i]
-    end 
+    end
 end
 
 function Animation:_get_frame(): integer
@@ -70,7 +71,7 @@ function Animation:_get_frame(): integer
         clamped_time = clamped_time - frame_duration
     end
 
-    logging.warning("Could not find frame for time, using last frame") 
+    logging.warning("Could not find frame for time, using last frame")
     return #self.frame_durations
 end
 
@@ -93,17 +94,9 @@ function Animation:draw(x: number, y: number)
     local sw = self.image:getWidth()
     local sh = self.image:getHeight()
 
-    local q = lutro.graphics.newQuad(
-        ((id-1)%(sw/tw))*tw,
-        0,
-        tw, th,
-        sw, sh)
+    local q = lutro.graphics.newQuad(((id - 1) % (sw / tw)) * tw, 0, tw, th, sw, sh)
 
-    lutro.graphics.draw(
-        self.image,
-        q,
-        x, y
-    )
+    lutro.graphics.draw(self.image, q, x, y)
 end
 
 return animations

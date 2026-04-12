@@ -1,9 +1,9 @@
 local characters = require("characters")
-local fonts = require("fonts")
-local images = require("engine.images")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
 local vectors = require("engine.geometry.vectors")
+local images = require("engine.images")
+local fonts = require("fonts")
 local screen = require("screen")
 local settings = require("settings")
 local teams = require("teams")
@@ -19,14 +19,14 @@ local type TeamSelection = teams.TeamSelection
 
 local score_font: ShadedFont
 local avatar_images: {CharacterName: Image}
-local COLOR_BLOCK_SIZE<const> = 19
-local AVATAR_WIDTH<const> = 18
-local SCORE_WIDTH<const> = 17
-local X_START<const> = 75
-local Y_START<const> = 3
-local Y_SCORE_ADJUST<const> = 5
-local AVATAR_SPACE_PADDING<const> = 10
-local TOTAL_WIDTH<const> = screen.WIDTH - X_START - AVATAR_SPACE_PADDING
+local COLOR_BLOCK_SIZE <const> = 19
+local AVATAR_WIDTH <const> = 18
+local SCORE_WIDTH <const> = 17
+local X_START <const> = 75
+local Y_START <const> = 3
+local Y_SCORE_ADJUST <const> = 5
+local AVATAR_SPACE_PADDING <const> = 10
+local TOTAL_WIDTH <const> = screen.WIDTH - X_START - AVATAR_SPACE_PADDING
 
 local interface ScoreBoard
     draw: function(self)
@@ -52,7 +52,7 @@ local record TeamScore
 end
 
 function TeamScore.new(team: Team, avatars: {CharacterSelection}): TeamScore
-    local self: TeamScore = setmetatable({}, { __index = TeamScore })
+    local self: TeamScore = setmetatable({}, {__index = TeamScore})
     self.team = team
     self.score = 0
     self.avatars = avatars
@@ -67,10 +67,14 @@ local record TeamsScoreBoard is ScoreBoard
     teams: {TeamScore}
 end
 
-local score_board = {ScoreBoard = ScoreBoard, SinglesScoreBoard = SinglesScoreBoard, TeamsScoreBoard = TeamsScoreBoard}
+local score_board = {
+    ScoreBoard = ScoreBoard,
+    SinglesScoreBoard = SinglesScoreBoard,
+    TeamsScoreBoard = TeamsScoreBoard,
+}
 
 function PlayerScore.new(id: integer, avatar: CharacterName): PlayerScore
-    local self: PlayerScore = setmetatable({}, { __index = PlayerScore })
+    local self: PlayerScore = setmetatable({}, {__index = PlayerScore})
     self.id = id
     self.score = 0
     self.avatar = avatar
@@ -78,22 +82,22 @@ function PlayerScore.new(id: integer, avatar: CharacterName): PlayerScore
 end
 
 local function get_avatar_position(avatar_num: number, num_avatars: number): Point
-	local space_for_avatar = AVATAR_WIDTH + SCORE_WIDTH
+    local space_for_avatar = AVATAR_WIDTH + SCORE_WIDTH
 
-	local padding = (TOTAL_WIDTH - space_for_avatar * num_avatars) / (num_avatars + 1)
-	local x_pos = X_START + padding * avatar_num + space_for_avatar * (avatar_num - 1)
-	return points.new(x_pos, Y_START)
+    local padding = (TOTAL_WIDTH - space_for_avatar * num_avatars) / (num_avatars + 1)
+    local x_pos = X_START + padding * avatar_num + space_for_avatar * (avatar_num - 1)
+    return points.new(x_pos, Y_START)
 end
 
 function SinglesScoreBoard:draw()
     local score_adjust = vectors.new(AVATAR_WIDTH, Y_SCORE_ADJUST)
 
     for nbr, player in ipairs(self.players) do
-		local avatar_pos = get_avatar_position(nbr, #self.players)
-		local score_pos = avatar_pos:move(score_adjust)
-		lutro.graphics.draw(avatar_images[player.avatar], avatar_pos.x, avatar_pos.y)
-		score_font:draw(tostring(player.score), score_pos)
-	end
+        local avatar_pos = get_avatar_position(nbr, #self.players)
+        local score_pos = avatar_pos:move(score_adjust)
+        lutro.graphics.draw(avatar_images[player.avatar], avatar_pos.x, avatar_pos.y)
+        score_font:draw(tostring(player.score), score_pos)
+    end
 end
 
 function SinglesScoreBoard:add_point(player_id: integer)
@@ -139,7 +143,7 @@ function SinglesScoreBoard:game_finished(): boolean
 end
 
 function score_board.new_for_singles(): SinglesScoreBoard
-    local self: SinglesScoreBoard = setmetatable({}, { __index = SinglesScoreBoard })
+    local self: SinglesScoreBoard = setmetatable({}, {__index = SinglesScoreBoard})
     self.players = {}
     return self
 end
@@ -176,7 +180,7 @@ function TeamsScoreBoard:draw()
         local team_background = get_team_background_area(x, team)
         teams.draw_square(team.team, team_background)
         draw_team_boarder(team_background)
-        
+
         for _, avatar in ipairs(team.avatars) do
             lutro.graphics.draw(avatar_images[avatar.sprite], x, Y_START)
             x = x + AVATAR_WIDTH
@@ -221,12 +225,14 @@ end
 function TeamsScoreBoard:update_avatars(selections: {TeamSelection})
     self.teams = {}
     for _, selection_group in ipairs(teams.grouped_selections(selections)) do
-        table.insert(self.teams, TeamScore.new(selection_group.team, selection_group.selections))
+        table.insert(
+            self.teams, TeamScore.new(selection_group.team, selection_group.selections)
+        )
     end
 end
 
 function score_board.new_for_teams(): TeamsScoreBoard
-    local self: TeamsScoreBoard = setmetatable({}, { __index = TeamsScoreBoard })
+    local self: TeamsScoreBoard = setmetatable({}, {__index = TeamsScoreBoard})
     self.teams = {}
     return self
 end

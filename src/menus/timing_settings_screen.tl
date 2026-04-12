@@ -1,8 +1,8 @@
-local items = require("menus.items")
 local scenes = require("engine.scenes")
-local settings = require("settings")
 local choices = require("menus.choices")
+local items = require("menus.items")
 local screens = require("menus.screens")
+local settings = require("settings")
 
 local type Scene = scenes.Scene
 local type MenuScreen = screens.MenuScreen
@@ -16,7 +16,7 @@ function timing_settings_screen.new(previous_screen: Scene): MenuScreen
 
     local current_idx_by_time: {number: integer} = {}
     local times_to_select_from: {number} = {}
-    for idx=1, 100 do
+    for idx = 1, 100 do
         local time = 60 + (idx - 1) * 5 -- Second resolution
         current_idx_by_time[time] = idx
         times_to_select_from[idx] = time
@@ -25,22 +25,34 @@ function timing_settings_screen.new(previous_screen: Scene): MenuScreen
     local timings = settings.game_rules.timings
     local battle_idx = current_idx_by_time[timings.battle] or 5
     local sudden_death_idx = current_idx_by_time[timings.sudden_death] or 1
-    local nbr_battles_selection = items.new_integer_selection(settings.game_rules.timings.nbr_battles, 1, 20)
-    local battle_time_selection = items.new_time_selection(battle_idx, times_to_select_from)
-    local sudden_death_time_selection = items.new_time_selection(sudden_death_idx, times_to_select_from)
+    local nbr_battles_selection = items.new_integer_selection(
+        settings.game_rules.timings.nbr_battles, 1, 20
+    )
+    local battle_time_selection = items.new_time_selection(
+        battle_idx, times_to_select_from
+    )
+    local sudden_death_time_selection = items.new_time_selection(
+        sudden_death_idx, times_to_select_from
+    )
 
-    return screens.new({
-        choices.new_integer(
-            "nbr. battles", 50, nbr_battles_selection, settings.set_nbr_battles
-        ),
-        choices.new_number(
-            "battle time", 70, battle_time_selection, settings.set_battle_time
-        ),
-        choices.new_number(
-            "sudden death time", 90, sudden_death_time_selection, settings.set_sudden_death_time
-        ),
-        choices.new_done("back", 180, done)
-    }, done)
+    return screens.new(
+        {
+            choices.new_integer(
+                "nbr. battles", 50, nbr_battles_selection, settings.set_nbr_battles
+            ),
+            choices.new_number(
+                "battle time", 70, battle_time_selection, settings.set_battle_time
+            ),
+            choices.new_number(
+                "sudden death time",
+                90,
+                sudden_death_time_selection,
+                settings.set_sudden_death_time
+            ),
+            choices.new_done("back", 180, done),
+        },
+        done
+    )
 end
 
 return timing_settings_screen

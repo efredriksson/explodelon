@@ -1,11 +1,11 @@
 local animations = require("engine.animations")
 local audio = require("engine.audio")
 local collision = require("engine.collision")
-local itertools = require("itertools")
-local hitboxes = require("engine.hitboxes")
-local players = require("players")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
+local hitboxes = require("engine.hitboxes")
+local itertools = require("itertools")
+local players = require("players")
 local settings = require("settings")
 local z_index = require("z_index")
 
@@ -31,7 +31,7 @@ local record Item is Entity, Explodable
 end
 
 function Item.new(item_type: ItemType, position: Point): Item
-    local self: Item = setmetatable({}, { __index = Item })
+    local self: Item = setmetatable({}, {__index = Item})
     self.type = item_type
     self.position = position
     self.z_index = z_index.LEVEL
@@ -49,7 +49,7 @@ function Item:blow_up()
 end
 
 function Item:hitbox(): Rectangle
-	return hitboxes.new_block(self.position):shrink(4)
+    return hitboxes.new_block(self.position):shrink(4)
 end
 
 function Item:draw()
@@ -60,9 +60,9 @@ function Item:draw()
     local item_icon = item_icons[self.type]
     local y_draw = self.position.y - 9
     local x_draw = self.position.x - 1
-	frame_animation:draw(x_draw, y_draw)
-	lutro.graphics.draw(item_icon, x_draw, y_draw)
-	lutro.graphics.draw(item_shadow, x_draw, y_draw)
+    frame_animation:draw(x_draw, y_draw)
+    lutro.graphics.draw(item_icon, x_draw, y_draw)
+    lutro.graphics.draw(item_shadow, x_draw, y_draw)
 end
 
 function Item:is_destroyed(): boolean
@@ -77,10 +77,10 @@ end
 local items = {Items = Items}
 
 function items.new(): Items
-   local self: Items = setmetatable({}, { __index = Items })
-   self.on_ground = collision.new_group()
-   self.by_players = {}
-   return self
+    local self: Items = setmetatable({}, {__index = Items})
+    self.on_ground = collision.new_group()
+    self.by_players = {}
+    return self
 end
 
 function Items:possible_drop(available_spots: {Point})
@@ -133,8 +133,10 @@ function Items:drop_items_of(players_: {Player}, available_spots: {Point})
             self.by_players[player.id] = nil
             for i, item in ipairs(shuffled_items) do
                 if i <= max_items_to_drop then
-                   local spot_to_drop = available_spots[lutro.math.random(#available_spots)]
-                   self:drop_at(spot_to_drop, item)
+                    local spot_to_drop = available_spots[lutro.math.random(
+                        #available_spots
+                    )]
+                    self:drop_at(spot_to_drop, item)
                 end
             end
         end
@@ -171,13 +173,14 @@ function Items:possible_pickup_by(player: Player)
     end
 end
 
-
 function items.load_assets()
     take_item_sound = audio.new_source_pool("assets/take_item.wav", "static", 5)
     take_item_sound:setVolume(0.75)
-    frame_animation = animations.new(lutro.graphics.newImage("assets/items/frame.png"), 18, 1 / 30)
-	item_shadow = lutro.graphics.newImage("assets/items/shadow.png")
-	item_icons = {
+    frame_animation = animations.new(
+        lutro.graphics.newImage("assets/items/frame.png"), 18, 1 / 30
+    )
+    item_shadow = lutro.graphics.newImage("assets/items/shadow.png")
+    item_icons = {
         speed = lutro.graphics.newImage("assets/items/speed.png"),
         bomb = lutro.graphics.newImage("assets/items/bomb.png"),
         lightning_bomb = lutro.graphics.newImage("assets/items/lightning-bomb.png"),

@@ -1,11 +1,11 @@
 local animations = require("engine.animations")
 local audio = require("engine.audio")
 local collision = require("engine.collision")
-local grid = require("level_layout.grid")
-local hitboxes = require("engine.hitboxes")
-local players = require("players")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
+local hitboxes = require("engine.hitboxes")
+local grid = require("level_layout.grid")
+local players = require("players")
 local z_index = require("z_index")
 
 local type Animation = animations.Animation
@@ -36,7 +36,7 @@ local record LightningTile is Entity
 end
 
 function LightningTile.new(position: Point): LightningTile
-    local self: LightningTile = setmetatable({}, { __index = LightningTile })
+    local self: LightningTile = setmetatable({}, {__index = LightningTile})
     self.position = position
     self.z_index = z_index.LEVEL
     self.reduction = 4
@@ -65,7 +65,7 @@ local record Lightning
 end
 
 function Lightning.new(position: Point, range: number): Lightning
-    local self: Lightning = setmetatable({}, { __index = Lightning })
+    local self: Lightning = setmetatable({}, {__index = Lightning})
     self.position = position
     self.range = range
     self.tiles = collision.new_group()
@@ -73,7 +73,7 @@ function Lightning.new(position: Point, range: number): Lightning
     self.speed = 8
     self.animations = {
         initial = animations.new(lightning_initial_image, 16, FRAME_DURATION / 2),
-        ending = animations.new(lightning_ending_image, 16, FRAME_DURATION)
+        ending = animations.new(lightning_ending_image, 16, FRAME_DURATION),
     }
 
     return self
@@ -92,10 +92,12 @@ function Lightning:has_reached_max_range(): boolean
 end
 
 local function clamp(val: number, min: number, max: number): number
-	return math.min(math.max(val, min), max)
+    return math.min(math.max(val, min), max)
 end
 
-function Lightning:_update_active_tiles(blockers: ReadableGroup<Explodable>, lookup: Lookup)
+function Lightning:_update_active_tiles(
+    blockers: ReadableGroup<Explodable>, lookup: Lookup
+)
     self.tiles = collision.new_group()
 
     -- Calculate how far the lightning have expanded
@@ -113,10 +115,10 @@ function Lightning:_update_active_tiles(blockers: ReadableGroup<Explodable>, loo
             table.insert(manhattan_points, points.new(x - offset, y - inv_offset))
             table.insert(manhattan_points, points.new(x - inv_offset, y + offset))
         end
-        
-        for ring=0, radius-1 do
+
+        for ring = 0, radius - 1 do
             local radius_pixels = ring * grid.TILE_SIZE
-            for offset=0, ring do
+            for offset = 0, ring do
                 local offset_pixels = offset * grid.TILE_SIZE
                 add_points_for(offset_pixels, radius_pixels)
             end
@@ -130,7 +132,9 @@ function Lightning:_update_active_tiles(blockers: ReadableGroup<Explodable>, loo
             return false
         end
 
-        for _, _ in pairs(lookup:collisions_between(collision.new_group({tile}), blockers)) do
+        for _, _ in pairs(
+            lookup:collisions_between(collision.new_group({tile}), blockers)
+        ) do
             return false
         end
 
@@ -179,7 +183,9 @@ function Lightning:draw()
     end
 end
 
-function Lightning:update(dt: number, blockers: ReadableGroup<Explodable>, lookup: Lookup)
+function Lightning:update(
+    dt: number, blockers: ReadableGroup<Explodable>, lookup: Lookup
+)
     self.duration = self.duration + dt
     self:_update_active_tiles(blockers, lookup)
     self:_get_animation():update(dt)
@@ -193,17 +199,23 @@ end
 local lightnings = {Lightnings = Lightnings}
 
 function lightnings.load_assets()
-    lightning_initial_image = lutro.graphics.newImage("assets/lightning-bomb/explosion/explosion_center.png")
-    lightning_ending_image = lutro.graphics.newImage("assets/lightning-bomb/explosion/explosion_end.png")
+    lightning_initial_image = lutro.graphics.newImage(
+        "assets/lightning-bomb/explosion/explosion_center.png"
+    )
+    lightning_ending_image = lutro.graphics.newImage(
+        "assets/lightning-bomb/explosion/explosion_end.png"
+    )
 
-    lightning_sound = audio.new_source_pool("assets/lightning-bomb/explosion/detonate.ogg", "static", 5)
+    lightning_sound = audio.new_source_pool(
+        "assets/lightning-bomb/explosion/detonate.ogg", "static", 5
+    )
     lightning_sound:setPitch(0.75)
 end
 
 function lightnings.new(): Lightnings
-   local self: Lightnings = setmetatable({}, { __index = Lightnings })
-   self.on_ground = {}
-   return self
+    local self: Lightnings = setmetatable({}, {__index = Lightnings})
+    self.on_ground = {}
+    return self
 end
 
 function Lightnings:place_explosion(position: Point, range: number)
@@ -212,7 +224,12 @@ function Lightnings:place_explosion(position: Point, range: number)
     table.insert(self.on_ground, explosion)
 end
 
-function Lightnings:update(dt: number, blockers: ReadableGroup<Explodable>, explodables: ReadableGroup<Player>, lookup: Lookup)
+function Lightnings:update(
+    dt: number,
+    blockers: ReadableGroup<Explodable>,
+    explodables: ReadableGroup<Player>,
+    lookup: Lookup
+)
     for i = #self.on_ground, 1, -1 do
         local explosion = self.on_ground[i]
 

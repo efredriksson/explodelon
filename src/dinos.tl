@@ -1,7 +1,7 @@
-local hitboxes = require("engine.hitboxes")
-local vectors = require("engine.geometry.vectors")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
+local vectors = require("engine.geometry.vectors")
+local hitboxes = require("engine.hitboxes")
 local settings = require("settings")
 
 local type Direction = vectors.Direction
@@ -33,23 +33,21 @@ end
 
 local ROAR_BUILDUP_TIME = 0.4
 local dinos = {
-    ROAR_BUILDUP_TIME = ROAR_BUILDUP_TIME,
-    DinoAction = DinoAction,
-    Dino = Dino
+    ROAR_BUILDUP_TIME = ROAR_BUILDUP_TIME, DinoAction = DinoAction, Dino = Dino
 }
 
 function dinos.new(position: Point, direction: Direction): Dino
-   local self: Dino = setmetatable({}, { __index = Dino })
-   self.position = position
-   self.direction = direction
-   self.action = "idle"
-   local dino_choices = settings.get_enabled_dinos()
-   self.color = dino_choices[lutro.math.random(#dino_choices)]
-   self.level = 1
-   self.hatching = true
-   self.jump_powerup_for = 0
-   self.throw_powerup_for = 0
-   return self
+    local self: Dino = setmetatable({}, {__index = Dino})
+    self.position = position
+    self.direction = direction
+    self.action = "idle"
+    local dino_choices = settings.get_enabled_dinos()
+    self.color = dino_choices[lutro.math.random(#dino_choices)]
+    self.level = 1
+    self.hatching = true
+    self.jump_powerup_for = 0
+    self.throw_powerup_for = 0
+    return self
 end
 
 function Dino:level_up()

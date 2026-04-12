@@ -1,9 +1,9 @@
 local collision = require("engine.collision")
-local grid = require("level_layout.grid")
-local hitboxes = require("engine.hitboxes")
-local map_entities = require("level_layout.map_entities")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
+local hitboxes = require("engine.hitboxes")
+local grid = require("level_layout.grid")
+local map_entities = require("level_layout.map_entities")
 local z_index = require("z_index")
 
 local type Explodable = require("bombs.explodable")
@@ -14,7 +14,7 @@ local type Point = points.Point
 local type Rectangle = rectangles.Rectangle
 
 local record PressureBlock is Entity, Explodable, Kinematic
-	falling_position: Point
+    falling_position: Point
     position: Point
     in_explosion: boolean
 end
@@ -23,12 +23,12 @@ local pressure_block_image: Image
 local block_fall_shadow: Image
 
 function PressureBlock.new(target: Point): PressureBlock
-	local self: PressureBlock = setmetatable({}, { __index = PressureBlock })
-	self.falling_position = points.new(target.x, -grid.TILE_SIZE)
+    local self: PressureBlock = setmetatable({}, {__index = PressureBlock})
+    self.falling_position = points.new(target.x, -grid.TILE_SIZE)
     self.position = target
     self.z_index = z_index.LEVEL
     self.in_explosion = false
-	return self
+    return self
 end
 
 function PressureBlock:get_position(): Point
@@ -36,7 +36,9 @@ function PressureBlock:get_position(): Point
 end
 
 function PressureBlock:draw()
-    lutro.graphics.draw(pressure_block_image, self.falling_position.x, self.falling_position.y)
+    lutro.graphics.draw(
+        pressure_block_image, self.falling_position.x, self.falling_position.y
+    )
 end
 
 function PressureBlock:draw_shadow()
@@ -50,16 +52,16 @@ function PressureBlock:blow_up()
 end
 
 function PressureBlock:hit_with_bomb()
-	-- Does nothing
+    -- Does nothing
 end
 
 function PressureBlock:hitbox(): Rectangle
-    -- Not for movement blocking but hitting entities 
-	return hitboxes.new_block(self.position):shrink(4)
+    -- Not for movement blocking but hitting entities
+    return hitboxes.new_block(self.position):shrink(4)
 end
 
 function PressureBlock:movementbox(): Rectangle
-	return hitboxes.new_block(self.position)
+    return hitboxes.new_block(self.position)
 end
 
 function PressureBlock:is_on_ground(): boolean
@@ -68,14 +70,16 @@ end
 
 function PressureBlock:update(dt: number)
     local block_fall_speed = 285
-    self.falling_position.y = math.min(self.position.y, self.falling_position.y + dt * block_fall_speed)
+    self.falling_position.y = math.min(
+        self.position.y, self.falling_position.y + dt * block_fall_speed
+    )
     if self:is_on_ground() then
         self.z_index = z_index.BELOW
     end
 end
 
 local record PressureBlocks
-	next_left_index: integer
+    next_left_index: integer
     next_right_index: integer
     left_positions: {Point}
     right_positions: {Point}
@@ -91,7 +95,7 @@ end
 local pressure_blocks = {PressureBlocks = PressureBlocks, PressureBlock = PressureBlock}
 
 function pressure_blocks.new(): PressureBlocks
-	local self: PressureBlocks = setmetatable({}, { __index = PressureBlocks })
+    local self: PressureBlocks = setmetatable({}, {__index = PressureBlocks})
     self.left_positions = map_entities.get_left_side_pressure_blocks()
     self.right_positions = map_entities.get_right_side_pressure_blocks()
     self.on_ground = collision.new_group()
@@ -103,7 +107,7 @@ function pressure_blocks.new(): PressureBlocks
     self.left_fall_finished = false
     self.no_more_falling_blocks = false
     self.sudden_death = false
-	return self
+    return self
 end
 
 function PressureBlocks:no_updates(): boolean
@@ -113,7 +117,9 @@ end
 function PressureBlocks:set_next_right_falling_block()
     self.right_fall_finished = false
     if self.next_right_index <= #self.right_positions then
-        self.right_falling = PressureBlock.new(self.right_positions[self.next_right_index])
+        self.right_falling = PressureBlock.new(
+            self.right_positions[self.next_right_index]
+        )
         self.next_right_index = self.next_right_index + 1
     else
         self.no_more_falling_blocks = true
@@ -136,7 +142,7 @@ function PressureBlocks:falling(): {PressureBlock: PressureBlock}
     end
     return {
         [self.left_falling] = self.left_falling,
-        [self.right_falling] = self.right_falling
+        [self.right_falling] = self.right_falling,
     }
 end
 

@@ -1,17 +1,17 @@
+local characters = require("characters")
 local animations = require("engine.animations")
 local audio = require("engine.audio")
-local battle = require("game.battle")
-local characters = require("characters")
-local fonts = require("fonts")
-local joysticks = require("engine.joysticks")
-local items = require("menus.items")
-local scenes = require("engine.scenes")
-local settings = require("settings")
-local vectors = require("engine.geometry.vectors")
 local points = require("engine.geometry.points")
-local team_selection = require("team_selection")
+local vectors = require("engine.geometry.vectors")
+local joysticks = require("engine.joysticks")
+local scenes = require("engine.scenes")
+local fonts = require("fonts")
+local battle = require("game.battle")
 local score_board = require("game.score_board")
 local win_condition = require("game.win_condition")
+local items = require("menus.items")
+local settings = require("settings")
+local team_selection = require("team_selection")
 
 local type Animation = animations.Animation
 local type Battle = battle.Battle
@@ -23,13 +23,13 @@ local type Scene = scenes.Scene
 local type Point = points.Point
 
 local record Character
-   sprite: CharacterName
-   number: integer
-   y_shift: number
+    sprite: CharacterName
+    number: integer
+    y_shift: number
 end
 
 function Character.new(sprite: CharacterName, number: integer): Character
-    local self: Character = setmetatable({}, { __index = Character })
+    local self: Character = setmetatable({}, {__index = Character})
     self.sprite = sprite
     self.number = number
     self.y_shift = 0.0
@@ -95,7 +95,7 @@ local record PlayerSelection is Scene
 end
 
 function PlayerSelection.new(): PlayerSelection
-    local self: PlayerSelection = setmetatable({}, { __index = PlayerSelection })
+    local self: PlayerSelection = setmetatable({}, {__index = PlayerSelection})
     self.score_board = score_board.new_for_singles()
     self.game = battle.new(
         self, self.score_board, win_condition.new_for_singles(self.score_board)
@@ -157,9 +157,10 @@ end
 function PlayerSelection:check_for_new_player_selecting()
     -- No player is selecting, check if anyone is pressing right or left
     -- indicating that they want to select a character
-    for player_id=1, joysticks.maxplayers() do
-        local trying_to_select = joysticks.is_pressed(player_id, joysticks.BUTTONS.RIGHT) or
-            joysticks.is_pressed(player_id, joysticks.BUTTONS.LEFT)
+    for player_id = 1, joysticks.maxplayers() do
+        local trying_to_select = joysticks.is_pressed(
+            player_id, joysticks.BUTTONS.RIGHT
+        ) or joysticks.is_pressed(player_id, joysticks.BUTTONS.LEFT)
 
         if trying_to_select and characters.have_not_selected(player_id) then
             self.player_selecting = player_id
@@ -175,7 +176,7 @@ function PlayerSelection:handle_player_input()
         else
             music:stop()
             self.score_board:update_avatars(characters.get_selections())
-            
+
             if self.going_back_to_game then
                 -- The game might have paused audio, make sure to unpause:
                 audio.unpause()
@@ -192,17 +193,18 @@ function PlayerSelection:handle_player_input()
         self:check_for_new_player_selecting()
         return
     end
-    
+
     local ok_action = false
 
     if joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.RIGHT) then
         ok_action = self.selector:increment()
     elseif joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.LEFT) then
         ok_action = self.selector:decrement()
-    elseif (joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.B) or 
-            joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.R)) then
-
-        local selected = table.remove(self.selectable_characters, self.selector:get_value())
+    elseif (joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.B)
+        or joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.R)) then
+        local selected = table.remove(
+            self.selectable_characters, self.selector:get_value()
+        )
         table.insert(self.walking_characters, selected)
         characters.new_selection(self.player_selecting, selected.sprite)
         self.selector:reduce_max_val()
@@ -240,7 +242,7 @@ function PlayerSelection:draw_slow_walking(character: Character)
 end
 
 function PlayerSelection:draw()
-	lutro.graphics.draw(background)
+    lutro.graphics.draw(background)
 
     for _, char in ipairs(self.selectable_characters) do
         self:draw_idle(char)
@@ -272,7 +274,7 @@ function PlayerSelection:draw()
 end
 
 function player_selection.setup(): Scene
-	return PlayerSelection.new()
+    return PlayerSelection.new()
 end
 
 return player_selection

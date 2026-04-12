@@ -1,12 +1,12 @@
 local animations = require("engine.animations")
 local audio = require("engine.audio")
 local collision = require("engine.collision")
-local grid = require("level_layout.grid")
+local points = require("engine.geometry.points")
+local rectangles = require("engine.geometry.rectangles")
+local vectors = require("engine.geometry.vectors")
 local hitboxes = require("engine.hitboxes")
 local images = require("engine.images")
-local points = require("engine.geometry.points")
-local vectors = require("engine.geometry.vectors")
-local rectangles = require("engine.geometry.rectangles")
+local grid = require("level_layout.grid")
 local z_index = require("z_index")
 
 local type Animation = animations.Animation
@@ -33,9 +33,7 @@ local explosion_small: Source
 local explosion_medium: Source
 local explosion_large: Source
 
-
 -- Explosion --
-
 local record ExplosionAnimations
     right_end: Animation
     left_end: Animation
@@ -61,8 +59,13 @@ local record ExplosionTile is Entity
     type: ExplosionTileType
 end
 
-function ExplosionTile.new(position: Point, reduction: integer, is_last: boolean, explosion_type: ExplosionTileType): ExplosionTile
-    local self: ExplosionTile = setmetatable({}, { __index = ExplosionTile })
+function ExplosionTile.new(
+    position: Point,
+    reduction: integer,
+    is_last: boolean,
+    explosion_type: ExplosionTileType
+): ExplosionTile
+    local self: ExplosionTile = setmetatable({}, {__index = ExplosionTile})
     self.position = position
     self.z_index = z_index.LEVEL
     self.reduction = reduction
@@ -95,7 +98,7 @@ local record Explosion
 end
 
 function Explosion.new(position: Point, range: number, delay?: number): Explosion
-    local self: Explosion = setmetatable({}, { __index = Explosion })
+    local self: Explosion = setmetatable({}, {__index = Explosion})
     self.position = position
     self.blocked_at = {}
     self.range = range
@@ -108,9 +111,11 @@ function Explosion.new(position: Point, range: number, delay?: number): Explosio
         left_end = animations.new(explosion_end_left_image, 16, FRAME_DURATION),
         top_end = animations.new(explosion_end_top_image, 16, FRAME_DURATION),
         bottom_end = animations.new(explosion_end_bottom_image, 16, FRAME_DURATION),
-        middle_horizontal = animations.new(explosion_horizontal_image, 16, FRAME_DURATION),
+        middle_horizontal = animations.new(
+            explosion_horizontal_image, 16, FRAME_DURATION
+        ),
         middle_vertical = animations.new(explosion_vertical_image, 16, FRAME_DURATION),
-        center = animations.new(explosion_center_image, 16, FRAME_DURATION)
+        center = animations.new(explosion_center_image, 16, FRAME_DURATION),
     }
 
     return self
@@ -134,18 +139,20 @@ function Explosion:has_reached_max_range(): boolean
     return self.duration >= self.range / self.speed
 end
 
-function Explosion:new_tile(position: Point, is_last: boolean, explosion_type: ExplosionTileType): ExplosionTile
+function Explosion:new_tile(
+    position: Point, is_last: boolean, explosion_type: ExplosionTileType
+): ExplosionTile
     local function tile_reduction(): integer
         local min_reduction = 3
         if not self:has_reached_max_range() then
             return min_reduction
         end
-        
+
         local time_since_max_range = self.duration - self.range / self.speed
         local reduction = (1 + math.floor(time_since_max_range / FRAME_DURATION)) * 2
         return math.max(reduction, min_reduction)
     end
-    
+
     return ExplosionTile.new(position, tile_reduction(), is_last, explosion_type)
 end
 
@@ -155,7 +162,9 @@ local enum BlockingResult
     "nil"
 end
 
-function Explosion:_update_active_tiles(blockers: ReadableGroup<Explodable>, lookup: Lookup)
+function Explosion:_update_active_tiles(
+    blockers: ReadableGroup<Explodable>, lookup: Lookup
+)
     self.tiles = collision.new_group()
 
     -- Calculate how far the explosion should expanded
@@ -175,7 +184,9 @@ function Explosion:_update_active_tiles(blockers: ReadableGroup<Explodable>, loo
             end
         end
 
-        local colliding_blockers = lookup:collisions_between(collision.new_group({tile}), blockers)
+        local colliding_blockers = lookup:collisions_between(
+            collision.new_group({tile}), blockers
+        )
         for _, blocker in pairs(colliding_blockers) do
             if blocker.in_explosion then
                 return "next"
@@ -213,7 +224,9 @@ function Explosion:_update_active_tiles(blockers: ReadableGroup<Explodable>, loo
             return {next_tile}
         end
 
-        local remaining_tiles = propagate(next_pos, delta, distance_traveled + 1, explosion_type)
+        local remaining_tiles = propagate(
+            next_pos, delta, distance_traveled + 1, explosion_type
+        )
         local is_last = #remaining_tiles == 0
 
         local tile = self:new_tile(next_pos, is_last, explosion_type)
@@ -234,7 +247,9 @@ function Explosion:_update_active_tiles(blockers: ReadableGroup<Explodable>, loo
 
     -- Propagate in all four directions
     for direction, delta in pairs(directions) do
-        for _, tile in ipairs(propagate(self.position, delta:scale(grid.TILE_SIZE), 1, direction)) do
+        for _, tile in ipairs(
+            propagate(self.position, delta:scale(grid.TILE_SIZE), 1, direction)
+        ) do
             self.tiles:add(tile)
         end
     end
@@ -246,10 +261,18 @@ function Explosion:get_tile_animation(tile: ExplosionTile): Animation
     end
 
     if tile.is_last then
-        if tile.type == "right" then return self.animations.right_end end
-        if tile.type == "left" then return self.animations.left_end end
-        if tile.type == "up" then return self.animations.top_end end
-        if tile.type == "down" then return self.animations.bottom_end end
+        if tile.type == "right" then
+            return self.animations.right_end
+        end
+        if tile.type == "left" then
+            return self.animations.left_end
+        end
+        if tile.type == "up" then
+            return self.animations.top_end
+        end
+        if tile.type == "down" then
+            return self.animations.bottom_end
+        end
     end
 
     if tile.type == "right" or tile.type == "left" then
@@ -281,7 +304,9 @@ function Explosion:update_end_animation(dt: number)
     self.animations.center:update(dt)
 end
 
-function Explosion:update(dt: number, blockers: ReadableGroup<Explodable>, lookup: Lookup)
+function Explosion:update(
+    dt: number, blockers: ReadableGroup<Explodable>, lookup: Lookup
+)
     if self.delay > 0 then
         self.delay = self.delay - dt
         return
@@ -304,7 +329,9 @@ local explosions = {Explosions = Explosions}
 
 function explosions.load_assets()
     local function get_explosion_image(tile: string): Image
-        local image = lutro.graphics.newImage("assets/bomb/explosion/explosion_" .. tile .. ".png")
+        local image = lutro.graphics.newImage(
+            "assets/bomb/explosion/explosion_" .. tile .. ".png"
+        )
         images.set_alpha(image, 175)
         return image
     end
@@ -318,7 +345,9 @@ function explosions.load_assets()
     explosion_center_image = get_explosion_image("center")
 
     local function get_explosion_audio(size: string): Source
-        local explosion_audio = audio.new_source_pool("assets/bomb/explosion/" .. size .. ".wav", "static", 5)
+        local explosion_audio = audio.new_source_pool(
+            "assets/bomb/explosion/" .. size .. ".wav", "static", 5
+        )
         explosion_audio:setVolume(0.4)
         explosion_audio:setPitch(0.25)
         return explosion_audio
@@ -330,9 +359,9 @@ function explosions.load_assets()
 end
 
 function explosions.new(): Explosions
-   local self: Explosions = setmetatable({}, { __index = Explosions })
-   self.on_ground = {}
-   return self
+    local self: Explosions = setmetatable({}, {__index = Explosions})
+    self.on_ground = {}
+    return self
 end
 
 function Explosions:place_explosion(position: Point, range: number, delay?: number)
@@ -341,7 +370,12 @@ function Explosions:place_explosion(position: Point, range: number, delay?: numb
     table.insert(self.on_ground, explosion)
 end
 
-function Explosions:update(dt: number, blockers: ReadableGroup<Explodable>, explodables: ReadableGroup<Explodable>, lookup: Lookup)
+function Explosions:update(
+    dt: number,
+    blockers: ReadableGroup<Explodable>,
+    explodables: ReadableGroup<Explodable>,
+    lookup: Lookup
+)
     for i = #self.on_ground, 1, -1 do
         local explosion = self.on_ground[i]
         explosion:update(dt, blockers, lookup)

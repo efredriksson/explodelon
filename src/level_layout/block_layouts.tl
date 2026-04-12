@@ -1,8 +1,8 @@
-local entities = require("level_layout.maps.entities")
-local grid = require("level_layout.grid")
-local itertools = require("itertools")
 local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
+local itertools = require("itertools")
+local grid = require("level_layout.grid")
+local entities = require("level_layout.maps.entities")
 local settings = require("settings")
 
 local type BlockType = entities.BlockType
@@ -55,14 +55,17 @@ local function player_exclusion_zone(occupies: {Kinematic}): {Point}
     return close_to_entity
 end
 
-local function place_soft_blocks(layout: {integer: {integer: BlockType}}, exclusion_zone: {Point})
+local function place_soft_blocks(
+    layout: {integer: {integer: BlockType}}, exclusion_zone: {Point}
+)
     local dim = grid.dimensions()
     local count = 0
     while count < settings.game_rules.items.nbr_soft_blocks do
         local i = lutro.math.random(dim.x_max + 1) - 1
         local j = lutro.math.random(dim.y_max + 1) - 1
         local cell: BlockType = layout[i][j]
-        if cell == "none" and not contains_point(exclusion_zone, grid.get_tile_position(i, j)) then
+        if cell == "none"
+            and not contains_point(exclusion_zone, grid.get_tile_position(i, j)) then
             layout[i][j] = "soft"
             count = count + 1
         end
@@ -92,25 +95,38 @@ local record QuadrantCell
     j: integer
 end
 
-function QuadrantCell.new(i: integer, j: integer, corner_x: integer, corner_y: integer): QuadrantCell
-    local self: QuadrantCell = setmetatable({}, { __index = QuadrantCell })
+function QuadrantCell.new(
+    i: integer, j: integer, corner_x: integer, corner_y: integer
+): QuadrantCell
+    local self: QuadrantCell = setmetatable({}, {__index = QuadrantCell})
     self.i = i
     self.j = j
     self.distance = math.abs(i - corner_x) + math.abs(j - corner_y)
     return self
 end
 
-function QuadrantCell:can_place_soft_block(layout: {integer: {integer: BlockType}}, exclusion_zone: {Point}): boolean
+function QuadrantCell:can_place_soft_block(
+    layout: {integer: {integer: BlockType}}, exclusion_zone: {Point}
+): boolean
     return layout[self.i][self.j] == "none"
         and not contains_point(exclusion_zone, grid.get_tile_position(self.i, self.j))
 end
 
 local function distance_to_corner(first: QuadrantCell, second: QuadrantCell): boolean
-    if first.distance ~= second.distance then return first.distance < second.distance end
+    if first.distance ~= second.distance then
+        return first.distance < second.distance
+    end
     return first.i < second.i
 end
 
-local function quadrant_cells(x_min: integer, x_max: integer, y_min: integer, y_max: integer, corner_x: integer, corner_y: integer): {QuadrantCell}
+local function quadrant_cells(
+    x_min: integer,
+    x_max: integer,
+    y_min: integer,
+    y_max: integer,
+    corner_x: integer,
+    corner_y: integer
+): {QuadrantCell}
     local cells: {QuadrantCell} = {}
     for i = x_min, x_max do
         for j = y_min, y_max do
@@ -131,17 +147,21 @@ function block_layouts.quadrant(occupies: {Kinematic}): {integer: {integer: Bloc
     local per_quadrant = math.floor(total / 4)
     local remainder = total - per_quadrant * 4
 
+    -- fmt: off
     local top_left     = quadrant_cells(1,         x_mid     - 1,   1,         y_mid     - 1,   1,             1            )
     local top_right    = quadrant_cells(x_mid + 1, dim.x_max - 1,   1,         y_mid     - 1,   dim.x_max - 1, 1            )
     local bottom_left  = quadrant_cells(1,         x_mid     - 1,   y_mid + 1, dim.y_max - 1,   1,             dim.y_max - 1)
     local bottom_right = quadrant_cells(x_mid + 1, dim.x_max - 1,   y_mid + 1, dim.y_max - 1,   dim.x_max - 1, dim.y_max - 1)
+    -- fmt: on
     local all_quadrants = {top_left, top_right, bottom_left, bottom_right}
 
     for quadrant_index, cells in ipairs(all_quadrants) do
         local count = per_quadrant + (quadrant_index <= remainder and 1 or 0)
         local placed = 0
         for _, cell in ipairs(cells) do
-            if placed >= count then break end
+            if placed >= count then
+                break
+            end
             if cell:can_place_soft_block(layout, exclusion_zone) then
                 layout[cell.i][cell.j] = "soft"
                 placed = placed + 1

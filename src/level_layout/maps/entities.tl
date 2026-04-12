@@ -1,7 +1,7 @@
-local hitboxes = require("engine.hitboxes")
-local vectors = require("engine.geometry.vectors")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
+local vectors = require("engine.geometry.vectors")
+local hitboxes = require("engine.hitboxes")
 
 local type Vector = vectors.Vector
 local type Point = points.Point
@@ -13,7 +13,7 @@ local record Goal
 end
 
 function Goal.new(position: Point, pair: Point): Goal
-    local self: Goal = setmetatable({}, { __index = Goal })
+    local self: Goal = setmetatable({}, {__index = Goal})
     self.position = position
     self.pair = pair
     return self
@@ -29,7 +29,7 @@ local record ConveyorBelt
 end
 
 function ConveyorBelt.new(position: Point, direction: Vector): ConveyorBelt
-    local self: ConveyorBelt = setmetatable({}, { __index = ConveyorBelt })
+    local self: ConveyorBelt = setmetatable({}, {__index = ConveyorBelt})
     self.position = position
     self.direction = direction
     return self
@@ -51,7 +51,9 @@ local type Kinematic = require("kinematic")
 local type MapLayout = interface
     get_conveyor_belts: function(self): {ConveyorBelt}
     get_goals: function(self): {Goal}
-    get_block_layout: function(self, occupies: {Kinematic}): {integer: {integer: BlockType}}
+    get_block_layout: function(
+        self, occupies: {Kinematic}
+    ): {integer: {integer: BlockType}}
     has_ice: function(self): boolean
 end
 
