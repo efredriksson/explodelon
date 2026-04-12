@@ -5,23 +5,25 @@ local down_for_states: {integer: {integer: number}} = {}
 local joysticks = {
     MAX_BUTTONS = 16,
     BUTTONS = {
-        B = 1,
-        Y = 2,
-        SELECT = 3,
-        START = 4,
-        UP = 5,
-        DOWN = 6,
-        LEFT = 7,
-        RIGHT = 8,
-        A = 9,
-        X = 10,
-        L = 11,
-        R = 12,
-        L2 = 13,
-        R2 = 14,
-        L3 = 15,
-        R3 = 16,
-    },
+        -- fmt: off
+        B        = 1,
+        Y        = 2,
+        SELECT   = 3,
+        START    = 4,
+        UP       = 5,
+        DOWN     = 6,
+        LEFT     = 7,
+        RIGHT    = 8,
+        A        = 9,
+        X        = 10,
+        L        = 11,
+        R        = 12,
+        L2       = 13,
+        R2       = 14,
+        L3       = 15,
+        R3       = 16,
+        -- fmt: on
+    }
 }
 
 function joysticks.maxplayers(): integer
