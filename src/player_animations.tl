@@ -418,7 +418,8 @@ local function character_sprite_for_action(
         end
     end
 
-    local base_path = "assets/" .. character_asset .. "/" .. state .. "/" .. action_resolved()
+    local base_path = "assets/" .. character_asset .. "/" .. state .. "/" .. action_resolved(
+    )
     return {
         up = lutro.graphics.newImage(base_path .. "_up.png"),
         down = lutro.graphics.newImage(base_path .. "_down.png"),

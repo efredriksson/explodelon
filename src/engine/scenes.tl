@@ -133,7 +133,8 @@ function PerformanceSample:start(): number
 end
 
 function PerformanceSample:record(before_seconds: number, label: string)
-    self.accumulated_seconds = self.accumulated_seconds + (lutro.timer.getTime() - before_seconds)
+    self.accumulated_seconds = self.accumulated_seconds + (lutro.timer.getTime(
+    ) - before_seconds)
     self.frame_count = self.frame_count + 1
     if self.frame_count >= 300 then
         local avg_ms = (self.accumulated_seconds / self.frame_count) * 1000
