@@ -22,8 +22,9 @@ function LoopIndex:values(): function(): integer
     local val = self.start - self.step
     local function value_iterator(): integer
         val = val + self.step
-        if (val <= self.end_ and self.step > 0)
-            or (val >= self.end_ and self.step < 0) then
+        if
+            (val <= self.end_ and self.step > 0) or (val >= self.end_ and self.step < 0)
+        then
             return val
         end
     end

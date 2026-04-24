@@ -280,7 +280,13 @@ local function get_image(
     is_walking: boolean, sprite: CharacterName, direction: Direction
 ): Image
     local walk_name = {[true] = "walk", [false] = "idle"}
-    local path = "assets/" .. sprite .. "/foot/" .. walk_name[is_walking] .. "_" .. direction .. ".png"
+    local path = "assets/"
+        .. sprite
+        .. "/foot/"
+        .. walk_name[is_walking]
+        .. "_"
+        .. direction
+        .. ".png"
     return lutro.graphics.newImage(path)
 end
 

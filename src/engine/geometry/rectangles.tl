@@ -31,8 +31,8 @@ end
 function Rectangle:overlap(other: Rectangle): boolean
     return interval_overlap(self.x, self.x + self.width, other.x, other.x + other.width)
         and interval_overlap(
-        self.y, self.y + self.height, other.y, other.y + other.height
-    )
+            self.y, self.y + self.height, other.y, other.y + other.height
+        )
 end
 
 local function interval_contained(

@@ -162,8 +162,10 @@ function Lookup:collisions_between<K is Entity, T>(
             for j = y_min, y_max do
                 local index = index_2d_to_1d(i, j)
                 for _, check_against in ipairs(self.map[index] or {}) do
-                    if entity ~= check_against
-                        and entity:hitbox():overlap(check_against:hitbox()) then
+                    if
+                        entity ~= check_against
+                        and entity:hitbox():overlap(check_against:hitbox())
+                    then
                         local in_group = group:get(check_against)
                         if not (in_group is nil) then
                             collides_with[entity] = in_group
