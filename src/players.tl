@@ -216,8 +216,10 @@ function Player:set_action(action: Action)
         return
     end
 
-    if (self.action == "dash" or action == "roar")
-        and (action == "walk" or action == "idle") then
+    if
+        (self.action == "dash" or action == "roar")
+        and (action == "walk" or action == "idle")
+    then
         -- Not possible to exit dash action into walk or idle
         return
     end
@@ -385,9 +387,9 @@ function Player:can_jump(): boolean
 end
 
 function Player:get_max_jump_dist(): integer
-    local jump_dist = 2 * (math.floor(
-        self.dino.jump_powerup_for / DINO_POWERUP_TIME_INTERVAL
-    ) + 1)
+    local jump_dist = 2 * (
+        math.floor(self.dino.jump_powerup_for / DINO_POWERUP_TIME_INTERVAL) + 1
+    )
     -- Clamp max jump dist
     return math.min(jump_dist, self.dino.level * 2)
 end
@@ -541,9 +543,8 @@ function Player:update(dt: number)
     self.roar_for = self.roar_for - dt
     self.last_time_adding_sonic_wave = self.last_time_adding_sonic_wave + dt
 
-    self.after_image_shift = self.after_image_shift + self:get_speed() * dt + lutro.math.random(
-        4
-    )
+    self.after_image_shift = self.after_image_shift + self:get_speed(
+    ) * dt + lutro.math.random(4)
     self.after_image_shift = math.fmod(self.after_image_shift, 37)
 
     if self:is_sonic_blasting() then

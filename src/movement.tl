@@ -222,8 +222,10 @@ local function restrict_player_movement(
 
     local bombs_player_is_inside: {Kinematic: Kinematic} = {}
     for _, bomb in ipairs(close_bombs) do
-        if bomb.position:distance_to(player.position) <= grid.TILE_SIZE * (3 / 4)
-            and not bomb.has_been_kicked then
+        if
+            bomb.position:distance_to(player.position) <= grid.TILE_SIZE * (3 / 4)
+            and not bomb.has_been_kicked
+        then
             bombs_player_is_inside[bomb] = bomb
         end
     end
@@ -263,8 +265,9 @@ local function restrict_player_movement(
 
     for _, bomb in ipairs(close_bombs) do
         local bomb_hitbox = bomb:movementbox()
-        if walking_further_into_block(bomb_hitbox)
-            and not bombs_player_is_inside[bomb] then
+        if
+            walking_further_into_block(bomb_hitbox) and not bombs_player_is_inside[bomb]
+        then
             -- If a bomb has been kicked then it is no longer to move
             -- freely in far inside it. This is to stop moving through
             -- bombs that are kicked against a player.
@@ -294,8 +297,9 @@ local function restrict_player_movement(
 
     for _, bomb in ipairs(close_lightning_bombs) do
         local bomb_hitbox = bomb:movementbox()
-        if walking_further_into_block(bomb_hitbox)
-            and not bombs_player_is_inside[bomb] then
+        if
+            walking_further_into_block(bomb_hitbox) and not bombs_player_is_inside[bomb]
+        then
             local corner_cut = try_corner_cut(bomb_hitbox, bomb)
             if corner_cut then
                 return corner_cut

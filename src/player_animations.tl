@@ -272,9 +272,11 @@ end
 
 function PlayerEntity:_get_animation(): Animation
     local function get_direction(): Direction
-        if self.player.dino
+        if
+            self.player.dino
             and self.player.dino.action == "slide"
-            and self.player.dino.level == 2 then
+            and self.player.dino.level == 2
+        then
             -- For level 2 dino sliding the character riding it should turn depending
             -- on the direction sliding for it to look like they bracing sliding to a stop:
             return SLIDE_WIHT_DINO_DIR_MAP[self.player.direction]
@@ -338,9 +340,11 @@ function PlayerEntity:_draw_mounted()
         draw_sonic_blasts(self.player)
     end
 
-    if self.player.action == "dash"
+    if
+        self.player.action == "dash"
         and self.player.dino
-        and self.player.dino.level == 3 then
+        and self.player.dino.level == 3
+    then
         local shift_vector = DINO_AFTERIMGE_SHIFT[self.player.direction]:scale(
             self.player.after_image_shift
         )
@@ -348,9 +352,11 @@ function PlayerEntity:_draw_mounted()
         draw(dino_animation, dino_position():move(shift_vector))
     end
 
-    if self.player.action == "slide"
+    if
+        self.player.action == "slide"
         and self.player.dino
-        and self.player.dino.level == 2 then
+        and self.player.dino.level == 2
+    then
         local character_pos = draw_position:move(
             DINO_SLIDE_CHARACTER_ADJUST[self.player.direction]
         )
@@ -418,7 +424,12 @@ local function character_sprite_for_action(
         end
     end
 
-    local base_path = "assets/" .. character_asset .. "/" .. state .. "/" .. action_resolved()
+    local base_path = "assets/"
+        .. character_asset
+        .. "/"
+        .. state
+        .. "/"
+        .. action_resolved()
     return {
         up = lutro.graphics.newImage(base_path .. "_up.png"),
         down = lutro.graphics.newImage(base_path .. "_down.png"),
@@ -507,7 +518,11 @@ function player_animations.load_assets()
     local function get_stun_cry_text_for_dir(dir: string): {integer: Image}
         local result: {integer: Image} = {}
         for level = 1, 3 do
-            local asset = "assets/tirras/level_" .. level .. "/stun_cry_text_" .. dir .. ".png"
+            local asset = "assets/tirras/level_"
+                .. level
+                .. "/stun_cry_text_"
+                .. dir
+                .. ".png"
             result[level] = lutro.graphics.newImage(asset)
         end
 
