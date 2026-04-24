@@ -28,3 +28,7 @@ package: ${LUTRO_DIST_PATH}
 
 lint:
 	tl check ${SRCS_LINT}
+	ceru --check src
+
+format:
+	ceru src

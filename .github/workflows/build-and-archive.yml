@@ -10,7 +10,7 @@ jobs:
           fetch-depth: 15
       - uses: actions/setup-node@v4
       - name: Setup Lua/Teal
-        run: sudo apt install luarocks make zip && sudo luarocks install tl
+        run: sudo apt install luarocks make zip && sudo luarocks install tl && sudo luarocks install cerulean
       - name: Setup release bot
         run: npm install -g semantic-release @semantic-release/release-notes-generator @semantic-release/exec @commitlint/cli @commitlint/config-conventional
       - name: Lint

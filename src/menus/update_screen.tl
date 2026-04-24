@@ -105,7 +105,8 @@ function UpdateCheckScene:update(dt: number)
     end
     if self.have_connection and not (self.started_download or self.is_up_to_date) then
         self.started_download = true
-        local download_cmd = "wget -O " .. self:download_dst() .. " " .. self.download_url
+        local download_cmd = "wget -O " .. self:download_dst(
+        ) .. " " .. self.download_url
         local finish_touch = " && touch " .. self:download_finish_marker()
         os.execute(download_cmd .. finish_touch .. " &")
     end

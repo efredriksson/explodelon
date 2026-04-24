@@ -124,7 +124,8 @@ function PlayerCart.new(id: integer, position: number, head: CharacterName): Pla
     self.cannon_powerup_for = 0.0
     self.turbo = false
     self.reload_countdown = 0.0
-    self.animations, self.loading_animations, self.firing_animations = get_cart_animations()
+    self.animations, self.loading_animations, self.firing_animations = get_cart_animations(
+    )
     return self
 end
 

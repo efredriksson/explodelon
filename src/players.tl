@@ -541,9 +541,8 @@ function Player:update(dt: number)
     self.roar_for = self.roar_for - dt
     self.last_time_adding_sonic_wave = self.last_time_adding_sonic_wave + dt
 
-    self.after_image_shift = self.after_image_shift + self:get_speed() * dt + lutro.math.random(
-        4
-    )
+    self.after_image_shift = self.after_image_shift + self:get_speed(
+    ) * dt + lutro.math.random(4)
     self.after_image_shift = math.fmod(self.after_image_shift, 37)
 
     if self:is_sonic_blasting() then
