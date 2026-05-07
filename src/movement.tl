@@ -513,20 +513,24 @@ local function direction_for_diagonal(
     return computed_dir
 end
 
-local function direction_from_dominant_velocity(
-    vel: Vector, current_dir: Direction
+-- Lets dino abilities (roar, bomb throw) aim mid ice-slide: facing follows the
+-- player's tap rather than the dominant slide axis.
+local function pick_facing_direction(
+    move_inputs: {Movement},
+    moves: {Movement},
+    current_dir: Direction,
+    new_dir: Direction,
+    constrained: boolean,
+    ice_sliding: boolean
 ): Direction
-    if math.abs(vel.x) > math.abs(vel.y) then
-        return vel.x > 0 and "right" or "left"
-    elseif math.abs(vel.y) > math.abs(vel.x) then
-        return vel.y > 0 and "down" or "up"
-    elseif vel.x ~= 0 then
-        return vel.x > 0 and "right" or "left"
-    elseif vel.y ~= 0 then
-        return vel.y > 0 and "down" or "up"
-    else
+    if not ice_sliding then
+        return direction_for_diagonal(moves, current_dir, new_dir, constrained)
+    end
+    if #move_inputs == 0 then
         return current_dir
     end
+    local input_dir = move_inputs[#move_inputs].dir
+    return direction_for_diagonal(move_inputs, current_dir, input_dir, constrained)
 end
 
 local function get_ice_moves(
@@ -615,9 +619,8 @@ function movement.set_position_and_dir_from_input(
         bombs_,
         lookup
     )
-    local dominant_dir = direction_from_dominant_velocity(player.ice_velocity, new_dir)
-    local updated_dir = direction_for_diagonal(
-        moves, player.direction, dominant_dir, constrained
+    local updated_dir = pick_facing_direction(
+        move_inputs, moves, player.direction, new_dir, constrained, ice_sliding
     )
 
     player:set_movement(new_pos, updated_dir)
