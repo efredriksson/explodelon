@@ -41,7 +41,9 @@ local type Eggs = eggs.Eggs
 local type Explodable = require("bombs.explodable")
 local type Entity = require("engine.entity")
 local type Kinematic = require("kinematic")
+local type CharacterSelection = characters.CharacterSelection
 local type GameCountdown = countdown.GameCountdown
+local type PausedGame = pause_scene.PausedGame
 local type HardBlocks = hard_blocks.HardBlocks
 local type Items = items.Items
 local type LightningBombs = lightning_bombs.LightningBombs
@@ -70,7 +72,7 @@ local type BattleState = enum
     "finished"
 end
 
-local record Battle is Scene
+local record Battle is PausedGame
     score_board: ScoreBoard
     player_selection: Scene
 
@@ -258,36 +260,70 @@ function Battle:get_player(player_id: integer): Player
     return nil
 end
 
-function Battle:handle_pause_input(): boolean
-    if self.state == "finished" then
+-- The roster is edited outside the battle, in the character selection screen and
+-- the pause menu, so the players on the field have to be caught up with it.
+function Battle:sync_with_selections()
+    local function has_no_selection(player: Player): boolean
+        return not characters.exist_selection_for(player.id)
+    end
+
+    for _, player in ipairs(itertools.filter(self.players, has_no_selection)) do
+        player:remove()
+    end
+
+    local function has_no_player(selection: CharacterSelection): boolean
+        return self:get_player(selection.player_id) == nil
+    end
+
+    local someone_joined = itertools.count(
+        characters.get_selections(), has_no_player
+    ) > 0
+    if someone_joined and self.state == "starting" then
+        -- Joining before the round is underway gets you into that round rather
+        -- than waiting out one you never saw.
+        self.state = "restarting"
+    end
+end
+
+-- Resuming skips Battle:load, so the roster it would have rebuilt is synced here
+-- instead. Audio is left alone on purpose: update() unpauses it once the
+-- ready-set-go finishes, so unpausing here would stack the battle music underneath.
+function Battle:enter(is_resuming: boolean)
+    if is_resuming then
+        self:sync_with_selections()
+    end
+
+    scenes.set(self, is_resuming)
+end
+
+function Battle:add_player()
+    if #characters.get_selections() >= joysticks.maxplayers() then
         return
     end
 
-    local function toggle_if_playing(player_id: integer)
-        if not characters.exist_selection_for(player_id) then
-            settings.number_of_players = settings.number_of_players + 1
-            if settings.player_selection == "off" then
-                characters.new_selection(player_id)
-            else
-                characters.queue_selection_for(player_id)
-            end
-            scenes.set(self.player_selection)
+    settings.set_number_of_auto_selected_characters(
+        settings.number_of_auto_selected_characters + 1
+    )
+    scenes.set(self.player_selection)
+end
 
-            if self.state == "starting" then
-                -- If someone joins while game is still starting we restart so
-                -- they can join and play directly.
-                self.state = "restarting"
-            end
-        else
-            settings.number_of_players = settings.number_of_players - 1
-            characters.remove_selection_for(player_id)
-            self.score_board:remove_player(player_id)
-            local possible_player = self:get_player(player_id)
-            if possible_player then
-                possible_player:remove()
-            end
-            scenes.set(self, true)
-        end
+function Battle:leave_game(player_id: integer)
+    if #characters.get_selections() <= settings.MINIMUM_PLAYERS then
+        return
+    end
+
+    settings.set_number_of_auto_selected_characters(
+        settings.number_of_auto_selected_characters - 1
+    )
+    characters.remove_selection_for(player_id)
+    self.score_board:remove_player(player_id)
+    self:sync_with_selections()
+    scenes.set(self, true)
+end
+
+function Battle:handle_pause_input(): boolean
+    if self.state == "finished" then
+        return
     end
 
     for player_id = 1, joysticks.maxplayers() do
@@ -295,14 +331,7 @@ function Battle:handle_pause_input(): boolean
             self.countdown = countdown.new()
             self.audio_paused = true
             audio.pause()
-            scenes.set(
-                pause_scene.new(
-                    self,
-                    player_id,
-                    characters.exist_selection_for(player_id),
-                    toggle_if_playing
-                )
-            )
+            scenes.set(pause_scene.new(self, player_id))
             return true
         end
     end

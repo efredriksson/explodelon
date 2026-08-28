@@ -1,3 +1,4 @@
+local characters = require("characters")
 local audio = require("engine.audio")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
@@ -8,21 +9,25 @@ local fonts = require("fonts")
 local screen = require("screen")
 
 local type MenuFont = fonts.MenuFont
+local type Point = points.Point
 local type Scene = scenes.Scene
 local type Rectangle = rectangles.Rectangle
+
+local interface PausedGame is Scene
+    leave_game: function(self, player_id: integer)
+    add_player: function(self)
+end
 
 local GAME_EXIT_TIME = 3.5
 local pause_menu_image: Image
 local pause_menu_sound: Source
 local white_font: MenuFont
-local pause_scene = {}
+local pause_scene = {PausedGame = PausedGame}
 
 local record GamePauseScene is Scene
-    paused_scene: Scene
+    paused_game: PausedGame
     player_id: integer
-    is_playing: boolean
     exit_counter: number
-    toggle_if_playing: function(integer)
 end
 
 local function get_pause_square(): Rectangle
@@ -33,18 +38,27 @@ local function get_pause_square(): Rectangle
     )
 end
 
-function pause_scene.new(
-    paused_scene: Scene,
-    player_id: integer,
-    is_playing: boolean,
-    toggle_if_playing: function(integer)
-): GamePauseScene
+local WINDOW = get_pause_square()
+local FIRST_ROW_Y = 6
+local ROW_HEIGHT = 10
+
+local function row_position(row: integer): Point
+    return points.new(WINDOW.x, WINDOW.y + FIRST_ROW_Y + ROW_HEIGHT * (row - 1))
+end
+
+-- Four rows is what the panel holds: below the last one is its bottom border.
+local ROW_POSITIONS: {Point} = {
+    row_position(1),
+    row_position(2),
+    row_position(3),
+    row_position(4),
+}
+
+function pause_scene.new(paused_game: PausedGame, player_id: integer): GamePauseScene
     local self: GamePauseScene = setmetatable({}, {__index = GamePauseScene})
-    self.paused_scene = paused_scene
+    self.paused_game = paused_game
     self.player_id = player_id
-    self.is_playing = is_playing
     self.exit_counter = 0
-    self.toggle_if_playing = toggle_if_playing
 
     pause_menu_sound:play()
     return self
@@ -61,40 +75,45 @@ function GamePauseScene:_time_to_exit(): integer
     return math.floor(GAME_EXIT_TIME - self.exit_counter)
 end
 
-function GamePauseScene:draw()
-    self.paused_scene:draw()
-    local window = get_pause_square()
-    lutro.graphics.draw(pause_menu_image, window.x, window.y)
-    local header_pos = points.new(window.x, window.y + 10)
-    white_font:print_centered(
-        "game paused by player " .. self.player_id, window.width, header_pos
-    )
+function GamePauseScene:_is_playing(): boolean
+    return characters.exist_selection_for(self.player_id)
+end
 
-    local toggle_msg_pos = points.new(window.x, window.y + 22)
-    if not self.is_playing then
-        white_font:print_centered("press l1 to join", window.width, toggle_msg_pos)
-    else
-        white_font:print_centered("press l1 to leave", window.width, toggle_msg_pos)
-    end
-
-    local exit_msg_pos = points.new(window.x, window.y + 34)
+function GamePauseScene:_exit_message(): string
     if self.exit_counter < 0.1 then
-        white_font:print_centered(
-            "hold select down to exit", window.width, exit_msg_pos
-        )
+        return "hold select down to exit"
     else
-        white_font:print_centered(
-            "exiting game in " .. self:_time_to_exit(), window.width, exit_msg_pos
-        )
+        return "exiting game in " .. self:_time_to_exit()
     end
+end
+
+function GamePauseScene:_print_row(text: string, row: integer)
+    white_font:print_centered(text, WINDOW.width, ROW_POSITIONS[row])
+end
+
+function GamePauseScene:draw()
+    self.paused_game:draw()
+    lutro.graphics.draw(pause_menu_image, WINDOW.x, WINDOW.y)
+
+    self:_print_row("game paused by player " .. self.player_id, 1)
+    self:_print_row("press r1 to add players", 2)
+    if self:_is_playing() then
+        self:_print_row("press l1 to leave", 3)
+    end
+    self:_print_row(self:_exit_message(), 4)
 end
 
 function GamePauseScene:update(dt: number)
     if joysticks.is_pressed(self.player_id, joysticks.BUTTONS.START) then
-        scenes.set(self.paused_scene, true)
+        scenes.set(self.paused_game, true)
     end
-    if joysticks.is_pressed(self.player_id, joysticks.BUTTONS.L) then
-        self.toggle_if_playing(self.player_id)
+    if joysticks.is_pressed(self.player_id, joysticks.BUTTONS.R) then
+        self.paused_game:add_player()
+    end
+    if
+        self:_is_playing() and joysticks.is_pressed(self.player_id, joysticks.BUTTONS.L)
+    then
+        self.paused_game:leave_game(self.player_id)
     end
     if lutro.joystick.isDown(self.player_id, joysticks.BUTTONS.SELECT) then
         self.exit_counter = self.exit_counter + dt

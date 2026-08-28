@@ -20,19 +20,15 @@ local background: Image
 local record MenuScreen is Scene
     menu_choices: {MenuChoice}
     menu_selection: MenuSelection<integer>
-    on_load: function()
     go_back: function(Scene)
 end
 
 local screens = {MenuScreen = MenuScreen}
 
-function screens.new(
-    menu_choices: {MenuChoice}, go_back?: function(Scene), on_load?: function()
-): MenuScreen
+function screens.new(menu_choices: {MenuChoice}, go_back?: function(Scene)): MenuScreen
     local self: MenuScreen = setmetatable({}, {__index = MenuScreen})
     self.menu_choices = menu_choices
     self.menu_selection = items.new_integer_selection(1, 1, #self.menu_choices)
-    self.on_load = on_load or function() end
     self.go_back = go_back or function(_: Scene) end
     return self
 end
@@ -97,7 +93,6 @@ function MenuScreen:draw()
 end
 
 function MenuScreen:load()
-    self.on_load()
 end
 
 return screens
