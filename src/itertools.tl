@@ -107,6 +107,16 @@ function itertools.filter<T>(iterator: {T}, predicate: function(T): boolean): {T
     return result
 end
 
+function itertools.count<T>(iterator: {T}, predicate: function(T): boolean): integer
+    local matches = 0
+    for _, element in ipairs(iterator) do
+        if predicate(element) then
+            matches = matches + 1
+        end
+    end
+    return matches
+end
+
 function itertools.shuffle<T>(t: {T}): {T}
     -- https://stackoverflow.com/a/68486276
     local s = {}

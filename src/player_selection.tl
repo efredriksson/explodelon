@@ -9,7 +9,9 @@ local fonts = require("fonts")
 local battle = require("game.battle")
 local score_board = require("game.score_board")
 local win_condition = require("game.win_condition")
+local itertools = require("itertools")
 local items = require("menus.items")
+local screen = require("screen")
 local settings = require("settings")
 local team_selection = require("team_selection")
 
@@ -17,10 +19,12 @@ local type Animation = animations.Animation
 local type Battle = battle.Battle
 local type SinglesScoreBoard = score_board.SinglesScoreBoard
 local type CharacterName = characters.CharacterName
+local type CharacterSelection = characters.CharacterSelection
 local type MenuFont = fonts.MenuFont
-local type MenuSelection = items.MenuSelection
 local type Scene = scenes.Scene
 local type Point = points.Point
+
+local COUNTDOWN_DURATION = 3.0
 
 local record Character
     sprite: CharacterName
@@ -43,28 +47,64 @@ local COLUMN_OFFSET = vectors.new(45, 0)
 function Character:get_position(): Point
     local character_rows = 2
 
-    -- Using 0 index for these integers:
-    local character_number = self.number - 1
-    local column = math.floor(character_number / character_rows)
-    local row = math.fmod(character_number, character_rows)
+    local zero_based_number = self.number - 1
+    local column = math.floor(zero_based_number / character_rows)
+    local row = math.fmod(zero_based_number, character_rows)
 
     local pos_offset = ROW_OFFSET:scale(row):plus(COLUMN_OFFSET:scale(column))
     local walk_offset = vectors.new(0, self.y_shift)
     return FIRST_CHAR_POS:move(pos_offset):move(walk_offset)
 end
 
-function Character:walk(dt: number)
-    local walk_speed = 5
-    self.y_shift = self.y_shift + dt * walk_speed
+function Character:is_taken(): boolean
+    return not characters.is_unused(self.sprite)
+end
+
+-- Walking stops before the character leaves the line-up and takes its player
+-- number off screen with it.
+local WALK_DISTANCE = 56
+local WALK_SPEED = 5
+
+function Character:is_walking(): boolean
+    return self:is_taken() and self.y_shift < WALK_DISTANCE
+end
+
+function Character:update(dt: number)
+    if not self:is_taken() then
+        self.y_shift = 0.0
+    elseif self:is_walking() then
+        self.y_shift = math.min(self.y_shift + dt * WALK_SPEED, WALK_DISTANCE)
+    end
+end
+
+-- arrival_order lets several cursors sharing one character be stacked in the
+-- order they arrived.
+local record Cursor
+    player_id: integer
+    character_number: integer
+    arrival_order: integer
+    confirmed: boolean
+end
+
+function Cursor.new(
+    player_id: integer, character_number: integer, arrival_order: integer
+): Cursor
+    local self: Cursor = setmetatable({}, {__index = Cursor})
+    self.player_id = player_id
+    self.character_number = character_number
+    self.arrival_order = arrival_order
+    self.confirmed = false
+    return self
 end
 
 local ok_sound: Source
 local selector_indicator: Image
 local background: Image
 local black_font: MenuFont
+local white_font: MenuFont
 local music: Source
 local idle_down_images: {CharacterName: Image} = {}
-local walk_down_images: {CharacterName: Image} = {}
+local slow_walk_animations: {CharacterName: Animation} = {}
 
 local function get_idle_down_png(character_name: CharacterName): Image
     return lutro.graphics.newImage("assets/" .. character_name .. "/foot/idle_down.png")
@@ -75,7 +115,7 @@ local function get_walk_down_png(character_name: CharacterName): Image
 end
 
 local function get_walk_down_animation(character_name: CharacterName): Animation
-    local image = walk_down_images[character_name]
+    local image = get_walk_down_png(character_name)
     local animation = animations.new(image, 18, 0.5)
     animation.steps = animation.steps - 1 -- Skip final step when walking slowly
     return animation
@@ -86,12 +126,10 @@ local record PlayerSelection is Scene
     score_board: SinglesScoreBoard
     team_selection: Scene
     going_back_to_game: boolean
-    player_selecting: integer
-    idle_images: {integer: Image}
-    slow_walk_animations: {CharacterName: Animation}
-    selector: MenuSelection<integer>
-    selectable_characters: {Character}
-    walking_characters: {Character}
+    cursors: {Cursor}
+    next_arrival_order: integer
+    countdown_time: number
+    line_up: {Character}
 end
 
 function PlayerSelection.new(): PlayerSelection
@@ -102,39 +140,58 @@ function PlayerSelection.new(): PlayerSelection
     )
     self.team_selection = team_selection.new(self, music)
     self.going_back_to_game = false
-    self.idle_images = {}
-    self.slow_walk_animations = {}
-    self.selectable_characters = {}
-    self.walking_characters = {}
+    self.cursors = {}
+    self.next_arrival_order = 1
+    self.countdown_time = COUNTDOWN_DURATION
+    self.line_up = {}
+    for number, sprite in ipairs(characters.get_names()) do
+        table.insert(self.line_up, Character.new(sprite, number))
+    end
     return self
 end
 
-function PlayerSelection:load()
-    -- Entering scene we need to re-calculate these from game state
-    self.player_selecting = characters.next_player_selecting()
-    self.slow_walk_animations = {}
-    self.selectable_characters = {}
-    local previous_walk_state = self.walking_characters
-    self.walking_characters = {}
-    for idx, sprite in ipairs(characters.get_names()) do
-        local character = Character.new(sprite, idx)
-        if characters.is_unused(sprite) then
-            table.insert(self.selectable_characters, character)
-        else
-            table.insert(self.walking_characters, character)
-        end
-        self.slow_walk_animations[sprite] = get_walk_down_animation(sprite)
-    end
+function PlayerSelection:_skips_lobby(): boolean
+    return settings.auto_select_characters
+end
 
-    for _, old_walking in ipairs(previous_walk_state) do
-        for _, new_walking in ipairs(self.walking_characters) do
-            if old_walking.number == new_walking.number then
-                new_walking.y_shift = old_walking.y_shift
-            end
+function PlayerSelection:_countdown_duration(): number
+    if self:_skips_lobby() then
+        return 0
+    else
+        return COUNTDOWN_DURATION
+    end
+end
+
+function PlayerSelection:_character_number_of(sprite: CharacterName): integer
+    for _, character in ipairs(self.line_up) do
+        if character.sprite == sprite then
+            return character.number
         end
     end
 
-    self.selector = items.new_integer_selection(1, 1, #self.selectable_characters)
+    return nil
+end
+
+function PlayerSelection:_next_arrival_order(): integer
+    local order = self.next_arrival_order
+    self.next_arrival_order = order + 1
+    return order
+end
+
+-- Existing selections come back as confirmed cursors: a rematch is then just
+-- holding start again, and reopening mid-battle shows who's still playing.
+function PlayerSelection:_initial_cursors(): {Cursor}
+    local function cursor_for(selection: CharacterSelection): Cursor
+        local cursor = Cursor.new(
+            selection.player_id,
+            self:_character_number_of(selection.sprite),
+            self:_next_arrival_order()
+        )
+        cursor.confirmed = true
+        return cursor
+    end
+
+    return itertools.map(characters.get_selections(), cursor_for)
 end
 
 local player_selection = {}
@@ -142,7 +199,7 @@ local player_selection = {}
 function player_selection.load_assets()
     for _, sprite in ipairs(characters.get_names()) do
         idle_down_images[sprite] = get_idle_down_png(sprite)
-        walk_down_images[sprite] = get_walk_down_png(sprite)
+        slow_walk_animations[sprite] = get_walk_down_animation(sprite)
     end
 
     selector_indicator = lutro.graphics.newImage("assets/player_indicator.png")
@@ -150,69 +207,201 @@ function player_selection.load_assets()
 
     ok_sound = items.ok_sound()
     black_font = fonts.new_menu_black()
+    white_font = fonts.new_menu_white_outlined()
     music = audio.new_source("assets/music/player-selection.ogg", "static")
     music:setVolume(0.75)
 end
 
-function PlayerSelection:check_for_new_player_selecting()
-    -- No player is selecting, check if anyone is pressing right or left
-    -- indicating that they want to select a character
+function PlayerSelection:_has_cursor(player_id: integer): boolean
+    for _, cursor in ipairs(self.cursors) do
+        if cursor.player_id == player_id then
+            return true
+        end
+    end
+
+    return false
+end
+
+function PlayerSelection:_may_activate(player_id: integer): boolean
+    return not self:_has_cursor(player_id)
+        and not characters.exist_selection_for(player_id)
+end
+
+function PlayerSelection:_is_pointed_at(character: Character): boolean
+    for _, cursor in ipairs(self.cursors) do
+        if cursor.character_number == character.number then
+            return true
+        end
+    end
+
+    return false
+end
+
+local function is_free(character: Character): boolean
+    return not character:is_taken()
+end
+
+-- Start a new player off on a character nobody else is looking at, so two
+-- freshly activated controllers do not stack up on the same sprite.
+function PlayerSelection:_character_to_activate_on(): Character
+    local function is_unattended(character: Character): boolean
+        return not self:_is_pointed_at(character)
+    end
+
+    local free_characters = itertools.filter(self.line_up, is_free)
+    local unattended_characters = itertools.filter(free_characters, is_unattended)
+    return unattended_characters[1] or free_characters[1]
+end
+
+function PlayerSelection:_activate_cursor_for(player_id: integer): boolean
+    local character = self:_character_to_activate_on()
+    if not character then
+        return false
+    end
+
+    table.insert(
+        self.cursors,
+        Cursor.new(player_id, character.number, self:_next_arrival_order())
+    )
+    return true
+end
+
+function PlayerSelection:load()
+    if self:_skips_lobby() then
+        characters.set_auto_selected(settings.number_of_auto_selected_characters)
+    end
+
+    self.countdown_time = self:_countdown_duration()
+    self.next_arrival_order = 1
+    self.cursors = self:_initial_cursors()
+end
+
+function PlayerSelection:_activate_new_cursors(): boolean
+    local activated = false
     for player_id = 1, joysticks.maxplayers() do
         local trying_to_select = joysticks.is_pressed(
             player_id, joysticks.BUTTONS.RIGHT
         ) or joysticks.is_pressed(player_id, joysticks.BUTTONS.LEFT)
 
-        if trying_to_select and characters.have_not_selected(player_id) then
-            self.player_selecting = player_id
-            return
+        if trying_to_select and self:_may_activate(player_id) then
+            if self:_activate_cursor_for(player_id) then
+                activated = true
+            end
+        end
+    end
+
+    return activated
+end
+
+function PlayerSelection:_free_character_number(from: integer, step: integer): integer
+    local number = from + step
+    while self.line_up[number] do
+        if not self.line_up[number]:is_taken() then
+            return number
+        end
+        number = number + step
+    end
+
+    return nil
+end
+
+function PlayerSelection:_move_cursor(cursor: Cursor, step: integer): boolean
+    local number = self:_free_character_number(cursor.character_number, step)
+    if not number then
+        return false
+    end
+
+    cursor.character_number = number
+    cursor.arrival_order = self:_next_arrival_order()
+    return true
+end
+
+-- A cursor still pointing at a sprite that gets taken steps aside to the next
+-- character, the same move it would have made on its own.
+function PlayerSelection:_move_cursors_off_taken_characters()
+    for _, cursor in ipairs(self.cursors) do
+        if not cursor.confirmed then
+            local character = self.line_up[cursor.character_number]
+            if character:is_taken() then
+                local stepped_right = self:_move_cursor(cursor, 1)
+                if not stepped_right then
+                    self:_move_cursor(cursor, -1)
+                end
+            end
         end
     end
 end
 
-function PlayerSelection:handle_player_input()
-    if #characters.get_selections() == settings.number_of_players then
-        if settings.teams then
-            scenes.set(self.team_selection)
-        else
-            music:stop()
-            self.score_board:update_avatars(characters.get_selections())
+function PlayerSelection:_confirm(cursor: Cursor): boolean
+    local character = self.line_up[cursor.character_number]
+    if character:is_taken() then
+        return false
+    end
 
-            if self.going_back_to_game then
-                -- The game might have paused audio, make sure to unpause:
-                audio.unpause()
-            end
-            scenes.set(self.game, self.going_back_to_game)
-            -- Battle started, keep track on that state:
-            self.going_back_to_game = true
+    characters.new_selection(cursor.player_id, character.sprite)
+    cursor.confirmed = true
+    self:_move_cursors_off_taken_characters()
+    return true
+end
+
+function PlayerSelection:_handle_cursor_input(cursor: Cursor): boolean
+    local player_id = cursor.player_id
+
+    if cursor.confirmed then
+        if joysticks.is_pressed(player_id, joysticks.BUTTONS.A) then
+            characters.remove_selection_for(player_id)
+            cursor.confirmed = false
+            return true
         end
 
-        return
+        return false
     end
 
-    if not self.player_selecting then
-        self:check_for_new_player_selecting()
-        return
-    end
-
-    local ok_action = false
-
-    if joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.RIGHT) then
-        ok_action = self.selector:increment()
-    elseif joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.LEFT) then
-        ok_action = self.selector:decrement()
+    if joysticks.is_pressed(player_id, joysticks.BUTTONS.RIGHT) then
+        return self:_move_cursor(cursor, 1)
+    elseif joysticks.is_pressed(player_id, joysticks.BUTTONS.LEFT) then
+        return self:_move_cursor(cursor, -1)
     elseif (
-        joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.B)
-        or joysticks.is_pressed(self.player_selecting, joysticks.BUTTONS.R)
+        joysticks.is_pressed(player_id, joysticks.BUTTONS.B)
+        or joysticks.is_pressed(player_id, joysticks.BUTTONS.R)
     ) then
-        local selected = table.remove(
-            self.selectable_characters, self.selector:get_value()
-        )
-        table.insert(self.walking_characters, selected)
-        characters.new_selection(self.player_selecting, selected.sprite)
-        self.selector:reduce_max_val()
+        return self:_confirm(cursor)
+    end
 
+    return false
+end
+
+-- Leaving is only offered to players still making up their mind; a picked
+-- character is given back with A instead.
+function PlayerSelection:_deactivate_cursors(): boolean
+    local deactivated = false
+    for i = #self.cursors, 1, -1 do
+        local cursor = self.cursors[i]
+        local wants_to_leave = joysticks.is_pressed(
+            cursor.player_id, joysticks.BUTTONS.A
+        )
+        if not cursor.confirmed and wants_to_leave then
+            table.remove(self.cursors, i)
+            deactivated = true
+        end
+    end
+
+    return deactivated
+end
+
+-- Leaving and picking are settled before new controllers are let in, so the
+-- press that activates a player does not also move their brand new cursor.
+function PlayerSelection:_handle_player_input()
+    local ok_action = self:_deactivate_cursors()
+
+    for _, cursor in ipairs(self.cursors) do
+        if self:_handle_cursor_input(cursor) then
+            ok_action = true
+        end
+    end
+
+    if self:_activate_new_cursors() then
         ok_action = true
-        self.player_selecting = characters.next_player_selecting()
     end
 
     if ok_action then
@@ -220,59 +409,160 @@ function PlayerSelection:handle_player_input()
     end
 end
 
+function PlayerSelection:_is_someone_holding_start(): boolean
+    for _, cursor in ipairs(self.cursors) do
+        local holding_start = lutro.joystick.isDown(
+            cursor.player_id, joysticks.BUTTONS.START
+        )
+        if cursor.confirmed and holding_start then
+            return true
+        end
+    end
+
+    return false
+end
+
+function PlayerSelection:_has_enough_players(): boolean
+    return #characters.get_selections() >= settings.MINIMUM_PLAYERS
+end
+
+function PlayerSelection:_is_starting(): boolean
+    if self:_skips_lobby() then
+        return true
+    end
+
+    return self:_has_enough_players() and self:_is_someone_holding_start()
+end
+
+function PlayerSelection:_start_battle()
+    if settings.teams then
+        scenes.set(self.team_selection)
+        return
+    end
+
+    music:stop()
+    self.score_board:update_avatars(characters.get_selections())
+    self.game:enter(self.going_back_to_game)
+    self.going_back_to_game = true
+end
+
+function PlayerSelection:_update_countdown(dt: number, is_starting: boolean)
+    if is_starting then
+        self.countdown_time = math.max(self.countdown_time - dt, 0)
+    else
+        self.countdown_time = self:_countdown_duration()
+    end
+end
+
+-- A skipped lobby lives for a single frame, which is still long enough to start
+-- the music over the battle it is about to hand back to.
+function PlayerSelection:_keep_music_playing()
+    if self:_skips_lobby() or music:isPlaying() then
+        return
+    end
+
+    music:play()
+end
+
 function PlayerSelection:update(dt: number)
-    if not music:isPlaying() then
-        music:play()
+    self:_keep_music_playing()
+
+    self:_handle_player_input()
+
+    local is_starting = self:_is_starting()
+    self:_update_countdown(dt, is_starting)
+
+    if is_starting and self.countdown_time == 0 then
+        self:_start_battle()
+        return
     end
 
-    self:handle_player_input()
-
-    for _, selected in ipairs(self.walking_characters) do
-        selected:walk(dt)
-        self.slow_walk_animations[selected.sprite]:update(dt)
+    for _, character in ipairs(self.line_up) do
+        character:update(dt)
+        if character:is_walking() then
+            slow_walk_animations[character.sprite]:update(dt)
+        end
     end
 end
 
-function PlayerSelection:draw_idle(character: Character)
-    local pos = character:get_position()
-    lutro.graphics.draw(idle_down_images[character.sprite], pos.x, pos.y)
+local INDICATOR_OFFSET = vectors.new(4, -5)
+local INDICATOR_TEXT_OFFSET = vectors.new(0, 3)
+local MESSAGE_POSITION = points.new(0, 30)
+local NOT_ENOUGH_PLAYERS_MESSAGE = settings.MINIMUM_PLAYERS .. " players needed"
+
+-- Indicators stack a full height apart so the player numbers stay readable;
+-- the newest arrival sits on top.
+function PlayerSelection:_indicators_below(cursor: Cursor): integer
+    local function arrived_earlier_on_same_character(other: Cursor): boolean
+        return other.character_number == cursor.character_number
+            and other.arrival_order < cursor.arrival_order
+    end
+
+    return itertools.count(self.cursors, arrived_earlier_on_same_character)
 end
 
-function PlayerSelection:draw_slow_walking(character: Character)
-    local pos = character:get_position()
-    self.slow_walk_animations[character.sprite]:draw(pos.x, pos.y)
+function PlayerSelection:_draw_indicator(cursor: Cursor, character_position: Point)
+    local stack_height = selector_indicator:getHeight() * self:_indicators_below(cursor)
+    local stack_offset = vectors.new(0, -stack_height)
+    local indicator_pos = character_position:move(INDICATOR_OFFSET):move(stack_offset)
+    lutro.graphics.draw(selector_indicator, indicator_pos.x, indicator_pos.y)
+
+    local text_pos = indicator_pos:move(INDICATOR_TEXT_OFFSET)
+    local text_box = selector_indicator:getWidth()
+    black_font:print_centered(tostring(cursor.player_id), text_box, text_pos)
+end
+
+function PlayerSelection:_going_word(): string
+    if self.going_back_to_game then
+        return "resume"
+    else
+        return "begin"
+    end
+end
+
+function PlayerSelection:_hold_start_message(): string
+    return "hold start to " .. self:_going_word()
+end
+
+-- The countdown only moves while someone holds start, so its value alone says
+-- whether anyone is.
+function PlayerSelection:_start_message(): string
+    if not self:_has_enough_players() then
+        return NOT_ENOUGH_PLAYERS_MESSAGE
+    elseif self.countdown_time < COUNTDOWN_DURATION then
+        return self:_going_word() .. " in " .. math.ceil(self.countdown_time)
+    else
+        return self:_hold_start_message()
+    end
+end
+
+function PlayerSelection:_draw_start_message()
+    white_font:print_centered(self:_start_message(), screen.WIDTH, MESSAGE_POSITION)
+end
+
+function PlayerSelection:_draw_character(character: Character)
+    local position = character:get_position()
+    if character:is_walking() then
+        slow_walk_animations[character.sprite]:draw(position.x, position.y)
+    else
+        lutro.graphics.draw(idle_down_images[character.sprite], position.x, position.y)
+    end
+
+    for _, cursor in ipairs(self.cursors) do
+        if cursor.character_number == character.number then
+            self:_draw_indicator(cursor, position)
+        end
+    end
 end
 
 function PlayerSelection:draw()
     lutro.graphics.draw(background)
 
-    for _, char in ipairs(self.selectable_characters) do
-        self:draw_idle(char)
-    end
-    for _, char in ipairs(self.walking_characters) do
-        self:draw_slow_walking(char)
+    for _, character in ipairs(self.line_up) do
+        self:_draw_character(character)
     end
 
-    local character = self.selectable_characters[self.selector:get_value()]
-    if character == nil then
-        return -- This only happens when all 10 characters are selected, will change scene!
-    end
-    local indicator_offset = vectors.new(4, -5)
-    local indicator_pos = character:get_position():move(indicator_offset)
-    lutro.graphics.draw(selector_indicator, indicator_pos.x, indicator_pos.y)
-
-    local function indicator_text(): string
-        if self.player_selecting then
-            return tostring(self.player_selecting)
-        else
-            return "!"
-        end
-    end
-
-    local indicator_text_offset = vectors.new(0, 3)
-    local text_pos = indicator_pos:move(indicator_text_offset)
-    local text_box = selector_indicator:getWidth()
-    black_font:print_centered(indicator_text(), text_box, text_pos)
+    self:_draw_start_message()
 end
 
 function player_selection.setup(): Scene

@@ -140,12 +140,6 @@ function GameRules.new(): GameRules
     return self
 end
 
-local type PlayerSelectionMethod = enum
-    "on"
-    "off"
-    "keep"
-end
-
 local type Map = enum
     "football"
     "factory"
@@ -153,45 +147,45 @@ local type Map = enum
 end
 
 local record Settings
-    number_of_players: integer
-    player_selection: PlayerSelectionMethod
+    MINIMUM_PLAYERS: integer
+    number_of_auto_selected_characters: integer
+    auto_select_characters: boolean
     teams: boolean
     map: Map
     game_rules: GameRules
     -- Type export
     ItemType: ItemType
     DinoColor: DinoColor
-    PlayerSelectionMethod: PlayerSelectionMethod
     Map: Map
 end
 
 function Settings.new(): Settings
     local self: Settings = setmetatable({}, {__index = Settings})
-    self.number_of_players = 4
-    self.player_selection = "on"
+    self.MINIMUM_PLAYERS = 2
+    self.number_of_auto_selected_characters = 4
+    self.auto_select_characters = false
     self.teams = false
     self.map = "football"
     self.game_rules = GameRules.new()
     -- Type export
     self.ItemType = ItemType
     self.DinoColor = DinoColor
-    self.PlayerSelectionMethod = PlayerSelectionMethod
     self.Map = Map
     return self
 end
 
 local settings = Settings.new()
 
-function Settings.set_player_selection(value: PlayerSelectionMethod)
-    settings.player_selection = value
+function Settings.set_auto_select_characters(value: boolean)
+    settings.auto_select_characters = value
 end
 
 function Settings.set_map(value: Map)
     settings.map = value
 end
 
-function Settings.set_number_of_players(value: integer)
-    settings.number_of_players = value
+function Settings.set_number_of_auto_selected_characters(value: integer)
+    settings.number_of_auto_selected_characters = value
 end
 
 function Settings.set_nbr_soft_blocks(value: integer)

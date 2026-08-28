@@ -1,6 +1,5 @@
 local characters = require("characters")
 local animations = require("engine.animations")
-local audio = require("engine.audio")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
 local vectors = require("engine.geometry.vectors")
@@ -226,11 +225,7 @@ function TeamSelectionScene:update(dt: number)
         self.score_board:update_avatars(selections)
         self.win_condition:update_team_mapping(selections)
 
-        if self.going_back_to_game then
-            -- The game might have paused audio, make sure to unpause:
-            audio.unpause()
-        end
-        scenes.set(self.game, self.going_back_to_game)
+        self.game:enter(self.going_back_to_game)
         self.going_back_to_game = true
     end
 end
