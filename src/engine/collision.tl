@@ -13,12 +13,11 @@ end
 
 local function get_indexes(hitbox: Rectangle): (integer, integer, integer, integer)
     local block_size = settings.block_size
-    local x_min, y_min = math.ceil(hitbox.x / block_size), math.ceil(
-        hitbox.y / block_size
-    )
-    local x_max, y_max = math.ceil((hitbox.x + hitbox.width) / block_size), math.ceil(
-        (hitbox.y + hitbox.height) / block_size
-    )
+    local x_min, y_min =
+        math.ceil(hitbox.x / block_size), math.ceil(hitbox.y / block_size)
+    local x_max, y_max =
+        math.ceil((hitbox.x + hitbox.width) / block_size),
+        math.ceil((hitbox.y + hitbox.height) / block_size)
 
     if y_max >= LIMIT_Y_TILES then
         logger.warning("Tile out of bound, collision checking will not work")
