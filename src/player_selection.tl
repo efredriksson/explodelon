@@ -10,6 +10,7 @@ local battle = require("game.battle")
 local score_board = require("game.score_board")
 local win_condition = require("game.win_condition")
 local itertools = require("itertools")
+local controller_hints = require("menus.controller_hints")
 local items = require("menus.items")
 local screen = require("screen")
 local settings = require("settings")
@@ -20,9 +21,11 @@ local type Battle = battle.Battle
 local type SinglesScoreBoard = score_board.SinglesScoreBoard
 local type CharacterName = characters.CharacterName
 local type CharacterSelection = characters.CharacterSelection
+local type ControllerHints = controller_hints.ControllerHints
 local type MenuFont = fonts.MenuFont
 local type Scene = scenes.Scene
 local type Point = points.Point
+local type PlayerInfo = controller_hints.PlayerInfo
 
 local COUNTDOWN_DURATION = 3.0
 
@@ -121,7 +124,7 @@ local function get_walk_down_animation(character_name: CharacterName): Animation
     return animation
 end
 
-local record PlayerSelection is Scene
+local record PlayerSelection is Scene, PlayerInfo
     game: Battle
     score_board: SinglesScoreBoard
     team_selection: Scene
@@ -130,6 +133,7 @@ local record PlayerSelection is Scene
     next_arrival_order: integer
     countdown_time: number
     line_up: {Character}
+    controller_hints: ControllerHints
 end
 
 function PlayerSelection.new(): PlayerSelection
@@ -147,6 +151,7 @@ function PlayerSelection.new(): PlayerSelection
     for number, sprite in ipairs(characters.get_names()) do
         table.insert(self.line_up, Character.new(sprite, number))
     end
+    self.controller_hints = controller_hints.new(self)
     return self
 end
 
@@ -211,9 +216,11 @@ function player_selection.load_assets()
     music = audio.new_source("assets/music/player-selection.ogg", "static")
     music:setLooping(true)
     music:setVolume(0.75)
+
+    controller_hints.load_assets()
 end
 
-function PlayerSelection:_has_cursor(player_id: integer): boolean
+function PlayerSelection:has_cursor(player_id: integer): boolean
     for _, cursor in ipairs(self.cursors) do
         if cursor.player_id == player_id then
             return true
@@ -224,7 +231,7 @@ function PlayerSelection:_has_cursor(player_id: integer): boolean
 end
 
 function PlayerSelection:_may_activate(player_id: integer): boolean
-    return not self:_has_cursor(player_id)
+    return not self:has_cursor(player_id)
         and not characters.exist_selection_for(player_id)
 end
 
@@ -468,6 +475,7 @@ end
 function PlayerSelection:update(dt: number)
     self:_keep_music_playing()
 
+    self.controller_hints:update(dt)
     self:_handle_player_input()
 
     local is_starting = self:_is_starting()
@@ -564,6 +572,7 @@ function PlayerSelection:draw()
     end
 
     self:_draw_start_message()
+    self.controller_hints:draw()
 end
 
 function player_selection.setup(): Scene

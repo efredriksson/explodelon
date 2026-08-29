@@ -1,5 +1,7 @@
 local points = require("engine.geometry.points")
+local images = require("engine.images")
 
+local type Color = images.Color
 local type Point = points.Point
 
 local record ShadedFont
@@ -67,40 +69,78 @@ function fonts.new_menu_black(): MenuFont
     return MenuFont.new(black_font, nil)
 end
 
+-- Shared; decoded once, not per colour.
+local black_outline_font: Font
+
+local function get_black_outline_font(): Font
+    if not black_outline_font then
+        black_outline_font = lutro.graphics.newImageFont(
+            "assets/imgfont/black.png", FONT_SYMBOLS
+        )
+    end
+    return black_outline_font
+end
+
+local function new_outlined(ink_font: Font): MenuFont
+    return MenuFont.new(ink_font, get_black_outline_font())
+end
+
 function fonts.new_menu_white_outlined(): MenuFont
-    local white_font = lutro.graphics.newImageFont(
-        "assets/imgfont/white.png", FONT_SYMBOLS
+    return new_outlined(
+        lutro.graphics.newImageFont("assets/imgfont/white.png", FONT_SYMBOLS)
     )
-    local black_font = lutro.graphics.newImageFont(
-        "assets/imgfont/black.png", FONT_SYMBOLS
-    )
-    return MenuFont.new(white_font, black_font)
 end
 
 function fonts.new_menu_gray_outlined(): MenuFont
-    local gray_font = lutro.graphics.newImageFont(
-        "assets/imgfont/gray.png", FONT_SYMBOLS
+    return new_outlined(
+        lutro.graphics.newImageFont("assets/imgfont/gray.png", FONT_SYMBOLS)
     )
-    local black_font = lutro.graphics.newImageFont(
-        "assets/imgfont/black.png", FONT_SYMBOLS
-    )
-    return MenuFont.new(gray_font, black_font)
 end
 
-function MenuFont:print_centered(text: string, box_width: number, position: Point)
-    if self.outline then
-        lutro.graphics.setFont(self.outline)
+local WHITE_INK: Color = {255, 255, 255}
+
+-- Recolours the shared glyph sheet (engine.images.change_colors) instead of
+-- a PNG per colour.
+function fonts.new_menu_colored_outlined(ink_color: Color): MenuFont
+    local ink_image = lutro.graphics.newImage("assets/imgfont/white.png")
+    images.change_colors(ink_image, {[WHITE_INK] = ink_color})
+    return new_outlined(lutro.graphics.newImageFont(ink_image, FONT_SYMBOLS))
+end
+
+local function print_at(text: string, x: number, y: number, box_width?: number)
+    if box_width then
+        lutro.graphics.printf(text, x, y, box_width, "center")
+    else
+        lutro.graphics.print(text, x, y)
+    end
+end
+
+local function print_menu_text(
+    font: MenuFont, text: string, position: Point, box_width?: number
+)
+    if font.outline then
+        lutro.graphics.setFont(font.outline)
         for dx = -1, 1 do
             for dy = -1, 1 do
-                lutro.graphics.printf(
-                    text, position.x + dx, position.y + dy, box_width, "center"
-                )
+                print_at(text, position.x + dx, position.y + dy, box_width)
             end
         end
     end
 
-    lutro.graphics.setFont(self.main)
-    lutro.graphics.printf(text, position.x, position.y, box_width, "center")
+    lutro.graphics.setFont(font.main)
+    print_at(text, position.x, position.y, box_width)
+end
+
+function MenuFont:print(text: string, position: Point)
+    print_menu_text(self, text, position)
+end
+
+function MenuFont:width(text: string): number
+    return self.main:getWidth(text)
+end
+
+function MenuFont:print_centered(text: string, box_width: number, position: Point)
+    print_menu_text(self, text, position, box_width)
 end
 
 return fonts
