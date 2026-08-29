@@ -209,6 +209,7 @@ function player_selection.load_assets()
     black_font = fonts.new_menu_black()
     white_font = fonts.new_menu_white_outlined()
     music = audio.new_source("assets/music/player-selection.ogg", "static")
+    music:setLooping(true)
     music:setVolume(0.75)
 end
 
