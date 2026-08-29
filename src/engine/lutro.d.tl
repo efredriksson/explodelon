@@ -106,6 +106,7 @@ global record lutro
         setBackgroundColor: function(r: number, g: number, b: number, lum?: number)
 
         newImageFont: function(filename: string, glyphs: string): Font
+        newImageFont: function(image: Image, glyphs: string): Font
         setFont: function(font: Font)
         print: function(text: string, x: number, y: number)
         printf: function(
