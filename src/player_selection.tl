@@ -487,7 +487,7 @@ end
 
 local INDICATOR_OFFSET = vectors.new(4, -5)
 local INDICATOR_TEXT_OFFSET = vectors.new(0, 3)
-local MESSAGE_POSITION = points.new(0, 30)
+local MESSAGE_POSITION = points.new(0, 10)
 local NOT_ENOUGH_PLAYERS_MESSAGE = settings.MINIMUM_PLAYERS .. " players needed"
 
 -- Indicators stack a full height apart so the player numbers stay readable;
