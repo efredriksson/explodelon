@@ -1,4 +1,5 @@
 local scenes = require("engine.scenes")
+local beginner_settings_screen = require("menus.beginner_settings_screen")
 local choices = require("menus.choices")
 local dino_settings_screen = require("menus.dino_setting_screen")
 local ice_settings_screen = require("menus.ice_settings_screen")
@@ -36,6 +37,9 @@ function game_rule_screen.new(previous_screen: Scene): MenuScreen
     local function enter_ice_settings_screen(ctx: Scene)
         scenes.set(ice_settings_screen.new(ctx))
     end
+    local function enter_beginner_settings_screen(ctx: Scene)
+        scenes.set(beginner_settings_screen.new(ctx))
+    end
     local function enter_load_rules_screen(ctx: Scene)
         scenes.set(load_rules_screen.new(ctx, previous_screen))
     end
@@ -49,7 +53,8 @@ function game_rule_screen.new(previous_screen: Scene): MenuScreen
             choices.new_done("player rules", 130, enter_player_settings_screen),
             choices.new_done("timing rules", 150, enter_timing_settings_screen),
             choices.new_done("ice rules", 170, enter_ice_settings_screen),
-            choices.new_done("back", 200, done),
+            choices.new_done("beginner help", 190, enter_beginner_settings_screen),
+            choices.new_done("back", 210, done),
         },
         done
     )

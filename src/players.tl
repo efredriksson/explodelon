@@ -108,6 +108,8 @@ local record Player is Explodable, Kinematic, Entity
     has_kick: boolean
     invulnerable_for: number
     stunned_for: number
+    petrified_for: number
+    time_alive: number
     slide_for: number
     roar_for: number
     total_roar_time: number
@@ -149,6 +151,8 @@ function players.new(id: integer, sprite: CharacterName, position: Point): Playe
     self.fire = player_settings.start_with_fire
     self.invulnerable_for = 0
     self.stunned_for = 0
+    self.petrified_for = 0
+    self.time_alive = 0
     self.after_image_shift = 0
     self.slide_for = 0
     self.roar_for = 0
@@ -182,6 +186,10 @@ function Player:is_stunned(): boolean
     return self.stunned_for > 0
 end
 
+function Player:is_petrified(): boolean
+    return self.petrified_for > 0
+end
+
 function Player:can_slide(): boolean
     return self.action == "dash" and self.dino and self.dino.level >= 2
 end
@@ -211,7 +219,12 @@ function Player:is_sonic_blasting(): boolean
 end
 
 function Player:set_action(action: Action)
-    if self.action == "dying" or self:is_stunned() or self:is_sliding() then
+    if
+        self.action == "dying"
+        or self:is_stunned()
+        or self:is_sliding()
+        or self:is_petrified()
+    then
         -- Not able to perform new action due to conditions
         return
     end
@@ -319,7 +332,10 @@ function Player:is_invulnerable(): boolean
 end
 
 function Player:accepts_input(): boolean
-    return not self:is_jumping() and not self:is_stunned() and not self:is_roaring()
+    return not self:is_jumping()
+        and not self:is_stunned()
+        and not self:is_roaring()
+        and not self:is_petrified()
 end
 
 -- Player jump constants
@@ -493,8 +509,27 @@ function Player:get_speed(): number
     end
 end
 
+function Player:_should_petrify(): boolean
+    return self.time_alive < settings.game_rules.players.petrify_grace_seconds
+end
+
+function Player:_stand_idle_facing_down()
+    self.action = "idle"
+    self.direction = "down"
+end
+
+function Player:_petrify()
+    self:_stand_idle_facing_down()
+    self.petrified_for = settings.game_rules.players.petrify_stone_seconds
+end
+
+function Player:_unpetrify()
+    self:_stand_idle_facing_down()
+    self.invulnerable_for = 2
+end
+
 function Player:kill()
-    if self:is_invulnerable() or self:is_jumping() then
+    if self:is_invulnerable() or self:is_jumping() or self:is_petrified() then
         return
     end
 
@@ -505,6 +540,11 @@ function Player:kill()
 
         self.invulnerable_for = 2
         self:jump_off_dino()
+        return
+    end
+
+    if self:_should_petrify() then
+        self:_petrify()
         return
     end
 
@@ -537,6 +577,7 @@ function Player:_new_sonic_wave(): SonicWave
 end
 
 function Player:update(dt: number)
+    self.time_alive = self.time_alive + dt
     self.invulnerable_for = self.invulnerable_for - dt
     self.stunned_for = self.stunned_for - dt
     self.slide_for = self.slide_for - dt
@@ -570,6 +611,14 @@ function Player:update(dt: number)
     if self.play_dino_roar and self:is_sonic_blasting() then
         sonic_blast_sound:play()
         self.play_dino_roar = false
+    end
+
+    if self.petrified_for > 0 then
+        self.petrified_for = self.petrified_for - dt
+        if self.petrified_for <= 0 then
+            self.petrified_for = 0
+            self:_unpetrify()
+        end
     end
 
     if self.action == "stunned" or self.action == "slide" then

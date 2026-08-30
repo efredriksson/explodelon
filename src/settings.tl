@@ -68,6 +68,8 @@ local record PlayerRules
     start_with_bombs: integer
     start_with_lightning_bombs: integer
     start_with_fire: integer
+    petrify_grace_seconds: number
+    petrify_stone_seconds: number
 end
 
 function PlayerRules.new(): PlayerRules
@@ -79,6 +81,8 @@ function PlayerRules.new(): PlayerRules
     self.start_with_bombs = 1
     self.start_with_lightning_bombs = 0
     self.start_with_fire = 2
+    self.petrify_grace_seconds = 8
+    self.petrify_stone_seconds = 5
     return self
 end
 
@@ -260,6 +264,14 @@ end
 
 function Settings.set_start_with_kick(value: boolean)
     settings.game_rules.players.start_with_kick = value
+end
+
+function Settings.set_petrify_grace_seconds(value: number)
+    settings.game_rules.players.petrify_grace_seconds = value
+end
+
+function Settings.set_petrify_stone_seconds(value: number)
+    settings.game_rules.players.petrify_stone_seconds = value
 end
 
 function Settings.set_start_with_bombs(value: integer)

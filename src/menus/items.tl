@@ -134,6 +134,20 @@ function menu_items.new_number_selection(
     return self
 end
 
+function menu_items.new_number_selection_for_value(
+    value: number, choices: {number}
+): MenuSelection<number>
+    local function starting_index(): integer
+        for index, candidate in ipairs(choices) do
+            if candidate == value then
+                return index
+            end
+        end
+        return 1
+    end
+    return menu_items.new_number_selection(starting_index(), choices)
+end
+
 function menu_items.ok_sound(): Source
     return audio.new_source("assets/menu_good.wav", "static")
 end

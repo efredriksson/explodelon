@@ -17,21 +17,12 @@ function ice_settings_screen.new(previous_screen: Scene): MenuScreen
     local acceleration_options: {number} = {1, 2, 3, 4, 5, 6, 8}
     local friction_options: {number} = {0.5, 1, 1.5, 2, 3, 4, 6}
 
-    local function find_index(options: {number}, target: number): integer
-        for i, v in ipairs(options) do
-            if v == target then
-                return i
-            end
-        end
-        return 1
-    end
-
     local ice = settings.game_rules.ice
-    local acceleration_selection = items.new_number_selection(
-        find_index(acceleration_options, ice.acceleration_factor), acceleration_options
+    local acceleration_selection = items.new_number_selection_for_value(
+        ice.acceleration_factor, acceleration_options
     )
-    local friction_selection = items.new_number_selection(
-        find_index(friction_options, ice.friction_factor), friction_options
+    local friction_selection = items.new_number_selection_for_value(
+        ice.friction_factor, friction_options
     )
 
     return screens.new(

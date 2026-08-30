@@ -6,6 +6,7 @@ local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
 local vectors = require("engine.geometry.vectors")
 local images = require("engine.images")
+local fonts = require("fonts")
 local grid = require("level_layout.grid")
 local players = require("players")
 local teams = require("teams")
@@ -13,6 +14,7 @@ local z_index = require("z_index")
 
 local type Entity = require("engine.entity")
 local type Animation = animations.Animation
+local type ShadedFont = fonts.ShadedFont
 local type Action = players.Action
 local type Color = images.Color
 local type CharacterName = characters.CharacterName
@@ -33,6 +35,8 @@ local sonic_wave_images: {Direction: {SonicWaveColor: Image}} = {}
 local stun_cry_text_images: {Direction: {integer: Image}}
 local sprites: {CharacterName: SpriteImages} = {}
 local sprites_invulnerable: {CharacterName: SpriteImages} = {}
+local petrified_animations: {CharacterName: Animation} = {}
+local petrify_font: ShadedFont
 local special_animation_frame_durations: {Action: number} = {
     dying = 1 / 8,
     stunned = 1 / 8,
@@ -133,6 +137,8 @@ local STUN_CRY_SHAKE_AXIS = {
     left = vectors.new(-1, 0),
 }
 local STUN_CRY_REACH_BY_LEVEL = {[1] = 1.0, [2] = 1.75, [3] = 2.5}
+-- Lifts the countdown off the sprite's midline so it reads over the head.
+local PETRIFY_COUNTDOWN_RISE = 4
 
 local function block_to_anim_draw_pos(animation: Animation, pos: Point): Point
     -- y: +1 is because of the sprite, look over when doing animations
@@ -271,6 +277,10 @@ function PlayerEntity:update(dt: number)
 end
 
 function PlayerEntity:_get_animation(): Animation
+    if self.player:is_petrified() then
+        return petrified_animations[self.player.sprite]
+    end
+
     local function get_direction(): Direction
         if
             self.player.dino
@@ -498,6 +508,14 @@ end
 
 local player_animations = {PlayerAnimations = PlayerAnimations}
 
+local function get_petrified_animation(sprite_name: CharacterName): Animation
+    local mid_stride_frame = 2
+    local asset_path = "assets/" .. sprite_name .. "/foot/walk_down.png"
+    local walk_strip = lutro.graphics.newImage(asset_path)
+    images.petrify(walk_strip)
+    return animations.new_frozen(walk_strip, 18, mid_stride_frame)
+end
+
 function player_animations.load_assets()
     jump_shadow_image = lutro.graphics.newImage("assets/items/shadow.png")
     for _, sprite_name in ipairs(characters.get_names()) do
@@ -513,6 +531,11 @@ function player_animations.load_assets()
                 end
             end
         end
+    end
+
+    petrify_font = fonts.new_shaded_numbers()
+    for _, sprite_name in ipairs(characters.get_names()) do
+        petrified_animations[sprite_name] = get_petrified_animation(sprite_name)
     end
 
     local function get_stun_cry_text_for_dir(dir: string): {integer: Image}
@@ -650,6 +673,22 @@ function PlayerAnimations:draw_stun_cry_texts_not_up()
         if entity.player.direction ~= "up" then
             draw_stun_cry_text(entity.player)
             draw_sonic_blasts(entity.player)
+        end
+    end
+end
+
+local function draw_petrify_countdown(player: Player)
+    local text = tostring(math.ceil(player.petrified_for))
+    local centered_above_body = player:movementbox():center():move(
+        vectors.new(-petrify_font:width(text) / 2, -PETRIFY_COUNTDOWN_RISE)
+    )
+    petrify_font:draw(text, centered_above_body)
+end
+
+function PlayerAnimations:draw_petrify_countdowns()
+    for _, entity in ipairs(self.entities) do
+        if entity.player:is_petrified() then
+            draw_petrify_countdown(entity.player)
         end
     end
 end

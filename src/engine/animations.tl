@@ -48,6 +48,17 @@ function animations.new(
     return animations.new_with_frames(image, frame_durations)
 end
 
+--- An animation frozen at a frame index.
+function animations.new_frozen(
+    image: Image, width: number, frame_index: integer
+): Animation
+    local self: Animation = animations.new(image, width, 1)
+    self.playing = false
+    -- Set time to hit frozen frame index:
+    self.timer = frame_index - 0.5
+    return self
+end
+
 function Animation:reset()
     self.timer = 0
     self.playing = true
