@@ -13,23 +13,29 @@ local record IceRinkLayout is MapLayout
     get_conveyor_belts: function(self): {ConveyorBelt}
     get_goals: function(self): {Goal}
     get_trampolines: function(self): {Trampoline}
+    conveyor_belts: {ConveyorBelt}
+    goals: {Goal}
+    trampolines: {Trampoline}
 end
 
 function IceRinkLayout.new(): IceRinkLayout
     local self: IceRinkLayout = setmetatable({}, {__index = IceRinkLayout})
+    self.conveyor_belts = {}
+    self.goals = {}
+    self.trampolines = {}
     return self
 end
 
 function IceRinkLayout:get_goals(): {Goal}
-    return {}
+    return self.goals
 end
 
 function IceRinkLayout:get_conveyor_belts(): {ConveyorBelt}
-    return {}
+    return self.conveyor_belts
 end
 
 function IceRinkLayout:get_trampolines(): {Trampoline}
-    return {}
+    return self.trampolines
 end
 
 function IceRinkLayout:get_block_layout(

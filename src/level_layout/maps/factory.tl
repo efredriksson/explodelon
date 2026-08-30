@@ -16,22 +16,12 @@ local record FactoryLayout is MapLayout
     get_conveyor_belts: function(self): {ConveyorBelt}
     get_goals: function(self): {Goal}
     get_trampolines: function(self): {Trampoline}
+    conveyor_belts: {ConveyorBelt}
+    goals: {Goal}
+    trampolines: {Trampoline}
 end
 
-function FactoryLayout.new(): FactoryLayout
-    local self: FactoryLayout = setmetatable({}, {__index = FactoryLayout})
-    return self
-end
-
-function FactoryLayout:get_goals(): {Goal}
-    return {}
-end
-
-function FactoryLayout:get_trampolines(): {Trampoline}
-    return {}
-end
-
-function FactoryLayout:get_conveyor_belts(): {ConveyorBelt}
+local function build_conveyor_belts(): {ConveyorBelt}
     local function create_belt(i: integer, j: integer, dir: Direction): ConveyorBelt
         return ConveyorBelt.new(
             grid.get_tile_position(i, j), vectors.from_direction(dir)
@@ -59,6 +49,26 @@ function FactoryLayout:get_conveyor_belts(): {ConveyorBelt}
         create_belt(math.ceil(dim.x_max / 2), dim.y_min, "down"),
         create_belt(math.ceil(dim.x_max / 2), dim.y_max, "up"),
     }
+end
+
+function FactoryLayout.new(): FactoryLayout
+    local self: FactoryLayout = setmetatable({}, {__index = FactoryLayout})
+    self.conveyor_belts = build_conveyor_belts()
+    self.goals = {}
+    self.trampolines = {}
+    return self
+end
+
+function FactoryLayout:get_goals(): {Goal}
+    return self.goals
+end
+
+function FactoryLayout:get_trampolines(): {Trampoline}
+    return self.trampolines
+end
+
+function FactoryLayout:get_conveyor_belts(): {ConveyorBelt}
+    return self.conveyor_belts
 end
 
 function FactoryLayout:get_block_layout(

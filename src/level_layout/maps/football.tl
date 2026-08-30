@@ -14,14 +14,12 @@ local record FootballLayout is MapLayout
     get_conveyor_belts: function(self): {ConveyorBelt}
     get_goals: function(self): {Goal}
     get_trampolines: function(self): {Trampoline}
+    conveyor_belts: {ConveyorBelt}
+    goals: {Goal}
+    trampolines: {Trampoline}
 end
 
-function FootballLayout.new(): FootballLayout
-    local self: FootballLayout = setmetatable({}, {__index = FootballLayout})
-    return self
-end
-
-function FootballLayout:get_goals(): {Goal}
+local function build_goals(): {Goal}
     return {
         Goal.new(grid.get_tile_position(-1, 4), grid.get_tile_position(-1, 6)),
         Goal.new(grid.get_tile_position(-1, 6), grid.get_tile_position(-1, 4)),
@@ -30,12 +28,24 @@ function FootballLayout:get_goals(): {Goal}
     }
 end
 
+function FootballLayout.new(): FootballLayout
+    local self: FootballLayout = setmetatable({}, {__index = FootballLayout})
+    self.conveyor_belts = {}
+    self.goals = build_goals()
+    self.trampolines = {}
+    return self
+end
+
+function FootballLayout:get_goals(): {Goal}
+    return self.goals
+end
+
 function FootballLayout:get_conveyor_belts(): {ConveyorBelt}
-    return {}
+    return self.conveyor_belts
 end
 
 function FootballLayout:get_trampolines(): {Trampoline}
-    return {}
+    return self.trampolines
 end
 
 function FootballLayout:get_block_layout(
