@@ -8,7 +8,6 @@ local settings = require("settings")
 
 local type BlockType = entities.BlockType
 local type Point = points.Point
-local type Kinematic = require("kinematic")
 
 local block_layouts = {}
 
@@ -41,7 +40,7 @@ local function grid_cell_type(i: integer, j: integer): BlockType
     end
 end
 
-local function player_exclusion_zone(occupies: {Kinematic}): {Point}
+local function player_exclusion_zone(occupies: {Point}): {Point}
     local close_to_entity: {Point} = {}
     for _, occupied in ipairs(occupies) do
         -- Do allow some positions close to occupied entity to have soft blocks:
@@ -49,7 +48,7 @@ local function player_exclusion_zone(occupies: {Kinematic}): {Point}
         for j, i in itertools.double_loop_inner_loopback({-1, 1}, {-1, 1}) do
             if sum_to_allow ~= math.abs(i + j) or (i == 0 and j == 0) then
                 local close_by = vectors.new(j, i):scale(grid.TILE_SIZE)
-                table.insert(close_to_entity, occupied:get_position():move(close_by))
+                table.insert(close_to_entity, occupied:move(close_by))
             end
         end
     end
@@ -86,18 +85,22 @@ local function place_soft_blocks(
     end
 end
 
-function block_layouts.grid(occupies: {Kinematic}): {integer: {integer: BlockType}}
+function block_layouts.grid(
+    occupies: {Point}, keep_clear?: {Point}
+): {integer: {integer: BlockType}}
     local layout = new_empty_layout()
     for i = 0, 7 do
         for j = 0, 4 do
             layout[1 + i * 2][1 + j * 2] = grid_cell_type(i, j)
         end
     end
-    place_soft_blocks(layout, player_exclusion_zone(occupies))
+    place_soft_blocks(
+        layout, itertools.combine(player_exclusion_zone(occupies), keep_clear or {})
+    )
     return layout
 end
 
-function block_layouts.empty(occupies: {Kinematic}): {integer: {integer: BlockType}}
+function block_layouts.empty(occupies: {Point}): {integer: {integer: BlockType}}
     local layout = new_empty_layout()
     place_soft_blocks(layout, player_exclusion_zone(occupies))
     return layout
@@ -151,7 +154,7 @@ local function quadrant_cells(
     return cells
 end
 
-function block_layouts.quadrant(occupies: {Kinematic}): {integer: {integer: BlockType}}
+function block_layouts.quadrant(occupies: {Point}): {integer: {integer: BlockType}}
     local layout = new_empty_layout()
     local exclusion_zone = player_exclusion_zone(occupies)
     local dim = grid.dimensions()

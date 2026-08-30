@@ -1,3 +1,4 @@
+local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
 local block_layouts = require("level_layout.block_layouts")
 local grid = require("level_layout.grid")
@@ -7,12 +8,14 @@ local type MapLayout = entities.MapLayout
 local type BlockType = entities.BlockType
 local type Goal = entities.Goal
 local type ConveyorBelt = entities.ConveyorBelt
+local type Trampoline = entities.Trampoline
 local type Direction = vectors.Direction
-local type Kinematic = require("kinematic")
+local type Point = points.Point
 
 local record FactoryLayout is MapLayout
     get_conveyor_belts: function(self): {ConveyorBelt}
     get_goals: function(self): {Goal}
+    get_trampolines: function(self): {Trampoline}
 end
 
 function FactoryLayout.new(): FactoryLayout
@@ -21,6 +24,10 @@ function FactoryLayout.new(): FactoryLayout
 end
 
 function FactoryLayout:get_goals(): {Goal}
+    return {}
+end
+
+function FactoryLayout:get_trampolines(): {Trampoline}
     return {}
 end
 
@@ -55,7 +62,7 @@ function FactoryLayout:get_conveyor_belts(): {ConveyorBelt}
 end
 
 function FactoryLayout:get_block_layout(
-    occupies: {Kinematic}
+    occupies: {Point}
 ): {integer: {integer: BlockType}}
     return block_layouts.grid(occupies)
 end

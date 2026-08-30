@@ -1,3 +1,4 @@
+local bouncing = require("level_graphics.maps.bouncing")
 local factory = require("level_graphics.maps.factory")
 local football = require("level_graphics.maps.football")
 local ice_rink = require("level_graphics.maps.ice_rink")
@@ -12,6 +13,7 @@ local map_graphics <total>: {Map: MapGraphics} = {
     football = football.new_graphics(),
     factory = factory.new_graphics(),
     ice_rink = ice_rink.new_graphics(),
+    bouncing = bouncing.new_graphics(),
 }
 
 function init.get_graphics(): MapGraphics
