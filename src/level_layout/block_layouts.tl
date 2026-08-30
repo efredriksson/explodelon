@@ -1,5 +1,6 @@
 local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
+local logger = require("engine.logger")
 local itertools = require("itertools")
 local grid = require("level_layout.grid")
 local entities = require("level_layout.maps.entities")
@@ -59,8 +60,11 @@ local function place_soft_blocks(
     layout: {integer: {integer: BlockType}}, exclusion_zone: {Point}
 )
     local dim = grid.dimensions()
+    local target = settings.game_rules.items.nbr_soft_blocks
+    local give_up_after = (dim.x_max + 1) * (dim.y_max + 1) * 4
     local count = 0
-    while count < settings.game_rules.items.nbr_soft_blocks do
+    local misses = 0
+    while count < target and misses < give_up_after do
         local i = lutro.math.random(dim.x_max + 1) - 1
         local j = lutro.math.random(dim.y_max + 1) - 1
         local cell: BlockType = layout[i][j]
@@ -70,7 +74,15 @@ local function place_soft_blocks(
         then
             layout[i][j] = "soft"
             count = count + 1
+            misses = 0
+        else
+            misses = misses + 1
         end
+    end
+    if count < target then
+        logger.warning(
+            "Ran out of room for soft blocks: placed " .. count .. " of " .. target
+        )
     end
 end
 
