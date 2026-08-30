@@ -645,6 +645,8 @@ function Battle:draw()
     self.player_animations:draw_lateral_jump_shadows()
     -- Put stun cry text above everything else (with up exception)
     self.player_animations:draw_stun_cry_texts_not_up()
+    -- Petrify countdown reads on top of the frozen character
+    self.player_animations:draw_petrify_countdowns()
 
     local mobility_related: {Kinematic} = itertools.sets_as_list(
         self.bombs.on_ground.set,

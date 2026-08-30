@@ -23,6 +23,10 @@ function fonts.new_shaded(main: Font, shade: Font): ShadedFont
     return self
 end
 
+function ShadedFont:width(text: string): number
+    return self.main:getWidth(text)
+end
+
 function ShadedFont:draw(text: string, position: Point)
     lutro.graphics.setFont(self.shade)
     for dx = 1, 0, -1 do
