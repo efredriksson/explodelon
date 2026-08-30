@@ -148,6 +148,7 @@ local type Map = enum
     "football"
     "factory"
     "ice_rink"
+    "bouncing"
 end
 
 local record Settings

@@ -39,6 +39,20 @@ function ConveyorBelt:get_hitbox(): Rectangle
     return hitboxes.new_block(self.position)
 end
 
+local record Trampoline
+    position: Point
+end
+
+function Trampoline.new(position: Point): Trampoline
+    local self: Trampoline = setmetatable({}, {__index = Trampoline})
+    self.position = position
+    return self
+end
+
+function Trampoline:get_hitbox(): Rectangle
+    return hitboxes.new_block(self.position)
+end
+
 local enum BlockType
     "none"
     "hard"
@@ -46,20 +60,18 @@ local enum BlockType
     "soft"
 end
 
-local type Kinematic = require("kinematic")
-
 local type MapLayout = interface
     get_conveyor_belts: function(self): {ConveyorBelt}
     get_goals: function(self): {Goal}
-    get_block_layout: function(
-        self, occupies: {Kinematic}
-    ): {integer: {integer: BlockType}}
+    get_trampolines: function(self): {Trampoline}
+    get_block_layout: function(self, occupies: {Point}): {integer: {integer: BlockType}}
     has_ice: function(self): boolean
 end
 
 local entities = {
     Goal = Goal,
     ConveyorBelt = ConveyorBelt,
+    Trampoline = Trampoline,
     MapLayout = MapLayout,
     BlockType = BlockType,
 }

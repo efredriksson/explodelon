@@ -9,6 +9,7 @@ local type Kinematic = require("kinematic")
 local type Point = points.Point
 local type Goal = entities.Goal
 local type ConveyorBelt = entities.ConveyorBelt
+local type Trampoline = entities.Trampoline
 local type ItemType = settings.ItemType
 local type BlockType = entities.BlockType
 
@@ -83,8 +84,13 @@ function BlockConfigs.new(
     return self
 end
 
+local function get_pos(k: Kinematic): Point
+    return k:get_position()
+end
+
 function map_entities.get_block_configs(occupied: {Kinematic}): BlockConfigs
-    local layout = maps.get_layout():get_block_layout(occupied)
+    local occupied_positions = itertools.map(occupied, get_pos)
+    local layout = maps.get_layout():get_block_layout(occupied_positions)
     local dim = grid.dimensions()
     local hard: {HardBlockConfig} = {}
     local soft_positions: {Point} = {}
@@ -183,6 +189,10 @@ end
 
 function map_entities.get_conveyor_belts(): {ConveyorBelt}
     return maps.get_layout():get_conveyor_belts()
+end
+
+function map_entities.get_trampolines(): {Trampoline}
+    return maps.get_layout():get_trampolines()
 end
 
 return map_entities

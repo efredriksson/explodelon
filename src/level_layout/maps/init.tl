@@ -1,3 +1,4 @@
+local bouncing = require("level_layout.maps.bouncing")
 local entities = require("level_layout.maps.entities")
 local factory = require("level_layout.maps.factory")
 local football = require("level_layout.maps.football")
@@ -11,6 +12,7 @@ local map_layouts <total>: {Map: MapLayout} = {
     football = football,
     factory = factory,
     ice_rink = ice_rink,
+    bouncing = bouncing,
 }
 
 local init = {}
