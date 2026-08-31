@@ -268,6 +268,8 @@ function PlayerEntity:hitbox(): Rectangle
 end
 
 function PlayerEntity:update(dt: number)
+    -- Bounce arcs above its tile row; sort it over nearer-row blocks.
+    self.z_index = self.player:is_bouncing() and z_index.ABOVE or z_index.LEVEL
     self.regular[self.player.state][self.player.action][self.player.direction]:update(
         dt
     )
@@ -334,7 +336,7 @@ function PlayerEntity:_draw_mounted()
     end
 
     local function dino_position(): Point
-        if self.player.action == "jump" then
+        if self.player:is_jumping_laterally() then
             return self.player:get_jump_position()
         elseif self.player.action == "roar" then
             return self.player.dino.position:move(stun_cry_displacement(self.player))
@@ -417,14 +419,14 @@ local function character_sprite_for_action(
         if action == "jump_on" or action == "jump_off" then
             -- Same sprite for 'jump' when on foot as when mounted
             state = "foot"
-        elseif action == "idle" then
-            -- Same sprite for 'idle' as 'walk' when mounted
+        elseif action == "idle" or action == "bounce" then
+            -- 'idle' and bounce use the 'walk' sprite when mounted
             action = "walk"
         end
     end
 
     local function action_resolved(): string
-        if action == "jump_on" or action == "jump_off" then
+        if action == "jump_on" or action == "jump_off" or action == "bounce" then
             return "jump"
         elseif action == "jump" or action == "dash" or action == "roar" then
             -- Same sprite for jump as walk/idle, is always on mount when this happen
@@ -488,6 +490,7 @@ local function character_sprites_for_state(
         jump_on = character_sprite_for_action(character_asset, state, "jump_on"),
         jump_off = character_sprite_for_action(character_asset, state, "jump_off"),
         jump = character_sprite_for_action(character_asset, state, "jump"),
+        bounce = character_sprite_for_action(character_asset, state, "bounce"),
         dash = character_sprite_for_action(character_asset, state, "dash"),
         dying = character_sprite_for_dying(character_asset),
         stunned = character_sprite_for_stunned(character_asset, state),
@@ -652,7 +655,7 @@ end
 
 function PlayerAnimations:draw_lateral_jump_shadows()
     local function jumps_lateral(player: Player): boolean
-        return player.action == "jump"
+        return player:is_jumping_laterally()
             and player.jump_trajectory.lateral_velocity:length() > 0
     end
 

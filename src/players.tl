@@ -38,6 +38,7 @@ local type Action = enum
     "jump_on"
     "jump_off"
     "jump"
+    "bounce"
     "idle"
     "dying"
     "stunned"
@@ -178,8 +179,16 @@ function Player:is_jumping_on_off_dino(): boolean
     return self.action == "jump_on" or self.action == "jump_off"
 end
 
+function Player:is_jumping_laterally(): boolean
+    return self.action == "jump" or self.action == "bounce"
+end
+
 function Player:is_jumping(): boolean
-    return self:is_jumping_on_off_dino() or self.action == "jump"
+    return self:is_jumping_on_off_dino() or self:is_jumping_laterally()
+end
+
+function Player:is_bouncing(): boolean
+    return self.action == "bounce"
 end
 
 function Player:is_stunned(): boolean
@@ -246,6 +255,9 @@ function Player:set_action(action: Action)
         elseif action == "stunned" then
             self.dino.action = "stunned"
         elseif action == "jump" then
+            self.dino.action = "jump"
+        elseif action == "bounce" then
+            -- No dino bounce pose; reuse jump.
             self.dino.action = "jump"
         elseif action == "dash" then
             self.dino.action = "dash"
@@ -343,6 +355,22 @@ local JUMP_ON_TIME = 1.2 -- Unit: seconds
 local JUMP_OFF_TIME = 0.9 -- Unit: seconds
 local JUMP_ON_HEIGHT = 2 * grid.TILE_SIZE -- Unit: pixels (not SI unit!)
 local JUMP_OFF_HEIGHT = 3 * grid.TILE_SIZE -- Unit: pixels (not SI unit!)
+
+-- Trampoline bounce. One shared duration keeps chained hops evenly paced.
+local BOUNCE_TIME = 1.0 -- Unit: seconds
+local BOUNCE_LAUNCH_TILES = 4
+local BOUNCE_LAUNCH_HEIGHT = 2.5 * grid.TILE_SIZE -- Unit: pixels (not SI unit!)
+local BOUNCE_HOP_HEIGHT = 0.8 * grid.TILE_SIZE -- Unit: pixels (not SI unit!)
+
+local function bounce_trajectory(
+    from: Point, target: Point, apex_height: number
+): ProjectileTrajectory
+    return physics.calc_trajectory(0, 0, apex_height, BOUNCE_TIME, from, target)
+end
+
+local function tiles_in_direction(direction: Direction, tiles: number): Vector
+    return vectors.from_direction(direction):scale(grid.TILE_SIZE * tiles)
+end
 
 function Player:jumps_onto(dino: Dino)
     if not self:is_jumping() then
@@ -451,6 +479,56 @@ function Player:jump_with_dino(jump_to: Point | nil)
         )
         self.dino.jump_powerup_for = 0
     end
+end
+
+function Player:_start_bounce_arc(from: Point, target: Point, apex_height: number)
+    self.position = from
+    self.jump_target = target
+    self.jump_trajectory = bounce_trajectory(from, target, apex_height)
+end
+
+function Player:_launch_bounce(direction: Direction)
+    self:set_action("bounce")
+    local target = grid.snap_to(self.position):move(
+        tiles_in_direction(direction, BOUNCE_LAUNCH_TILES)
+    )
+    self:_start_bounce_arc(self.position, target, BOUNCE_LAUNCH_HEIGHT)
+end
+
+function Player:start_bounce(direction: Direction)
+    if self:is_jumping() then
+        return
+    end
+    self:_launch_bounce(direction)
+end
+
+function Player:bounce_off_trampoline()
+    self.position = self.jump_target
+    self:_launch_bounce(self.direction)
+end
+
+function Player:bounce_to_next_tile()
+    -- Re-launch from jump_target, not self.position: each arc lands a hair
+    -- off-grid, and chaining from that drift compounds until hops miss the pads.
+    local hop_from = self.jump_target
+    self:_start_bounce_arc(
+        hop_from,
+        hop_from:move(tiles_in_direction(self.direction, 1)),
+        BOUNCE_HOP_HEIGHT
+    )
+end
+
+function Player:wrap_bounce()
+    self.position = grid.outside_on_opposite_side(self.position)
+    local target = grid.snap_to(self.position):move(
+        tiles_in_direction(self.direction, 1)
+    )
+    self:_start_bounce_arc(self.position, target, BOUNCE_HOP_HEIGHT)
+end
+
+function Player:land_bounce()
+    self.position = self.jump_target
+    self:set_action("idle")
 end
 
 function Player:dash_with_dino()
@@ -627,7 +705,8 @@ function Player:update(dt: number)
 
     if self:is_jumping() then
         self.position = self.jump_trajectory:update(dt, self.position)
-        if self.jump_trajectory:finished() then
+        -- Landing vs. another hop needs collision data only Battle has; it decides.
+        if self.jump_trajectory:finished() and not self:is_bouncing() then
             -- When distance from target not decreasing while falling we have landed
             self:set_action("idle")
             self.position = self.jump_target
@@ -639,9 +718,10 @@ function Player:update(dt: number)
 end
 
 function Player:get_draw_position(): Point
-    if self:is_jumping_on_off_dino() then
+    local bouncing_on_foot = self:is_bouncing() and self.state == "foot"
+    if self:is_jumping_on_off_dino() or bouncing_on_foot then
         return self:get_jump_position()
-    elseif self.action == "jump" then
+    elseif self.action == "jump" or self:is_bouncing() then
         -- Adjust player sprite for jump height and being on top of its mount
         return get_character_position_on_top_of_dino(
             self:get_jump_position(), self.direction
