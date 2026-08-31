@@ -61,11 +61,17 @@ local function trampoline_position(trampoline: Trampoline): Point
     return trampoline.position
 end
 
+local function hard_block_is_tall(i: integer, j: integer): boolean
+    return (i + j) % 2 == 1
+end
+
 function BouncingLayout:get_block_layout(
     occupies: {Point}
 ): {integer: {integer: BlockType}}
     return block_layouts.grid(
-        occupies, itertools.map(self:get_trampolines(), trampoline_position)
+        occupies,
+        hard_block_is_tall,
+        itertools.map(self:get_trampolines(), trampoline_position)
     )
 end
 

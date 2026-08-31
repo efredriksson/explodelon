@@ -48,10 +48,14 @@ function FootballLayout:get_trampolines(): {Trampoline}
     return self.trampolines
 end
 
+local function hard_block_is_tall(_: integer, _: integer): boolean
+    return false
+end
+
 function FootballLayout:get_block_layout(
     occupies: {Point}
 ): {integer: {integer: BlockType}}
-    return block_layouts.grid(occupies)
+    return block_layouts.grid(occupies, hard_block_is_tall)
 end
 
 function FootballLayout:has_ice(): boolean

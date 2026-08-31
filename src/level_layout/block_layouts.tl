@@ -32,8 +32,10 @@ local function new_empty_layout(): {integer: {integer: BlockType}}
     return layout
 end
 
-local function grid_cell_type(i: integer, j: integer): BlockType
-    if j == 2 and (i == 1 or i == 6) then
+local function grid_cell_type(
+    i: integer, j: integer, is_tall_cell: function(integer, integer): boolean
+): BlockType
+    if is_tall_cell(i, j) then
         return "hard_tall"
     else
         return "hard"
@@ -86,12 +88,14 @@ local function place_soft_blocks(
 end
 
 function block_layouts.grid(
-    occupies: {Point}, keep_clear?: {Point}
+    occupies: {Point},
+    is_tall_cell: (function(integer, integer): boolean),
+    keep_clear?: {Point}
 ): {integer: {integer: BlockType}}
     local layout = new_empty_layout()
     for i = 0, 7 do
         for j = 0, 4 do
-            layout[1 + i * 2][1 + j * 2] = grid_cell_type(i, j)
+            layout[1 + i * 2][1 + j * 2] = grid_cell_type(i, j, is_tall_cell)
         end
     end
     place_soft_blocks(

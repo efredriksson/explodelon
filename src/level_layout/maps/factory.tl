@@ -71,10 +71,14 @@ function FactoryLayout:get_conveyor_belts(): {ConveyorBelt}
     return self.conveyor_belts
 end
 
+local function hard_block_is_tall(i: integer, j: integer): boolean
+    return j == 2 and (i == 1 or i == 6)
+end
+
 function FactoryLayout:get_block_layout(
     occupies: {Point}
 ): {integer: {integer: BlockType}}
-    return block_layouts.grid(occupies)
+    return block_layouts.grid(occupies, hard_block_is_tall)
 end
 
 function FactoryLayout:has_ice(): boolean
