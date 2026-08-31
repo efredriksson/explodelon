@@ -51,6 +51,7 @@ local type MadBombers = mad_bombers.MadBombers
 local type PlayerAnimations = player_animations.PlayerAnimations
 local type Player = players.Player
 local type PressureBlocks = pressure_blocks.PressureBlocks
+local type PressureBlock = pressure_blocks.PressureBlock
 local type SoftBlocks = soft_blocks.SoftBlocks
 local type SoftBlock = soft_blocks.SoftBlock
 local type CombinedGroup = collision.CombinedGroup
@@ -359,6 +360,23 @@ local function bounce_landing_is_free(
     return grid.area():contains(landing_area)
 end
 
+local function landing_hits_pressure_block(
+    landing_position: Point,
+    pressure_blocks_on_ground: ReadableGroup<PressureBlock>,
+    lookup: Lookup
+): boolean
+    local landing_area = hitboxes.new_block(landing_position)
+    local close_blocks = lookup:in_box_and_group(
+        landing_area:expand(grid.TILE_SIZE), pressure_blocks_on_ground
+    )
+    for _, block in ipairs(close_blocks) do
+        if landing_area:overlap(block:movementbox()) then
+            return true
+        end
+    end
+    return false
+end
+
 function Battle:check_if_finished(dt: number)
     if self.state == "finished" then
         return
@@ -443,6 +461,13 @@ function Battle:_maybe_launch_off_trampoline(player: Player)
 end
 
 function Battle:_resolve_bounce(player: Player, lookup: Lookup)
+    if landing_hits_pressure_block(
+        player.jump_target, self.pressure_blocks.on_ground, lookup
+    ) then
+        player:land_bounce()
+        return
+    end
+
     local can_land = bounce_landing_is_free(
         player.jump_target, self.blocks_jump, lookup
     )
