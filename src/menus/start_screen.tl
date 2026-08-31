@@ -16,7 +16,9 @@ local type MenuChoice = choices.MenuChoice
 local start_screen = {}
 
 function start_screen.new(): MenuScreen
-    local map_selection_choice = items.new_enum({"football", "factory", "ice_rink"})
+    local map_selection_choice = items.new_enum(
+        {"football", "factory", "ice_rink", "bouncing"}
+    )
 
     local function done(_: Scene)
         audio.stop()
