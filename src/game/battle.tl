@@ -343,6 +343,22 @@ local is_alive = function(player: Player): boolean return player:is_alive() end
 
 local is_dead = function(player: Player): boolean return not player:is_alive() end
 
+-- Must match dino_inputs' jump-landing check.
+local function bounce_landing_is_free(
+    landing_position: Point, blocks_jump: ReadableGroup<Kinematic>, lookup: Lookup
+): boolean
+    local landing_area = hitboxes.new_block(landing_position)
+    local close_blocks = lookup:in_box_and_group(
+        landing_area:expand(grid.TILE_SIZE), blocks_jump
+    )
+    for _, block in ipairs(close_blocks) do
+        if landing_area:overlap(block:movementbox()) then
+            return false
+        end
+    end
+    return grid.area():contains(landing_area)
+end
+
 function Battle:check_if_finished(dt: number)
     if self.state == "finished" then
         return
@@ -405,6 +421,39 @@ function Battle:_handle_sonic_blast(
     )
     for _, hit_block in ipairs(hit_blocks) do
         hit_block:reveal()
+    end
+end
+
+function Battle:_tile_has_trampoline(position: Point): boolean
+    for _, trampoline in ipairs(map_entities.get_trampolines()) do
+        if trampoline.position:equal(position) then
+            return true
+        end
+    end
+    return false
+end
+
+function Battle:_maybe_launch_off_trampoline(player: Player)
+    if
+        player.action == "walk"
+        and self:_tile_has_trampoline(grid.snap_to(player.position))
+    then
+        player:start_bounce(player.direction)
+    end
+end
+
+function Battle:_resolve_bounce(player: Player, lookup: Lookup)
+    local can_land = bounce_landing_is_free(
+        player.jump_target, self.blocks_jump, lookup
+    )
+    if can_land and self:_tile_has_trampoline(player.jump_target) then
+        player:bounce_off_trampoline()
+    elseif can_land then
+        player:land_bounce()
+    elseif grid.outside_visible_area(player:movementbox()) then
+        player:wrap_bounce()
+    else
+        player:bounce_to_next_tile()
     end
 end
 
@@ -493,6 +542,7 @@ function Battle:update(dt: number)
             dino_inputs.handle(
                 dt, player, self.bombs, self.blocks_jump, self.bombs.on_ground, lookup
             )
+            self:_maybe_launch_off_trampoline(player)
         end
         trace_player_movement:stop()
         local trace_player_interaction = tracing.start("interaction")
@@ -512,6 +562,9 @@ function Battle:update(dt: number)
             self:_handle_sonic_blast(
                 lookup, self.bombs.on_ground, self.soft_blocks.on_ground, player
             )
+        end
+        if player:is_bouncing() and player.jump_trajectory:finished() then
+            self:_resolve_bounce(player, lookup)
         end
         trace_player_interaction:stop()
     end
