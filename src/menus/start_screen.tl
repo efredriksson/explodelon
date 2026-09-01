@@ -1,12 +1,10 @@
-local audio = require("engine.audio")
 local scenes = require("engine.scenes")
+local map_selection = require("map_selection")
 local choices = require("menus.choices")
 local debug_screen = require("menus.debug_screen")
 local game_rule_screen = require("menus.game_rule_screen")
-local items = require("menus.items")
 local screens = require("menus.screens")
 local update_sceen = require("menus.update_screen")
-local player_selection = require("player_selection")
 local settings = require("settings")
 
 local type Scene = scenes.Scene
@@ -16,13 +14,10 @@ local type MenuChoice = choices.MenuChoice
 local start_screen = {}
 
 function start_screen.new(): MenuScreen
-    local map_selection_choice = items.new_enum(
-        {"football", "factory", "ice_rink", "bouncing"}
-    )
-
-    local function done(_: Scene)
-        audio.stop()
-        scenes.set(player_selection.setup())
+    -- The menu music is left running so it carries over into map selection;
+    -- that scene stops it once the player commits and moves on.
+    local function done(ctx: Scene)
+        scenes.set(map_selection.new(ctx))
     end
     -- Root of the menus, there is nowhere to go back to.
     local function go_back(_: Scene)
@@ -39,7 +34,6 @@ function start_screen.new(): MenuScreen
 
     local menu_choices: {MenuChoice} = {
         choices.new_boolean("teams", 50, settings.teams, settings.set_teams),
-        choices.new_enum("map", 65, map_selection_choice, settings.set_map),
         choices.new_done("game rules", 80, enter_game_rules_screen),
         choices.new_done("debug settings", 95, enter_debug_screen),
     }
