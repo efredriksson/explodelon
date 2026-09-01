@@ -81,31 +81,23 @@ function MovementWithCheck.new(
     return self
 end
 
-local function get_moves_from_input(player: Player, dt: number): {Movement}
-    local result: {Movement} = {}
+local function get_moves_from_input(player: Player): {Direction}
+    local held: {Direction} = {}
 
     if lutro.joystick.isDown(player.id, joysticks.BUTTONS.DOWN) then
-        table.insert(
-            result, Movement.new(vectors.new(0, dt * player:get_speed()), "down")
-        )
+        table.insert(held, "down")
     end
     if lutro.joystick.isDown(player.id, joysticks.BUTTONS.UP) then
-        table.insert(
-            result, Movement.new(vectors.new(0, -dt * player:get_speed()), "up")
-        )
+        table.insert(held, "up")
     end
     if lutro.joystick.isDown(player.id, joysticks.BUTTONS.RIGHT) then
-        table.insert(
-            result, Movement.new(vectors.new(dt * player:get_speed(), 0), "right")
-        )
+        table.insert(held, "right")
     end
     if lutro.joystick.isDown(player.id, joysticks.BUTTONS.LEFT) then
-        table.insert(
-            result, Movement.new(vectors.new(-dt * player:get_speed(), 0), "left")
-        )
+        table.insert(held, "left")
     end
 
-    return result
+    return held
 end
 
 --- Sign of a number represented as 1 or -1
@@ -581,9 +573,21 @@ local function get_ice_moves(
     return result
 end
 
-function movement.set_position_and_dir_from_input(
+local function moves_from_directions(
+    player: Player, dt: number, held: {Direction}
+): {Movement}
+    local function as_movement(direction: Direction): Movement
+        return Movement.new(
+            vectors.from_direction(direction):scale(dt * player:get_speed()), direction
+        )
+    end
+    return itertools.map(held, as_movement)
+end
+
+local function apply_moves(
     player: Player,
     dt: number,
+    held: {Direction},
     blocks: {Kinematic},
     lightning_bombs_: LightningBombs,
     blocks_bombs: ReadableGroup<Kinematic>,
@@ -592,7 +596,7 @@ function movement.set_position_and_dir_from_input(
     lookup: Lookup,
     ice_sliding: boolean
 )
-    local move_inputs = get_moves_from_input(player, dt)
+    local move_inputs = moves_from_directions(player, dt, held)
     local momentum = Movement.new_from_player(dt, player)
     local moves = get_moves(player, move_inputs, momentum)
     local player_action: Action = #moves ~= 0 and "walk" or "idle"
@@ -625,6 +629,58 @@ function movement.set_position_and_dir_from_input(
 
     player:set_movement(new_pos, updated_dir)
     player:set_action(player_action)
+end
+
+function movement.set_position_and_dir_from_input(
+    player: Player,
+    dt: number,
+    blocks: {Kinematic},
+    lightning_bombs_: LightningBombs,
+    blocks_bombs: ReadableGroup<Kinematic>,
+    players_: ReadableGroup<Player>,
+    bombs_: ReadableGroup<Bomb>,
+    lookup: Lookup,
+    ice_sliding: boolean
+)
+    apply_moves(
+        player,
+        dt,
+        get_moves_from_input(player),
+        blocks,
+        lightning_bombs_,
+        blocks_bombs,
+        players_,
+        bombs_,
+        lookup,
+        ice_sliding
+    )
+end
+
+--- Like set_position_and_dir_from_input, but fed a scripted held-direction list
+-- so menu-preview drones reuse the real movement, kick and belt pipeline.
+function movement.set_position_and_dir_scripted(
+    player: Player,
+    dt: number,
+    held: {Direction},
+    blocks: {Kinematic},
+    lightning_bombs_: LightningBombs,
+    blocks_bombs: ReadableGroup<Kinematic>,
+    players_: ReadableGroup<Player>,
+    bombs_: ReadableGroup<Bomb>,
+    lookup: Lookup
+)
+    apply_moves(
+        player,
+        dt,
+        held,
+        blocks,
+        lightning_bombs_,
+        blocks_bombs,
+        players_,
+        bombs_,
+        lookup,
+        false
+    )
 end
 
 return movement

@@ -323,6 +323,7 @@ end
 -- Explosions --
 local record Explosions
     on_ground: {Explosion}
+    silent: boolean
 end
 
 local explosions = {Explosions = Explosions}
@@ -358,15 +359,18 @@ function explosions.load_assets()
     explosion_large = get_explosion_audio("large")
 end
 
-function explosions.new(): Explosions
+function explosions.new(silent?: boolean): Explosions
     local self: Explosions = setmetatable({}, {__index = Explosions})
     self.on_ground = {}
+    self.silent = silent or false
     return self
 end
 
 function Explosions:place_explosion(position: Point, range: number, delay?: number)
     local explosion = Explosion.new(position, range, delay)
-    explosion:play()
+    if not self.silent then
+        explosion:play()
+    end
     table.insert(self.on_ground, explosion)
 end
 
