@@ -454,11 +454,11 @@ function bombs.load_assets()
     bomb_image = lutro.graphics.newImage("assets/bomb/bomb.png")
 end
 
-function bombs.new(): Bombs
+function bombs.new(silent?: boolean): Bombs
     local self: Bombs = setmetatable({}, {__index = Bombs})
     self.on_ground = collision.new_group()
     self.in_air = collision.new_group()
-    self.explosions = explosions.new()
+    self.explosions = explosions.new(silent)
     return self
 end
 

@@ -6,12 +6,14 @@ local scenes = require("engine.scenes")
 local fonts = require("fonts")
 local itertools = require("itertools")
 local level_graphics = require("level_graphics.maps.init")
+local map_preview = require("map_preview.init")
 local items = require("menus.items")
 local player_selection = require("player_selection")
 local screen = require("screen")
 local settings = require("settings")
 
 local type Map = settings.Map
+local type MapPreview = require("map_preview.interfaces")
 local type MenuFont = fonts.MenuFont
 local type MenuSelection = items.MenuSelection
 local type Scene = scenes.Scene
@@ -52,6 +54,7 @@ local arrow_shade_right_image: Image
 local record MapSelection is Scene
     previous_screen: Scene
     selection: MenuSelection<Map>
+    preview: MapPreview
 end
 
 local map_selection = {}
@@ -60,6 +63,7 @@ function map_selection.new(previous_screen: Scene): MapSelection
     local self: MapSelection = setmetatable({}, {__index = MapSelection})
     self.previous_screen = previous_screen
     self.selection = items.new_enum(MAPS)
+    self.preview = nil
     return self
 end
 
@@ -74,32 +78,38 @@ function map_selection.load_assets()
     images.flip_horizontal(arrow_shade_right_image)
 end
 
+-- leave() restores the global settings.map the preview swapped to "factory".
+function MapSelection:_close_preview()
+    if self.preview then
+        self.preview:leave()
+        self.preview = nil
+    end
+end
+
 function MapSelection:load()
+    self:_close_preview()
     self.selection.value = itertools.find(settings.map, MAPS)
+    self.preview = map_preview.for_map(self.selection:get_value())
 end
 
 -- The start-menu music plays under this scene; stop it before player-selection
 -- starts its own track, or the two overlap.
 function MapSelection:_enter_player_selection()
+    self:_close_preview()
     audio.stop()
     scenes.set(player_selection.setup())
 end
 
-function MapSelection:update(_: number)
-    if settings.auto_select_characters then
-        -- Auto-select enters the battle on the first frame with no input, so the
-        -- map picker would sit here forever waiting for a button press.
-        self:_enter_player_selection()
-        return
-    end
-
+function MapSelection:update(dt: number)
     if joysticks.is_pressed_any(joysticks.BUTTONS.B) then
+        self:_close_preview()
         settings.set_map(self.selection:get_value())
         self:_enter_player_selection()
         return
     end
 
     if joysticks.is_pressed_any(joysticks.BUTTONS.A) then
+        self:_close_preview()
         scenes.set(self.previous_screen)
         return
     end
@@ -113,6 +123,12 @@ function MapSelection:update(_: number)
 
     if moved then
         ok_sound:play()
+        self:_close_preview()
+        self.preview = map_preview.for_map(self.selection:get_value())
+    end
+
+    if self.preview then
+        self.preview:update(dt)
     end
 end
 
@@ -138,6 +154,9 @@ end
 
 function MapSelection:draw()
     level_graphics.get_graphics_for(self.selection:get_value()):draw_background()
+    if self.preview then
+        self.preview:draw()
+    end
     self:_draw_arrows()
     self:_draw_name()
 end

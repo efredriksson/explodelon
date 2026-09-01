@@ -34,6 +34,7 @@ local players = require("players")
 local pressure_blocks = require("pressure_block")
 local settings = require("settings")
 local soft_blocks = require("soft_blocks")
+local z_index = require("z_index")
 
 local type Bomb = bombs.Bomb
 local type Bombs = bombs.Bombs
@@ -638,26 +639,6 @@ function Battle:update(dt: number)
     trace_entities:stop()
 end
 
-local function sort_entities_by_y_cord(players_to_sort: {Entity})
-    local function compare_entity_y_pos(e1: Entity, e2: Entity): boolean
-        if e1.z_index ~= e2.z_index then
-            return e1.z_index < e2.z_index
-        end
-        local pos1 = e1:get_position()
-        local pos2 = e2:get_position()
-        if pos1.y ~= pos2.y then
-            return pos1.y < pos2.y
-        end
-        if pos1.x ~= pos2.x then
-            return pos1.x < pos2.x
-        end
-        -- tostring gives a stable memory-address-based order within a session,
-        -- preventing flickering for entities at identical positions.
-        return tostring(e1) < tostring(e2)
-    end
-    table.sort(players_to_sort, compare_entity_y_pos)
-end
-
 function Battle:draw()
     background.draw()
     self.timer:draw()
@@ -693,7 +674,7 @@ function Battle:draw()
     )
 
     -- Need to render entities in the front last so they are on top of any other entity
-    sort_entities_by_y_cord(entities_to_draw)
+    table.sort(entities_to_draw, z_index.back_to_front)
 
     for _, entity in ipairs(entities_to_draw) do
         entity:draw()
