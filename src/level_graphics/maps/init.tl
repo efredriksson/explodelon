@@ -20,6 +20,10 @@ function init.get_graphics(): MapGraphics
     return map_graphics[settings.map]
 end
 
+function init.get_graphics_for(map: Map): MapGraphics
+    return map_graphics[map]
+end
+
 function init.load_assets()
     for _, graphics in pairs(map_graphics) do
         graphics:load_assets()

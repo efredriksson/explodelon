@@ -40,6 +40,24 @@ function images.change_colors(image: Image, color_mapping: {Color: Color})
     end
 end
 
+--- Mirrors the image left-to-right in place, so one asset can face both ways.
+function images.flip_horizontal(image: Image)
+    local image_data = image:getData()
+    local width = image:getWidth()
+    local height = image:getHeight()
+    for i = 0, math.floor(width / 2) - 1 do
+        local mirrored_i = width - 1 - i
+        for j = 0, height - 1 do
+            local left_r, left_g, left_b, left_alpha = image_data:getPixel(i, j)
+            local right_r, right_g, right_b, right_alpha = image_data:getPixel(
+                mirrored_i, j
+            )
+            image_data:setPixel(i, j, right_r, right_g, right_b, right_alpha)
+            image_data:setPixel(mirrored_i, j, left_r, left_g, left_b, left_alpha)
+        end
+    end
+end
+
 --- Scale 0-1 represent how far from current to max to increase color component
 local function increase_color(color: number, scale: number): number
     return color + scale * (255 - color)
