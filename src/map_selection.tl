@@ -63,7 +63,6 @@ function map_selection.new(previous_screen: Scene): MapSelection
     local self: MapSelection = setmetatable({}, {__index = MapSelection})
     self.previous_screen = previous_screen
     self.selection = items.new_enum(MAPS)
-    self.preview = nil
     return self
 end
 
@@ -78,16 +77,13 @@ function map_selection.load_assets()
     images.flip_horizontal(arrow_shade_right_image)
 end
 
--- leave() restores the global settings.map the preview swapped to "factory".
-function MapSelection:_close_preview()
-    if self.preview then
-        self.preview:leave()
-        self.preview = nil
-    end
+-- Each preview swapped the global settings.map to the map it renders; leave()
+-- puts back the map that was configured before the picker opened.
+function MapSelection:_leave_preview()
+    self.preview:leave()
 end
 
 function MapSelection:load()
-    self:_close_preview()
     self.selection.value = itertools.find(settings.map, MAPS)
     self.preview = map_preview.for_map(self.selection:get_value())
 end
@@ -95,21 +91,20 @@ end
 -- The start-menu music plays under this scene; stop it before player-selection
 -- starts its own track, or the two overlap.
 function MapSelection:_enter_player_selection()
-    self:_close_preview()
     audio.stop()
     scenes.set(player_selection.setup())
 end
 
 function MapSelection:update(dt: number)
     if joysticks.is_pressed_any(joysticks.BUTTONS.B) then
-        self:_close_preview()
+        self:_leave_preview()
         settings.set_map(self.selection:get_value())
         self:_enter_player_selection()
         return
     end
 
     if joysticks.is_pressed_any(joysticks.BUTTONS.A) then
-        self:_close_preview()
+        self:_leave_preview()
         scenes.set(self.previous_screen)
         return
     end
@@ -123,13 +118,11 @@ function MapSelection:update(dt: number)
 
     if moved then
         ok_sound:play()
-        self:_close_preview()
+        self:_leave_preview()
         self.preview = map_preview.for_map(self.selection:get_value())
     end
 
-    if self.preview then
-        self.preview:update(dt)
-    end
+    self.preview:update(dt)
 end
 
 function MapSelection:_draw_arrows()
@@ -154,9 +147,7 @@ end
 
 function MapSelection:draw()
     level_graphics.get_graphics_for(self.selection:get_value()):draw_background()
-    if self.preview then
-        self.preview:draw()
-    end
+    self.preview:draw()
     self:_draw_arrows()
     self:_draw_name()
 end
