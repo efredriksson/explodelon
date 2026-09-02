@@ -667,7 +667,8 @@ function movement.set_position_and_dir_scripted(
     blocks_bombs: ReadableGroup<Kinematic>,
     players_: ReadableGroup<Player>,
     bombs_: ReadableGroup<Bomb>,
-    lookup: Lookup
+    lookup: Lookup,
+    ice_sliding: boolean
 )
     apply_moves(
         player,
@@ -679,7 +680,7 @@ function movement.set_position_and_dir_scripted(
         players_,
         bombs_,
         lookup,
-        false
+        ice_sliding
     )
 end
 
