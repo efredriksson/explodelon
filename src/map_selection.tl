@@ -51,10 +51,38 @@ local arrow_right_image: Image
 local arrow_shade_left_image: Image
 local arrow_shade_right_image: Image
 
+local STABLE_STEP_SECONDS = 1 / 60
+local STABLE_MAX_CATCHUP_SECONDS = STABLE_STEP_SECONDS * 2
+
+-- A clock that will keep to a more uniform 'dt', reducing the amount of numerical
+-- rounding issues. This helps ensure the map previews are deterministic.
+local record StableClock
+    pending: number
+end
+
+function StableClock.new(): StableClock
+    local self: StableClock = setmetatable({}, {__index = StableClock})
+    self.pending = 0
+    return self
+end
+
+function StableClock:tick(dt: number): number
+    local number_of_steps = 0
+
+    self.pending = math.min(self.pending + dt, STABLE_MAX_CATCHUP_SECONDS)
+    while self.pending >= STABLE_STEP_SECONDS do
+        self.pending = self.pending - STABLE_STEP_SECONDS
+        number_of_steps = number_of_steps + 1
+    end
+
+    return STABLE_STEP_SECONDS * number_of_steps
+end
+
 local record MapSelection is Scene
     previous_screen: Scene
     selection: MenuSelection<Map>
     preview: MapPreview
+    clock: StableClock
 end
 
 local map_selection = {}
@@ -63,6 +91,7 @@ function map_selection.new(previous_screen: Scene): MapSelection
     local self: MapSelection = setmetatable({}, {__index = MapSelection})
     self.previous_screen = previous_screen
     self.selection = items.new_enum(MAPS)
+    self.clock = StableClock.new()
     return self
 end
 
@@ -122,7 +151,7 @@ function MapSelection:update(dt: number)
         self.preview = map_preview.for_map(self.selection:get_value())
     end
 
-    self.preview:update(dt)
+    self.preview:update(self.clock:tick(dt))
 end
 
 function MapSelection:_draw_arrows()
