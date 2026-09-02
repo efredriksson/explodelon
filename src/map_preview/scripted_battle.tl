@@ -10,6 +10,7 @@ local items = require("items")
 local itertools = require("itertools")
 local grid = require("level_layout.grid")
 local map_entities = require("level_layout.map_entities")
+local maps = require("level_layout.maps.init")
 local movement = require("movement")
 local player_animations = require("player_animations")
 local players = require("players")
@@ -66,6 +67,7 @@ end
 local record ScriptedBattle
     config: WorldConfig
     entered_map: Map
+    ice_sliding: boolean
 
     players: {Player}
     player_inputs: {Player: {Direction}}
@@ -136,6 +138,7 @@ function scripted_battle.new(
     -- bombs:update reads goal tiles and block layout off the global settings.map,
     -- so we hold it here until leave() restores the previous map.
     settings.set_map(config.map)
+    self.ice_sliding = maps.get_layout():has_ice()
 
     self.hard_blocks = hard_blocks.new(map_entities.get_block_configs({}).hard)
     self.lightning_bombs = lightning_bombs.new()
@@ -195,7 +198,8 @@ function ScriptedBattle:update(dt: number)
                 self.blocks_bombs,
                 self.alive_players_group,
                 self.bombs.on_ground,
-                lookup
+                lookup,
+                self.ice_sliding
             )
         end
     end
