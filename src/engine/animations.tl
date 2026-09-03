@@ -92,7 +92,8 @@ function Animation:update(dt: number)
     end
 
     self.timer = self.timer + dt
-    if self.timer > self.total_time then
+    -- A cycle that has exactly filled total_time is already done.
+    if self.timer >= self.total_time then
         self.timer = 0
         self.loops = self.loops + 1
     end
