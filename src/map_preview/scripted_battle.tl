@@ -16,6 +16,7 @@ local player_animations = require("player_animations")
 local players = require("players")
 local settings = require("settings")
 local soft_blocks = require("soft_blocks")
+local trampolines = require("trampolines")
 local z_index = require("z_index")
 
 local type Bombs = bombs.Bombs
@@ -35,6 +36,7 @@ local type PlayerAnimations = player_animations.PlayerAnimations
 local type Point = points.Point
 local type SoftBlockConfig = map_entities.SoftBlockConfig
 local type SoftBlocks = soft_blocks.SoftBlocks
+local type Trampolines = trampolines.Trampolines
 
 local record ItemDrop
     at: Point
@@ -82,8 +84,11 @@ local record ScriptedBattle
     alive_players_group: Group<Player>
     blockers: CombinedGroup<Explodable>
     blocks_bombs: CombinedGroup<Kinematic>
+    blocks_jump: CombinedGroup<Kinematic>
     empty_bounce_group: Group<Kinematic>
+    empty_pressure_blocks: Group<Entity>
     explodables: CombinedGroup<Explodable>
+    trampolines: Trampolines
 end
 
 local scripted_battle = {
@@ -126,6 +131,12 @@ function ScriptedBattle:reset(scripted_players: {Player})
         self.soft_blocks.on_ground.set,
         self.bombs.on_ground.set
     )
+    self.blocks_jump = collision.new_combined_group(
+        self.hard_blocks.on_ground.set,
+        self.soft_blocks.on_ground.set,
+        self.bombs.on_ground.set
+    )
+    self.trampolines = trampolines.new(self.blocks_jump, self.empty_pressure_blocks)
     self.player_animations = player_animations.new(self.players)
 end
 
@@ -145,6 +156,7 @@ function scripted_battle.new(
     self.alive_players_group = collision.new_group()
     self.blocks_bombs = collision.new_combined_group(self.hard_blocks.on_ground.set)
     self.empty_bounce_group = collision.new_group()
+    self.empty_pressure_blocks = collision.new_group()
 
     self:reset(scripted_players)
     return self
@@ -202,6 +214,7 @@ function ScriptedBattle:update(dt: number)
                 self.ice_sliding
             )
         end
+        self.trampolines:update(player, lookup)
     end
 
     self.soft_blocks:update(dt)
