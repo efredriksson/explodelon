@@ -151,17 +151,27 @@ local type Map = enum
     "bouncing"
 end
 
+-- Debug rules are off this list; they have no player-facing name.
+local type RulesetName = enum
+    "default"
+    "insanity"
+    "bomb_stack"
+    "dino_madness"
+end
+
 local record Settings
     MINIMUM_PLAYERS: integer
     number_of_auto_selected_characters: integer
     auto_select_characters: boolean
     teams: boolean
     map: Map
+    ruleset: RulesetName
     game_rules: GameRules
     -- Type export
     ItemType: ItemType
     DinoColor: DinoColor
     Map: Map
+    RulesetName: RulesetName
 end
 
 function Settings.new(): Settings
@@ -171,11 +181,13 @@ function Settings.new(): Settings
     self.auto_select_characters = false
     self.teams = false
     self.map = "football"
+    self.ruleset = "default"
     self.game_rules = GameRules.new()
     -- Type export
     self.ItemType = ItemType
     self.DinoColor = DinoColor
     self.Map = Map
+    self.RulesetName = RulesetName
     return self
 end
 
@@ -327,7 +339,7 @@ function Settings.set_ice_friction_factor(value: number)
     settings.game_rules.ice.friction_factor = value
 end
 
-function Settings.set_game_rules_default()
+local function set_game_rules_default()
     settings.game_rules = GameRules.new()
 end
 
@@ -353,7 +365,7 @@ function Settings.set_game_rules_lightning_bomb_debug()
     settings.game_rules.dinos.nbr_of_eggs = 0
 end
 
-function Settings.set_game_rules_insanity()
+local function set_game_rules_insanity()
     settings.game_rules = GameRules.new()
     settings.game_rules.items.nbr_soft_blocks = 30
     settings.game_rules.timings.battle = 120
@@ -366,7 +378,7 @@ function Settings.set_game_rules_insanity()
     settings.game_rules.players.mad_bombers.after_sudden_death = true
 end
 
-function Settings.set_game_rules_bomb_stack()
+local function set_game_rules_bomb_stack()
     settings.game_rules = GameRules.new()
     settings.game_rules.items.nbr_soft_blocks = 65
     settings.game_rules.items.nbr_of_items.bomb = 12
@@ -386,7 +398,7 @@ function Settings.set_game_rules_bomb_stack()
     settings.game_rules.players.mad_bombers.after_sudden_death = false
 end
 
-function Settings.set_game_rules_dino_madness()
+local function set_game_rules_dino_madness()
     settings.game_rules = GameRules.new()
     settings.game_rules.items.nbr_soft_blocks = 60
     settings.game_rules.timings.battle = 150
@@ -395,6 +407,18 @@ function Settings.set_game_rules_dino_madness()
     settings.game_rules.items.spawn_rates.lightning_bomb = 0.08
     settings.game_rules.items.spawn_rates.bomb = 0.16
     settings.game_rules.items.spawn_rates.speed = 0.1
+end
+
+local RULESET_LOADERS <total>: {RulesetName: function()} = {
+    default = set_game_rules_default,
+    insanity = set_game_rules_insanity,
+    bomb_stack = set_game_rules_bomb_stack,
+    dino_madness = set_game_rules_dino_madness,
+}
+
+function Settings.set_ruleset(name: RulesetName)
+    RULESET_LOADERS[name]()
+    settings.ruleset = name
 end
 
 function Settings.set_debug_performance()
