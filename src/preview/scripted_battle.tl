@@ -39,11 +39,39 @@ local type SoftBlocks = soft_blocks.SoftBlocks
 local type Stage = choreography.Stage
 local type Trampolines = trampolines.Trampolines
 
+local STABLE_STEP_SECONDS = 1 / 60
+local STABLE_MAX_CATCHUP_SECONDS = STABLE_STEP_SECONDS * 2
+
+-- A clock that will keep to a more uniform 'dt', reducing the amount of numerical
+-- rounding issues. This helps ensure the map previews are deterministic.
+local record StableClock
+    pending: number
+end
+
+function StableClock.new(): StableClock
+    local self: StableClock = setmetatable({}, {__index = StableClock})
+    self.pending = 0
+    return self
+end
+
+function StableClock:tick(dt: number): number
+    local number_of_steps = 0
+
+    self.pending = math.min(self.pending + dt, STABLE_MAX_CATCHUP_SECONDS)
+    while self.pending >= STABLE_STEP_SECONDS do
+        self.pending = self.pending - STABLE_STEP_SECONDS
+        number_of_steps = number_of_steps + 1
+    end
+
+    return STABLE_STEP_SECONDS * number_of_steps
+end
+
 local record ScriptedBattle is Stage
     scenery: Scenery
     choreography: Choreography
     entered_map: Map
     ice_sliding: boolean
+    clock: StableClock
     elapsed: number
 
     players: {Player}
@@ -129,6 +157,7 @@ end
 function scripted_battle.new(stage_set: Scenery, piece: Choreography): ScriptedBattle
     local self: ScriptedBattle = setmetatable({}, {__index = ScriptedBattle})
     self.entered_map = settings.map
+    self.clock = StableClock.new()
     self.lightning_bombs = lightning_bombs.new()
     self.alive_players_group = collision.new_group()
     self.empty_bounce_group = collision.new_group()
@@ -198,7 +227,7 @@ function ScriptedBattle:_step_systems(dt: number)
     self.player_animations:update(dt)
 end
 
-function ScriptedBattle:update(dt: number)
+function ScriptedBattle:_update(dt: number)
     self.elapsed = self.elapsed + dt
     if self.elapsed >= self.choreography.cycle_length then
         self:_restart()
@@ -207,6 +236,10 @@ function ScriptedBattle:update(dt: number)
 
     self.choreography:step(dt)
     self:_step_systems(dt)
+end
+
+function ScriptedBattle:update(dt: number)
+    self:_update(self.clock:tick(dt))
 end
 
 function ScriptedBattle:draw()
