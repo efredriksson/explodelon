@@ -140,14 +140,6 @@ local STUN_CRY_REACH_BY_LEVEL = {[1] = 1.0, [2] = 1.75, [3] = 2.5}
 -- Lifts the countdown off the sprite's midline so it reads over the head.
 local PETRIFY_COUNTDOWN_RISE = 4
 
-local function block_to_anim_draw_pos(animation: Animation, pos: Point): Point
-    -- y: +1 is because of the sprite, look over when doing animations
-    return points.new(
-        pos.x + (grid.TILE_SIZE - animation.width) / 2,
-        pos.y - animation.height + grid.TILE_SIZE + 1
-    )
-end
-
 local function draw_flag(player: Player, draw_position: Point)
     if player.team_id then
         local flag_pos = draw_position:move(vectors.new(4, -10))
@@ -313,7 +305,7 @@ end
 
 function PlayerEntity:_draw_foot(animation: Animation)
     local draw_position = self.player:get_draw_position()
-    local draw_pos = block_to_anim_draw_pos(animation, draw_position)
+    local draw_pos = grid.block_sprite_position(animation, draw_position)
     draw_flag(self.player, draw_pos)
     animation:draw(draw_pos.x, draw_pos.y)
 end
@@ -328,7 +320,7 @@ function PlayerEntity:_draw_mounted()
     local draw_position = self.player:get_draw_position()
 
     local function draw(animation: Animation, pos: Point, should_draw_flag?: boolean)
-        local draw_pos = block_to_anim_draw_pos(animation, pos)
+        local draw_pos = grid.block_sprite_position(animation, pos)
         if should_draw_flag then
             draw_flag(self.player, draw_pos)
         end

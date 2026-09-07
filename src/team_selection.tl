@@ -136,17 +136,9 @@ function TeamPlayer:update(dt: number)
     self:_get_animation():update(dt)
 end
 
-local function block_to_anim_draw_pos(animation: Animation, pos: Point): Point
-    -- y: +1 is because of the sprite, look over when doing animations
-    return points.new(
-        pos.x + (grid.TILE_SIZE - animation.width) / 2,
-        pos.y - animation.height + grid.TILE_SIZE + 1
-    )
-end
-
 function TeamPlayer:draw()
     local anim = self:_get_animation()
-    local draw_pos = block_to_anim_draw_pos(anim, self.position)
+    local draw_pos = grid.block_sprite_position(anim, self.position)
     anim:draw(draw_pos.x, draw_pos.y)
 end
 

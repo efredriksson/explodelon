@@ -1,7 +1,9 @@
+local animations = require("engine.animations")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
 local logger = require("engine.logger")
 
+local type Animation = animations.Animation
 local type Point = points.Point
 local type Rectangle = rectangles.Rectangle
 
@@ -36,6 +38,15 @@ end
 
 function grid.get_tile_position(i: integer, j: integer): Point
     return grid.get_tile(i, j):top_left()
+end
+
+--- Where a sprite taller and wider than its tile is drawn to stand in it.
+function grid.block_sprite_position(animation: Animation, block: Point): Point
+    -- y: +1 is because of the sprite, look over when doing animations
+    return points.new(
+        block.x + (grid.TILE_SIZE - animation.width) / 2,
+        block.y - animation.height + grid.TILE_SIZE + 1
+    )
 end
 
 --- Get local position for point in block, so {x, y} ∈ [0, TILE_SIZE).
