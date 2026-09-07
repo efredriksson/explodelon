@@ -59,56 +59,60 @@ end
 
 local FONT_SYMBOLS = " abcdefghijklmnopqrstuvwxyz0123456789.!'-:*"
 
-function fonts.new_menu_white(): MenuFont
-    local white_font = lutro.graphics.newImageFont(
-        "assets/imgfont/white.png", FONT_SYMBOLS
+local GLYPH_SHEET = "assets/imgfont/white.png"
+
+local WHITE_INK: Color = {255, 255, 255}
+local BLACK_INK: Color = {0, 0, 0}
+local GRAY_INK: Color = {192, 192, 192}
+
+local function new_ink_sheet(ink_color: Color): Image
+    local sheet = lutro.graphics.newImage(GLYPH_SHEET)
+    images.change_colors(sheet, {[WHITE_INK] = ink_color})
+    return sheet
+end
+
+local function new_font(ink_color: Color): Font
+    return lutro.graphics.newImageFont(new_ink_sheet(ink_color), FONT_SYMBOLS)
+end
+
+-- A Font never changes once built, so screens sharing an ink share the font.
+local built_fonts: {string: Font} = {}
+
+local function font_key(ink_color: Color): string
+    return string.format(
+        "%d-%d-%d",
+        math.floor(ink_color[1]),
+        math.floor(ink_color[2]),
+        math.floor(ink_color[3])
     )
-    return MenuFont.new(white_font, nil)
+end
+
+local function get_font(ink_color: Color): Font
+    local key = font_key(ink_color)
+    if not built_fonts[key] then
+        built_fonts[key] = new_font(ink_color)
+    end
+    return built_fonts[key]
+end
+
+function fonts.new_menu_white(): MenuFont
+    return MenuFont.new(get_font(WHITE_INK), nil)
 end
 
 function fonts.new_menu_black(): MenuFont
-    local black_font = lutro.graphics.newImageFont(
-        "assets/imgfont/black.png", FONT_SYMBOLS
-    )
-    return MenuFont.new(black_font, nil)
-end
-
--- Shared; decoded once, not per colour.
-local black_outline_font: Font
-
-local function get_black_outline_font(): Font
-    if not black_outline_font then
-        black_outline_font = lutro.graphics.newImageFont(
-            "assets/imgfont/black.png", FONT_SYMBOLS
-        )
-    end
-    return black_outline_font
-end
-
-local function new_outlined(ink_font: Font): MenuFont
-    return MenuFont.new(ink_font, get_black_outline_font())
+    return MenuFont.new(get_font(BLACK_INK), nil)
 end
 
 function fonts.new_menu_white_outlined(): MenuFont
-    return new_outlined(
-        lutro.graphics.newImageFont("assets/imgfont/white.png", FONT_SYMBOLS)
-    )
+    return MenuFont.new(get_font(WHITE_INK), get_font(BLACK_INK))
 end
 
 function fonts.new_menu_gray_outlined(): MenuFont
-    return new_outlined(
-        lutro.graphics.newImageFont("assets/imgfont/gray.png", FONT_SYMBOLS)
-    )
+    return MenuFont.new(get_font(GRAY_INK), get_font(BLACK_INK))
 end
 
-local WHITE_INK: Color = {255, 255, 255}
-
--- Recolours the shared glyph sheet (engine.images.change_colors) instead of
--- a PNG per colour.
 function fonts.new_menu_colored_outlined(ink_color: Color): MenuFont
-    local ink_image = lutro.graphics.newImage("assets/imgfont/white.png")
-    images.change_colors(ink_image, {[WHITE_INK] = ink_color})
-    return new_outlined(lutro.graphics.newImageFont(ink_image, FONT_SYMBOLS))
+    return MenuFont.new(get_font(ink_color), get_font(BLACK_INK))
 end
 
 local function print_at(text: string, x: number, y: number, box_width?: number)
