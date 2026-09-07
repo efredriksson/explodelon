@@ -5,6 +5,7 @@ local settings = require("settings")
 
 local type Scene = scenes.Scene
 local type MenuScreen = screens.MenuScreen
+local type RulesetName = settings.RulesetName
 
 local load_rules_screen = {}
 
@@ -12,21 +13,11 @@ function load_rules_screen.new(previous_screen: Scene, start_screen: Scene): Men
     local function done(_: Scene)
         scenes.set(previous_screen)
     end
-    local function load_default_rules()
-        settings.set_game_rules_default()
-        scenes.set(start_screen)
-    end
-    local function load_insanity_rules()
-        settings.set_game_rules_insanity()
-        scenes.set(start_screen)
-    end
-    local function load_dino_madness_rules()
-        settings.set_game_rules_dino_madness()
-        scenes.set(start_screen)
-    end
-    local function load_bomb_stack_rules()
-        settings.set_game_rules_bomb_stack()
-        scenes.set(start_screen)
+    local function load_ruleset(name: RulesetName): function(ctx: Scene)
+        return function(_: Scene)
+            settings.set_ruleset(name)
+            scenes.set(start_screen)
+        end
     end
     local function load_debug_kick_rules()
         settings.set_game_rules_kick_debug()
@@ -47,10 +38,10 @@ function load_rules_screen.new(previous_screen: Scene, start_screen: Scene): Men
 
     return screens.new(
         {
-            choices.new_done("insanity", 50, load_insanity_rules),
-            choices.new_done("dino madness", 65, load_dino_madness_rules),
-            choices.new_done("bomb stack", 80, load_bomb_stack_rules),
-            choices.new_done("default", 95, load_default_rules),
+            choices.new_done("insanity", 50, load_ruleset("insanity")),
+            choices.new_done("dino madness", 65, load_ruleset("dino_madness")),
+            choices.new_done("bomb stack", 80, load_ruleset("bomb_stack")),
+            choices.new_done("default", 95, load_ruleset("default")),
             choices.new_done("debug dinos", 110, load_debug_dino_rules),
             choices.new_done("debug kick", 125, load_debug_kick_rules),
             choices.new_done(
