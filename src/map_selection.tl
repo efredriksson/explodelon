@@ -6,17 +6,18 @@ local scenes = require("engine.scenes")
 local fonts = require("fonts")
 local itertools = require("itertools")
 local level_graphics = require("level_graphics.maps.init")
-local map_preview = require("map_preview.init")
 local items = require("menus.items")
 local player_selection = require("player_selection")
+local preview_maps = require("preview.maps.init")
+local scripted_battle = require("preview.scripted_battle")
 local screen = require("screen")
 local settings = require("settings")
 
 local type Map = settings.Map
-local type MapPreview = require("map_preview.interfaces")
 local type MenuFont = fonts.MenuFont
 local type MenuSelection = items.MenuSelection
 local type Scene = scenes.Scene
+local type ScriptedBattle = scripted_battle.ScriptedBattle
 
 local MAP_ORDER <total>: {Map: integer} = {
     football = 1,
@@ -81,7 +82,7 @@ end
 local record MapSelection is Scene
     previous_screen: Scene
     selection: MenuSelection<Map>
-    preview: MapPreview
+    preview: ScriptedBattle
     clock: StableClock
 end
 
@@ -106,15 +107,18 @@ function map_selection.load_assets()
     images.flip_horizontal(arrow_shade_right_image)
 end
 
--- Each preview swapped the global settings.map to the map it renders; leave()
--- puts back the map that was configured before the picker opened.
+-- The preview holds settings.map at whatever it is showing; leave() puts back
+-- the map the picker opened on.
 function MapSelection:_leave_preview()
     self.preview:leave()
 end
 
 function MapSelection:load()
     self.selection.value = itertools.find(settings.map, MAPS)
-    self.preview = map_preview.for_map(self.selection:get_value())
+    local map = self.selection:get_value()
+    self.preview = scripted_battle.new(
+        preview_maps.scenery_for(map), preview_maps.choreography_for(map)
+    )
 end
 
 -- The start-menu music plays under this scene; stop it before player-selection
@@ -147,8 +151,10 @@ function MapSelection:update(dt: number)
 
     if moved then
         ok_sound:play()
-        self:_leave_preview()
-        self.preview = map_preview.for_map(self.selection:get_value())
+        local map = self.selection:get_value()
+        self.preview:play(
+            preview_maps.scenery_for(map), preview_maps.choreography_for(map)
+        )
     end
 
     self.preview:update(self.clock:tick(dt))
