@@ -58,6 +58,13 @@ function images.flip_horizontal(image: Image)
     end
 end
 
+function images.new_mirrored_pair(filename: string): Image, Image
+    local original = lutro.graphics.newImage(filename)
+    local mirrored = lutro.graphics.newImage(filename)
+    images.flip_horizontal(mirrored)
+    return original, mirrored
+end
+
 --- Scale 0-1 represent how far from current to max to increase color component
 local function increase_color(color: number, scale: number): number
     return color + scale * (255 - color)

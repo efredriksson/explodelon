@@ -26,15 +26,7 @@ local MAP_ORDER <total>: {Map: integer} = {
     bouncing = 4,
 }
 
-local function maps_in_cycle_order(): {Map}
-    local ordered: {Map} = {}
-    for map, position in pairs(MAP_ORDER) do
-        ordered[position] = map
-    end
-    return ordered
-end
-
-local MAPS = maps_in_cycle_order()
+local MAPS = itertools.in_position_order(MAP_ORDER)
 
 local ARROW_MARGIN = 6
 
@@ -70,12 +62,12 @@ end
 function map_selection.load_assets()
     font = fonts.new_menu_white_outlined()
     ok_sound = items.ok_sound()
-    arrow_right_image = lutro.graphics.newImage("assets/arrow_right.png")
-    arrow_left_image = lutro.graphics.newImage("assets/arrow_right.png")
-    images.flip_horizontal(arrow_left_image)
-    arrow_shade_left_image = lutro.graphics.newImage("assets/arrow_shade.png")
-    arrow_shade_right_image = lutro.graphics.newImage("assets/arrow_shade.png")
-    images.flip_horizontal(arrow_shade_right_image)
+    arrow_right_image, arrow_left_image = images.new_mirrored_pair(
+        "assets/arrow_right.png"
+    )
+    arrow_shade_left_image, arrow_shade_right_image = images.new_mirrored_pair(
+        "assets/arrow_shade.png"
+    )
 end
 
 -- The preview holds settings.map at whatever it is showing; leave() puts back
