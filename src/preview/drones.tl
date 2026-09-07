@@ -4,12 +4,14 @@ local characters = require("characters")
 local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
 local players = require("players")
+local choreography = require("preview.choreography")
 local settings = require("settings")
 
 local type CharacterName = characters.CharacterName
 local type Direction = vectors.Direction
 local type Player = players.Player
 local type Point = points.Point
+local type Stage = choreography.Stage
 
 local BOMBER_SPRITE: CharacterName = "kotetsu"
 local VICTIM_SPRITE: CharacterName = "white"
@@ -68,18 +70,22 @@ function Pacer.new(walker: Player, reach: number, facing: Direction): Pacer
     return self
 end
 
-function Pacer:turn()
+function Pacer:_turn()
     self.facing = OPPOSITE[self.facing]
 end
 
-function Pacer:direction(): Direction
+function Pacer:_direction(): Direction
     local heading = vectors.from_direction(self.facing)
-    -- Projecting onto the current heading to only turn once when out of reach
+    -- Projected onto the heading so it turns once, not every frame out of reach.
     local travelled = self.origin:vector_to(self.walker.position):dot_product(heading)
     if travelled >= self.reach then
-        self:turn()
+        self:_turn()
     end
     return self.facing
+end
+
+function Pacer:steer(stage: Stage)
+    stage:set_player_inputs(self.walker, {self:_direction()})
 end
 
 return drones
