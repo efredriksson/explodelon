@@ -126,7 +126,7 @@ function ScriptedBattle:_restart()
     self.elapsed = 0
 
     self.soft_blocks = soft_blocks.new(self.scenery.soft_blocks)
-    self.items = items.new()
+    self.items = items.new(true)
     for _, drop in ipairs(self.scenery.items) do
         self.items:drop_at(drop.at, drop.kind)
     end
@@ -229,6 +229,7 @@ function ScriptedBattle:_step_systems(dt: number)
             )
         end
         self.trampolines:update(player, lookup)
+        self.items:possible_pickup_by(player)
     end
 
     self.soft_blocks:update(dt)

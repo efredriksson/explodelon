@@ -72,14 +72,16 @@ end
 local record Items
     on_ground: Group<Item>
     by_players: {integer: {ItemType}}
+    silent: boolean
 end
 
 local items = {Items = Items}
 
-function items.new(): Items
+function items.new(silent?: boolean): Items
     local self: Items = setmetatable({}, {__index = Items})
     self.on_ground = collision.new_group()
     self.by_players = {}
+    self.silent = silent or false
     return self
 end
 
@@ -144,7 +146,9 @@ function Items:drop_items_of(players_: {Player}, available_spots: {Point})
 end
 
 function Items:_consume_by(player: Player, item: Item)
-    take_item_sound:play()
+    if not self.silent then
+        take_item_sound:play()
+    end
     self.on_ground:remove(item)
     if self.by_players[player.id] == nil then
         self.by_players[player.id] = {}
