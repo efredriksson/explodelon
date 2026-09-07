@@ -38,6 +38,7 @@ local type Scenery = scenery.Scenery
 local type SoftBlocks = soft_blocks.SoftBlocks
 local type Stage = choreography.Stage
 local type Trampolines = trampolines.Trampolines
+local type Vector = vectors.Vector
 
 local STABLE_STEP_SECONDS = 1 / 60
 local STABLE_MAX_CATCHUP_SECONDS = STABLE_STEP_SECONDS * 2
@@ -177,6 +178,14 @@ end
 
 function ScriptedBattle:set_player_inputs(player: Player, directions: {Direction})
     self.player_inputs[player] = directions
+end
+
+function ScriptedBattle:face(player: Player, direction: Direction)
+    player.direction = direction
+end
+
+function ScriptedBattle:slide(player: Player, velocity: Vector)
+    player.ice_velocity = velocity
 end
 
 function ScriptedBattle:_step_systems(dt: number)

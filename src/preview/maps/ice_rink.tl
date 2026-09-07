@@ -136,8 +136,8 @@ function IceRinkPreview:open(stage: Stage): {Player}
 
     -- Pre-seeded so the loop opens mid-chase.
     local victim_glide = self.victim:get_speed()
-    self.victim.ice_velocity = vectors.new(victim_glide, victim_glide)
-    self.chaser.ice_velocity = vectors.new(0, self.chaser:get_speed())
+    stage:slide(self.victim, vectors.new(victim_glide, victim_glide))
+    stage:slide(self.chaser, vectors.new(0, self.chaser:get_speed()))
 
     self.chaser_phase = "herding"
     self.victim_phase = "fleeing"
@@ -202,7 +202,7 @@ function IceRinkPreview:_choreograph_chaser()
 
     if self.chaser_phase == "resting" then
         self.stage:set_player_inputs(chaser, {})
-        self.chaser.direction = "down"
+        self.stage:face(chaser, "down")
     end
 end
 

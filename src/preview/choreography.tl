@@ -5,10 +5,13 @@ local players = require("players")
 
 local type Direction = vectors.Direction
 local type Player = players.Player
+local type Vector = vectors.Vector
 
 local type Stage = interface
     set_player_inputs: function(self, player: Player, directions: {Direction})
     place_bomb: function(self, player: Player)
+    face: function(self, player: Player, direction: Direction)
+    slide: function(self, player: Player, velocity: Vector)
 end
 
 -- open() runs once per run: spawn a fresh cast, clear phase state.
