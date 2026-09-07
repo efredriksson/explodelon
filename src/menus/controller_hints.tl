@@ -5,6 +5,7 @@ local vectors = require("engine.geometry.vectors")
 local images = require("engine.images")
 local joysticks = require("engine.joysticks")
 local fonts = require("fonts")
+local painting = require("menus.painting")
 local screen = require("screen")
 
 local type Color = images.Color
@@ -12,16 +13,21 @@ local type MenuFont = fonts.MenuFont
 local type Point = points.Point
 local type Rectangle = rectangles.Rectangle
 
-local BACKDROP_TINT: Color = {0, 0, 0}
 local BACKDROP_ALPHA = 130
 local BACKDROP_PADDING = 6
 local SCREEN_CENTER_X = screen.WIDTH / 2
 
-local WHITE: Color = {255, 255, 255}
-local AMBER: Color = {245, 197, 66}
-local CYAN: Color = {89, 199, 232}
-local PURPLE: Color = {186, 120, 224}
-local RED: Color = {226, 71, 58}
+local BACKDROP_TINT = painting.BLACK
+local WHITE = painting.WHITE
+local AMBER = painting.AMBER
+local CYAN = painting.CYAN
+local PURPLE = painting.PURPLE
+local RED = painting.RED
+
+local set_color = painting.set_color
+local fill_rect = painting.fill_rect
+local draw_hline = painting.draw_hline
+local draw_vline = painting.draw_vline
 
 local interface PlayerInfo
     has_cursor: function(self, player_id: integer): boolean
@@ -130,25 +136,6 @@ function controller_hints.new(player_info: PlayerInfo): ControllerHints
     self.hint_cooldown_time_left = 0
     self.hint_backdrop = hint_backdrop_bounds()
     return self
-end
-
-local function set_color(tint: Color, alpha?: number)
-    lutro.graphics.setColor(tint[1], tint[2], tint[3], alpha or 255)
-end
-
-local function fill_rect(
-    x: number, y: number, width: number, height: number, tint: Color, alpha?: number
-)
-    set_color(tint, alpha)
-    lutro.graphics.rectangle("fill", x, y, width, height)
-end
-
-local function draw_hline(x0: number, x1: number, y: number, tint: Color)
-    fill_rect(math.min(x0, x1), y, math.abs(x1 - x0) + 1, 1, tint)
-end
-
-local function draw_vline(x: number, y0: number, y1: number, tint: Color)
-    fill_rect(x, math.min(y0, y1), 1, math.abs(y1 - y0) + 1, tint)
 end
 
 local function draw_dot(x: number, y: number, tint: Color)
