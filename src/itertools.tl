@@ -79,6 +79,17 @@ function itertools.combine<T>(...: {T}): {T}
     return combined_list
 end
 
+-- Written as a `<total>` map so the type checker demands every enum member.
+function itertools.in_position_order<T>(positions: {T: integer}): {T}
+    local ordered: {T} = {}
+
+    for value, position in pairs(positions) do
+        ordered[position] = value
+    end
+
+    return ordered
+end
+
 function itertools.find<T>(value: T, list: {T}): integer
     for index, elem in ipairs(list) do
         if elem == value then
