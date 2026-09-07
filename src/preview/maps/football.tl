@@ -8,6 +8,7 @@ local drones = require("preview.drones")
 local scenery = require("preview.scenery")
 
 local type Choreography = choreography.Choreography
+local type KickCycle = drones.KickCycle
 local type Pacer = drones.Pacer
 local type Player = players.Player
 local type Scenery = scenery.Scenery
@@ -24,8 +25,6 @@ local VICTIM_START = grid.get_tile_position(2, 6)
 
 local KICKER_BOMBS = 1
 local KICKER_FIRE_RANGE = 1
-local STEP_OFF_DISTANCE = 20
-local RETURN_MARGIN = 1.75
 local ROW_4_CLEARANCE = 28
 
 local PACE_RANGE = 200
@@ -60,20 +59,12 @@ local ITEMS = {
     item_at(8, 5, "kick"),
 }
 
-local type KickerPhase = enum
-    "placing"
-    "stepping_off"
-    "returning"
-    "clearing"
-    "resting"
-end
-
 local record FootballPreview is Choreography
     stage: Stage
     kicker: Player
     victim: Player
     victim_pacer: Pacer
-    kicker_phase: KickerPhase
+    kick_cycle: KickCycle
 end
 
 local football = {}
@@ -92,52 +83,15 @@ function FootballPreview:open(stage: Stage): {Player}
     self.stage = stage
     self.kicker = drones.kicker(KICKER_START, KICKER_BOMBS, KICKER_FIRE_RANGE)
     self.victim = drones.victim(VICTIM_START)
-    self.kicker_phase = "placing"
+    self.kick_cycle = drones.KickCycle.new(
+        self.kicker, KICKER_BOMBS, "up", ROW_4_CLEARANCE
+    )
     self.victim_pacer = drones.Pacer.new(self.victim, PACE_RANGE, "right")
     return {self.kicker, self.victim}
 end
 
-function FootballPreview:_choreograph_kicker()
-    local kicker = self.kicker
-
-    if self.kicker_phase == "placing" then
-        self.stage:place_bomb(kicker)
-        self.stage:set_player_inputs(kicker, {})
-        self.kicker_phase = "stepping_off"
-        return
-    end
-
-    if self.kicker_phase == "stepping_off" then
-        self.stage:set_player_inputs(kicker, {"right"})
-        if kicker.position:distance_to(KICKER_START) >= STEP_OFF_DISTANCE then
-            self.kicker_phase = "returning"
-        end
-        return
-    end
-
-    if self.kicker_phase == "returning" then
-        self.stage:set_player_inputs(kicker, {"left"})
-        if kicker.position:distance_to(KICKER_START) <= RETURN_MARGIN then
-            self.kicker_phase = "clearing"
-        end
-        return
-    end
-
-    if self.kicker_phase == "clearing" then
-        self.stage:set_player_inputs(kicker, {"up"})
-        if kicker.position:distance_to(KICKER_START) >= ROW_4_CLEARANCE then
-            self.kicker_phase = "resting"
-        end
-        return
-    end
-
-    if self.kicker_phase == "resting" then
-        self.stage:set_player_inputs(kicker, {})
-    end
-end
-
-function FootballPreview:step(_dt: number)
-    self:_choreograph_kicker()
+function FootballPreview:step(dt: number)
+    self.kick_cycle:steer(self.stage, dt)
     self.victim_pacer:steer(self.stage)
 end
 

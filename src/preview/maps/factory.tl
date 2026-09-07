@@ -8,6 +8,7 @@ local drones = require("preview.drones")
 local scenery = require("preview.scenery")
 
 local type Choreography = choreography.Choreography
+local type KickCycle = drones.KickCycle
 local type Pacer = drones.Pacer
 local type Player = players.Player
 local type Scenery = scenery.Scenery
@@ -24,8 +25,6 @@ local VICTIM_START = grid.get_tile_position(8, 5)
 local KICKER_BOMBS = 4
 -- Wide enough that ring-edge blasts reach the centre.
 local KICKER_FIRE_RANGE = 4
-local STEP_OFF_DISTANCE = 20
-local RETURN_MARGIN = 1.75
 local REST_DURATION = 0.15
 local CHAIN_REACTION_CLEARANCE = 32
 
@@ -61,22 +60,12 @@ local ITEMS = {
     item_at(14, 3, "kick"),
 }
 
-local type KickerPhase = enum
-    "placing"
-    "stepping_off"
-    "returning"
-    "retreating"
-    "resting"
-end
-
 local record FactoryPreview is Choreography
     stage: Stage
     kicker: Player
     victim: Player
     victim_pacer: Pacer
-    kicker_phase: KickerPhase
-    kicker_rest_for: number
-    bombs_placed: integer
+    kick_cycle: KickCycle
 end
 
 local factory = {}
@@ -95,65 +84,16 @@ function FactoryPreview:open(stage: Stage): {Player}
     self.stage = stage
     self.kicker = drones.kicker(KICKER_START, KICKER_BOMBS, KICKER_FIRE_RANGE)
     self.victim = drones.victim(VICTIM_START)
-    self.kicker_phase = "placing"
+    self.kick_cycle = drones.KickCycle.new(
+        self.kicker, KICKER_BOMBS, "right", CHAIN_REACTION_CLEARANCE, REST_DURATION
+    )
     -- Pillars flank the ring centre, so the victim paces vertically.
     self.victim_pacer = drones.Pacer.new(self.victim, PACE_RANGE, "down")
-    self.kicker_rest_for = 0
-    self.bombs_placed = 0
     return {self.kicker, self.victim}
 end
 
-function FactoryPreview:_choreograph_kicker(dt: number)
-    local kicker = self.kicker
-
-    if self.kicker_phase == "placing" then
-        self.stage:place_bomb(kicker)
-        self.bombs_placed = self.bombs_placed + 1
-        self.stage:set_player_inputs(kicker, {})
-        self.kicker_phase = "stepping_off"
-        return
-    end
-
-    if self.kicker_phase == "stepping_off" then
-        self.stage:set_player_inputs(kicker, {"right"})
-        if kicker.position:distance_to(KICKER_START) >= STEP_OFF_DISTANCE then
-            self.kicker_phase = "returning"
-        end
-        return
-    end
-
-    if self.kicker_phase == "returning" then
-        self.stage:set_player_inputs(kicker, {"left"})
-        if kicker.position:distance_to(KICKER_START) <= RETURN_MARGIN then
-            if self.bombs_placed >= KICKER_BOMBS then
-                self.kicker_phase = "retreating"
-            else
-                self.kicker_phase = "resting"
-                self.kicker_rest_for = REST_DURATION
-            end
-        end
-        return
-    end
-
-    if self.kicker_phase == "retreating" then
-        self.stage:set_player_inputs(kicker, {"right"})
-        if kicker.position:distance_to(KICKER_START) >= CHAIN_REACTION_CLEARANCE then
-            self.kicker_phase = "resting"
-        end
-        return
-    end
-
-    if self.kicker_phase == "resting" then
-        self.stage:set_player_inputs(kicker, {})
-        self.kicker_rest_for = self.kicker_rest_for - dt
-        if self.kicker_rest_for <= 0 and self.bombs_placed < KICKER_BOMBS then
-            self.kicker_phase = "placing"
-        end
-    end
-end
-
 function FactoryPreview:step(dt: number)
-    self:_choreograph_kicker(dt)
+    self.kick_cycle:steer(self.stage, dt)
     self.victim_pacer:steer(self.stage)
 end
 
