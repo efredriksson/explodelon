@@ -41,35 +41,35 @@ function debug_screen.new(previous_screen: Scene): MenuScreen
             ),
             choices.new_boolean(
                 "draw hitboxes",
-                120,
+                110,
                 engine_settings.draw_hitboxes,
                 engine_settings.set_draw_hitboxs
             ),
             choices.new_boolean(
                 "log slow game loop",
-                135,
+                125,
                 engine_settings.log_scene_perf,
                 engine_settings.set_log_scene_perf
             ),
             choices.new_boolean(
                 "log memory usage",
-                150,
+                140,
                 engine_settings.log_mem_usage,
                 engine_settings.set_log_mem_usage
             ),
             choices.new_boolean(
                 "auto-select characters",
-                165,
+                155,
                 settings.auto_select_characters,
                 settings.set_auto_select_characters
             ),
             choices.new_integer(
                 "nbr. to auto-select",
-                180,
+                170,
                 nbr_auto_selected_characters,
                 settings.set_number_of_auto_selected_characters
             ),
-            choices.new_done("back", 210, done),
+            choices.new_done("back", 195, done),
         },
         done
     )
