@@ -44,6 +44,23 @@ local record ExplosionAnimations
     center: Animation
 end
 
+function ExplosionAnimations.new(): ExplosionAnimations
+    local self: ExplosionAnimations = setmetatable({}, {__index = ExplosionAnimations})
+    local width = grid.TILE_SIZE
+    self.right_end = animations.new(explosion_end_right_image, width, FRAME_DURATION)
+    self.left_end = animations.new(explosion_end_left_image, width, FRAME_DURATION)
+    self.top_end = animations.new(explosion_end_top_image, width, FRAME_DURATION)
+    self.bottom_end = animations.new(explosion_end_bottom_image, width, FRAME_DURATION)
+    self.middle_horizontal = animations.new(
+        explosion_horizontal_image, width, FRAME_DURATION
+    )
+    self.middle_vertical = animations.new(
+        explosion_vertical_image, width, FRAME_DURATION
+    )
+    self.center = animations.new(explosion_center_image, width, FRAME_DURATION)
+    return self
+end
+
 local enum ExplosionTileType
     "center"
     "right"
@@ -106,17 +123,7 @@ function Explosion.new(position: Point, range: number, delay?: number): Explosio
     self.duration = 0
     self.delay = delay or 0
     self.speed = 28
-    self.animations = {
-        right_end = animations.new(explosion_end_right_image, 16, FRAME_DURATION),
-        left_end = animations.new(explosion_end_left_image, 16, FRAME_DURATION),
-        top_end = animations.new(explosion_end_top_image, 16, FRAME_DURATION),
-        bottom_end = animations.new(explosion_end_bottom_image, 16, FRAME_DURATION),
-        middle_horizontal = animations.new(
-            explosion_horizontal_image, 16, FRAME_DURATION
-        ),
-        middle_vertical = animations.new(explosion_vertical_image, 16, FRAME_DURATION),
-        center = animations.new(explosion_center_image, 16, FRAME_DURATION),
-    }
+    self.animations = ExplosionAnimations.new()
 
     return self
 end
