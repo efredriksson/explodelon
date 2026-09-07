@@ -159,6 +159,13 @@ local type RulesetName = enum
     "dino_madness"
 end
 
+local type DebugRulesetName = enum
+    "kick"
+    "lightning_bomb"
+    "performance"
+    "dinos"
+end
+
 local record Settings
     MINIMUM_PLAYERS: integer
     number_of_auto_selected_characters: integer
@@ -172,6 +179,7 @@ local record Settings
     DinoColor: DinoColor
     Map: Map
     RulesetName: RulesetName
+    DebugRulesetName: DebugRulesetName
 end
 
 function Settings.new(): Settings
@@ -188,6 +196,7 @@ function Settings.new(): Settings
     self.DinoColor = DinoColor
     self.Map = Map
     self.RulesetName = RulesetName
+    self.DebugRulesetName = DebugRulesetName
     return self
 end
 
@@ -343,28 +352,6 @@ local function set_game_rules_default()
     settings.game_rules = GameRules.new()
 end
 
-function Settings.set_game_rules_kick_debug()
-    settings.game_rules = GameRules.new()
-    settings.game_rules.players.start_with_kick = true
-    settings.game_rules.players.start_with_bombs = 10
-    settings.game_rules.items.nbr_soft_blocks = 0
-end
-
-function Settings.set_game_rules_lightning_bomb_debug()
-    settings.game_rules = GameRules.new()
-    settings.game_rules.players.start_with_kick = true
-    settings.game_rules.players.start_with_lightning_bombs = 1
-    settings.game_rules.timings.sudden_death = 150
-    settings.game_rules.items.nbr_soft_blocks = 5
-    settings.game_rules.items.spawn_rates.lightning_bomb = 0.1
-    settings.game_rules.items.nbr_of_items.lightning_bomb = 3
-    settings.game_rules.items.nbr_of_items.bomb = 2
-    settings.game_rules.items.nbr_of_items.fire = 0
-    settings.game_rules.items.nbr_of_items.kick = 0
-    settings.game_rules.items.nbr_of_items.speed = 0
-    settings.game_rules.dinos.nbr_of_eggs = 0
-end
-
 local function set_game_rules_insanity()
     settings.game_rules = GameRules.new()
     settings.game_rules.items.nbr_soft_blocks = 30
@@ -421,7 +408,29 @@ function Settings.set_ruleset(name: RulesetName)
     settings.ruleset = name
 end
 
-function Settings.set_debug_performance()
+local function set_debug_kick()
+    settings.game_rules = GameRules.new()
+    settings.game_rules.players.start_with_kick = true
+    settings.game_rules.players.start_with_bombs = 10
+    settings.game_rules.items.nbr_soft_blocks = 0
+end
+
+local function set_debug_lightning_bomb()
+    settings.game_rules = GameRules.new()
+    settings.game_rules.players.start_with_kick = true
+    settings.game_rules.players.start_with_lightning_bombs = 1
+    settings.game_rules.timings.sudden_death = 150
+    settings.game_rules.items.nbr_soft_blocks = 5
+    settings.game_rules.items.spawn_rates.lightning_bomb = 0.1
+    settings.game_rules.items.nbr_of_items.lightning_bomb = 3
+    settings.game_rules.items.nbr_of_items.bomb = 2
+    settings.game_rules.items.nbr_of_items.fire = 0
+    settings.game_rules.items.nbr_of_items.kick = 0
+    settings.game_rules.items.nbr_of_items.speed = 0
+    settings.game_rules.dinos.nbr_of_eggs = 0
+end
+
+local function set_debug_performance()
     settings.game_rules = GameRules.new()
     settings.game_rules.players.start_with_kick = true
     settings.game_rules.players.start_with_bombs = 10
@@ -429,7 +438,7 @@ function Settings.set_debug_performance()
     engine_settings.set_log_scene_perf(true)
 end
 
-function Settings.set_debug_dinos()
+local function set_debug_dinos()
     settings.game_rules = GameRules.new()
     settings.game_rules.items.nbr_of_items.fire = 0
     settings.game_rules.items.nbr_of_items.kick = 0
@@ -442,6 +451,19 @@ function Settings.set_debug_dinos()
     settings.game_rules.dinos.enabled.purple = true
     settings.game_rules.dinos.enabled.green = false
     settings.game_rules.dinos.enabled.yellow = false
+end
+
+local DEBUG_RULESET_LOADERS <total>: {DebugRulesetName: function()} = {
+    kick = set_debug_kick,
+    lightning_bomb = set_debug_lightning_bomb,
+    performance = set_debug_performance,
+    dinos = set_debug_dinos,
+}
+
+function Settings.set_debug_ruleset(name: DebugRulesetName)
+    Settings.set_ruleset("default")
+    DEBUG_RULESET_LOADERS[name]()
+    settings.auto_select_characters = true
 end
 
 return settings
