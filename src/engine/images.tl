@@ -98,24 +98,27 @@ local function stamp_block(
     end
 end
 
-function images.new_magnified_glyph_sheet(image: Image, factor: number): Image
-    local source = image:getData()
-    local width = image:getWidth()
-    local height = image:getHeight()
-    local column_widths = scaled_column_widths(source, width, factor)
-
+--- Per-column widths so a glyph sheet's 1px separators are not scaled up.
+local function magnify_by_columns(
+    source: ImageData,
+    origin_x: number,
+    origin_y: number,
+    height: number,
+    column_widths: {number},
+    factor: number
+): Image
     local scaled = new_blank_image(sum(column_widths), height * factor)
     local target = scaled:getData()
 
     local target_x: number = 0
     for column, column_width in ipairs(column_widths) do
-        local x = column - 1
-        for y = 0, height - 1 do
-            local red, green, blue, alpha = source:getPixel(x, y)
+        local source_x = origin_x + column - 1
+        for row = 0, height - 1 do
+            local red, green, blue, alpha = source:getPixel(source_x, origin_y + row)
             stamp_block(
                 target,
                 target_x,
-                y * factor,
+                row * factor,
                 column_width,
                 factor,
                 red,
@@ -128,6 +131,24 @@ function images.new_magnified_glyph_sheet(image: Image, factor: number): Image
     end
 
     return scaled
+end
+
+function images.new_magnified_glyph_sheet(image: Image, factor: number): Image
+    local source = image:getData()
+    local column_widths = scaled_column_widths(source, image:getWidth(), factor)
+    return magnify_by_columns(source, 0, 0, image:getHeight(), column_widths, factor)
+end
+
+--- Drawn at 1x; a scaled quad in lutro.graphics.draw bleeds past the crop to
+--- the next strip frame or the texture edge.
+function images.new_magnified_region(
+    sheet: Image, x: number, y: number, width: number, height: number, factor: number
+): Image
+    local column_widths: {number} = {}
+    for _ = 1, width do
+        table.insert(column_widths, factor)
+    end
+    return magnify_by_columns(sheet:getData(), x, y, height, column_widths, factor)
 end
 
 --- Mirrors the image left-to-right in place, so one asset can face both ways.

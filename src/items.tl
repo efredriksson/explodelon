@@ -18,6 +18,9 @@ local type Point = points.Point
 local type Rectangle = rectangles.Rectangle
 local type ItemType = settings.ItemType
 
+local FRAME_WIDTH = 18
+local FRAME_DURATION = 1 / 30
+
 local take_item_sound: Source
 local frame_animation: Animation
 local item_shadow: Image
@@ -177,11 +180,20 @@ function Items:possible_pickup_by(player: Player)
     end
 end
 
+function items.get_icon(item_type: ItemType): Image
+    return item_icons[item_type]
+end
+
+-- For menus that hold the frame still instead of cycling it.
+function items.get_frame_image(): Image
+    return frame_animation.image
+end
+
 function items.load_assets()
     take_item_sound = audio.new_source_pool("assets/take_item.wav", "static", 5)
     take_item_sound:setVolume(0.75)
     frame_animation = animations.new(
-        lutro.graphics.newImage("assets/items/frame.png"), 18, 1 / 30
+        lutro.graphics.newImage("assets/items/frame.png"), FRAME_WIDTH, FRAME_DURATION
     )
     item_shadow = lutro.graphics.newImage("assets/items/shadow.png")
     item_icons = {

@@ -1,21 +1,31 @@
--- Picks the ruleset between map select and player select.
+-- Pick a ruleset and see what its counts do, at double size.
 
+local dino_animations = require("dino_animations")
+local eggs = require("eggs")
 local points = require("engine.geometry.points")
+local rectangles = require("engine.geometry.rectangles")
+local images = require("engine.images")
 local joysticks = require("engine.joysticks")
 local scenes = require("engine.scenes")
 local fonts = require("fonts")
+local items = require("items")
 local itertools = require("itertools")
 local background = require("level_graphics.background")
+local soft_block_animations = require("level_graphics.soft_block_animations")
 local arrows = require("menus.arrows")
 local game_rule_screen = require("menus.game_rule_screen")
-local items = require("menus.items")
+local menu_items = require("menus.items")
 local painting = require("menus.painting")
 local player_selection = require("player_selection")
 local screen = require("screen")
 local settings = require("settings")
 
+local type DinoColor = settings.DinoColor
+local type ItemType = settings.ItemType
+local type Map = settings.Map
 local type MenuFont = fonts.MenuFont
-local type MenuSelection = items.MenuSelection
+local type MenuSelection = menu_items.MenuSelection
+local type Rectangle = rectangles.Rectangle
 local type RulesetName = settings.RulesetName
 local type Scene = scenes.Scene
 
@@ -27,6 +37,23 @@ local RULESET_ORDER <total>: {RulesetName: integer} = {
 }
 
 local RULESETS = itertools.in_position_order(RULESET_ORDER)
+
+local ITEM_ORDER: {ItemType} = {"bomb", "fire", "speed", "kick", "lightning_bomb"}
+local DINO_ORDER: {DinoColor} = {"blue", "pink", "green", "yellow", "purple"}
+
+-- Padding cropped away, so materiel is as big as its subject, not its canvas.
+local SOFT_BLOCK_CROP = rectangles.new(0, 0, 16, 16)
+local EGG_CROP = rectangles.new(1, 2, 18, 22)
+local DINO_CROP = rectangles.new(9, 14, 16, 18)
+
+-- Short of the tile's bottom border, which reads as a stray line under a
+-- floating pickup.
+local PICKUP_CROP = rectangles.new(0, 0, 18, 17)
+
+local MATERIEL_SCALE = 2
+
+local MENU_DINO_LEVEL = 1
+local DISABLED_ALPHA = 64
 
 -- Keeps text legible over the map behind.
 local WASH_ALPHA = 160
@@ -43,9 +70,197 @@ local ACCENT_RULE_Y = 172
 local HINTS = "press start for more options"
 local HINTS_POSITION = points.new(0, 186)
 
-local name_font: MenuFont
+local big_font: MenuFont
+local big_gray_font: MenuFont
 local hint_font: MenuFont
+local gray_font: MenuFont
 local ok_sound: Source
+local frame_sprite: Image
+local egg_sprite: Image
+local item_sprites: {ItemType: Image} = {}
+local bright_dino_sprites: {DinoColor: Image} = {}
+local faded_dino_sprites: {DinoColor: Image} = {}
+local soft_block_sprites: {Map: Image} = {}
+
+local type MaterielKind = enum
+    "soft_block"
+    "item"
+    "egg"
+    "dino"
+end
+
+local record Materiel
+    kind: MaterielKind
+    item: ItemType
+    color: DinoColor
+end
+
+function Materiel.new(kind: MaterielKind, item?: ItemType, color?: DinoColor): Materiel
+    local self: Materiel = setmetatable({}, {__index = Materiel})
+    self.kind = kind
+    self.item = item
+    self.color = color
+    return self
+end
+
+local function item_materiel(item: ItemType): Materiel
+    return Materiel.new("item", item, nil)
+end
+
+local function dino_materiel(color: DinoColor): Materiel
+    return Materiel.new("dino", nil, color)
+end
+
+local ROW_X = 10
+local SLOT_WIDTH = 50
+local COUNT_DROP = 2
+
+-- Beside the count, one slot's digits would run into the next slot's.
+local PERCENT_DROP = 14
+
+local record Row
+    materiel: {Materiel}
+    baseline: number
+end
+
+function Row.new(materiel: {Materiel}, baseline: number): Row
+    local self: Row = setmetatable({}, {__index = Row})
+    self.materiel = materiel
+    self.baseline = baseline
+    return self
+end
+
+function Row:count_y(): number
+    return self.baseline + COUNT_DROP
+end
+
+function Row:slot_x(position: integer): number
+    return ROW_X + (position - 1) * SLOT_WIDTH
+end
+
+local MATERIEL_ROWS: {Row} = {
+    Row.new(
+        itertools.combine(
+            {Materiel.new("soft_block")}, itertools.map(ITEM_ORDER, item_materiel)
+        ),
+        36
+    ),
+    Row.new(
+        itertools.combine(
+            {Materiel.new("egg")}, itertools.map(DINO_ORDER, dino_materiel)
+        ),
+        107
+    ),
+}
+
+local function dino_sprite_for(color: DinoColor): Image
+    if settings.game_rules.dinos.enabled[color] then
+        return bright_dino_sprites[color]
+    end
+    return faded_dino_sprites[color]
+end
+
+local function materiel_count(materiel: Materiel): integer
+    if materiel.kind == "soft_block" then
+        return settings.game_rules.items.nbr_soft_blocks
+    elseif materiel.kind == "item" then
+        return settings.game_rules.items.nbr_of_items[materiel.item]
+    elseif materiel.kind == "egg" then
+        return settings.game_rules.dinos.nbr_of_eggs
+    end
+    return 0
+end
+
+local function font_for_count(count: integer): MenuFont
+    if count > 0 then
+        return big_font
+    end
+    return big_gray_font
+end
+
+-- What a blown-open soft block also drops mid-battle.
+local function drop_rate(materiel: Materiel): number
+    if materiel.kind ~= "item" then
+        return 0
+    end
+    return settings.game_rules.items.spawn_rates[materiel.item]
+end
+
+local function draw_drop_percent(materiel: Materiel, slot_x: number, count_y: number)
+    local rate = drop_rate(materiel)
+    if rate <= 0 then
+        return
+    end
+
+    gray_font:print_centered(
+        string.format("%d%%", math.floor(rate * 100 + 0.5)),
+        SLOT_WIDTH,
+        points.new(slot_x, count_y + PERCENT_DROP)
+    )
+end
+
+local function magnified_region(sheet: Image, crop: Rectangle): Image
+    return images.new_magnified_region(
+        sheet, crop.x, crop.y, crop.width, crop.height, MATERIEL_SCALE
+    )
+end
+
+-- Map-dependent, and the map is not known until entry.
+local function ensure_soft_block_sprite()
+    if soft_block_sprites[settings.map] then
+        return
+    end
+    soft_block_sprites[settings.map] = magnified_region(
+        soft_block_animations.get_rigid().image, SOFT_BLOCK_CROP
+    )
+end
+
+local function draw_sprite(sprite: Image, center_x: number, baseline: number)
+    lutro.graphics.draw(
+        sprite, center_x - sprite:getWidth() / 2, baseline - sprite:getHeight()
+    )
+end
+
+-- One frame colour rather than cycling, and no floor shadow: no floor here to
+-- fall on.
+local function draw_pickup(item: ItemType, center_x: number, baseline: number)
+    draw_sprite(frame_sprite, center_x, baseline)
+    draw_sprite(item_sprites[item], center_x, baseline)
+end
+
+local function draw_materiel(materiel: Materiel, center_x: number, baseline: number)
+    if materiel.kind == "item" then
+        draw_pickup(materiel.item, center_x, baseline)
+    elseif materiel.kind == "soft_block" then
+        draw_sprite(soft_block_sprites[settings.map], center_x, baseline)
+    elseif materiel.kind == "egg" then
+        draw_sprite(egg_sprite, center_x, baseline)
+    else
+        draw_sprite(dino_sprite_for(materiel.color), center_x, baseline)
+    end
+end
+
+-- A dino is in or out of the ruleset, and the faded sprite already says so.
+local function draw_count(materiel: Materiel, slot_x: number, count_y: number)
+    if materiel.kind == "dino" then
+        return
+    end
+
+    local count = materiel_count(materiel)
+    font_for_count(count):print_centered(
+        tostring(count), SLOT_WIDTH, points.new(slot_x, count_y)
+    )
+    draw_drop_percent(materiel, slot_x, count_y)
+end
+
+local function draw_row(row: Row)
+    local count_y = row:count_y()
+    for position, materiel in ipairs(row.materiel) do
+        local slot_x = row:slot_x(position)
+        draw_materiel(materiel, slot_x + SLOT_WIDTH / 2, row.baseline)
+        draw_count(materiel, slot_x, count_y)
+    end
+end
 
 local record OptionsSelection is Scene
     previous_screen: Scene
@@ -57,18 +272,41 @@ local options_selection = {}
 function options_selection.new(previous_screen: Scene): OptionsSelection
     local self: OptionsSelection = setmetatable({}, {__index = OptionsSelection})
     self.previous_screen = previous_screen
-    self.selection = items.new_enum(RULESETS)
+    self.selection = menu_items.new_enum(RULESETS)
     return self
 end
 
+local function new_faded_dino_image(color: DinoColor): Image
+    local image = dino_animations.new_image(MENU_DINO_LEVEL, "idle", "down", color)
+    images.set_alpha(image, DISABLED_ALPHA)
+    return image
+end
+
 function options_selection.load_assets()
-    name_font = fonts.new_menu_white_outlined_big()
+    big_font = fonts.new_menu_white_outlined_big()
+    big_gray_font = fonts.new_menu_gray_outlined_big()
     hint_font = fonts.new_menu_white_outlined()
-    ok_sound = items.ok_sound()
+    gray_font = fonts.new_menu_gray_outlined()
+    ok_sound = menu_items.ok_sound()
+
+    frame_sprite = magnified_region(items.get_frame_image(), PICKUP_CROP)
+    egg_sprite = magnified_region(eggs.get_shake_image(), EGG_CROP)
+    for _, item in ipairs(ITEM_ORDER) do
+        item_sprites[item] = magnified_region(items.get_icon(item), PICKUP_CROP)
+    end
+    for _, color in ipairs(DINO_ORDER) do
+        bright_dino_sprites[color] = magnified_region(
+            dino_animations.get_image(MENU_DINO_LEVEL, "idle", "down", color), DINO_CROP
+        )
+        faded_dino_sprites[color] = magnified_region(
+            new_faded_dino_image(color), DINO_CROP
+        )
+    end
 end
 
 function OptionsSelection:load()
     self.selection.value = itertools.find(settings.ruleset, RULESETS)
+    ensure_soft_block_sprite()
 end
 
 function OptionsSelection:update(_dt: number)
@@ -112,6 +350,12 @@ function OptionsSelection:_draw_washed_map()
     reset_draw_color()
 end
 
+function OptionsSelection:_draw_readout()
+    for _, row in ipairs(MATERIEL_ROWS) do
+        draw_row(row)
+    end
+end
+
 function OptionsSelection:_draw_arrows()
     if not self.selection:at_min() then
         lutro.graphics.draw(arrows.left(), 0, ARROW_Y)
@@ -124,9 +368,7 @@ function OptionsSelection:_draw_arrows()
 end
 
 function OptionsSelection:_draw_flank()
-    name_font:print_centered(
-        self.selection:as_menu_string(), FLANK_WIDTH, NAME_POSITION
-    )
+    big_font:print_centered(self.selection:as_menu_string(), FLANK_WIDTH, NAME_POSITION)
     hint_font:print_centered(HINTS, FLANK_WIDTH, HINTS_POSITION)
 end
 
@@ -141,6 +383,7 @@ end
 
 function OptionsSelection:draw()
     self:_draw_washed_map()
+    self:_draw_readout()
     self:_draw_arrows()
     self:_draw_flank()
     self:_draw_accent_rule()

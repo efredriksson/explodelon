@@ -241,6 +241,19 @@ function dino_animations.load_assets()
     dino_images = get_dino_images()
 end
 
+function dino_animations.get_image(
+    level: integer, action: DinoAction, direction: Direction, color: DinoColor
+): Image
+    return dino_images[color][direction][action][level]
+end
+
+-- A private copy, for callers that fade it without touching the battle's sprites.
+function dino_animations.new_image(
+    level: integer, action: DinoAction, direction: Direction, color: DinoColor
+): Image
+    return dino_iamge(level, action, direction, color)
+end
+
 function dino_animations.new(): AnimatedDinos
     local self: AnimatedDinos = setmetatable({}, {__index = AnimatedDinos})
     self.mount_entity_by_dino = {}
