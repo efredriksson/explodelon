@@ -65,38 +65,56 @@ local WHITE_INK: Color = {255, 255, 255}
 local BLACK_INK: Color = {0, 0, 0}
 local GRAY_INK: Color = {192, 192, 192}
 
+local NORMAL_SCALE = 1
+local BIG_SCALE = 2
+
+-- Bodies are inked edge to edge, so this pixel is all the tracking there is.
+local GLYPH_SPACING = 1
+
 local function new_ink_sheet(ink_color: Color): Image
     local sheet = lutro.graphics.newImage(GLYPH_SHEET)
     images.change_colors(sheet, {[WHITE_INK] = ink_color})
     return sheet
 end
 
-local function new_font(ink_color: Color): Font
-    return lutro.graphics.newImageFont(new_ink_sheet(ink_color), FONT_SYMBOLS)
+local function new_glyph_sheet(ink_color: Color, scale: integer): Image
+    local sheet = new_ink_sheet(ink_color)
+    if scale == NORMAL_SCALE then
+        return sheet
+    end
+    return images.new_magnified_glyph_sheet(sheet, scale)
+end
+
+local function new_font(ink_color: Color, scale: integer): Font
+    return lutro.graphics.newImageFont(
+        new_glyph_sheet(ink_color, scale), FONT_SYMBOLS, GLYPH_SPACING * scale
+    )
 end
 
 -- A Font never changes once built, so screens sharing an ink share the font.
 local built_fonts: {string: Font} = {}
 
-local function font_key(ink_color: Color): string
+local function font_key(ink_color: Color, scale: integer): string
     return string.format(
-        "%d-%d-%d",
+        "%d-%d-%d@%d",
         math.floor(ink_color[1]),
         math.floor(ink_color[2]),
-        math.floor(ink_color[3])
+        math.floor(ink_color[3]),
+        scale
     )
 end
 
-local function get_font(ink_color: Color): Font
-    local key = font_key(ink_color)
+local function get_font(ink_color: Color, scale?: integer): Font
+    local font_scale = scale or NORMAL_SCALE
+    local key = font_key(ink_color, font_scale)
     if not built_fonts[key] then
-        built_fonts[key] = new_font(ink_color)
+        built_fonts[key] = new_font(ink_color, font_scale)
     end
     return built_fonts[key]
 end
 
-local function new_outlined(ink_color: Color): MenuFont
-    return MenuFont.new(get_font(ink_color), get_font(BLACK_INK))
+local function new_outlined(ink_color: Color, scale?: integer): MenuFont
+    return MenuFont.new(get_font(ink_color, scale), get_font(BLACK_INK, scale))
 end
 
 function fonts.new_menu_white(): MenuFont
@@ -109,6 +127,10 @@ end
 
 function fonts.new_menu_white_outlined(): MenuFont
     return new_outlined(WHITE_INK)
+end
+
+function fonts.new_menu_white_outlined_big(): MenuFont
+    return new_outlined(WHITE_INK, BIG_SCALE)
 end
 
 function fonts.new_menu_gray_outlined(): MenuFont
