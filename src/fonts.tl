@@ -57,7 +57,7 @@ function MenuFont.new(main: Font, outline: Font): MenuFont
     return self
 end
 
-local FONT_SYMBOLS = " abcdefghijklmnopqrstuvwxyz0123456789.!'-:*"
+local FONT_SYMBOLS = " abcdefghijklmnopqrstuvwxyz0123456789.!'-:*%"
 
 local GLYPH_SHEET = "assets/imgfont/white.png"
 
@@ -135,6 +135,10 @@ end
 
 function fonts.new_menu_gray_outlined(): MenuFont
     return new_outlined(GRAY_INK)
+end
+
+function fonts.new_menu_gray_outlined_big(): MenuFont
+    return new_outlined(GRAY_INK, BIG_SCALE)
 end
 
 function fonts.new_menu_colored_outlined(ink_color: Color): MenuFont

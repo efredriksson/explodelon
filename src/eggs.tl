@@ -125,6 +125,10 @@ function Eggs:possible_hatcher(player: Player): Dino
     return nil
 end
 
+function eggs.get_shake_image(): Image
+    return egg_shake_image
+end
+
 function eggs.load_assets()
     egg_shake_image = lutro.graphics.newImage("assets/tirras/egg.png")
     egg_open_image = lutro.graphics.newImage("assets/tirras/egg_open.png")

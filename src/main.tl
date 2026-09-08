@@ -28,10 +28,11 @@ function lutro.load()
     screens.load_assets()
     arrows.load_assets()
     map_selection.load_assets()
-    options_selection.load_assets()
     player_selection.load_assets()
     team_selection.load_assets()
     battle.load_assets()
+    -- Leans on eggs and dinos being warm, which battle loading brings in.
+    options_selection.load_assets()
     update_screen.load_assets()
     local load_time = lutro.timer.getTime() - load_start
     logger.info("Loading assets at start took " .. load_time .. "s")
