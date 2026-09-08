@@ -1,10 +1,10 @@
 local points = require("engine.geometry.points")
-local images = require("engine.images")
 local joysticks = require("engine.joysticks")
 local scenes = require("engine.scenes")
 local fonts = require("fonts")
 local itertools = require("itertools")
 local level_graphics = require("level_graphics.maps.init")
+local arrows = require("menus.arrows")
 local items = require("menus.items")
 local player_selection = require("player_selection")
 local preview_maps = require("preview.maps.init")
@@ -38,10 +38,6 @@ local NAME_POSITION = points.new(0, 7)
 
 local font: MenuFont
 local ok_sound: Source
-local arrow_left_image: Image
-local arrow_right_image: Image
-local arrow_shade_left_image: Image
-local arrow_shade_right_image: Image
 
 local record MapSelection is Scene
     previous_screen: Scene
@@ -61,12 +57,6 @@ end
 function map_selection.load_assets()
     font = fonts.new_menu_white_outlined()
     ok_sound = items.ok_sound()
-    arrow_right_image, arrow_left_image = images.new_mirrored_pair(
-        "assets/arrow_right.png"
-    )
-    arrow_shade_left_image, arrow_shade_right_image = images.new_mirrored_pair(
-        "assets/arrow_shade.png"
-    )
 end
 
 -- The preview holds settings.map at whatever it is showing; leave() puts back
@@ -120,18 +110,20 @@ function MapSelection:update(dt: number)
 end
 
 function MapSelection:_draw_arrows()
-    local arrow_y = (screen.HEIGHT + ARROW_AREA_TOP - arrow_left_image:getHeight()) / 2
+    local left_image = arrows.left()
+    local right_image = arrows.right()
+    local arrow_y = (screen.HEIGHT + ARROW_AREA_TOP - left_image:getHeight()) / 2
 
-    if self.selection.value > self.selection.min then
-        lutro.graphics.draw(arrow_shade_left_image, 0, 0)
-        lutro.graphics.draw(arrow_left_image, ARROW_MARGIN, arrow_y)
+    if not self.selection:at_min() then
+        lutro.graphics.draw(arrows.left_shade(), 0, 0)
+        lutro.graphics.draw(left_image, ARROW_MARGIN, arrow_y)
     end
 
-    if self.selection.value < self.selection.max then
-        local shade_x = screen.WIDTH - arrow_shade_right_image:getWidth()
-        lutro.graphics.draw(arrow_shade_right_image, shade_x, 0)
-        local right_x = screen.WIDTH - ARROW_MARGIN - arrow_right_image:getWidth()
-        lutro.graphics.draw(arrow_right_image, right_x, arrow_y)
+    if not self.selection:at_max() then
+        local shade_image = arrows.right_shade()
+        lutro.graphics.draw(shade_image, screen.WIDTH - shade_image:getWidth(), 0)
+        local right_x = screen.WIDTH - ARROW_MARGIN - right_image:getWidth()
+        lutro.graphics.draw(right_image, right_x, arrow_y)
     end
 end
 
