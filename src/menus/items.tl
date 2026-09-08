@@ -61,6 +61,14 @@ function MenuSelection:decrement(): boolean
     return new_val >= self.min
 end
 
+function MenuSelection:at_min(): boolean
+    return self.value <= self.min
+end
+
+function MenuSelection:at_max(): boolean
+    return self.value >= self.max
+end
+
 function MenuSelection:get_value(): T
     return self.convert(self.value)
 end
