@@ -40,6 +40,96 @@ function images.change_colors(image: Image, color_mapping: {Color: Color})
     end
 end
 
+local function new_blank_image(width: number, height: number): Image
+    return lutro.graphics.newImage(lutro.image.newImageData(width, height))
+end
+
+local function corner_color(image_data: ImageData): Color
+    local red, green, blue = image_data:getPixel(0, 0)
+    return {red, green, blue}
+end
+
+--- lutro delimits glyphs by top-row pixels matching the corner colour; widening
+--- a separator would add an empty glyph.
+local function scaled_column_width(
+    image_data: ImageData, x: number, separator: Color, factor: number
+): number
+    local red, green, blue = image_data:getPixel(x, 0)
+    if color_equal({red, green, blue}, separator) then
+        return 1
+    end
+    return factor
+end
+
+local function scaled_column_widths(
+    image_data: ImageData, width: number, factor: number
+): {number}
+    local separator = corner_color(image_data)
+    local widths: {number} = {}
+    for x = 0, width - 1 do
+        table.insert(widths, scaled_column_width(image_data, x, separator, factor))
+    end
+    return widths
+end
+
+local function sum(numbers: {number}): number
+    local total: number = 0
+    for _, value in ipairs(numbers) do
+        total = total + value
+    end
+    return total
+end
+
+local function stamp_block(
+    target: ImageData,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    red: number,
+    green: number,
+    blue: number,
+    alpha: number
+)
+    for offset_x = 0, width - 1 do
+        for offset_y = 0, height - 1 do
+            target:setPixel(x + offset_x, y + offset_y, red, green, blue, alpha)
+        end
+    end
+end
+
+function images.new_magnified_glyph_sheet(image: Image, factor: number): Image
+    local source = image:getData()
+    local width = image:getWidth()
+    local height = image:getHeight()
+    local column_widths = scaled_column_widths(source, width, factor)
+
+    local scaled = new_blank_image(sum(column_widths), height * factor)
+    local target = scaled:getData()
+
+    local target_x: number = 0
+    for column, column_width in ipairs(column_widths) do
+        local x = column - 1
+        for y = 0, height - 1 do
+            local red, green, blue, alpha = source:getPixel(x, y)
+            stamp_block(
+                target,
+                target_x,
+                y * factor,
+                column_width,
+                factor,
+                red,
+                green,
+                blue,
+                alpha
+            )
+        end
+        target_x = target_x + column_width
+    end
+
+    return scaled
+end
+
 --- Mirrors the image left-to-right in place, so one asset can face both ways.
 function images.flip_horizontal(image: Image)
     local image_data = image:getData()

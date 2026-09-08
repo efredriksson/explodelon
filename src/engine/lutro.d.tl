@@ -105,8 +105,8 @@ global record lutro
         setColor: function(r: number, g: number, b: number, lum?: number)
         setBackgroundColor: function(r: number, g: number, b: number, lum?: number)
 
-        newImageFont: function(filename: string, glyphs: string): Font
-        newImageFont: function(image: Image, glyphs: string): Font
+        newImageFont: function(filename: string, glyphs: string, spacing?: number): Font
+        newImageFont: function(image: Image, glyphs: string, spacing?: number): Font
         setFont: function(font: Font)
         print: function(text: string, x: number, y: number)
         printf: function(
@@ -114,6 +114,7 @@ global record lutro
         )
 
         newImage: function(filename: string): Image
+        newImage: function(data: ImageData): Image
         newQuad: function(
             x: number, y: number, width: number, height: number, sw: number, sh: number
         ): Quad
@@ -147,6 +148,10 @@ global record lutro
         rectangle: function(
             mode: DrawMode, x: number, y: number, width: number, height: number
         )
+    end
+
+    record image
+        newImageData: function(width: number, height: number): ImageData
     end
 
     record joystick

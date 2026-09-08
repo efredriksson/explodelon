@@ -2,7 +2,6 @@ local scenes = require("engine.scenes")
 local map_selection = require("map_selection")
 local choices = require("menus.choices")
 local debug_screen = require("menus.debug_screen")
-local game_rule_screen = require("menus.game_rule_screen")
 local screens = require("menus.screens")
 local update_sceen = require("menus.update_screen")
 local settings = require("settings")
@@ -28,13 +27,9 @@ function start_screen.new(): MenuScreen
     local function enter_update_screen(ctx: Scene)
         scenes.set(update_sceen.new(ctx))
     end
-    local function enter_game_rules_screen(ctx: Scene)
-        scenes.set(game_rule_screen.new(ctx))
-    end
 
     local menu_choices: {MenuChoice} = {
         choices.new_boolean("teams", 50, settings.teams, settings.set_teams),
-        choices.new_done("game rules", 80, enter_game_rules_screen),
         choices.new_done("debug settings", 95, enter_debug_screen),
     }
     if update_sceen.is_recalbox() then
