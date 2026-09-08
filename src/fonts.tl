@@ -95,6 +95,10 @@ local function get_font(ink_color: Color): Font
     return built_fonts[key]
 end
 
+local function new_outlined(ink_color: Color): MenuFont
+    return MenuFont.new(get_font(ink_color), get_font(BLACK_INK))
+end
+
 function fonts.new_menu_white(): MenuFont
     return MenuFont.new(get_font(WHITE_INK), nil)
 end
@@ -104,15 +108,15 @@ function fonts.new_menu_black(): MenuFont
 end
 
 function fonts.new_menu_white_outlined(): MenuFont
-    return MenuFont.new(get_font(WHITE_INK), get_font(BLACK_INK))
+    return new_outlined(WHITE_INK)
 end
 
 function fonts.new_menu_gray_outlined(): MenuFont
-    return MenuFont.new(get_font(GRAY_INK), get_font(BLACK_INK))
+    return new_outlined(GRAY_INK)
 end
 
 function fonts.new_menu_colored_outlined(ink_color: Color): MenuFont
-    return MenuFont.new(get_font(ink_color), get_font(BLACK_INK))
+    return new_outlined(ink_color)
 end
 
 local function print_at(text: string, x: number, y: number, box_width?: number)
