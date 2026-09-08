@@ -1,4 +1,3 @@
-local audio = require("engine.audio")
 local points = require("engine.geometry.points")
 local images = require("engine.images")
 local joysticks = require("engine.joysticks")
@@ -84,10 +83,7 @@ function MapSelection:load()
     )
 end
 
--- The start-menu music plays under this scene; stop it before player-selection
--- starts its own track, or the two overlap.
 function MapSelection:_enter_player_selection()
-    audio.stop()
     scenes.set(player_selection.setup())
 end
 

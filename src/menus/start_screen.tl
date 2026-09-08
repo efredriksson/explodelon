@@ -14,8 +14,8 @@ local type MenuChoice = choices.MenuChoice
 local start_screen = {}
 
 function start_screen.new(): MenuScreen
-    -- The menu music is left running so it carries over into map selection;
-    -- that scene stops it once the player commits and moves on.
+    -- The menu music is left running so it carries over into the picker screens;
+    -- player selection stops it when it starts its own.
     local function done(ctx: Scene)
         scenes.set(map_selection.new(ctx))
     end

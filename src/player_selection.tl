@@ -275,6 +275,9 @@ function PlayerSelection:_activate_cursor_for(player_id: integer): boolean
 end
 
 function PlayerSelection:load()
+    -- Silences whichever menu track led here; this scene runs its own instead.
+    audio.stop()
+
     if self:_skips_lobby() then
         characters.set_auto_selected(settings.number_of_auto_selected_characters)
     end
