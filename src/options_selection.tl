@@ -264,6 +264,7 @@ end
 local PREVIEW_TINTS: {ItemType: Color} = {
     bomb = painting.AMBER,
     fire = painting.RED,
+    speed = painting.CYAN,
     kick = painting.GREEN,
 }
 
