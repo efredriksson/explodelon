@@ -40,7 +40,7 @@ function start_screen.new(): MenuScreen
     end
     table.insert(menu_choices, choices.new_done("start game", 180, done))
 
-    return screens.new(menu_choices, go_back)
+    return screens.new(menu_choices, go_back, #menu_choices)
 end
 
 return start_screen
