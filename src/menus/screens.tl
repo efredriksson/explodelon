@@ -25,10 +25,14 @@ end
 
 local screens = {MenuScreen = MenuScreen}
 
-function screens.new(menu_choices: {MenuChoice}, go_back?: function(Scene)): MenuScreen
+function screens.new(
+    menu_choices: {MenuChoice}, go_back?: function(Scene), selected?: integer
+): MenuScreen
     local self: MenuScreen = setmetatable({}, {__index = MenuScreen})
     self.menu_choices = menu_choices
-    self.menu_selection = items.new_integer_selection(1, 1, #self.menu_choices)
+    self.menu_selection = items.new_integer_selection(
+        selected or 1, 1, #self.menu_choices
+    )
     self.go_back = go_back or function(_: Scene) end
     return self
 end
