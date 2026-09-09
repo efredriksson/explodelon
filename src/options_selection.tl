@@ -17,11 +17,12 @@ local game_rule_screen = require("menus.game_rule_screen")
 local menu_items = require("menus.items")
 local painting = require("menus.painting")
 local player_selection = require("player_selection")
-local fire = require("preview.options.fire")
+local preview_options = require("preview.options.init")
 local window = require("preview.options.window")
 local scripted_battle = require("preview.scripted_battle")
 local settings = require("settings")
 
+local type Color = images.Color
 local type DinoColor = settings.DinoColor
 local type ItemType = settings.ItemType
 local type Map = settings.Map
@@ -260,9 +261,10 @@ local function draw_count(materiel: Materiel, slot_x: number, count_y: number)
     draw_drop_percent(materiel, slot_x, count_y)
 end
 
--- Only the fire lesson exists, so the marker stays on its subject.
-local PREVIEWED_ITEM: ItemType = "fire"
-local PREVIEW_TINT = painting.RED
+local PREVIEW_TINTS: {ItemType: Color} = {
+    bomb = painting.AMBER,
+    fire = painting.RED,
+}
 
 local MARKER_WIDTH = 44
 local MARKER_TOP = 2
@@ -270,11 +272,11 @@ local MARKER_HEIGHT = 57
 local MARKER_ALPHA = 200
 local MARKER_THICKNESS = 2
 
-local function is_preview_subject(materiel: Materiel): boolean
-    return materiel.kind == "item" and materiel.item == PREVIEWED_ITEM
+local function is_preview_subject(materiel: Materiel, subject: ItemType): boolean
+    return materiel.kind == "item" and materiel.item == subject
 end
 
-local function draw_marker(slot_x: number)
+local function draw_marker(slot_x: number, tint: Color)
     painting.draw_box(
         rectangles.new(
             slot_x + (SLOT_WIDTH - MARKER_WIDTH) / 2,
@@ -282,18 +284,18 @@ local function draw_marker(slot_x: number)
             MARKER_WIDTH,
             MARKER_HEIGHT
         ),
-        PREVIEW_TINT,
+        tint,
         MARKER_THICKNESS,
         MARKER_ALPHA
     )
 end
 
-local function draw_row(row: Row)
+local function draw_row(row: Row, subject: ItemType)
     local count_y = row:count_y()
     for position, materiel in ipairs(row.materiel) do
         local slot_x = row:slot_x(position)
-        if is_preview_subject(materiel) then
-            draw_marker(slot_x)
+        if is_preview_subject(materiel, subject) then
+            draw_marker(slot_x, PREVIEW_TINTS[subject])
         end
         draw_materiel(materiel, slot_x + SLOT_WIDTH / 2, row.baseline)
         draw_count(materiel, slot_x, count_y)
@@ -304,6 +306,7 @@ local record OptionsSelection is Scene
     previous_screen: Scene
     selection: MenuSelection<RulesetName>
     lesson: ScriptedBattle
+    rotation_index: integer
 end
 
 local options_selection = {}
@@ -312,6 +315,7 @@ function options_selection.new(previous_screen: Scene): OptionsSelection
     local self: OptionsSelection = setmetatable({}, {__index = OptionsSelection})
     self.previous_screen = previous_screen
     self.selection = menu_items.new_enum(RULESETS)
+    self.rotation_index = 1
     return self
 end
 
@@ -343,13 +347,28 @@ function options_selection.load_assets()
     end
 end
 
+function OptionsSelection:_previewed_item(): ItemType
+    return preview_options.rotation[self.rotation_index]
+end
+
 -- load() reruns on return from the rules screen, where the map can't change, so
--- the lesson plays on.
+-- the showcase plays on.
 function OptionsSelection:_start_lesson()
     if self.lesson then
         return
     end
-    self.lesson = scripted_battle.new(fire.new_scenery(), fire.new_choreography())
+    local item = self:_previewed_item()
+    self.lesson = scripted_battle.new(
+        preview_options.scenery_for(item), preview_options.choreography_for(item)
+    )
+end
+
+function OptionsSelection:_advance_preview()
+    self.rotation_index = self.rotation_index % #preview_options.rotation + 1
+    local item = self:_previewed_item()
+    self.lesson:play(
+        preview_options.scenery_for(item), preview_options.choreography_for(item)
+    )
 end
 
 function OptionsSelection:load()
@@ -392,17 +411,21 @@ function OptionsSelection:update(dt: number)
     end
 
     self.lesson:update(dt)
+    if self.lesson:taught_once() then
+        self:_advance_preview()
+    end
 end
 
 function OptionsSelection:_draw_arena()
     background.draw()
     self.lesson:draw()
-    window.draw_surround(PREVIEW_TINT)
+    window.draw_surround(PREVIEW_TINTS[self:_previewed_item()])
 end
 
 function OptionsSelection:_draw_readout()
+    local subject = self:_previewed_item()
     for _, row in ipairs(MATERIEL_ROWS) do
-        draw_row(row)
+        draw_row(row, subject)
     end
 end
 
