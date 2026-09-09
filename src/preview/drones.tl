@@ -73,8 +73,8 @@ function drones.kicker(start: Point, bomb_count: integer, fire: integer): Player
     return drone
 end
 
-function drones.bomber(start: Point, bomb_count: integer, fire: integer): Player
-    return new_bomber(start, bomb_count, fire)
+function drones.bomber(start: Point, bomb_count?: integer, fire?: integer): Player
+    return new_bomber(start, bomb_count or 1, fire or 2)
 end
 
 function drones.victim(start: Point): Player
