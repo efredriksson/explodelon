@@ -12,6 +12,7 @@ local AMBER: Color = {245, 197, 66}
 local CYAN: Color = {89, 199, 232}
 local PURPLE: Color = {186, 120, 224}
 local RED: Color = {226, 71, 58}
+local GREEN: Color = {119, 221, 119}
 
 local painting = {
     BLACK = BLACK,
@@ -20,6 +21,7 @@ local painting = {
     CYAN = CYAN,
     PURPLE = PURPLE,
     RED = RED,
+    GREEN = GREEN,
 }
 
 function painting.set_color(tint: Color, alpha?: number)

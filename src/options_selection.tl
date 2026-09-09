@@ -264,6 +264,7 @@ end
 local PREVIEW_TINTS: {ItemType: Color} = {
     bomb = painting.AMBER,
     fire = painting.RED,
+    kick = painting.GREEN,
 }
 
 local MARKER_WIDTH = 44
