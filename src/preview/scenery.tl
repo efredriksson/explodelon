@@ -29,6 +29,7 @@ local record Scenery
 end
 
 local scenery = {
+    ItemDrop = ItemDrop,
     Scenery = Scenery,
 }
 

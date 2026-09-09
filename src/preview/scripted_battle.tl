@@ -249,7 +249,10 @@ function ScriptedBattle:_update(dt: number)
 end
 
 function ScriptedBattle:update(dt: number)
-    self:_update(self.clock:tick(dt))
+    local step = self.clock:tick(dt)
+    for _ = 1, self.choreography.playback_rate or 1 do
+        self:_update(step)
+    end
 end
 
 function ScriptedBattle:draw()

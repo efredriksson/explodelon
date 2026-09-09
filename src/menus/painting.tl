@@ -1,8 +1,10 @@
 -- Flat-colour drawing for menu screens, and the palette they share.
 
+local rectangles = require("engine.geometry.rectangles")
 local images = require("engine.images")
 
 local type Color = images.Color
+local type Rectangle = rectangles.Rectangle
 
 local BLACK: Color = {0, 0, 0}
 local WHITE: Color = {255, 255, 255}
@@ -37,6 +39,18 @@ end
 
 function painting.draw_vline(x: number, y0: number, y1: number, tint: Color)
     painting.fill_rect(x, math.min(y0, y1), 1, math.abs(y1 - y0) + 1, tint)
+end
+
+function painting.draw_box(
+    area: Rectangle, tint: Color, thickness?: number, alpha?: number
+)
+    painting.set_color(tint, alpha)
+    for ring = 0, (thickness or 1) - 1 do
+        local bounds = area:expand(ring)
+        lutro.graphics.rectangle(
+            "line", bounds.x, bounds.y, bounds.width, bounds.height
+        )
+    end
 end
 
 return painting

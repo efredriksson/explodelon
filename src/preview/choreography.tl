@@ -17,6 +17,7 @@ end
 -- open() runs once per run: spawn a fresh cast, clear phase state.
 local type Choreography = interface
     cycle_length: number
+    playback_rate: integer
 
     open: function(self, stage: Stage): {Player}
     step: function(self, dt: number)
