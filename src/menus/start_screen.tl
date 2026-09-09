@@ -38,7 +38,7 @@ function start_screen.new(): MenuScreen
             choices.new_done("check for updates", 110, enter_update_screen)
         )
     end
-    table.insert(menu_choices, choices.new_done("start game", 180, done))
+    table.insert(menu_choices, choices.new_done("set up battle", 180, done))
 
     return screens.new(menu_choices, go_back, #menu_choices)
 end
