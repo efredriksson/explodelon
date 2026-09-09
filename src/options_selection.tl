@@ -17,7 +17,9 @@ local game_rule_screen = require("menus.game_rule_screen")
 local menu_items = require("menus.items")
 local painting = require("menus.painting")
 local player_selection = require("player_selection")
-local screen = require("screen")
+local fire = require("preview.options.fire")
+local window = require("preview.options.window")
+local scripted_battle = require("preview.scripted_battle")
 local settings = require("settings")
 
 local type DinoColor = settings.DinoColor
@@ -28,6 +30,7 @@ local type MenuSelection = menu_items.MenuSelection
 local type Rectangle = rectangles.Rectangle
 local type RulesetName = settings.RulesetName
 local type Scene = scenes.Scene
+local type ScriptedBattle = scripted_battle.ScriptedBattle
 
 local RULESET_ORDER <total>: {RulesetName: integer} = {
     default = 1,
@@ -55,19 +58,23 @@ local MATERIEL_SCALE = 2
 local MENU_DINO_LEVEL = 1
 local DISABLED_ALPHA = 64
 
--- Keeps text legible over the map behind.
-local WASH_ALPHA = 160
+-- The picker's half, left of the lesson window.
+local FLANK_WIDTH = window.FRAME.x
 
--- Everything the picker owns sits left of this, leaving the lesson cell the rest.
-local FLANK_WIDTH = 214
+-- Half size: an exact halving keeps the chunky source clean and clears the
+-- longest name at 2x.
+local ARROW_Y = 143
+local ARROW_SCALE = 0.5
 
-local ARROW_Y = 138
+-- Clear of the border and the screen edge.
+local ARROW_INSET = 4
 local NAME_POSITION = points.new(0, 144)
 
 local ACCENT_RULE_INSET = 12
 local ACCENT_RULE_Y = 172
 
-local HINTS = "press start for more options"
+-- Longer than this wraps in the flank.
+local HINTS = "start for more options"
 local HINTS_POSITION = points.new(0, 186)
 
 local big_font: MenuFont
@@ -253,10 +260,41 @@ local function draw_count(materiel: Materiel, slot_x: number, count_y: number)
     draw_drop_percent(materiel, slot_x, count_y)
 end
 
+-- Only the fire lesson exists, so the marker stays on its subject.
+local PREVIEWED_ITEM: ItemType = "fire"
+local PREVIEW_TINT = painting.RED
+
+local MARKER_WIDTH = 44
+local MARKER_TOP = 2
+local MARKER_HEIGHT = 57
+local MARKER_ALPHA = 200
+local MARKER_THICKNESS = 2
+
+local function is_preview_subject(materiel: Materiel): boolean
+    return materiel.kind == "item" and materiel.item == PREVIEWED_ITEM
+end
+
+local function draw_marker(slot_x: number)
+    painting.draw_box(
+        rectangles.new(
+            slot_x + (SLOT_WIDTH - MARKER_WIDTH) / 2,
+            MARKER_TOP,
+            MARKER_WIDTH,
+            MARKER_HEIGHT
+        ),
+        PREVIEW_TINT,
+        MARKER_THICKNESS,
+        MARKER_ALPHA
+    )
+end
+
 local function draw_row(row: Row)
     local count_y = row:count_y()
     for position, materiel in ipairs(row.materiel) do
         local slot_x = row:slot_x(position)
+        if is_preview_subject(materiel) then
+            draw_marker(slot_x)
+        end
         draw_materiel(materiel, slot_x + SLOT_WIDTH / 2, row.baseline)
         draw_count(materiel, slot_x, count_y)
     end
@@ -265,6 +303,7 @@ end
 local record OptionsSelection is Scene
     previous_screen: Scene
     selection: MenuSelection<RulesetName>
+    lesson: ScriptedBattle
 end
 
 local options_selection = {}
@@ -304,24 +343,39 @@ function options_selection.load_assets()
     end
 end
 
+-- load() reruns on return from the rules screen, where the map can't change, so
+-- the lesson plays on.
+function OptionsSelection:_start_lesson()
+    if self.lesson then
+        return
+    end
+    self.lesson = scripted_battle.new(fire.new_scenery(), fire.new_choreography())
+end
+
 function OptionsSelection:load()
     self.selection.value = itertools.find(settings.ruleset, RULESETS)
     ensure_soft_block_sprite()
+    self:_start_lesson()
 end
 
-function OptionsSelection:update(_dt: number)
+function OptionsSelection:_leave_for(next_screen: Scene)
+    self.lesson:leave()
+    scenes.set(next_screen)
+end
+
+function OptionsSelection:update(dt: number)
     if joysticks.is_pressed_any(joysticks.BUTTONS.B) then
-        scenes.set(player_selection.setup())
+        self:_leave_for(player_selection.setup())
         return
     end
 
     if joysticks.is_pressed_any(joysticks.BUTTONS.A) then
-        scenes.set(self.previous_screen)
+        self:_leave_for(self.previous_screen)
         return
     end
 
     if joysticks.is_pressed_any(joysticks.BUTTONS.START) then
-        scenes.set(game_rule_screen.new(self))
+        self:_leave_for(game_rule_screen.new(self))
         return
     end
 
@@ -336,18 +390,14 @@ function OptionsSelection:update(_dt: number)
         ok_sound:play()
         settings.set_ruleset(self.selection:get_value())
     end
+
+    self.lesson:update(dt)
 end
 
--- Nothing resets the draw colour between scenes, and menu screens leave it grey.
-local function reset_draw_color()
-    painting.set_color(painting.WHITE)
-end
-
-function OptionsSelection:_draw_washed_map()
-    reset_draw_color()
+function OptionsSelection:_draw_arena()
     background.draw()
-    painting.fill_rect(0, 0, screen.WIDTH, screen.HEIGHT, painting.BLACK, WASH_ALPHA)
-    reset_draw_color()
+    self.lesson:draw()
+    window.draw_surround(PREVIEW_TINT)
 end
 
 function OptionsSelection:_draw_readout()
@@ -356,14 +406,19 @@ function OptionsSelection:_draw_readout()
     end
 end
 
+local function draw_arrow(image: Image, x: number)
+    lutro.graphics.draw(image, x, ARROW_Y, 0, ARROW_SCALE, ARROW_SCALE)
+end
+
 function OptionsSelection:_draw_arrows()
     if not self.selection:at_min() then
-        lutro.graphics.draw(arrows.left(), 0, ARROW_Y)
+        draw_arrow(arrows.left(), ARROW_INSET)
     end
 
     if not self.selection:at_max() then
         local right_image = arrows.right()
-        lutro.graphics.draw(right_image, FLANK_WIDTH - right_image:getWidth(), ARROW_Y)
+        local scaled_width = right_image:getWidth() * ARROW_SCALE
+        draw_arrow(right_image, FLANK_WIDTH - scaled_width - ARROW_INSET)
     end
 end
 
@@ -382,7 +437,7 @@ function OptionsSelection:_draw_accent_rule()
 end
 
 function OptionsSelection:draw()
-    self:_draw_washed_map()
+    self:_draw_arena()
     self:_draw_readout()
     self:_draw_arrows()
     self:_draw_flank()
