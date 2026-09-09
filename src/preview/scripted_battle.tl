@@ -74,6 +74,7 @@ local record ScriptedBattle is Stage
     ice_sliding: boolean
     clock: StableClock
     elapsed: number
+    loops: integer
 
     players: {Player}
     player_inputs: {Player: {Direction}}
@@ -151,8 +152,13 @@ end
 function ScriptedBattle:play(stage_set: Scenery, piece: Choreography)
     self.scenery = stage_set
     self.choreography = piece
+    self.loops = 0
     self:_stand_up_map()
     self:_restart()
+end
+
+function ScriptedBattle:taught_once(): boolean
+    return self.loops > 0
 end
 
 function scripted_battle.new(stage_set: Scenery, piece: Choreography): ScriptedBattle
@@ -240,6 +246,7 @@ end
 function ScriptedBattle:_update(dt: number)
     self.elapsed = self.elapsed + dt
     if self.elapsed >= self.choreography.cycle_length then
+        self.loops = self.loops + 1
         self:_restart()
         return
     end
