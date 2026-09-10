@@ -170,6 +170,7 @@ local record Settings
     MINIMUM_PLAYERS: integer
     number_of_auto_selected_characters: integer
     auto_select_characters: boolean
+    skip_options_screen: boolean
     teams: boolean
     map: Map
     ruleset: RulesetName
@@ -190,6 +191,7 @@ function Settings.new(): Settings
     self.teams = false
     self.map = "football"
     self.ruleset = "default"
+    self.skip_options_screen = false
     self.game_rules = GameRules.new()
     -- Type export
     self.ItemType = ItemType
@@ -204,6 +206,10 @@ local settings = Settings.new()
 
 function Settings.set_auto_select_characters(value: boolean)
     settings.auto_select_characters = value
+end
+
+function Settings.set_skip_options_screen(value: boolean)
+    settings.skip_options_screen = value
 end
 
 function Settings.set_map(value: Map)
@@ -464,6 +470,7 @@ function Settings.set_debug_ruleset(name: DebugRulesetName)
     Settings.set_ruleset("default")
     DEBUG_RULESET_LOADERS[name]()
     settings.auto_select_characters = true
+    settings.skip_options_screen = true
 end
 
 return settings
