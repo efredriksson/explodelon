@@ -69,7 +69,13 @@ function debug_screen.new(previous_screen: Scene): MenuScreen
                 nbr_auto_selected_characters,
                 settings.set_number_of_auto_selected_characters
             ),
-            choices.new_done("back", 195, done),
+            choices.new_boolean(
+                "skip options screen",
+                185,
+                settings.skip_options_screen,
+                settings.set_skip_options_screen
+            ),
+            choices.new_done("back", 210, done),
         },
         done
     )
