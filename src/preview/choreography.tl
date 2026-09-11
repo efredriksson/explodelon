@@ -10,6 +10,7 @@ local type Vector = vectors.Vector
 local type Stage = interface
     set_player_inputs: function(self, player: Player, directions: {Direction})
     place_bomb: function(self, player: Player)
+    place_lightning_bomb: function(self, player: Player)
     face: function(self, player: Player, direction: Direction)
     slide: function(self, player: Player, velocity: Vector)
 end
