@@ -128,6 +128,15 @@ function itertools.count<T>(iterator: {T}, predicate: function(T): boolean): int
     return matches
 end
 
+function itertools.max(numbers: {number}): number
+    assert(#numbers > 0, "Cannot take the max of an empty list!")
+    local largest = numbers[1]
+    for _, n in ipairs(numbers) do
+        largest = math.max(largest, n)
+    end
+    return largest
+end
+
 function itertools.shuffle<T>(t: {T}): {T}
     -- https://stackoverflow.com/a/68486276
     local s = {}

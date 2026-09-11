@@ -119,12 +119,53 @@ local function dino_materiel(color: DinoColor): Materiel
     return Materiel.new("dino", nil, color)
 end
 
+-- Matches draw_materiel's sprite choice, so the marker starts at the icon's top.
+local function icon_height(materiel: Materiel): number
+    if materiel.kind == "item" then
+        return PICKUP_CROP.height * MATERIEL_SCALE
+    elseif materiel.kind == "soft_block" then
+        return SOFT_BLOCK_CROP.height * MATERIEL_SCALE
+    elseif materiel.kind == "egg" then
+        return EGG_CROP.height * MATERIEL_SCALE
+    end
+    return DINO_CROP.height * MATERIEL_SCALE
+end
+
+local function max_icon_height(materiel: {Materiel}): number
+    return itertools.max(itertools.map(materiel, icon_height))
+end
+
 local ROW_X = 10
 local SLOT_WIDTH = 50
 local COUNT_DROP = 2
 
 -- Beside the count, one slot's digits would run into the next slot's.
 local PERCENT_DROP = 14
+
+local function may_show_drop_percent(materiel: Materiel): boolean
+    return materiel.kind == "item"
+end
+
+-- Pixel heights of what's drawn below the icon.
+local COUNT_DIGIT_HEIGHT = 12
+local PERCENT_TEXT_HEIGHT = 6
+local MARKER_FOOTER_SLACK = 1
+
+local MARKER_FOOTER_COUNT_ONLY = COUNT_DROP + COUNT_DIGIT_HEIGHT + MARKER_FOOTER_SLACK
+local MARKER_FOOTER_WITH_PERCENT = (
+    COUNT_DROP + PERCENT_DROP + PERCENT_TEXT_HEIGHT + MARKER_FOOTER_SLACK
+)
+
+local function marker_footer(materiel: Materiel): number
+    if may_show_drop_percent(materiel) then
+        return MARKER_FOOTER_WITH_PERCENT
+    end
+    return MARKER_FOOTER_COUNT_ONLY
+end
+
+local function max_marker_footer(materiel: {Materiel}): number
+    return itertools.max(itertools.map(materiel, marker_footer))
+end
 
 local record Row
     materiel: {Materiel}
@@ -144,6 +185,14 @@ end
 
 function Row:slot_x(position: integer): number
     return ROW_X + (position - 1) * SLOT_WIDTH
+end
+
+function Row:marker_icon_height(): number
+    return max_icon_height(self.materiel)
+end
+
+function Row:marker_height(): number
+    return self:marker_icon_height() + max_marker_footer(self.materiel)
 end
 
 local MATERIEL_ROWS: {Row} = {
@@ -188,7 +237,7 @@ end
 
 -- What a blown-open soft block also drops mid-battle.
 local function drop_rate(materiel: Materiel): number
-    if materiel.kind ~= "item" then
+    if not may_show_drop_percent(materiel) then
         return 0
     end
     return settings.game_rules.items.spawn_rates[materiel.item]
@@ -229,16 +278,14 @@ local function draw_sprite(sprite: Image, center_x: number, baseline: number)
     )
 end
 
--- One frame colour rather than cycling, and no floor shadow: no floor here to
--- fall on.
-local function draw_pickup(item: ItemType, center_x: number, baseline: number)
+local function draw_item(item: ItemType, center_x: number, baseline: number)
     draw_sprite(frame_sprite, center_x, baseline)
     draw_sprite(item_sprites[item], center_x, baseline)
 end
 
 local function draw_materiel(materiel: Materiel, center_x: number, baseline: number)
     if materiel.kind == "item" then
-        draw_pickup(materiel.item, center_x, baseline)
+        draw_item(materiel.item, center_x, baseline)
     elseif materiel.kind == "soft_block" then
         draw_sprite(soft_block_sprites[settings.map], center_x, baseline)
     elseif materiel.kind == "egg" then
@@ -269,8 +316,6 @@ local PREVIEW_TINTS: {ItemType: Color} = {
 }
 
 local MARKER_WIDTH = 44
-local MARKER_TOP = 2
-local MARKER_HEIGHT = 57
 local MARKER_ALPHA = 200
 local MARKER_THICKNESS = 2
 
@@ -278,13 +323,10 @@ local function is_preview_subject(materiel: Materiel, subject: ItemType): boolea
     return materiel.kind == "item" and materiel.item == subject
 end
 
-local function draw_marker(slot_x: number, tint: Color)
+local function draw_marker(slot_x: number, top: number, height: number, tint: Color)
     painting.draw_box(
         rectangles.new(
-            slot_x + (SLOT_WIDTH - MARKER_WIDTH) / 2,
-            MARKER_TOP,
-            MARKER_WIDTH,
-            MARKER_HEIGHT
+            slot_x + (SLOT_WIDTH - MARKER_WIDTH) / 2, top, MARKER_WIDTH, height
         ),
         tint,
         MARKER_THICKNESS,
@@ -297,7 +339,12 @@ local function draw_row(row: Row, subject: ItemType)
     for position, materiel in ipairs(row.materiel) do
         local slot_x = row:slot_x(position)
         if is_preview_subject(materiel, subject) then
-            draw_marker(slot_x, PREVIEW_TINTS[subject])
+            draw_marker(
+                slot_x,
+                row.baseline - row:marker_icon_height(),
+                row:marker_height(),
+                PREVIEW_TINTS[subject]
+            )
         end
         draw_materiel(materiel, slot_x + SLOT_WIDTH / 2, row.baseline)
         draw_count(materiel, slot_x, count_y)
