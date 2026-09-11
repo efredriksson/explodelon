@@ -60,10 +60,13 @@ end
 
 local drones = {KickCycle = KickCycle, Pacer = Pacer}
 
-local function new_bomber(start: Point, bomb_count: integer, fire: integer): Player
+local function new_bomber(
+    start: Point, bomb_count: integer, fire: integer, lightning_bomb_count?: integer
+): Player
     local drone = players.new(1, BOMBER_SPRITE, start)
     drone.bombs = bomb_count
     drone.fire = fire
+    drone.lightning_bomb = lightning_bomb_count or 0
     return drone
 end
 
@@ -73,8 +76,10 @@ function drones.kicker(start: Point, bomb_count: integer, fire: integer): Player
     return drone
 end
 
-function drones.bomber(start: Point, bomb_count?: integer, fire?: integer): Player
-    return new_bomber(start, bomb_count or 1, fire or 2)
+function drones.bomber(
+    start: Point, bomb_count?: integer, fire?: integer, lightning_bomb_count?: integer
+): Player
+    return new_bomber(start, bomb_count or 1, fire or 2, lightning_bomb_count)
 end
 
 function drones.victim(start: Point): Player
