@@ -26,6 +26,7 @@ local record Scenery
     map: Map
     soft_blocks: {SoftBlockConfig}
     items: {ItemDrop}
+    eggs: {Point}
 end
 
 local scenery = {
@@ -34,12 +35,13 @@ local scenery = {
 }
 
 function scenery.new(
-    map: Map, soft_blocks: {SoftBlockConfig}, items: {ItemDrop}
+    map: Map, soft_blocks: {SoftBlockConfig}, items: {ItemDrop}, eggs?: {Point}
 ): Scenery
     local self: Scenery = setmetatable({}, {__index = Scenery})
     self.map = map
     self.soft_blocks = soft_blocks
     self.items = items
+    self.eggs = eggs or {}
     return self
 end
 
