@@ -115,6 +115,8 @@ function Materiel.new(kind: MaterielKind, item?: ItemType, color?: DinoColor): M
         self.subject = item
     elseif kind == "egg" then
         self.subject = "egg"
+    elseif kind == "dino" then
+        self.subject = "dino_" .. color
     end
     return self
 end
@@ -323,6 +325,7 @@ local PREVIEW_TINTS: {PreviewSubject: Color} = {
     kick = painting.GREEN,
     lightning_bomb = painting.WHITE,
     egg = painting.PURPLE,
+    dino_blue = painting.BLUE,
 }
 
 local MARKER_WIDTH = 44
