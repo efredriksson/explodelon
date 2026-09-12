@@ -36,18 +36,23 @@ local dinos = {
     ROAR_BUILDUP_TIME = ROAR_BUILDUP_TIME, DinoAction = DinoAction, Dino = Dino
 }
 
-function dinos.new(position: Point, direction: Direction): Dino
+function dinos.new(position: Point, direction: Direction, color: DinoColor): Dino
     local self: Dino = setmetatable({}, {__index = Dino})
     self.position = position
     self.direction = direction
     self.action = "idle"
-    local dino_choices = settings.get_enabled_dinos()
-    self.color = dino_choices[lutro.math.random(#dino_choices)]
+    self.color = color
     self.level = 1
     self.hatching = true
     self.jump_powerup_for = 0
     self.throw_powerup_for = 0
     return self
+end
+
+function dinos.new_random(position: Point, direction: Direction): Dino
+    local dino_choices = settings.get_enabled_dinos()
+    local color = dino_choices[lutro.math.random(#dino_choices)]
+    return dinos.new(position, direction, color)
 end
 
 function Dino:level_up()
