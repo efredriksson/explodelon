@@ -121,8 +121,7 @@ local function handle_throw_input(
     )
 
     local function get_position_throwing_from(): Point
-        local snaped_pos = grid.snap_to(player.position)
-        return snaped_pos:move(block_from_player_dir)
+        return grid.tile_ahead_of(player.position, player.direction)
     end
 
     local function must_throw(): boolean

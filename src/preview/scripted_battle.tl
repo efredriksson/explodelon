@@ -2,8 +2,10 @@
 
 local bombs = require("bombs.bombs")
 local lightning_bombs = require("bombs.lightning_bombs")
+local dinos = require("dinos")
 local eggs = require("eggs")
 local collision = require("engine.collision")
+local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
 local hard_blocks = require("hard_blocks")
 local items = require("items")
@@ -22,8 +24,10 @@ local trampolines = require("trampolines")
 local z_index = require("z_index")
 
 local type Bombs = bombs.Bombs
+local type Bomb = bombs.Bomb
 local type Choreography = choreography.Choreography
 local type CombinedGroup = collision.CombinedGroup
+local type DinoColor = settings.DinoColor
 local type Direction = vectors.Direction
 local type Eggs = eggs.Eggs
 local type Entity = require("engine.entity")
@@ -36,6 +40,7 @@ local type LightningBombs = lightning_bombs.LightningBombs
 local type Map = settings.Map
 local type Player = players.Player
 local type PlayerAnimations = player_animations.PlayerAnimations
+local type Point = points.Point
 local type Scenery = scenery.Scenery
 local type SoftBlocks = soft_blocks.SoftBlocks
 local type Stage = choreography.Stage
@@ -223,6 +228,35 @@ end
 
 function ScriptedBattle:slide(player: Player, velocity: Vector)
     player.ice_velocity = velocity
+end
+
+-- Skips jumps_onto's mid-air animation: the drone should enter already riding.
+function ScriptedBattle:mount_dino(player: Player, color: DinoColor)
+    local dino = dinos.new(player.position, player.direction, color)
+    dino.hatching = false
+    player.dino = dino
+    player.state = "mounted"
+    player:set_action("idle")
+    self.player_animations.dinos:add_for(dino)
+end
+
+-- Mirrors get_bomb_to_throw, minus the joystick charge distance: 'to' is
+-- picked directly by the choreography.
+local function bomb_ahead_of(player: Player, candidates: {Bomb}): Bomb
+    local throw_from = grid.tile_ahead_of(player.position, player.direction)
+    for _, bomb in ipairs(candidates) do
+        if bomb.position:equal(throw_from) then
+            return bomb
+        end
+    end
+    return nil
+end
+
+function ScriptedBattle:throw_bomb_with_dino(player: Player, to: Point)
+    local bomb = bomb_ahead_of(player, itertools.sets_as_list(self.bombs.on_ground.set))
+    if bomb then
+        self.bombs:throw_existing(bomb, to)
+    end
 end
 
 function ScriptedBattle:_step_systems(dt: number)
