@@ -462,6 +462,9 @@ function bombs.new(silent?: boolean): Bombs
     return self
 end
 
+local function no_refund()
+end
+
 local function is_occupied_by_bomb(position: Point, existing_bombs: {Entity}): boolean
     for _, existing_bomb in ipairs(existing_bombs) do
         if existing_bomb:get_position():equal(position) then
@@ -487,8 +490,13 @@ function Bombs:place_bomb(player: Player, occupied: {Entity})
     player.bombs = player.bombs - 1
 end
 
+-- No owning player: nothing to refund, nothing to check a bomb count against.
+function Bombs:place_static_bomb(position: Point, fire: integer)
+    self.on_ground:add(Bomb.new(position, fire, no_refund))
+end
+
 function Bombs:throw_bomb(from: Point, to: Point): Bomb
-    local bomb = Bomb.new(from, 2, function() end)
+    local bomb = Bomb.new(from, 2, no_refund)
     local thrown = ThrownBomb.new(bomb, to, grid.TILE_SIZE, grid.TILE_SIZE * 2, 0.4)
     self.in_air:add(thrown)
     return bomb
