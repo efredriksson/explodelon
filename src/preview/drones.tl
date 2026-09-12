@@ -82,6 +82,15 @@ function drones.bomber(
     return new_bomber(start, bomb_count or 1, fire or 2, lightning_bomb_count)
 end
 
+function drones.bomber_victim(
+    start: Point, bomb_count?: integer, fire?: integer
+): Player
+    local drone = new_bomber(start, bomb_count or 1, fire or 2)
+    local grace = settings.game_rules.players.petrify_grace_seconds
+    drone.time_alive = grace + 1 -- Nudged past the grace window so victim can die
+    return drone
+end
+
 function drones.victim(start: Point): Player
     local drone = players.new(2, VICTIM_SPRITE, start)
     local grace = settings.game_rules.players.petrify_grace_seconds

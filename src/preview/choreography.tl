@@ -21,6 +21,7 @@ local type Stage = interface
     throw_bomb_with_dino: function(self, player: Player, to: Point)
     jump_with_dino: function(self, player: Player, to: Point)
     dash_with_dino: function(self, player: Player)
+    stun_cry_with_dino: function(self, player: Player)
 end
 
 -- open() runs once per run: spawn a fresh cast, clear phase state.
