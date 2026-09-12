@@ -117,13 +117,16 @@ end
 
 function ScriptedBattle:_rebuild_groups()
     self.blockers = collision.new_combined_group(
-        self.hard_blocks.on_ground.set, self.soft_blocks.on_ground.set
+        self.eggs.on_ground.set,
+        self.items.on_ground.set,
+        self.hard_blocks.on_ground.set,
+        self.soft_blocks.on_ground.set
     )
-    -- Scenery pops on camera; a battle handles soft blocks elsewhere.
     self.explodables = collision.new_combined_group(
         self.alive_players_group.set,
-        self.soft_blocks.on_ground.set,
-        self.bombs.on_ground.set
+        self.bombs.on_ground.set,
+        self.eggs.on_ground.set,
+        self.items.on_ground.set
     )
     self.blocks_jump = collision.new_combined_group(
         self.hard_blocks.on_ground.set,
@@ -290,6 +293,8 @@ function ScriptedBattle:_step_systems(dt: number)
     local lookup = collision.new_lookup(
         self.hard_blocks.on_ground.set,
         self.soft_blocks.on_ground.set,
+        self.eggs.on_ground.set,
+        self.items.on_ground.set,
         self.bombs.on_ground.set,
         self.alive_players_group.set
     )
