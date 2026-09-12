@@ -52,10 +52,6 @@ local type Vector = vectors.Vector
 local STABLE_STEP_SECONDS = 1 / 60
 local STABLE_MAX_CATCHUP_SECONDS = STABLE_STEP_SECONDS * 2
 
--- Fixed, not settings.game_rules.players.start_with_fire: previews must stay
--- deterministic regardless of the live fire-power rule the user has set.
-local STATIC_BOMB_FIRE = 2
-
 -- A clock that will keep to a more uniform 'dt', reducing the amount of numerical
 -- rounding issues. This helps ensure the map previews are deterministic.
 local record StableClock
@@ -158,8 +154,8 @@ function ScriptedBattle:_restart()
         self.eggs:spawn_at(position)
     end
     self.bombs = bombs.new(true)
-    for _, position in ipairs(self.scenery.bombs) do
-        self.bombs:place_static_bomb(position, STATIC_BOMB_FIRE)
+    for _, bomb in ipairs(self.scenery.bombs) do
+        self.bombs:place_static_bomb(bomb.position, bomb.fire)
     end
     self.lightning_bombs = lightning_bombs.new()
     self:_rebuild_groups()
@@ -225,7 +221,7 @@ function ScriptedBattle:set_player_inputs(player: Player, directions: {Direction
 end
 
 function ScriptedBattle:face(player: Player, direction: Direction)
-    player.direction = direction
+    player:set_movement(player.position, direction)
 end
 
 function ScriptedBattle:slide(player: Player, velocity: Vector)
