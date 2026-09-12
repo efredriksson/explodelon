@@ -117,7 +117,7 @@ function Eggs:possible_hatcher(player: Player): Dino
         if player:hitbox():overlap(egg:hitbox()) then
             if not egg.breaking and not egg.is_exploding then
                 egg:open()
-                return dinos.new(egg.position, player.direction)
+                return dinos.new_random(egg.position, player.direction)
             end
         end
     end
