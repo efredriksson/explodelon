@@ -1,9 +1,11 @@
 local animations = require("engine.animations")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
+local vectors = require("engine.geometry.vectors")
 local logger = require("engine.logger")
 
 local type Animation = animations.Animation
+local type Direction = vectors.Direction
 local type Point = points.Point
 local type Rectangle = rectangles.Rectangle
 
@@ -79,6 +81,12 @@ end
 
 function grid.snap_to(pos: Point): Point
     return points.new(grid.snap_to_x(pos.x), grid.snap_to_y(pos.y))
+end
+
+function grid.tile_ahead_of(pos: Point, direction: Direction): Point
+    return grid.snap_to(pos):move(
+        vectors.from_direction(direction):scale(grid.TILE_SIZE)
+    )
 end
 
 function grid.outside_on_opposite_side(out_pos: Point): Point
