@@ -259,6 +259,10 @@ function ScriptedBattle:throw_bomb_with_dino(player: Player, to: Point)
     end
 end
 
+function ScriptedBattle:jump_with_dino(player: Player, to: Point)
+    player:jump_with_dino(to)
+end
+
 function ScriptedBattle:_step_systems(dt: number)
     local alive_players = itertools.filter(self.players, is_alive)
     self.alive_players_group:rebuild(alive_players)
