@@ -19,6 +19,7 @@ local type Stage = interface
     slide: function(self, player: Player, velocity: Vector)
     mount_dino: function(self, player: Player, color: DinoColor)
     throw_bomb_with_dino: function(self, player: Player, to: Point)
+    jump_with_dino: function(self, player: Player, to: Point)
 end
 
 -- open() runs once per run: spawn a fresh cast, clear phase state.
