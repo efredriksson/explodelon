@@ -3,6 +3,7 @@
 local choreography = require("preview.choreography")
 local bomb = require("preview.options.bomb")
 local dino_blue = require("preview.options.dino_blue")
+local dino_green = require("preview.options.dino_green")
 local dino_pink = require("preview.options.dino_pink")
 local egg = require("preview.options.egg")
 local fire = require("preview.options.fire")
@@ -24,11 +25,20 @@ local type PreviewSubject = enum
     "egg"
     "dino_blue"
     "dino_pink"
+    "dino_green"
 end
 
 -- Needs a builder below.
 local ROTATION: {PreviewSubject} = {
-    "bomb", "fire", "speed", "kick", "lightning_bomb", "egg", "dino_blue", "dino_pink"
+    "bomb",
+    "fire",
+    "speed",
+    "kick",
+    "lightning_bomb",
+    "egg",
+    "dino_blue",
+    "dino_pink",
+    "dino_green",
 }
 
 local scenery_builders: {PreviewSubject: function(): Scenery} = {
@@ -40,6 +50,7 @@ local scenery_builders: {PreviewSubject: function(): Scenery} = {
     egg = egg.new_scenery,
     dino_blue = dino_blue.new_scenery,
     dino_pink = dino_pink.new_scenery,
+    dino_green = dino_green.new_scenery,
 }
 
 local choreography_builders: {PreviewSubject: function(): Choreography} = {
@@ -51,6 +62,7 @@ local choreography_builders: {PreviewSubject: function(): Choreography} = {
     egg = egg.new_choreography,
     dino_blue = dino_blue.new_choreography,
     dino_pink = dino_pink.new_choreography,
+    dino_green = dino_green.new_choreography,
 }
 
 local options = {
