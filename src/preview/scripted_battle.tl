@@ -37,10 +37,12 @@ local type HardBlocks = hard_blocks.HardBlocks
 local type Items = items.Items
 local type Kinematic = require("kinematic")
 local type LightningBombs = lightning_bombs.LightningBombs
+local type Lookup = collision.Lookup
 local type Map = settings.Map
 local type Player = players.Player
 local type PlayerAnimations = player_animations.PlayerAnimations
 local type Point = points.Point
+local type ReadableGroup = collision.ReadableGroup
 local type Scenery = scenery.Scenery
 local type SoftBlocks = soft_blocks.SoftBlocks
 local type Stage = choreography.Stage
@@ -267,6 +269,25 @@ function ScriptedBattle:dash_with_dino(player: Player)
     player:dash_with_dino()
 end
 
+function ScriptedBattle:stun_cry_with_dino(player: Player)
+    player:stun_cry_with_dino()
+end
+
+-- Mirrors Battle:_handle_stun_cry: unlike jump/dash/throw, the hit itself is
+-- Battle-only logic no previous lesson needed, so it never ran here before.
+function ScriptedBattle:_handle_stun_cry(
+    lookup: Lookup, alive_players: ReadableGroup<Player>, player: Player
+)
+    local hit_players = lookup:in_box_and_group(
+        player:get_stun_cry_hitbox(), alive_players
+    )
+    for _, hit_player in ipairs(hit_players) do
+        if hit_player.action ~= "stunned" then
+            hit_player:stun_for(1.5)
+        end
+    end
+end
+
 function ScriptedBattle:_step_systems(dt: number)
     local alive_players = itertools.filter(self.players, is_alive)
     self.alive_players_group:rebuild(alive_players)
@@ -317,6 +338,9 @@ function ScriptedBattle:_step_systems(dt: number)
             player:jumps_onto(hatching_dino)
             self.player_animations.dinos:add_for(hatching_dino)
         end
+        if player:is_stun_crying() then
+            self:_handle_stun_cry(lookup, self.alive_players_group, player)
+        end
     end
 
     self.soft_blocks:update(dt)
@@ -365,6 +389,8 @@ function ScriptedBattle:draw()
     end
     -- Bomb thrown in air, draw throw shadows over all entities.
     self.bombs:draw_in_air_shadows()
+    -- Put stun cry text above everything else (with up exception)
+    self.player_animations:draw_stun_cry_texts_not_up()
 end
 
 return scripted_battle
