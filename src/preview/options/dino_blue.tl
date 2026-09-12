@@ -24,6 +24,8 @@ local BOMB_A_COLUMN = window.FIRST_COLUMN + 2
 local BOMB_B_COLUMN = window.FIRST_COLUMN + 3
 local VICTIM_COLUMN = window.FIRST_COLUMN + 4
 
+local BOMB_FIRE = 2
+
 local WALKER_SPEED = 35
 -- WALKER_SPEED doesn't evenly divide TILE_SIZE, use a margin for stop:
 local STOP_MARGIN = 1
@@ -37,9 +39,12 @@ end
 
 local ENTRY_TILE = corridor_tile_at(ENTRY_COLUMN)
 local STOP_TILE = corridor_tile_at(STOP_COLUMN)
-local BOMB_A_TILE = corridor_tile_at(BOMB_A_COLUMN)
 local BOMB_B_TILE = corridor_tile_at(BOMB_B_COLUMN)
 local VICTIM_TILE = corridor_tile_at(VICTIM_COLUMN)
+local SCENERY_BOMBS = {
+    scenery.bomb_at(BOMB_A_COLUMN, WALK_ROW, BOMB_FIRE),
+    scenery.bomb_at(BOMB_B_COLUMN, WALK_ROW, BOMB_FIRE),
+}
 
 local type WalkerPhase = enum
     "mounting"
@@ -59,7 +64,7 @@ end
 local dino_blue = {}
 
 function dino_blue.new_scenery(): Scenery
-    return scenery.new(settings.map, {}, {}, nil, {BOMB_A_TILE, BOMB_B_TILE})
+    return scenery.new(settings.map, {}, {}, nil, SCENERY_BOMBS)
 end
 
 function dino_blue.new_choreography(): Choreography
