@@ -45,6 +45,10 @@ local type Vector = vectors.Vector
 local STABLE_STEP_SECONDS = 1 / 60
 local STABLE_MAX_CATCHUP_SECONDS = STABLE_STEP_SECONDS * 2
 
+-- Fixed, not settings.game_rules.players.start_with_fire: previews must stay
+-- deterministic regardless of the live fire-power rule the user has set.
+local STATIC_BOMB_FIRE = 2
+
 -- A clock that will keep to a more uniform 'dt', reducing the amount of numerical
 -- rounding issues. This helps ensure the map previews are deterministic.
 local record StableClock
@@ -93,7 +97,7 @@ local record ScriptedBattle is Stage
     blockers: CombinedGroup<Explodable>
     blocks_bombs: CombinedGroup<Kinematic>
     blocks_jump: CombinedGroup<Kinematic>
-    empty_bounce_group: Group<Kinematic>
+    bombs_bounce_on: CombinedGroup<Kinematic>
     empty_pressure_blocks: Group<Entity>
     explodables: CombinedGroup<Explodable>
     lightning_blockers: CombinedGroup<Explodable>
@@ -123,6 +127,13 @@ function ScriptedBattle:_rebuild_groups()
         self.soft_blocks.on_ground.set,
         self.bombs.on_ground.set
     )
+    self.bombs_bounce_on = collision.new_combined_group(
+        self.soft_blocks.on_ground.set,
+        self.hard_blocks.on_ground.set,
+        self.lightning_bombs.on_ground.set,
+        self.bombs.on_ground.set,
+        self.alive_players_group.set
+    )
 end
 
 function ScriptedBattle:_restart()
@@ -140,6 +151,9 @@ function ScriptedBattle:_restart()
         self.eggs:spawn_at(position)
     end
     self.bombs = bombs.new(true)
+    for _, position in ipairs(self.scenery.bombs) do
+        self.bombs:place_static_bomb(position, STATIC_BOMB_FIRE)
+    end
     self.lightning_bombs = lightning_bombs.new()
     self:_rebuild_groups()
     self.trampolines = trampolines.new(self.blocks_jump, self.empty_pressure_blocks)
@@ -179,7 +193,6 @@ function scripted_battle.new(stage_set: Scenery, piece: Choreography): ScriptedB
     self.entered_map = settings.map
     self.clock = StableClock.new()
     self.alive_players_group = collision.new_group()
-    self.empty_bounce_group = collision.new_group()
     self.empty_pressure_blocks = collision.new_group()
 
     self:play(stage_set, piece)
@@ -229,7 +242,7 @@ function ScriptedBattle:_step_systems(dt: number)
         self.blocks_bombs,
         self.alive_players_group,
         self.bombs.on_ground,
-        self.empty_bounce_group,
+        self.bombs_bounce_on,
         lookup
     )
     self.lightning_bombs:update(
@@ -300,6 +313,7 @@ function ScriptedBattle:draw()
         self.items.on_ground.set,
         self.eggs.on_ground.set,
         self.bombs.on_ground.set,
+        self.bombs.in_air.set,
         self.lightning_bombs.on_ground.set,
         self.player_animations:get_all()
     )
@@ -307,6 +321,8 @@ function ScriptedBattle:draw()
     for _, entity in ipairs(entities) do
         entity:draw()
     end
+    -- Bomb thrown in air, draw throw shadows over all entities.
+    self.bombs:draw_in_air_shadows()
 end
 
 return scripted_battle
