@@ -327,6 +327,7 @@ local PREVIEW_TINTS: {PreviewSubject: Color} = {
     egg = painting.PURPLE,
     dino_blue = painting.BLUE,
     dino_pink = painting.PINK,
+    dino_green = painting.GREEN,
 }
 
 local MARKER_WIDTH = 44

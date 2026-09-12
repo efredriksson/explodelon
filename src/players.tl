@@ -191,6 +191,10 @@ function Player:is_bouncing(): boolean
     return self.action == "bounce"
 end
 
+function Player:is_crashed(): boolean
+    return self.action == "crashed"
+end
+
 function Player:is_stunned(): boolean
     return self.stunned_for > 0
 end
