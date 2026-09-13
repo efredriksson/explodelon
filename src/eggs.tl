@@ -58,7 +58,7 @@ function Egg:open()
     self.animation = animations.new(egg_open_image, 34, 1 / 6, 0.5)
 end
 
-function Egg:blow_up()
+function Egg:blow_up(_: number)
     self.is_exploding = true
 end
 

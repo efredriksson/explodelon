@@ -47,7 +47,7 @@ function Item:get_position(): Point
     return self.position
 end
 
-function Item:blow_up()
+function Item:blow_up(_: number)
     self.is_exploding = true
 end
 

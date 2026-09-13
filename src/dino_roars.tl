@@ -49,7 +49,7 @@ function DinoRoars:_resolve_sonic_blast(lookup: Lookup, player: Player)
         player:get_sonic_blast_hitbox(), self.bombs
     )
     for _, hit_bomb in ipairs(hit_bombs) do
-        hit_bomb:blow_up()
+        hit_bomb:blow_up(1.0)
     end
 
     local hit_blocks = lookup:in_box_and_group(

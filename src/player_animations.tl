@@ -29,6 +29,17 @@ local type Vector = vectors.Vector
 local type SpriteImages = {PlayerState: {Action: {Direction: Image}}}
 local type SonicWaveColor = players.SonicWaveColor
 
+local HP_BAR_WIDTH = 12
+local HP_BAR_MIN_FILL_WIDTH = 1
+local HP_BAR_HEIGHT = 2
+local HP_BAR_RISE = 20
+local HP_BAR_SHAKE_HORIZONTAL_PERIOD = 0.08
+local HP_BAR_SHAKE_VERTICAL_PERIOD = 0.11
+local HP_BAR_SHAKE_HORIZONTAL_AMOUNT = 1
+local HP_BAR_SHAKE_VERTICAL_AMOUNT = 0.5
+local HP_BAR_BACKGROUND: Color = {0, 0, 0}
+local HP_BAR_FILL: Color = {240, 50, 60}
+
 local jump_shadow_image: Image
 local flag_animations: {integer: {CharacterName: Animation}} = {}
 local sonic_wave_images: {Direction: {SonicWaveColor: Image}} = {}
@@ -684,6 +695,58 @@ function PlayerAnimations:draw_petrify_countdowns()
     for _, entity in ipairs(self.entities) do
         if entity.player:is_petrified() then
             draw_petrify_countdown(entity.player)
+        end
+    end
+end
+
+local function shake_offset(phase: number, period: number, amount: number): number
+    if (phase % period) > period / 2 then
+        return amount
+    else
+        return -amount
+    end
+end
+
+local function hp_bar_shake(player: Player): Vector
+    if not player:is_recently_hurt() then
+        return vectors.new(0, 0)
+    end
+
+    return vectors.new(
+        shake_offset(
+            player.time_alive,
+            HP_BAR_SHAKE_HORIZONTAL_PERIOD,
+            HP_BAR_SHAKE_HORIZONTAL_AMOUNT
+        ),
+        shake_offset(
+            player.time_alive,
+            HP_BAR_SHAKE_VERTICAL_PERIOD,
+            HP_BAR_SHAKE_VERTICAL_AMOUNT
+        )
+    )
+end
+
+local function draw_hp_bar(player: Player)
+    local top_left = player:sprite_box():center():move(
+        vectors.new(-HP_BAR_WIDTH / 2, -HP_BAR_RISE):plus(hp_bar_shake(player))
+    )
+
+    lutro.graphics.setColor(table.unpack(HP_BAR_BACKGROUND))
+    lutro.graphics.rectangle(
+        "fill", top_left.x, top_left.y, HP_BAR_WIDTH, HP_BAR_HEIGHT
+    )
+
+    local fill_width = math.max(
+        HP_BAR_MIN_FILL_WIDTH, HP_BAR_WIDTH * (player.hp / player.max_hp)
+    )
+    lutro.graphics.setColor(table.unpack(HP_BAR_FILL))
+    lutro.graphics.rectangle("fill", top_left.x, top_left.y, fill_width, HP_BAR_HEIGHT)
+end
+
+function PlayerAnimations:draw_hp_bars()
+    for _, entity in ipairs(self.entities) do
+        if entity.player:is_alive() and not entity.player:is_at_max_hp() then
+            draw_hp_bar(entity.player)
         end
     end
 end

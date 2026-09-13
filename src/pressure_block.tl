@@ -47,7 +47,7 @@ function PressureBlock:draw_shadow()
     lutro.graphics.draw(block_fall_shadow, shadow_x, shadow_y)
 end
 
-function PressureBlock:blow_up()
+function PressureBlock:blow_up(_: number)
     -- Does nothing
 end
 

@@ -103,6 +103,10 @@ function ExplosionTile:draw()
     assert(false, "Not implemented")
 end
 
+local function hit_fraction(explodable: Explodable, tile: ExplosionTile): number
+    return explodable:hitbox():overlap_area(tile:hitbox())
+end
+
 local record Explosion
     position: Point
     range: number
@@ -198,7 +202,7 @@ function Explosion:_update_active_tiles(
             if blocker.in_explosion then
                 return "next"
             else
-                blocker:blow_up()
+                blocker:blow_up(hit_fraction(blocker, tile))
                 table.insert(self.blocked_at, tile.position)
                 return "now"
             end
@@ -392,8 +396,8 @@ function Explosions:update(
         explosion:update(dt, blockers, lookup)
 
         local collides_with = lookup:collisions_between(explosion.tiles, explodables)
-        for _, collide_with in pairs(collides_with) do
-            collide_with:blow_up()
+        for tile, collide_with in pairs(collides_with) do
+            collide_with:blow_up(hit_fraction(collide_with, tile))
         end
 
         if explosion:is_complete() then

@@ -486,8 +486,8 @@ function Battle:update(dt: number)
     local hit_players = lookup:collisions_between(
         self.alive_players_group, self.pressure_blocks_group
     )
-    for player, _ in pairs(hit_players) do
-        player:kill()
+    for player, pressure_block in pairs(hit_players) do
+        player:hurt(player:hitbox():overlap_area(pressure_block:hitbox()))
     end
     for _, player in ipairs(dead_players) do
         if settings.game_rules.players.mad_bombers then
@@ -592,6 +592,8 @@ function Battle:draw()
     self.player_animations:draw_stun_cry_texts_not_up()
     -- Petrify countdown reads on top of the frozen character
     self.player_animations:draw_petrify_countdowns()
+    -- HP bar reads on top of the character, hidden while at max HP
+    self.player_animations:draw_hp_bars()
 
     local mobility_related: {Kinematic} = itertools.sets_as_list(
         self.bombs.on_ground.set,

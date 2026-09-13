@@ -26,6 +26,8 @@ local sonic_blast_sound: Source
 local STUN_CRY_ROAR_FOR = 1.8
 local SONIC_BLAST_ROAR_FOR = 1.4
 local SLIDE_FOR_TIME = 0.4
+local HURT_SHAKE_FOR = 0.2
+local DAMAGE_SCALING = 12
 local CHARACTER_HEIGHT_ON_DINO = 8 -- How high up from ground player is when on dino
 local DASH_WITH_DINO_SPEED_BONUS = {
     [1] = 50,
@@ -110,6 +112,9 @@ local record Player is Explodable, Kinematic, Entity
     invulnerable_for: number
     stunned_for: number
     petrified_for: number
+    hp: integer
+    max_hp: integer
+    hurt_for: number
     time_alive: number
     slide_for: number
     roar_for: number
@@ -150,6 +155,9 @@ function players.new(id: integer, sprite: CharacterName, position: Point): Playe
     self.bombs = player_settings.start_with_bombs
     self.lightning_bomb = player_settings.start_with_lightning_bombs
     self.fire = player_settings.start_with_fire
+    self.max_hp = player_settings.max_hp
+    self.hp = self.max_hp
+    self.hurt_for = 0
     self.invulnerable_for = 0
     self.stunned_for = 0
     self.petrified_for = 0
@@ -610,7 +618,7 @@ function Player:_unpetrify()
     self.invulnerable_for = 2
 end
 
-function Player:kill()
+function Player:hurt(hit_fraction: number)
     if self:is_invulnerable() or self:is_jumping() or self:is_petrified() then
         return
     end
@@ -625,12 +633,19 @@ function Player:kill()
         return
     end
 
-    if self:_should_petrify() then
+    local damage = math.max(1, math.ceil(hit_fraction / DAMAGE_SCALING))
+    self.hp = self.hp - damage
+
+    if self:_should_petrify() and self.hp * 2 < self.max_hp then
         self:_petrify()
+        self.hp = self.max_hp
         return
     end
 
-    self.action = "dying"
+    self.hurt_for = HURT_SHAKE_FOR
+    if self.hp <= 0 then
+        self.action = "dying"
+    end
 end
 
 function Player:remove()
@@ -638,12 +653,20 @@ function Player:remove()
     self.action = "dying"
 end
 
-function Player:blow_up()
-    self:kill()
+function Player:blow_up(hit_fraction: number)
+    self:hurt(hit_fraction)
 end
 
 function Player:is_alive(): boolean
     return self.action ~= "dying"
+end
+
+function Player:is_at_max_hp(): boolean
+    return self.hp >= self.max_hp
+end
+
+function Player:is_recently_hurt(): boolean
+    return self.hurt_for > 0
 end
 
 function Player:get_jump_position(): Point
@@ -662,6 +685,7 @@ function Player:update(dt: number)
     self.time_alive = self.time_alive + dt
     self.invulnerable_for = self.invulnerable_for - dt
     self.stunned_for = self.stunned_for - dt
+    self.hurt_for = self.hurt_for - dt
     self.slide_for = self.slide_for - dt
     self.roar_for = self.roar_for - dt
     self.last_time_adding_sonic_wave = self.last_time_adding_sonic_wave + dt
@@ -736,6 +760,10 @@ function Player:get_draw_position(): Point
     end
 
     return self.position
+end
+
+function Player:sprite_box(): Rectangle
+    return hitboxes.new_block(self:get_draw_position())
 end
 
 function players.load_assets()

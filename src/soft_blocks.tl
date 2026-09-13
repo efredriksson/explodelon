@@ -100,7 +100,7 @@ function SoftBlock:draw()
     end
 end
 
-function SoftBlock:blow_up()
+function SoftBlock:blow_up(_: number)
     self.is_exploding = true
     -- Draw soft blocks exploding above, revealing possible item under it
     self.z_index = z_index.ABOVE

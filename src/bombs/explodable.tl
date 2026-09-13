@@ -7,7 +7,7 @@ local type Rectangle = rectangles.Rectangle
 local type Explodable = interface
     get_position: function(self): Point
     in_explosion: boolean
-    blow_up: function(self)
+    blow_up: function(self, hit_fraction: number)
     hitbox: function(self): Rectangle
 end
 

@@ -68,6 +68,7 @@ local record PlayerRules
     start_with_bombs: integer
     start_with_lightning_bombs: integer
     start_with_fire: integer
+    max_hp: integer
     petrify_grace_seconds: number
     petrify_stone_seconds: number
 end
@@ -81,6 +82,7 @@ function PlayerRules.new(): PlayerRules
     self.start_with_bombs = 1
     self.start_with_lightning_bombs = 0
     self.start_with_fire = 2
+    self.max_hp = 1
     self.petrify_grace_seconds = 8
     self.petrify_stone_seconds = 5
     return self
@@ -312,6 +314,10 @@ end
 
 function Settings.set_start_with_fire(value: integer)
     settings.game_rules.players.start_with_fire = value
+end
+
+function Settings.set_max_hp(value: integer)
+    settings.game_rules.players.max_hp = value
 end
 
 function Settings.set_nbr_battles(value: integer)
