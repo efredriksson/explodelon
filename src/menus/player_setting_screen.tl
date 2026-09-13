@@ -27,6 +27,7 @@ function player_settings_screen.new(previous_screen: Scene): MenuScreen
     local start_with_fire_selected = items.new_integer_selection(
         player_settings.start_with_fire, 1, 20
     )
+    local max_hp_selected = items.new_integer_selection(player_settings.max_hp, 1, 500)
     return screens.new(
         {
             choices.new_boolean(
@@ -74,7 +75,8 @@ function player_settings_screen.new(previous_screen: Scene): MenuScreen
                 start_with_fire_selected,
                 settings.set_start_with_fire
             ),
-            choices.new_done("back", 180, done),
+            choices.new_integer("max hp", 170, max_hp_selected, settings.set_max_hp),
+            choices.new_done("back", 195, done),
         },
         done
     )

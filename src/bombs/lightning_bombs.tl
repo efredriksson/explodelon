@@ -73,7 +73,7 @@ function LightningBomb:movementbox(): Rectangle
     return hitboxes.new_block(self.position)
 end
 
-function LightningBomb:blow_up()
+function LightningBomb:blow_up(_: number)
     self.timer = 0
 end
 

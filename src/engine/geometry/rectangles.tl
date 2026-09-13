@@ -35,6 +35,22 @@ function Rectangle:overlap(other: Rectangle): boolean
         )
 end
 
+local function interval_intersection_length(
+    xmin1: number, xmax1: number, xmin2: number, xmax2: number
+): number
+    return math.max(0, math.min(xmax1, xmax2) - math.max(xmin1, xmin2))
+end
+
+function Rectangle:overlap_area(other: Rectangle): number
+    local intersection_width = interval_intersection_length(
+        self.x, self.x + self.width, other.x, other.x + other.width
+    )
+    local intersection_height = interval_intersection_length(
+        self.y, self.y + self.height, other.y, other.y + other.height
+    )
+    return intersection_width * intersection_height
+end
+
 local function interval_contained(
     xmin1: number, xmax1: number, xmin2: number, xmax2: number
 ): boolean

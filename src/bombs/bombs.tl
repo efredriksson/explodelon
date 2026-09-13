@@ -76,7 +76,7 @@ function Bomb:movementbox(): Rectangle
     return hitboxes.new_block(self.position)
 end
 
-function Bomb:blow_up()
+function Bomb:blow_up(_: number)
     self.timer = 0
 end
 

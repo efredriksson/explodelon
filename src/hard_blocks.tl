@@ -45,7 +45,7 @@ function HardBlock:hit_with_bomb()
     -- Does nothing
 end
 
-function HardBlock:blow_up()
+function HardBlock:blow_up(_: number)
     -- Does nothing
 end
 
