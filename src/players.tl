@@ -28,6 +28,7 @@ local SONIC_BLAST_ROAR_FOR = 1.4
 local SLIDE_FOR_TIME = 0.4
 local HURT_SHAKE_FOR = 0.2
 local DAMAGE_SCALING = 12
+local SUDDEN_DEATH_DAMAGE_FRACTION = 0.05
 local CHARACTER_HEIGHT_ON_DINO = 8 -- How high up from ground player is when on dino
 local DASH_WITH_DINO_SPEED_BONUS = {
     [1] = 50,
@@ -112,7 +113,7 @@ local record Player is Explodable, Kinematic, Entity
     invulnerable_for: number
     stunned_for: number
     petrified_for: number
-    hp: integer
+    hp: number
     max_hp: integer
     hurt_for: number
     time_alive: number
@@ -657,6 +658,10 @@ function Player:blow_up(hit_fraction: number)
     self:hurt(hit_fraction)
 end
 
+function Player:_take_sudden_death_damage(dt: number)
+    self.hp = math.max(1, self.hp - self.max_hp * dt * SUDDEN_DEATH_DAMAGE_FRACTION)
+end
+
 function Player:is_alive(): boolean
     return self.action ~= "dying"
 end
@@ -681,7 +686,7 @@ function Player:_new_sonic_wave(): SonicWave
     return SonicWave.new(color, time_to_live)
 end
 
-function Player:update(dt: number)
+function Player:update(dt: number, sudden_death?: boolean)
     self.time_alive = self.time_alive + dt
     self.invulnerable_for = self.invulnerable_for - dt
     self.stunned_for = self.stunned_for - dt
@@ -717,6 +722,10 @@ function Player:update(dt: number)
     if self.play_dino_roar and self:is_sonic_blasting() then
         sonic_blast_sound:play()
         self.play_dino_roar = false
+    end
+
+    if sudden_death then
+        self:_take_sudden_death_damage(dt)
     end
 
     if self.petrified_for > 0 then
