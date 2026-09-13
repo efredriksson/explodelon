@@ -64,6 +64,7 @@ local function new_bomber(
     lightning_bomb_count?: integer
 ): Player
     local drone = players.new(1, sprite, start)
+    drone.hp = 1
     drone.bombs = bomb_count
     drone.fire = fire
     drone.lightning_bomb = lightning_bomb_count or 0
@@ -99,13 +100,16 @@ end
 
 function drones.victim(sprite: CharacterName, start: Point): Player
     local drone = players.new(2, sprite, start)
+    drone.hp = 1
     local grace = settings.game_rules.players.petrify_grace_seconds
     drone.time_alive = grace + 1 -- Nudged past the grace window so victim can die
     return drone
 end
 
 function drones.bystander(sprite: CharacterName, start: Point): Player
-    return players.new(3, sprite, start)
+    local bystander = players.new(3, sprite, start)
+    bystander.hp = 1
+    return bystander
 end
 
 function Pacer.new(walker: Player, reach: number, facing: Direction): Pacer
