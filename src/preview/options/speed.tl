@@ -1,3 +1,4 @@
+local characters = require("characters")
 local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
 local grid = require("level_layout.grid")
@@ -9,6 +10,7 @@ local window = require("preview.options.window")
 local scenery = require("preview.scenery")
 local settings = require("settings")
 
+local type CharacterName = characters.CharacterName
 local type Choreography = choreography.Choreography
 local type Direction = vectors.Direction
 local type Player = players.Player
@@ -29,6 +31,7 @@ local BOMB_COLUMN = window.LAST_COLUMN
 local START_SPEED = 30
 local PLAYBACK_RATE = 2
 local CYCLE_LENGTH = 4.2
+local WALKER_SPRITE: CharacterName = "kotetsu"
 
 local function corridor_tile_at(column: integer): Point
     return grid.get_tile_position(column, WALK_ROW)
@@ -78,7 +81,7 @@ end
 
 function SpeedLesson:open(stage: Stage): {Player}
     self.stage = stage
-    self.walker = drones.bomber(ENTRY_TILE)
+    self.walker = drones.bomber(WALKER_SPRITE, ENTRY_TILE)
     self.walker.speed = START_SPEED
     self.phase = "crossing"
     return {self.walker}

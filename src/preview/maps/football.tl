@@ -1,5 +1,6 @@
 -- A goal bomb kills the victim pacing the next lane over.
 
+local characters = require("characters")
 local grid = require("level_layout.grid")
 local map_entities = require("level_layout.map_entities")
 local players = require("players")
@@ -7,6 +8,7 @@ local choreography = require("preview.choreography")
 local drones = require("preview.drones")
 local scenery = require("preview.scenery")
 
+local type CharacterName = characters.CharacterName
 local type Choreography = choreography.Choreography
 local type KickCycle = drones.KickCycle
 local type Pacer = drones.Pacer
@@ -30,6 +32,9 @@ local ROW_4_CLEARANCE = 28
 local PACE_RANGE = 200
 
 local CYCLE_LENGTH = 3.3
+
+local KICKER_SPRITE: CharacterName = "kotetsu"
+local VICTIM_SPRITE: CharacterName = "white"
 
 -- (10,4)/(12,6) pop for the goal blasts; the rest of rows 4 and 6 stay clear.
 local SOFT_BLOCKS: {SoftBlockConfig} = {
@@ -81,8 +86,10 @@ end
 
 function FootballPreview:open(stage: Stage): {Player}
     self.stage = stage
-    self.kicker = drones.kicker(KICKER_START, KICKER_BOMBS, KICKER_FIRE_RANGE)
-    self.victim = drones.victim(VICTIM_START)
+    self.kicker = drones.kicker(
+        KICKER_SPRITE, KICKER_START, KICKER_BOMBS, KICKER_FIRE_RANGE
+    )
+    self.victim = drones.victim(VICTIM_SPRITE, VICTIM_START)
     self.kick_cycle = drones.KickCycle.new(
         self.kicker, KICKER_BOMBS, "up", ROW_4_CLEARANCE
     )

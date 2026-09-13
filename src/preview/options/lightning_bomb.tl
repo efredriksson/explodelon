@@ -1,3 +1,4 @@
+local characters = require("characters")
 local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
 local grid = require("level_layout.grid")
@@ -9,6 +10,7 @@ local window = require("preview.options.window")
 local scenery = require("preview.scenery")
 local settings = require("settings")
 
+local type CharacterName = characters.CharacterName
 local type Choreography = choreography.Choreography
 local type Direction = vectors.Direction
 local type Player = players.Player
@@ -33,6 +35,9 @@ local WALKER_SPEED = 45
 local PLAYBACK_RATE = 2
 -- 5s fuse; rest covers entry/flight/blast.
 local CYCLE_LENGTH = 8
+
+local WALKER_SPRITE: CharacterName = "black"
+local VICTIM_SPRITE: CharacterName = "white"
 
 local function corridor_tile_at(column: integer): Point
     return grid.get_tile_position(column, WALK_ROW)
@@ -75,10 +80,10 @@ end
 
 function LightningBombLesson:open(stage: Stage): {Player}
     self.stage = stage
-    self.walker = drones.bomber(ENTRY_TILE, nil, nil, 1)
+    self.walker = drones.bomber(WALKER_SPRITE, ENTRY_TILE, nil, nil, 1)
     self.walker.speed = WALKER_SPEED
     self.phase = "entering"
-    local victim = drones.victim(VICTIM_TILE)
+    local victim = drones.victim(VICTIM_SPRITE, VICTIM_TILE)
     return {self.walker, victim}
 end
 

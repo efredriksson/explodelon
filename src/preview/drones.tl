@@ -13,10 +13,6 @@ local type Player = players.Player
 local type Point = points.Point
 local type Stage = choreography.Stage
 
-local BOMBER_SPRITE: CharacterName = "kotetsu"
-local VICTIM_SPRITE: CharacterName = "white"
-local BYSTANDER_SPRITE: CharacterName = "black"
-
 local OPPOSITE: {Direction: Direction} = {
     up = "down",
     down = "up",
@@ -61,45 +57,55 @@ end
 local drones = {KickCycle = KickCycle, Pacer = Pacer}
 
 local function new_bomber(
-    start: Point, bomb_count: integer, fire: integer, lightning_bomb_count?: integer
+    sprite: CharacterName,
+    start: Point,
+    bomb_count: integer,
+    fire: integer,
+    lightning_bomb_count?: integer
 ): Player
-    local drone = players.new(1, BOMBER_SPRITE, start)
+    local drone = players.new(1, sprite, start)
     drone.bombs = bomb_count
     drone.fire = fire
     drone.lightning_bomb = lightning_bomb_count or 0
     return drone
 end
 
-function drones.kicker(start: Point, bomb_count: integer, fire: integer): Player
-    local drone = new_bomber(start, bomb_count, fire)
+function drones.kicker(
+    sprite: CharacterName, start: Point, bomb_count: integer, fire: integer
+): Player
+    local drone = new_bomber(sprite, start, bomb_count, fire)
     drone.has_kick = true
     return drone
 end
 
 function drones.bomber(
-    start: Point, bomb_count?: integer, fire?: integer, lightning_bomb_count?: integer
+    sprite: CharacterName,
+    start: Point,
+    bomb_count?: integer,
+    fire?: integer,
+    lightning_bomb_count?: integer
 ): Player
-    return new_bomber(start, bomb_count or 1, fire or 2, lightning_bomb_count)
+    return new_bomber(sprite, start, bomb_count or 1, fire or 2, lightning_bomb_count)
 end
 
 function drones.bomber_victim(
-    start: Point, bomb_count?: integer, fire?: integer
+    sprite: CharacterName, start: Point, bomb_count?: integer, fire?: integer
 ): Player
-    local drone = new_bomber(start, bomb_count or 1, fire or 2)
+    local drone = new_bomber(sprite, start, bomb_count or 1, fire or 2)
     local grace = settings.game_rules.players.petrify_grace_seconds
     drone.time_alive = grace + 1 -- Nudged past the grace window so victim can die
     return drone
 end
 
-function drones.victim(start: Point): Player
-    local drone = players.new(2, VICTIM_SPRITE, start)
+function drones.victim(sprite: CharacterName, start: Point): Player
+    local drone = players.new(2, sprite, start)
     local grace = settings.game_rules.players.petrify_grace_seconds
     drone.time_alive = grace + 1 -- Nudged past the grace window so victim can die
     return drone
 end
 
-function drones.bystander(start: Point): Player
-    return players.new(3, BYSTANDER_SPRITE, start)
+function drones.bystander(sprite: CharacterName, start: Point): Player
+    return players.new(3, sprite, start)
 end
 
 function Pacer.new(walker: Player, reach: number, facing: Direction): Pacer

@@ -1,5 +1,6 @@
 -- Stacks three live bombs at once.
 
+local characters = require("characters")
 local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
 local itertools = require("itertools")
@@ -12,6 +13,7 @@ local window = require("preview.options.window")
 local scenery = require("preview.scenery")
 local settings = require("settings")
 
+local type CharacterName = characters.CharacterName
 local type Choreography = choreography.Choreography
 local type Direction = vectors.Direction
 local type ItemDrop = scenery.ItemDrop
@@ -53,6 +55,7 @@ local WALKER_SPEED = 45
 local PLAYBACK_RATE = 2
 -- Fuses, blasts, a beat.
 local CYCLE_LENGTH = 4.5
+local WALKER_SPRITE: CharacterName = "honey"
 
 -- Off the walker's path, within blast reach.
 local SOFT_BLOCKS: {SoftBlockConfig} = {
@@ -101,7 +104,7 @@ end
 
 function BombLesson:open(stage: Stage): {Player}
     self.stage = stage
-    self.walker = drones.bomber(ENTRY_TILE, START_BOMBS, START_FIRE)
+    self.walker = drones.bomber(WALKER_SPRITE, ENTRY_TILE, START_BOMBS, START_FIRE)
     self.walker.speed = WALKER_SPEED
     self.phase = "planting"
     self.next_plant = 1
