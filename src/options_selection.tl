@@ -201,8 +201,8 @@ function Row:marker_icon_height(): number
     return max_icon_height(self.materiel)
 end
 
-function Row:marker_height(): number
-    return self:marker_icon_height() + max_marker_footer(self.materiel)
+function Row:marker_height(marker_icon_height: number): number
+    return marker_icon_height + max_marker_footer(self.materiel)
 end
 
 local MATERIEL_ROWS: {Row} = {
@@ -356,10 +356,11 @@ local function draw_row(row: Row, subject: PreviewSubject)
     for position, materiel in ipairs(row.materiel) do
         local slot_x = row:slot_x(position)
         if is_preview_subject(materiel, subject) then
+            local marker_icon_height = row:marker_icon_height()
             draw_marker(
                 slot_x,
-                row.baseline - row:marker_icon_height(),
-                row:marker_height(),
+                row.baseline - marker_icon_height,
+                row:marker_height(marker_icon_height),
                 PREVIEW_TINTS[subject]
             )
         end
