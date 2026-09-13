@@ -289,6 +289,7 @@ function ScriptedBattle:_step_systems(dt: number)
         self.eggs.on_ground.set,
         self.items.on_ground.set,
         self.bombs.on_ground.set,
+        self.lightning_bombs.on_ground.set,
         self.alive_players_group.set
     )
 
