@@ -1,5 +1,6 @@
 -- The chaser seals the victim into the SE corner with dripped bombs.
 
+local characters = require("characters")
 local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
 local grid = require("level_layout.grid")
@@ -9,6 +10,7 @@ local choreography = require("preview.choreography")
 local drones = require("preview.drones")
 local scenery = require("preview.scenery")
 
+local type CharacterName = characters.CharacterName
 local type Choreography = choreography.Choreography
 local type Direction = vectors.Direction
 local type Player = players.Player
@@ -48,6 +50,10 @@ local VICTIM_COMMIT_RANGE = 96
 local CORNER_MARGIN = 16
 
 local CYCLE_LENGTH = 5.5
+
+local CHASER_SPRITE: CharacterName = "kotetsu"
+local VICTIM_SPRITE: CharacterName = "white"
+local BYSTANDER_SPRITE: CharacterName = "black"
 
 local SOFT_BLOCKS: {SoftBlockConfig} = {
     soft_block_at(2, 1),
@@ -130,9 +136,11 @@ end
 function IceRinkPreview:open(stage: Stage): {Player}
     self.stage = stage
     -- Not a kicker: a kick would scatter the seal it just laid.
-    self.chaser = drones.bomber(CHASER_START, CHASER_BOMB_BUDGET, CHASER_FIRE_RANGE)
-    self.victim = drones.victim(VICTIM_START)
-    self.bystander = drones.bystander(BYSTANDER_START)
+    self.chaser = drones.bomber(
+        CHASER_SPRITE, CHASER_START, CHASER_BOMB_BUDGET, CHASER_FIRE_RANGE
+    )
+    self.victim = drones.victim(VICTIM_SPRITE, VICTIM_START)
+    self.bystander = drones.bystander(BYSTANDER_SPRITE, BYSTANDER_START)
 
     -- Pre-seeded so the loop opens mid-chase.
     local victim_glide = self.victim:get_speed()

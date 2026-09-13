@@ -22,24 +22,45 @@ function ItemDrop.new(at: Point, kind: ItemType): ItemDrop
     return self
 end
 
+local record StaticBomb
+    position: Point
+    fire: integer
+end
+
+function StaticBomb.new(position: Point, fire: integer): StaticBomb
+    local self: StaticBomb = setmetatable({}, {__index = StaticBomb})
+    self.position = position
+    self.fire = fire
+    return self
+end
+
 local record Scenery
     map: Map
     soft_blocks: {SoftBlockConfig}
     items: {ItemDrop}
+    eggs: {Point}
+    bombs: {StaticBomb}
 end
 
 local scenery = {
     ItemDrop = ItemDrop,
+    StaticBomb = StaticBomb,
     Scenery = Scenery,
 }
 
 function scenery.new(
-    map: Map, soft_blocks: {SoftBlockConfig}, items: {ItemDrop}
+    map: Map,
+    soft_blocks: {SoftBlockConfig},
+    items: {ItemDrop},
+    eggs?: {Point},
+    bombs?: {StaticBomb}
 ): Scenery
     local self: Scenery = setmetatable({}, {__index = Scenery})
     self.map = map
     self.soft_blocks = soft_blocks
     self.items = items
+    self.eggs = eggs or {}
+    self.bombs = bombs or {}
     return self
 end
 
@@ -51,6 +72,10 @@ end
 
 function scenery.item_at(column: integer, row: integer, kind: ItemType): ItemDrop
     return ItemDrop.new(grid.get_tile_position(column, row), kind)
+end
+
+function scenery.bomb_at(column: integer, row: integer, fire: integer): StaticBomb
+    return StaticBomb.new(grid.get_tile_position(column, row), fire)
 end
 
 return scenery

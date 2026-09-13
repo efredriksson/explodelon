@@ -28,6 +28,7 @@ local type ItemType = settings.ItemType
 local type Map = settings.Map
 local type MenuFont = fonts.MenuFont
 local type MenuSelection = menu_items.MenuSelection
+local type PreviewSubject = preview_options.PreviewSubject
 local type Rectangle = rectangles.Rectangle
 local type RulesetName = settings.RulesetName
 local type Scene = scenes.Scene
@@ -101,6 +102,8 @@ local record Materiel
     kind: MaterielKind
     item: ItemType
     color: DinoColor
+    -- Set only for "item" and "egg" rows.
+    subject: string
 end
 
 function Materiel.new(kind: MaterielKind, item?: ItemType, color?: DinoColor): Materiel
@@ -108,6 +111,13 @@ function Materiel.new(kind: MaterielKind, item?: ItemType, color?: DinoColor): M
     self.kind = kind
     self.item = item
     self.color = color
+    if kind == "item" then
+        self.subject = item
+    elseif kind == "egg" then
+        self.subject = "egg"
+    elseif kind == "dino" then
+        self.subject = "dino_" .. color
+    end
     return self
 end
 
@@ -119,12 +129,53 @@ local function dino_materiel(color: DinoColor): Materiel
     return Materiel.new("dino", nil, color)
 end
 
+-- Matches draw_materiel's sprite choice, so the marker starts at the icon's top.
+local function icon_height(materiel: Materiel): number
+    if materiel.kind == "item" then
+        return PICKUP_CROP.height * MATERIEL_SCALE
+    elseif materiel.kind == "soft_block" then
+        return SOFT_BLOCK_CROP.height * MATERIEL_SCALE
+    elseif materiel.kind == "egg" then
+        return EGG_CROP.height * MATERIEL_SCALE
+    end
+    return DINO_CROP.height * MATERIEL_SCALE
+end
+
+local function max_icon_height(materiel: {Materiel}): number
+    return itertools.max(itertools.map(materiel, icon_height))
+end
+
 local ROW_X = 10
 local SLOT_WIDTH = 50
 local COUNT_DROP = 2
 
 -- Beside the count, one slot's digits would run into the next slot's.
 local PERCENT_DROP = 14
+
+local function may_show_drop_percent(materiel: Materiel): boolean
+    return materiel.kind == "item"
+end
+
+-- Pixel heights of what's drawn below the icon.
+local COUNT_DIGIT_HEIGHT = 12
+local PERCENT_TEXT_HEIGHT = 6
+local MARKER_FOOTER_SLACK = 1
+
+local MARKER_FOOTER_COUNT_ONLY = COUNT_DROP + COUNT_DIGIT_HEIGHT + MARKER_FOOTER_SLACK
+local MARKER_FOOTER_WITH_PERCENT = (
+    COUNT_DROP + PERCENT_DROP + PERCENT_TEXT_HEIGHT + MARKER_FOOTER_SLACK
+)
+
+local function marker_footer(materiel: Materiel): number
+    if may_show_drop_percent(materiel) then
+        return MARKER_FOOTER_WITH_PERCENT
+    end
+    return MARKER_FOOTER_COUNT_ONLY
+end
+
+local function max_marker_footer(materiel: {Materiel}): number
+    return itertools.max(itertools.map(materiel, marker_footer))
+end
 
 local record Row
     materiel: {Materiel}
@@ -144,6 +195,14 @@ end
 
 function Row:slot_x(position: integer): number
     return ROW_X + (position - 1) * SLOT_WIDTH
+end
+
+function Row:marker_icon_height(): number
+    return max_icon_height(self.materiel)
+end
+
+function Row:marker_height(marker_icon_height: number): number
+    return marker_icon_height + max_marker_footer(self.materiel)
 end
 
 local MATERIEL_ROWS: {Row} = {
@@ -188,7 +247,7 @@ end
 
 -- What a blown-open soft block also drops mid-battle.
 local function drop_rate(materiel: Materiel): number
-    if materiel.kind ~= "item" then
+    if not may_show_drop_percent(materiel) then
         return 0
     end
     return settings.game_rules.items.spawn_rates[materiel.item]
@@ -229,16 +288,14 @@ local function draw_sprite(sprite: Image, center_x: number, baseline: number)
     )
 end
 
--- One frame colour rather than cycling, and no floor shadow: no floor here to
--- fall on.
-local function draw_pickup(item: ItemType, center_x: number, baseline: number)
+local function draw_item(item: ItemType, center_x: number, baseline: number)
     draw_sprite(frame_sprite, center_x, baseline)
     draw_sprite(item_sprites[item], center_x, baseline)
 end
 
 local function draw_materiel(materiel: Materiel, center_x: number, baseline: number)
     if materiel.kind == "item" then
-        draw_pickup(materiel.item, center_x, baseline)
+        draw_item(materiel.item, center_x, baseline)
     elseif materiel.kind == "soft_block" then
         draw_sprite(soft_block_sprites[settings.map], center_x, baseline)
     elseif materiel.kind == "egg" then
@@ -261,30 +318,32 @@ local function draw_count(materiel: Materiel, slot_x: number, count_y: number)
     draw_drop_percent(materiel, slot_x, count_y)
 end
 
-local PREVIEW_TINTS: {ItemType: Color} = {
+local PREVIEW_TINTS: {PreviewSubject: Color} = {
     bomb = painting.AMBER,
     fire = painting.RED,
     speed = painting.CYAN,
     kick = painting.GREEN,
+    lightning_bomb = painting.WHITE,
+    egg = painting.PURPLE,
+    dino_blue = painting.BLUE,
+    dino_pink = painting.PINK,
+    dino_green = painting.GREEN,
+    dino_yellow = painting.YELLOW,
+    dino_purple = painting.PURPLE,
 }
 
 local MARKER_WIDTH = 44
-local MARKER_TOP = 2
-local MARKER_HEIGHT = 57
 local MARKER_ALPHA = 200
 local MARKER_THICKNESS = 2
 
-local function is_preview_subject(materiel: Materiel, subject: ItemType): boolean
-    return materiel.kind == "item" and materiel.item == subject
+local function is_preview_subject(materiel: Materiel, subject: PreviewSubject): boolean
+    return materiel.subject == subject
 end
 
-local function draw_marker(slot_x: number, tint: Color)
+local function draw_marker(slot_x: number, top: number, height: number, tint: Color)
     painting.draw_box(
         rectangles.new(
-            slot_x + (SLOT_WIDTH - MARKER_WIDTH) / 2,
-            MARKER_TOP,
-            MARKER_WIDTH,
-            MARKER_HEIGHT
+            slot_x + (SLOT_WIDTH - MARKER_WIDTH) / 2, top, MARKER_WIDTH, height
         ),
         tint,
         MARKER_THICKNESS,
@@ -292,12 +351,18 @@ local function draw_marker(slot_x: number, tint: Color)
     )
 end
 
-local function draw_row(row: Row, subject: ItemType)
+local function draw_row(row: Row, subject: PreviewSubject)
     local count_y = row:count_y()
     for position, materiel in ipairs(row.materiel) do
         local slot_x = row:slot_x(position)
         if is_preview_subject(materiel, subject) then
-            draw_marker(slot_x, PREVIEW_TINTS[subject])
+            local marker_icon_height = row:marker_icon_height()
+            draw_marker(
+                slot_x,
+                row.baseline - marker_icon_height,
+                row:marker_height(marker_icon_height),
+                PREVIEW_TINTS[subject]
+            )
         end
         draw_materiel(materiel, slot_x + SLOT_WIDTH / 2, row.baseline)
         draw_count(materiel, slot_x, count_y)
@@ -317,7 +382,7 @@ function options_selection.new(previous_screen: Scene): OptionsSelection
     local self: OptionsSelection = setmetatable({}, {__index = OptionsSelection})
     self.previous_screen = previous_screen
     self.selection = menu_items.new_enum(RULESETS)
-    self.rotation_index = 1
+    self.rotation_index = lutro.math.random(#preview_options.rotation)
     return self
 end
 
@@ -349,7 +414,7 @@ function options_selection.load_assets()
     end
 end
 
-function OptionsSelection:_previewed_item(): ItemType
+function OptionsSelection:_previewed_subject(): PreviewSubject
     return preview_options.rotation[self.rotation_index]
 end
 
@@ -359,17 +424,17 @@ function OptionsSelection:_start_lesson()
     if self.lesson then
         return
     end
-    local item = self:_previewed_item()
+    local subject = self:_previewed_subject()
     self.lesson = scripted_battle.new(
-        preview_options.scenery_for(item), preview_options.choreography_for(item)
+        preview_options.scenery_for(subject), preview_options.choreography_for(subject)
     )
 end
 
 function OptionsSelection:_advance_preview()
     self.rotation_index = self.rotation_index % #preview_options.rotation + 1
-    local item = self:_previewed_item()
+    local subject = self:_previewed_subject()
     self.lesson:play(
-        preview_options.scenery_for(item), preview_options.choreography_for(item)
+        preview_options.scenery_for(subject), preview_options.choreography_for(subject)
     )
 end
 
@@ -421,11 +486,11 @@ end
 function OptionsSelection:_draw_arena()
     background.draw()
     self.lesson:draw()
-    window.draw_surround(PREVIEW_TINTS[self:_previewed_item()])
+    window.draw_surround(PREVIEW_TINTS[self:_previewed_subject()])
 end
 
 function OptionsSelection:_draw_readout()
-    local subject = self:_previewed_item()
+    local subject = self:_previewed_subject()
     for _, row in ipairs(MATERIEL_ROWS) do
         draw_row(row, subject)
     end

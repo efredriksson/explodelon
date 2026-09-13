@@ -1,6 +1,7 @@
 -- The fire lesson: a bomber lays a bomb, crosses the corridor collecting fires,
 -- lays a second, and ducks clear before either blows.
 
+local characters = require("characters")
 local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
 local itertools = require("itertools")
@@ -13,6 +14,7 @@ local window = require("preview.options.window")
 local scenery = require("preview.scenery")
 local settings = require("settings")
 
+local type CharacterName = characters.CharacterName
 local type Choreography = choreography.Choreography
 local type Direction = vectors.Direction
 local type ItemDrop = scenery.ItemDrop
@@ -62,6 +64,8 @@ local CYCLE_LENGTH = 4.9
 -- The walk between bombs is dead air at battle speed.
 local PLAYBACK_RATE = 2
 
+local WALKER_SPRITE: CharacterName = "milon"
+
 local SOFT_BLOCKS: {SoftBlockConfig} = {
     soft_block_at(13, 6),
     soft_block_at(16, 6),
@@ -105,7 +109,7 @@ end
 
 function FireLesson:open(stage: Stage): {Player}
     self.stage = stage
-    self.walker = drones.bomber(ENTRY_TILE, START_BOMBS, START_FIRE)
+    self.walker = drones.bomber(WALKER_SPRITE, ENTRY_TILE, START_BOMBS, START_FIRE)
     self.walker.speed = WALKER_SPEED
     self.phase = "entering"
     return {self.walker}

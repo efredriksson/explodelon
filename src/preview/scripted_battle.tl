@@ -2,7 +2,11 @@
 
 local bombs = require("bombs.bombs")
 local lightning_bombs = require("bombs.lightning_bombs")
+local dino_roars = require("dino_roars")
+local dinos = require("dinos")
+local eggs = require("eggs")
 local collision = require("engine.collision")
+local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
 local hard_blocks = require("hard_blocks")
 local items = require("items")
@@ -21,9 +25,13 @@ local trampolines = require("trampolines")
 local z_index = require("z_index")
 
 local type Bombs = bombs.Bombs
+local type Bomb = bombs.Bomb
 local type Choreography = choreography.Choreography
 local type CombinedGroup = collision.CombinedGroup
+local type DinoColor = settings.DinoColor
+local type DinoRoars = dino_roars.DinoRoars
 local type Direction = vectors.Direction
+local type Eggs = eggs.Eggs
 local type Entity = require("engine.entity")
 local type Explodable = require("bombs.explodable")
 local type Group = collision.Group
@@ -34,6 +42,7 @@ local type LightningBombs = lightning_bombs.LightningBombs
 local type Map = settings.Map
 local type Player = players.Player
 local type PlayerAnimations = player_animations.PlayerAnimations
+local type Point = points.Point
 local type Scenery = scenery.Scenery
 local type SoftBlocks = soft_blocks.SoftBlocks
 local type Stage = choreography.Stage
@@ -55,16 +64,16 @@ function StableClock.new(): StableClock
     return self
 end
 
-function StableClock:tick(dt: number): number
-    local number_of_steps = 0
+function StableClock:ticks(dt: number): {number}
+    local steps: {number} = {}
 
     self.pending = math.min(self.pending + dt, STABLE_MAX_CATCHUP_SECONDS)
     while self.pending >= STABLE_STEP_SECONDS do
         self.pending = self.pending - STABLE_STEP_SECONDS
-        number_of_steps = number_of_steps + 1
+        table.insert(steps, STABLE_STEP_SECONDS)
     end
 
-    return STABLE_STEP_SECONDS * number_of_steps
+    return steps
 end
 
 local record ScriptedBattle is Stage
@@ -82,6 +91,7 @@ local record ScriptedBattle is Stage
     hard_blocks: HardBlocks
     soft_blocks: SoftBlocks
     items: Items
+    eggs: Eggs
     lightning_bombs: LightningBombs
     bombs: Bombs
     player_animations: PlayerAnimations
@@ -90,9 +100,11 @@ local record ScriptedBattle is Stage
     blockers: CombinedGroup<Explodable>
     blocks_bombs: CombinedGroup<Kinematic>
     blocks_jump: CombinedGroup<Kinematic>
-    empty_bounce_group: Group<Kinematic>
+    bombs_bounce_on: CombinedGroup<Kinematic>
+    dino_roars: DinoRoars
     empty_pressure_blocks: Group<Entity>
     explodables: CombinedGroup<Explodable>
+    lightning_blockers: CombinedGroup<Explodable>
     trampolines: Trampolines
 end
 
@@ -106,18 +118,31 @@ end
 
 function ScriptedBattle:_rebuild_groups()
     self.blockers = collision.new_combined_group(
-        self.hard_blocks.on_ground.set, self.soft_blocks.on_ground.set
+        self.eggs.on_ground.set,
+        self.items.on_ground.set,
+        self.hard_blocks.on_ground.set,
+        self.soft_blocks.on_ground.set
     )
-    -- Scenery pops on camera; a battle handles soft blocks elsewhere.
     self.explodables = collision.new_combined_group(
         self.alive_players_group.set,
-        self.soft_blocks.on_ground.set,
-        self.bombs.on_ground.set
+        self.bombs.on_ground.set,
+        self.eggs.on_ground.set,
+        self.items.on_ground.set
     )
     self.blocks_jump = collision.new_combined_group(
         self.hard_blocks.on_ground.set,
         self.soft_blocks.on_ground.set,
         self.bombs.on_ground.set
+    )
+    self.bombs_bounce_on = collision.new_combined_group(
+        self.soft_blocks.on_ground.set,
+        self.hard_blocks.on_ground.set,
+        self.lightning_bombs.on_ground.set,
+        self.bombs.on_ground.set,
+        self.alive_players_group.set
+    )
+    self.dino_roars = dino_roars.new(
+        self.alive_players_group, self.bombs.on_ground, self.soft_blocks.on_ground
     )
 end
 
@@ -131,7 +156,15 @@ function ScriptedBattle:_restart()
     for _, drop in ipairs(self.scenery.items) do
         self.items:drop_at(drop.at, drop.kind)
     end
+    self.eggs = eggs.new()
+    for _, position in ipairs(self.scenery.eggs) do
+        self.eggs:spawn_at(position)
+    end
     self.bombs = bombs.new(true)
+    for _, bomb in ipairs(self.scenery.bombs) do
+        self.bombs:place_static_bomb(bomb.position, bomb.fire)
+    end
+    self.lightning_bombs = lightning_bombs.new()
     self:_rebuild_groups()
     self.trampolines = trampolines.new(self.blocks_jump, self.empty_pressure_blocks)
     self.player_animations = player_animations.new(self.players)
@@ -147,6 +180,10 @@ function ScriptedBattle:_stand_up_map()
     -- Hard blocks only, unlike Battle:load, so drones and kicked bombs pass
     -- through scenery: a piece may stand blocks anywhere off a blast path.
     self.blocks_bombs = collision.new_combined_group(self.hard_blocks.on_ground.set)
+    -- Only hard blocks stop lightning.
+    self.lightning_blockers = collision.new_combined_group(
+        self.hard_blocks.on_ground.set
+    )
 end
 
 function ScriptedBattle:play(stage_set: Scenery, piece: Choreography)
@@ -165,9 +202,7 @@ function scripted_battle.new(stage_set: Scenery, piece: Choreography): ScriptedB
     local self: ScriptedBattle = setmetatable({}, {__index = ScriptedBattle})
     self.entered_map = settings.map
     self.clock = StableClock.new()
-    self.lightning_bombs = lightning_bombs.new()
     self.alive_players_group = collision.new_group()
-    self.empty_bounce_group = collision.new_group()
     self.empty_pressure_blocks = collision.new_group()
 
     self:play(stage_set, piece)
@@ -182,16 +217,67 @@ function ScriptedBattle:place_bomb(player: Player)
     self.bombs:place_bomb(player, itertools.sets_as_list(self.bombs.on_ground.set))
 end
 
+function ScriptedBattle:place_lightning_bomb(player: Player)
+    self.lightning_bombs:place_lightning_bomb(
+        player, itertools.sets_as_list(self.lightning_bombs.on_ground.set)
+    )
+end
+
 function ScriptedBattle:set_player_inputs(player: Player, directions: {Direction})
     self.player_inputs[player] = directions
 end
 
 function ScriptedBattle:face(player: Player, direction: Direction)
-    player.direction = direction
+    player:set_movement(player.position, direction)
 end
 
 function ScriptedBattle:slide(player: Player, velocity: Vector)
     player.ice_velocity = velocity
+end
+
+-- Skips jumps_onto's mid-air animation: the drone should enter already riding.
+function ScriptedBattle:mount_dino(player: Player, color: DinoColor)
+    local dino = dinos.new(player.position, player.direction, color)
+    dino.hatching = false
+    player.dino = dino
+    player.state = "mounted"
+    player:set_action("idle")
+    self.player_animations.dinos:add_for(dino)
+end
+
+-- Mirrors get_bomb_to_throw, minus the joystick charge distance: 'to' is
+-- picked directly by the choreography.
+local function bomb_ahead_of(player: Player, candidates: {Bomb}): Bomb
+    local throw_from = grid.tile_ahead_of(player.position, player.direction)
+    for _, bomb in ipairs(candidates) do
+        if bomb.position:equal(throw_from) then
+            return bomb
+        end
+    end
+    return nil
+end
+
+function ScriptedBattle:throw_bomb_with_dino(player: Player, to: Point)
+    local bomb = bomb_ahead_of(player, itertools.sets_as_list(self.bombs.on_ground.set))
+    if bomb then
+        self.bombs:throw_existing(bomb, to)
+    end
+end
+
+function ScriptedBattle:jump_with_dino(player: Player, to: Point)
+    player:jump_with_dino(to)
+end
+
+function ScriptedBattle:dash_with_dino(player: Player)
+    player:dash_with_dino()
+end
+
+function ScriptedBattle:stun_cry_with_dino(player: Player)
+    player:stun_cry_with_dino()
+end
+
+function ScriptedBattle:sonic_blast_with_dino(player: Player)
+    player:sonic_blast_with_dino()
 end
 
 function ScriptedBattle:_step_systems(dt: number)
@@ -200,7 +286,10 @@ function ScriptedBattle:_step_systems(dt: number)
     local lookup = collision.new_lookup(
         self.hard_blocks.on_ground.set,
         self.soft_blocks.on_ground.set,
+        self.eggs.on_ground.set,
+        self.items.on_ground.set,
         self.bombs.on_ground.set,
+        self.lightning_bombs.on_ground.set,
         self.alive_players_group.set
     )
 
@@ -211,8 +300,11 @@ function ScriptedBattle:_step_systems(dt: number)
         self.blocks_bombs,
         self.alive_players_group,
         self.bombs.on_ground,
-        self.empty_bounce_group,
+        self.bombs_bounce_on,
         lookup
+    )
+    self.lightning_bombs:update(
+        dt, self.lightning_blockers, self.alive_players_group, lookup
     )
 
     for _, player in ipairs(alive_players) do
@@ -236,10 +328,17 @@ function ScriptedBattle:_step_systems(dt: number)
         end
         self.trampolines:update(player, lookup)
         self.items:possible_pickup_by(player)
+        local hatching_dino = self.eggs:possible_hatcher(player)
+        if hatching_dino then
+            player:jumps_onto(hatching_dino)
+            self.player_animations.dinos:add_for(hatching_dino)
+        end
+        self.dino_roars:resolve(lookup, player)
     end
 
     self.soft_blocks:update(dt)
     self.items:update(dt)
+    self.eggs:update(dt)
     self.player_animations:update(dt)
 end
 
@@ -256,27 +355,42 @@ function ScriptedBattle:_update(dt: number)
 end
 
 function ScriptedBattle:update(dt: number)
-    local step = self.clock:tick(dt)
-    for _ = 1, self.choreography.playback_rate or 1 do
-        self:_update(step)
+    for _, step in ipairs(self.clock:ticks(dt)) do
+        for _ = 1, self.choreography.playback_rate or 1 do
+            self:_update(step)
+        end
     end
 end
 
 function ScriptedBattle:draw()
+    -- When jumping in place, draw jump shadows under all entities.
+    self.player_animations:draw_vertical_jump_shadows()
     self.bombs:draw_on_ground_shadows()
     self.bombs.explosions:draw()
+    self.lightning_bombs.lightnings:draw()
 
     local entities: {Entity} = itertools.sets_as_list(
         self.hard_blocks.on_ground.set,
         self.soft_blocks.on_ground.set,
         self.items.on_ground.set,
+        self.eggs.on_ground.set,
         self.bombs.on_ground.set,
+        self.bombs.in_air.set,
+        self.lightning_bombs.on_ground.set,
         self.player_animations:get_all()
     )
     table.sort(entities, z_index.back_to_front)
     for _, entity in ipairs(entities) do
         entity:draw()
     end
+    -- Bomb thrown in air, draw throw shadows over all entities.
+    self.bombs:draw_in_air_shadows()
+    -- When jumping some distance, draw jump shadows over all entities.
+    self.player_animations:draw_lateral_jump_shadows()
+    -- Put stun cry text above everything else (with up exception)
+    self.player_animations:draw_stun_cry_texts_not_up()
+    -- Petrify countdown reads on top of the frozen character.
+    self.player_animations:draw_petrify_countdowns()
 end
 
 return scripted_battle
