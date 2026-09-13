@@ -82,7 +82,7 @@ function PlayerRules.new(): PlayerRules
     self.start_with_bombs = 1
     self.start_with_lightning_bombs = 0
     self.start_with_fire = 2
-    self.max_hp = 1
+    self.max_hp = 100
     self.petrify_grace_seconds = 8
     self.petrify_stone_seconds = 5
     return self
