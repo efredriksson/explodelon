@@ -1,5 +1,6 @@
 local points = require("engine.geometry.points")
 local itertools = require("itertools")
+local block_layouts = require("level_layout.block_layouts")
 local grid = require("level_layout.grid")
 local entities = require("level_layout.maps.entities")
 local maps = require("level_layout.maps.init")
@@ -91,7 +92,9 @@ end
 
 function map_entities.get_block_configs(occupied: {Kinematic}): BlockConfigs
     local occupied_positions = itertools.map(occupied, get_pos)
-    local layout = maps.get_layout():get_block_layout(occupied_positions)
+    local map_layout = maps.get_layout()
+    local block_pattern = settings.map_patterns[settings.map].block_pattern
+    local layout = block_layouts.build(block_pattern, occupied_positions, map_layout)
     local dim = grid.dimensions()
     local hard: {HardBlockConfig} = {}
     local soft_positions: {Point} = {}

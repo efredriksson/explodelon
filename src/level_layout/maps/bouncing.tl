@@ -1,11 +1,9 @@
 local points = require("engine.geometry.points")
 local itertools = require("itertools")
-local block_layouts = require("level_layout.block_layouts")
 local grid = require("level_layout.grid")
 local entities = require("level_layout.maps.entities")
 
 local type MapLayout = entities.MapLayout
-local type BlockType = entities.BlockType
 local type Goal = entities.Goal
 local type ConveyorBelt = entities.ConveyorBelt
 local type Trampoline = entities.Trampoline
@@ -61,18 +59,12 @@ local function trampoline_position(trampoline: Trampoline): Point
     return trampoline.position
 end
 
-local function hard_block_is_tall(i: integer, j: integer): boolean
+function BouncingLayout:block_is_tall(i: integer, j: integer): boolean
     return (i + j) % 2 == 1
 end
 
-function BouncingLayout:get_block_layout(
-    occupies: {Point}
-): {integer: {integer: BlockType}}
-    return block_layouts.grid(
-        occupies,
-        hard_block_is_tall,
-        itertools.map(self:get_trampolines(), trampoline_position)
-    )
+function BouncingLayout:get_keep_clear_positions(): {Point}
+    return itertools.map(self:get_trampolines(), trampoline_position)
 end
 
 function BouncingLayout:has_ice(): boolean

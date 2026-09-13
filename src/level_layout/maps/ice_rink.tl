@@ -1,9 +1,7 @@
 local points = require("engine.geometry.points")
-local block_layouts = require("level_layout.block_layouts")
 local entities = require("level_layout.maps.entities")
 
 local type MapLayout = entities.MapLayout
-local type BlockType = entities.BlockType
 local type Goal = entities.Goal
 local type ConveyorBelt = entities.ConveyorBelt
 local type Trampoline = entities.Trampoline
@@ -38,10 +36,12 @@ function IceRinkLayout:get_trampolines(): {Trampoline}
     return self.trampolines
 end
 
-function IceRinkLayout:get_block_layout(
-    occupies: {Point}
-): {integer: {integer: BlockType}}
-    return block_layouts.quadrant(occupies)
+function IceRinkLayout:block_is_tall(_: integer, _: integer): boolean
+    return false
+end
+
+function IceRinkLayout:get_keep_clear_positions(): {Point}
+    return {}
 end
 
 function IceRinkLayout:has_ice(): boolean

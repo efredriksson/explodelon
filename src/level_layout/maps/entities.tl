@@ -64,7 +64,8 @@ local type MapLayout = interface
     get_conveyor_belts: function(self): {ConveyorBelt}
     get_goals: function(self): {Goal}
     get_trampolines: function(self): {Trampoline}
-    get_block_layout: function(self, occupies: {Point}): {integer: {integer: BlockType}}
+    get_keep_clear_positions: function(self): {Point}
+    block_is_tall: function(self, integer, integer): boolean
     has_ice: function(self): boolean
 end
 

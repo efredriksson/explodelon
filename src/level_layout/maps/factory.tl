@@ -1,11 +1,9 @@
 local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
-local block_layouts = require("level_layout.block_layouts")
 local grid = require("level_layout.grid")
 local entities = require("level_layout.maps.entities")
 
 local type MapLayout = entities.MapLayout
-local type BlockType = entities.BlockType
 local type Goal = entities.Goal
 local type ConveyorBelt = entities.ConveyorBelt
 local type Trampoline = entities.Trampoline
@@ -71,14 +69,12 @@ function FactoryLayout:get_conveyor_belts(): {ConveyorBelt}
     return self.conveyor_belts
 end
 
-local function hard_block_is_tall(i: integer, j: integer): boolean
+function FactoryLayout:block_is_tall(i: integer, j: integer): boolean
     return j == 2 and (i == 1 or i == 6)
 end
 
-function FactoryLayout:get_block_layout(
-    occupies: {Point}
-): {integer: {integer: BlockType}}
-    return block_layouts.grid(occupies, hard_block_is_tall)
+function FactoryLayout:get_keep_clear_positions(): {Point}
+    return {}
 end
 
 function FactoryLayout:has_ice(): boolean

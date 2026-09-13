@@ -6,7 +6,9 @@ local grid = require("level_layout.grid")
 local entities = require("level_layout.maps.entities")
 local settings = require("settings")
 
+local type BlockPattern = settings.BlockPattern
 local type BlockType = entities.BlockType
+local type MapLayout = entities.MapLayout
 local type Point = points.Point
 
 local block_layouts = {}
@@ -32,10 +34,8 @@ local function new_empty_layout(): {integer: {integer: BlockType}}
     return layout
 end
 
-local function grid_cell_type(
-    i: integer, j: integer, is_tall_cell: function(integer, integer): boolean
-): BlockType
-    if is_tall_cell(i, j) then
+local function grid_cell_type(i: integer, j: integer, map_layout: MapLayout): BlockType
+    if map_layout:block_is_tall(i, j) then
         return "hard_tall"
     else
         return "hard"
@@ -55,6 +55,10 @@ local function player_exclusion_zone(occupies: {Point}): {Point}
         end
     end
     return close_to_entity
+end
+
+local function full_exclusion_zone(occupies: {Point}, keep_clear: {Point}): {Point}
+    return itertools.combine(player_exclusion_zone(occupies), keep_clear or {})
 end
 
 local function place_soft_blocks(
@@ -87,26 +91,24 @@ local function place_soft_blocks(
     end
 end
 
-function block_layouts.grid(
-    occupies: {Point},
-    is_tall_cell: (function(integer, integer): boolean),
-    keep_clear?: {Point}
+local function grid_layout(
+    occupies: {Point}, map_layout: MapLayout, keep_clear?: {Point}
 ): {integer: {integer: BlockType}}
     local layout = new_empty_layout()
     for i = 0, 7 do
         for j = 0, 4 do
-            layout[1 + i * 2][1 + j * 2] = grid_cell_type(i, j, is_tall_cell)
+            layout[1 + i * 2][1 + j * 2] = grid_cell_type(i, j, map_layout)
         end
     end
-    place_soft_blocks(
-        layout, itertools.combine(player_exclusion_zone(occupies), keep_clear or {})
-    )
+    place_soft_blocks(layout, full_exclusion_zone(occupies, keep_clear))
     return layout
 end
 
-function block_layouts.empty(occupies: {Point}): {integer: {integer: BlockType}}
+local function empty_layout(
+    occupies: {Point}, keep_clear?: {Point}
+): {integer: {integer: BlockType}}
     local layout = new_empty_layout()
-    place_soft_blocks(layout, player_exclusion_zone(occupies))
+    place_soft_blocks(layout, full_exclusion_zone(occupies, keep_clear))
     return layout
 end
 
@@ -158,9 +160,11 @@ local function quadrant_cells(
     return cells
 end
 
-function block_layouts.quadrant(occupies: {Point}): {integer: {integer: BlockType}}
+local function quadrant_layout(
+    occupies: {Point}, keep_clear?: {Point}
+): {integer: {integer: BlockType}}
     local layout = new_empty_layout()
-    local exclusion_zone = player_exclusion_zone(occupies)
+    local exclusion_zone = full_exclusion_zone(occupies, keep_clear)
     local dim = grid.dimensions()
     local x_mid = math.floor(dim.x_max / 2)
     local y_mid = math.floor(dim.y_max / 2)
@@ -190,6 +194,18 @@ function block_layouts.quadrant(occupies: {Point}): {integer: {integer: BlockTyp
         end
     end
     return layout
+end
+
+function block_layouts.build(
+    pattern: BlockPattern, occupies: {Point}, map_layout: MapLayout
+): {integer: {integer: BlockType}}
+    local keep_clear = map_layout:get_keep_clear_positions()
+    if pattern == "grid" then
+        return grid_layout(occupies, map_layout, keep_clear)
+    elseif pattern == "empty" then
+        return empty_layout(occupies, keep_clear)
+    end
+    return quadrant_layout(occupies, keep_clear)
 end
 
 return block_layouts
