@@ -382,7 +382,7 @@ function options_selection.new(previous_screen: Scene): OptionsSelection
     local self: OptionsSelection = setmetatable({}, {__index = OptionsSelection})
     self.previous_screen = previous_screen
     self.selection = menu_items.new_enum(RULESETS)
-    self.rotation_index = 1
+    self.rotation_index = lutro.math.random(#preview_options.rotation)
     return self
 end
 
