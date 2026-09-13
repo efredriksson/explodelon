@@ -64,16 +64,16 @@ function StableClock.new(): StableClock
     return self
 end
 
-function StableClock:tick(dt: number): number
-    local number_of_steps = 0
+function StableClock:ticks(dt: number): {number}
+    local steps: {number} = {}
 
     self.pending = math.min(self.pending + dt, STABLE_MAX_CATCHUP_SECONDS)
     while self.pending >= STABLE_STEP_SECONDS do
         self.pending = self.pending - STABLE_STEP_SECONDS
-        number_of_steps = number_of_steps + 1
+        table.insert(steps, STABLE_STEP_SECONDS)
     end
 
-    return STABLE_STEP_SECONDS * number_of_steps
+    return steps
 end
 
 local record ScriptedBattle is Stage
@@ -355,9 +355,10 @@ function ScriptedBattle:_update(dt: number)
 end
 
 function ScriptedBattle:update(dt: number)
-    local step = self.clock:tick(dt)
-    for _ = 1, self.choreography.playback_rate or 1 do
-        self:_update(step)
+    for _, step in ipairs(self.clock:ticks(dt)) do
+        for _ = 1, self.choreography.playback_rate or 1 do
+            self:_update(step)
+        end
     end
 end
 
