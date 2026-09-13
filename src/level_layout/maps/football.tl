@@ -1,10 +1,8 @@
 local points = require("engine.geometry.points")
-local block_layouts = require("level_layout.block_layouts")
 local grid = require("level_layout.grid")
 local entities = require("level_layout.maps.entities")
 
 local type MapLayout = entities.MapLayout
-local type BlockType = entities.BlockType
 local type Goal = entities.Goal
 local type ConveyorBelt = entities.ConveyorBelt
 local type Trampoline = entities.Trampoline
@@ -48,14 +46,12 @@ function FootballLayout:get_trampolines(): {Trampoline}
     return self.trampolines
 end
 
-local function hard_block_is_tall(_: integer, _: integer): boolean
+function FootballLayout:block_is_tall(_: integer, _: integer): boolean
     return false
 end
 
-function FootballLayout:get_block_layout(
-    occupies: {Point}
-): {integer: {integer: BlockType}}
-    return block_layouts.grid(occupies, hard_block_is_tall)
+function FootballLayout:get_keep_clear_positions(): {Point}
+    return {}
 end
 
 function FootballLayout:has_ice(): boolean
