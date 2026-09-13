@@ -361,6 +361,8 @@ function ScriptedBattle:update(dt: number)
 end
 
 function ScriptedBattle:draw()
+    -- When jumping in place, draw jump shadows under all entities.
+    self.player_animations:draw_vertical_jump_shadows()
     self.bombs:draw_on_ground_shadows()
     self.bombs.explosions:draw()
     self.lightning_bombs.lightnings:draw()
@@ -381,8 +383,12 @@ function ScriptedBattle:draw()
     end
     -- Bomb thrown in air, draw throw shadows over all entities.
     self.bombs:draw_in_air_shadows()
+    -- When jumping some distance, draw jump shadows over all entities.
+    self.player_animations:draw_lateral_jump_shadows()
     -- Put stun cry text above everything else (with up exception)
     self.player_animations:draw_stun_cry_texts_not_up()
+    -- Petrify countdown reads on top of the frozen character.
+    self.player_animations:draw_petrify_countdowns()
 end
 
 return scripted_battle
