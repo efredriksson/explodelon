@@ -5,6 +5,7 @@ local lightnings = require("bombs.lightnings")
 local characters = require("characters")
 local dino_animations = require("dino_animations")
 local dino_inputs = require("dino_inputs")
+local dino_roars = require("dino_roars")
 local eggs = require("eggs")
 local audio = require("engine.audio")
 local collision = require("engine.collision")
@@ -37,8 +38,8 @@ local soft_blocks = require("soft_blocks")
 local trampolines = require("trampolines")
 local z_index = require("z_index")
 
-local type Bomb = bombs.Bomb
 local type Bombs = bombs.Bombs
+local type DinoRoars = dino_roars.DinoRoars
 local type Eggs = eggs.Eggs
 local type Explodable = require("bombs.explodable")
 local type Entity = require("engine.entity")
@@ -54,12 +55,9 @@ local type PlayerAnimations = player_animations.PlayerAnimations
 local type Player = players.Player
 local type PressureBlocks = pressure_blocks.PressureBlocks
 local type SoftBlocks = soft_blocks.SoftBlocks
-local type SoftBlock = soft_blocks.SoftBlock
 local type Trampolines = trampolines.Trampolines
 local type CombinedGroup = collision.CombinedGroup
 local type Group = collision.Group
-local type Lookup = collision.Lookup
-local type ReadableGroup = collision.ReadableGroup
 local type Scene = scenes.Scene
 local type ScoreBoard = score_board.ScoreBoard
 local type GameTimer = timer.GameTimer
@@ -108,6 +106,7 @@ local record Battle is PausedGame
     blockers: CombinedGroup<Explodable>
     lightning_blockers: CombinedGroup<Explodable>
     blocking_blocks_group: CombinedGroup<Kinematic>
+    dino_roars: DinoRoars
 end
 
 function Battle:load()
@@ -192,6 +191,9 @@ function Battle:load()
         self.hard_blocks.on_ground.set
     )
     self.trampolines = trampolines.new(self.blocks_jump, self.pressure_blocks_group)
+    self.dino_roars = dino_roars.new(
+        self.alive_players_group, self.bombs.on_ground, self.soft_blocks.on_ground
+    )
 end
 
 function Battle.new(
@@ -377,42 +379,6 @@ function Battle:check_if_finished(dt: number)
     end
 end
 
-function Battle:_handle_stun_cry(
-    lookup: Lookup, alive_players: ReadableGroup<Player>, player: Player
-)
-    local hit_players = lookup:in_box_and_group(
-        player:get_stun_cry_hitbox(), alive_players
-    )
-    for _, hit_player in ipairs(hit_players) do
-        if hit_player.action ~= "stunned" then
-            -- Stun cry only stun someone not already stunned
-            -- so not possible to perpetually stun in area
-            hit_player:stun_for(1.5)
-        end
-    end
-end
-
-function Battle:_handle_sonic_blast(
-    lookup: Lookup,
-    bombs_group: ReadableGroup<Bomb>,
-    soft_blocks_group: ReadableGroup<SoftBlock>,
-    player: Player
-)
-    local hit_bombs = lookup:in_box_and_group(
-        player:get_sonic_blast_hitbox(), bombs_group
-    )
-    for _, hit_bomb in ipairs(hit_bombs) do
-        hit_bomb:blow_up()
-    end
-
-    local hit_blocks = lookup:in_box_and_group(
-        player:get_sonic_blast_hitbox(), soft_blocks_group
-    )
-    for _, hit_block in ipairs(hit_blocks) do
-        hit_block:reveal()
-    end
-end
-
 function Battle:update(dt: number)
     if self.state == "restarting" then
         self:load()
@@ -511,14 +477,7 @@ function Battle:update(dt: number)
             self.player_animations.dinos:add_for(hatching_dino)
         end
 
-        if player:is_stun_crying() then
-            self:_handle_stun_cry(lookup, self.alive_players_group, player)
-        end
-        if player:is_sonic_blasting() then
-            self:_handle_sonic_blast(
-                lookup, self.bombs.on_ground, self.soft_blocks.on_ground, player
-            )
-        end
+        self.dino_roars:resolve(lookup, player)
         trace_player_interaction:stop()
     end
     trace_players:stop()
