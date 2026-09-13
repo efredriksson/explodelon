@@ -441,7 +441,7 @@ function Battle:update(dt: number)
     local trace_players = tracing.start("players")
     for _, player in ipairs(alive_players) do
         local trace_player_update = tracing.start("update")
-        player:update(dt)
+        player:update(dt, self.timer:sudden_death())
         trace_player_update:stop()
         local trace_player_movement = tracing.start("movement")
         if player:accepts_input() then
