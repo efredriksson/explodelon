@@ -2,6 +2,7 @@
 
 local bombs = require("bombs.bombs")
 local lightning_bombs = require("bombs.lightning_bombs")
+local dino_roars = require("dino_roars")
 local dinos = require("dinos")
 local eggs = require("eggs")
 local collision = require("engine.collision")
@@ -28,6 +29,7 @@ local type Bomb = bombs.Bomb
 local type Choreography = choreography.Choreography
 local type CombinedGroup = collision.CombinedGroup
 local type DinoColor = settings.DinoColor
+local type DinoRoars = dino_roars.DinoRoars
 local type Direction = vectors.Direction
 local type Eggs = eggs.Eggs
 local type Entity = require("engine.entity")
@@ -37,14 +39,11 @@ local type HardBlocks = hard_blocks.HardBlocks
 local type Items = items.Items
 local type Kinematic = require("kinematic")
 local type LightningBombs = lightning_bombs.LightningBombs
-local type Lookup = collision.Lookup
 local type Map = settings.Map
 local type Player = players.Player
 local type PlayerAnimations = player_animations.PlayerAnimations
 local type Point = points.Point
-local type ReadableGroup = collision.ReadableGroup
 local type Scenery = scenery.Scenery
-local type SoftBlock = soft_blocks.SoftBlock
 local type SoftBlocks = soft_blocks.SoftBlocks
 local type Stage = choreography.Stage
 local type Trampolines = trampolines.Trampolines
@@ -102,6 +101,7 @@ local record ScriptedBattle is Stage
     blocks_bombs: CombinedGroup<Kinematic>
     blocks_jump: CombinedGroup<Kinematic>
     bombs_bounce_on: CombinedGroup<Kinematic>
+    dino_roars: DinoRoars
     empty_pressure_blocks: Group<Entity>
     explodables: CombinedGroup<Explodable>
     lightning_blockers: CombinedGroup<Explodable>
@@ -140,6 +140,9 @@ function ScriptedBattle:_rebuild_groups()
         self.lightning_bombs.on_ground.set,
         self.bombs.on_ground.set,
         self.alive_players_group.set
+    )
+    self.dino_roars = dino_roars.new(
+        self.alive_players_group, self.bombs.on_ground, self.soft_blocks.on_ground
     )
 end
 
@@ -277,42 +280,6 @@ function ScriptedBattle:sonic_blast_with_dino(player: Player)
     player:sonic_blast_with_dino()
 end
 
--- Mirrors Battle:_handle_stun_cry: unlike jump/dash/throw, the hit itself is
--- Battle-only logic no previous lesson needed, so it never ran here before.
-function ScriptedBattle:_handle_stun_cry(
-    lookup: Lookup, alive_players: ReadableGroup<Player>, player: Player
-)
-    local hit_players = lookup:in_box_and_group(
-        player:get_stun_cry_hitbox(), alive_players
-    )
-    for _, hit_player in ipairs(hit_players) do
-        if hit_player.action ~= "stunned" then
-            hit_player:stun_for(1.5)
-        end
-    end
-end
-
-function ScriptedBattle:_handle_sonic_blast(
-    lookup: Lookup,
-    bombs_group: ReadableGroup<Bomb>,
-    soft_blocks_group: ReadableGroup<SoftBlock>,
-    player: Player
-)
-    local hit_bombs = lookup:in_box_and_group(
-        player:get_sonic_blast_hitbox(), bombs_group
-    )
-    for _, hit_bomb in ipairs(hit_bombs) do
-        hit_bomb:blow_up()
-    end
-
-    local hit_blocks = lookup:in_box_and_group(
-        player:get_sonic_blast_hitbox(), soft_blocks_group
-    )
-    for _, hit_block in ipairs(hit_blocks) do
-        hit_block:reveal()
-    end
-end
-
 function ScriptedBattle:_step_systems(dt: number)
     local alive_players = itertools.filter(self.players, is_alive)
     self.alive_players_group:rebuild(alive_players)
@@ -365,14 +332,7 @@ function ScriptedBattle:_step_systems(dt: number)
             player:jumps_onto(hatching_dino)
             self.player_animations.dinos:add_for(hatching_dino)
         end
-        if player:is_stun_crying() then
-            self:_handle_stun_cry(lookup, self.alive_players_group, player)
-        end
-        if player:is_sonic_blasting() then
-            self:_handle_sonic_blast(
-                lookup, self.bombs.on_ground, self.soft_blocks.on_ground, player
-            )
-        end
+        self.dino_roars:resolve(lookup, player)
     end
 
     self.soft_blocks:update(dt)
