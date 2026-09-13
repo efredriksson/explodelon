@@ -1,5 +1,6 @@
 -- The purple dino lesson: sonic blast clearing a bomb up close.
 
+local characters = require("characters")
 local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
 local grid = require("level_layout.grid")
@@ -10,6 +11,7 @@ local window = require("preview.options.window")
 local scenery = require("preview.scenery")
 local settings = require("settings")
 
+local type CharacterName = characters.CharacterName
 local type Choreography = choreography.Choreography
 local type Direction = vectors.Direction
 local type Player = players.Player
@@ -29,6 +31,7 @@ local RIDER_SPEED = 40
 local STOP_MARGIN = 1
 local PLAYBACK_RATE = 2
 local CYCLE_LENGTH = 4.0
+local RIDER_SPRITE: CharacterName = "manjimaru"
 
 local function corridor_tile_at(column: integer): Point
     return grid.get_tile_position(column, WALK_ROW)
@@ -71,7 +74,7 @@ end
 
 function DinoPurpleLesson:open(stage: Stage): {Player}
     self.stage = stage
-    self.rider = drones.bystander(RIDER_ENTRY_TILE)
+    self.rider = drones.bystander(RIDER_SPRITE, RIDER_ENTRY_TILE)
     self.rider.speed = RIDER_SPEED
     self.rider_phase = "mounting"
     return {self.rider}

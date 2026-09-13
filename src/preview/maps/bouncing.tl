@@ -1,5 +1,6 @@
 -- The bomber vaults clear of its own bomb; a wrapped launch pins the victim.
 
+local characters = require("characters")
 local grid = require("level_layout.grid")
 local map_entities = require("level_layout.map_entities")
 local players = require("players")
@@ -7,6 +8,7 @@ local choreography = require("preview.choreography")
 local drones = require("preview.drones")
 local scenery = require("preview.scenery")
 
+local type CharacterName = characters.CharacterName
 local type Choreography = choreography.Choreography
 local type Player = players.Player
 local type Scenery = scenery.Scenery
@@ -29,6 +31,10 @@ local ARRIVAL_MARGIN = 12
 local RETREAT_DISTANCE = 44
 
 local CYCLE_LENGTH = 5.5
+
+local BOMBER_SPRITE: CharacterName = "kotetsu"
+local VICTIM_SPRITE: CharacterName = "white"
+local BYSTANDER_SPRITE: CharacterName = "black"
 
 local SOFT_BLOCKS: {SoftBlockConfig} = {
     soft_block_at(0, 0),
@@ -99,9 +105,9 @@ end
 
 function BouncingPreview:open(stage: Stage): {Player}
     self.stage = stage
-    self.bomber = drones.bomber(BOMBER_START, BOMBER_BOMBS, BOMBER_FIRE)
-    self.victim = drones.victim(VICTIM_START)
-    self.bystander = drones.bystander(BYSTANDER_WEST)
+    self.bomber = drones.bomber(BOMBER_SPRITE, BOMBER_START, BOMBER_BOMBS, BOMBER_FIRE)
+    self.victim = drones.victim(VICTIM_SPRITE, VICTIM_START)
+    self.bystander = drones.bystander(BYSTANDER_SPRITE, BYSTANDER_WEST)
     self.bomber_phase = "arming"
     self.victim_phase = "approaching"
     self.bystander_phase = "going_east"

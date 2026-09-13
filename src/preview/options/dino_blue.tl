@@ -1,5 +1,6 @@
 -- The blue dino lession: throws bomb which bounces on other bomb and victim.
 
+local characters = require("characters")
 local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
 local grid = require("level_layout.grid")
@@ -10,6 +11,7 @@ local window = require("preview.options.window")
 local scenery = require("preview.scenery")
 local settings = require("settings")
 
+local type CharacterName = characters.CharacterName
 local type Choreography = choreography.Choreography
 local type Direction = vectors.Direction
 local type Player = players.Player
@@ -32,6 +34,9 @@ local STOP_MARGIN = 1
 local PLAYBACK_RATE = 2
 local AFTER_THROW_WAIT_DURATION = 1
 local CYCLE_LENGTH = 3.0
+
+local WALKER_SPRITE: CharacterName = "master_higins"
+local VICTIM_SPRITE: CharacterName = "manjimaru"
 
 local function corridor_tile_at(column: integer): Point
     return grid.get_tile_position(column, WALK_ROW)
@@ -76,10 +81,10 @@ end
 
 function DinoBlueLesson:open(stage: Stage): {Player}
     self.stage = stage
-    self.walker = drones.bomber(ENTRY_TILE)
+    self.walker = drones.bomber(WALKER_SPRITE, ENTRY_TILE)
     self.walker.speed = WALKER_SPEED
     self.phase = "mounting"
-    local victim = drones.victim(VICTIM_TILE)
+    local victim = drones.victim(VICTIM_SPRITE, VICTIM_TILE)
     return {self.walker, victim}
 end
 
