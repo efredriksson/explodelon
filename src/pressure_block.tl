@@ -96,8 +96,9 @@ local pressure_blocks = {PressureBlocks = PressureBlocks, PressureBlock = Pressu
 
 function pressure_blocks.new(): PressureBlocks
     local self: PressureBlocks = setmetatable({}, {__index = PressureBlocks})
-    self.left_positions = map_entities.get_left_side_pressure_blocks()
-    self.right_positions = map_entities.get_right_side_pressure_blocks()
+    local positions = map_entities.get_fall_pattern_positions("left_right")
+    self.left_positions = positions[1]
+    self.right_positions = positions[2]
     self.on_ground = collision.new_group()
     self.left_falling = PressureBlock.new(self.left_positions[1])
     self.right_falling = PressureBlock.new(self.right_positions[1])
