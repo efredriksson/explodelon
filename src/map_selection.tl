@@ -28,8 +28,6 @@ local MAP_ORDER <total>: {Map: integer} = {
 
 local MAPS = itertools.in_position_order(MAP_ORDER)
 
-local ARROW_MARGIN = 6
-
 -- Centre the arrows in the screen below the map-name strip rather than the whole
 -- screen, so they do not ride up into it.
 local ARROW_AREA_TOP = 10
@@ -114,21 +112,7 @@ function MapSelection:update(dt: number)
 end
 
 function MapSelection:_draw_arrows()
-    local left_image = arrows.left()
-    local right_image = arrows.right()
-    local arrow_y = (screen.HEIGHT + ARROW_AREA_TOP - left_image:getHeight()) / 2
-
-    if not self.selection:at_min() then
-        lutro.graphics.draw(arrows.left_shade(), 0, 0)
-        lutro.graphics.draw(left_image, ARROW_MARGIN, arrow_y)
-    end
-
-    if not self.selection:at_max() then
-        local shade_image = arrows.right_shade()
-        lutro.graphics.draw(shade_image, screen.WIDTH - shade_image:getWidth(), 0)
-        local right_x = screen.WIDTH - ARROW_MARGIN - right_image:getWidth()
-        lutro.graphics.draw(right_image, right_x, arrow_y)
-    end
+    arrows.draw_shaded(self.selection:at_min(), self.selection:at_max(), ARROW_AREA_TOP)
 end
 
 function MapSelection:_draw_name()
