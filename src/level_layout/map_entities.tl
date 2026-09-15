@@ -12,6 +12,7 @@ local type ConveyorBelt = entities.ConveyorBelt
 local type Trampoline = entities.Trampoline
 local type ItemType = settings.ItemType
 local type BlockType = entities.BlockType
+local type FallPattern = settings.FallPattern
 
 local record HardBlockConfig
     position: Point
@@ -112,7 +113,7 @@ function map_entities.get_block_configs(occupied: {Kinematic}): BlockConfigs
     return BlockConfigs.new(hard, assign_items_to_positions(soft_positions), non_hard)
 end
 
-function map_entities.get_right_side_pressure_blocks(): {Point}
+local function get_right_side_pressure_blocks(): {Point}
     local blocks: {Point} = {}
 
     for i, j in itertools.double_loop_inner_loopback({0, 3}, {0, 10}) do
@@ -126,7 +127,7 @@ function map_entities.get_right_side_pressure_blocks(): {Point}
     return blocks
 end
 
-function map_entities.get_left_side_pressure_blocks(): {Point}
+local function get_left_side_pressure_blocks(): {Point}
     local blocks: {Point} = {}
 
     for i, j in itertools.double_loop_inner_loopback({16, 13, -1}, {10, 0, -1}) do
@@ -138,6 +139,37 @@ function map_entities.get_left_side_pressure_blocks(): {Point}
     end
 
     return blocks
+end
+
+local function pressure_blocks_along_rows(
+    row_range: {integer, integer, integer}, column_range: {integer, integer, integer}
+): {Point}
+    local blocks: {Point} = {}
+    for j, i in itertools.double_loop_inner_loopback(row_range, column_range) do
+        table.insert(blocks, grid.get_tile_position(i, j))
+    end
+    return blocks
+end
+
+local function get_top_side_pressure_blocks(): {Point}
+    return pressure_blocks_along_rows({0, 3}, {0, 16})
+end
+
+local function get_bottom_side_pressure_blocks(): {Point}
+    return pressure_blocks_along_rows({10, 7, -1}, {16, 0, -1})
+end
+
+local FALL_PATTERN_SIDE_POSITIONS <total>: {FallPattern: {function(): {Point}}} = {
+    left_right = {get_left_side_pressure_blocks, get_right_side_pressure_blocks},
+    top_bottom = {get_top_side_pressure_blocks, get_bottom_side_pressure_blocks},
+}
+
+local function positions_for(get_positions: function(): {Point}): {Point}
+    return get_positions()
+end
+
+function map_entities.get_fall_pattern_positions(fall_pattern: FallPattern): {{Point}}
+    return itertools.map(FALL_PATTERN_SIDE_POSITIONS[fall_pattern], positions_for)
 end
 
 function map_entities.get_player_start_positions(number_of_players: integer): {Point}
