@@ -112,7 +112,7 @@ function MapSelection:update(dt: number)
 end
 
 function MapSelection:_draw_arrows()
-    arrows.draw_shaded(self.selection:at_min(), self.selection:at_max(), ARROW_AREA_TOP)
+    arrows.draw_shaded(ARROW_AREA_TOP)
 end
 
 function MapSelection:_draw_name()

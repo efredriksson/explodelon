@@ -501,15 +501,10 @@ local function draw_arrow(image: Image, x: number)
 end
 
 function OptionsSelection:_draw_arrows()
-    if not self.selection:at_min() then
-        draw_arrow(arrows.left(), ARROW_INSET)
-    end
-
-    if not self.selection:at_max() then
-        local right_image = arrows.right()
-        local scaled_width = right_image:getWidth() * ARROW_SCALE
-        draw_arrow(right_image, FLANK_WIDTH - scaled_width - ARROW_INSET)
-    end
+    draw_arrow(arrows.left(), ARROW_INSET)
+    local right_image = arrows.right()
+    local scaled_width = right_image:getWidth() * ARROW_SCALE
+    draw_arrow(right_image, FLANK_WIDTH - scaled_width - ARROW_INSET)
 end
 
 function OptionsSelection:_draw_flank()

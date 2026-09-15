@@ -29,6 +29,7 @@ local record MenuSelection<T>
     value: integer
     min: integer
     max: integer
+    wrap: boolean
     tostring: function(integer): string
     convert: function(integer): T
 end
@@ -50,23 +51,23 @@ function menu_items.new_integer_selection(
 end
 
 function MenuSelection:increment(): boolean
+    if self.wrap then
+        self.value = self.value % self.max + 1
+        return true
+    end
     local new_val = self.value + 1
     self.value = math.min(new_val, self.max)
     return new_val <= self.max
 end
 
 function MenuSelection:decrement(): boolean
+    if self.wrap then
+        self.value = (self.value - 2) % self.max + 1
+        return true
+    end
     local new_val = self.value - 1
     self.value = math.max(new_val, self.min)
     return new_val >= self.min
-end
-
-function MenuSelection:at_min(): boolean
-    return self.value <= self.min
-end
-
-function MenuSelection:at_max(): boolean
-    return self.value >= self.max
 end
 
 function MenuSelection:get_value(): T
@@ -105,6 +106,7 @@ function menu_items.new_enum<T>(choices: {T}): MenuSelection<T>
     self.value = 1
     self.min = 1
     self.max = #choices
+    self.wrap = true
     self.tostring = value_as_enum
     self.convert = function(v: integer): T return choices[v] end
     return self
