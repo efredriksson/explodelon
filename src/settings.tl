@@ -153,6 +153,41 @@ local type Map = enum
     "bouncing"
 end
 
+local type BlockPattern = enum
+    "grid"
+    "empty"
+    "quadrant"
+end
+
+local type FallPattern = enum
+    "left_right"
+    "top_bottom"
+end
+
+local record MapPatternSettings
+    block_pattern: BlockPattern
+    fall_pattern: FallPattern
+end
+
+function MapPatternSettings.new(
+    block_pattern: BlockPattern, fall_pattern: FallPattern
+): MapPatternSettings
+    local self: MapPatternSettings = setmetatable({}, {__index = MapPatternSettings})
+    self.block_pattern = block_pattern
+    self.fall_pattern = fall_pattern
+    return self
+end
+
+local function get_default_map_patterns(): {Map: MapPatternSettings}
+    local default_map_patterns <total>: {Map: MapPatternSettings} = {
+        football = MapPatternSettings.new("grid", "top_bottom"),
+        factory = MapPatternSettings.new("grid", "left_right"),
+        ice_rink = MapPatternSettings.new("quadrant", "left_right"),
+        bouncing = MapPatternSettings.new("grid", "left_right"),
+    }
+    return default_map_patterns
+end
+
 -- Debug rules are off this list; they have no player-facing name.
 local type RulesetName = enum
     "default"
@@ -177,12 +212,15 @@ local record Settings
     map: Map
     ruleset: RulesetName
     game_rules: GameRules
+    map_patterns: {Map: MapPatternSettings}
     -- Type export
     ItemType: ItemType
     DinoColor: DinoColor
     Map: Map
     RulesetName: RulesetName
     DebugRulesetName: DebugRulesetName
+    BlockPattern: BlockPattern
+    FallPattern: FallPattern
 end
 
 function Settings.new(): Settings
@@ -195,12 +233,15 @@ function Settings.new(): Settings
     self.ruleset = "default"
     self.skip_options_screen = false
     self.game_rules = GameRules.new()
+    self.map_patterns = get_default_map_patterns()
     -- Type export
     self.ItemType = ItemType
     self.DinoColor = DinoColor
     self.Map = Map
     self.RulesetName = RulesetName
     self.DebugRulesetName = DebugRulesetName
+    self.BlockPattern = BlockPattern
+    self.FallPattern = FallPattern
     return self
 end
 
@@ -216,6 +257,26 @@ end
 
 function Settings.set_map(value: Map)
     settings.map = value
+end
+
+function Settings.set_block_pattern(value: BlockPattern)
+    settings.map_patterns[settings.map].block_pattern = value
+end
+
+function Settings.get_block_pattern(): BlockPattern
+    return settings.map_patterns[settings.map].block_pattern
+end
+
+function Settings.set_fall_pattern(value: FallPattern)
+    settings.map_patterns[settings.map].fall_pattern = value
+end
+
+function Settings.get_fall_pattern(): FallPattern
+    return settings.map_patterns[settings.map].fall_pattern
+end
+
+function Settings.default_block_pattern(map: Map): BlockPattern
+    return get_default_map_patterns()[map].block_pattern
 end
 
 function Settings.set_number_of_auto_selected_characters(value: integer)
