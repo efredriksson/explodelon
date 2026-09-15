@@ -2,12 +2,15 @@ local collision = require("engine.collision")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
 local hitboxes = require("engine.hitboxes")
+local itertools = require("itertools")
 local grid = require("level_layout.grid")
 local map_entities = require("level_layout.map_entities")
+local settings = require("settings")
 local z_index = require("z_index")
 
 local type Explodable = require("bombs.explodable")
 local type Entity = require("engine.entity")
+local type FallPattern = settings.FallPattern
 local type Group = collision.Group
 local type Kinematic = require("kinematic")
 local type Point = points.Point
@@ -78,15 +81,46 @@ function PressureBlock:update(dt: number)
     end
 end
 
+local record PressureBlockSide
+    positions: {Point}
+    next_index: integer
+    falling: PressureBlock
+    fall_finished: boolean
+    on_ground: Group<PressureBlock>
+end
+
+function PressureBlockSide.new(
+    positions: {Point}, on_ground: Group<PressureBlock>
+): PressureBlockSide
+    local self: PressureBlockSide = setmetatable({}, {__index = PressureBlockSide})
+    self.positions = positions
+    self.on_ground = on_ground
+    self.falling = PressureBlock.new(positions[1])
+    self.next_index = 2
+    self.fall_finished = false
+    return self
+end
+
+function PressureBlockSide:set_next_falling_block(): boolean
+    if self.next_index > #self.positions then
+        return false
+    end
+    self.fall_finished = false
+    self.falling = PressureBlock.new(self.positions[self.next_index])
+    self.next_index = self.next_index + 1
+    return true
+end
+
+function PressureBlockSide:update(dt: number)
+    self.falling:update(dt)
+    if self.falling:is_on_ground() and not self.fall_finished then
+        self.fall_finished = true
+        self.on_ground:add(self.falling)
+    end
+end
+
 local record PressureBlocks
-    next_left_index: integer
-    next_right_index: integer
-    left_positions: {Point}
-    right_positions: {Point}
-    left_falling: PressureBlock
-    right_falling: PressureBlock
-    right_fall_finished: boolean
-    left_fall_finished: boolean
+    falling_sides: {PressureBlockSide}
     on_ground: Group<PressureBlock>
     no_more_falling_blocks: boolean
     sudden_death: boolean
@@ -94,18 +128,15 @@ end
 
 local pressure_blocks = {PressureBlocks = PressureBlocks, PressureBlock = PressureBlock}
 
-function pressure_blocks.new(): PressureBlocks
+function pressure_blocks.new(fall_pattern: FallPattern): PressureBlocks
     local self: PressureBlocks = setmetatable({}, {__index = PressureBlocks})
-    local positions = map_entities.get_fall_pattern_positions("left_right")
-    self.left_positions = positions[1]
-    self.right_positions = positions[2]
     self.on_ground = collision.new_group()
-    self.left_falling = PressureBlock.new(self.left_positions[1])
-    self.right_falling = PressureBlock.new(self.right_positions[1])
-    self.next_left_index = 2
-    self.next_right_index = 2
-    self.right_fall_finished = false
-    self.left_fall_finished = false
+    local function new_side(positions: {Point}): PressureBlockSide
+        return PressureBlockSide.new(positions, self.on_ground)
+    end
+    self.falling_sides = itertools.map(
+        map_entities.get_fall_pattern_positions(fall_pattern), new_side
+    )
     self.no_more_falling_blocks = false
     self.sudden_death = false
     return self
@@ -115,36 +146,30 @@ function PressureBlocks:no_updates(): boolean
     return self.no_more_falling_blocks or not self.sudden_death
 end
 
-function PressureBlocks:set_next_right_falling_block()
-    self.right_fall_finished = false
-    if self.next_right_index <= #self.right_positions then
-        self.right_falling = PressureBlock.new(
-            self.right_positions[self.next_right_index]
-        )
-        self.next_right_index = self.next_right_index + 1
-    else
-        self.no_more_falling_blocks = true
-    end
+local function side_is_finished(side: PressureBlockSide): boolean
+    return side.fall_finished
 end
 
-function PressureBlocks:set_next_left_falling_block()
-    self.left_fall_finished = false
-    if self.next_left_index <= #self.left_positions then
-        self.left_falling = PressureBlock.new(self.left_positions[self.next_left_index])
-        self.next_left_index = self.next_left_index + 1
-    else
-        self.no_more_falling_blocks = true
+function PressureBlocks:_advance_all_sides()
+    local exists_more_falling_blocks = false
+    for _, side in ipairs(self.falling_sides) do
+        if side:set_next_falling_block() then
+            exists_more_falling_blocks = true
+        end
     end
+
+    self.no_more_falling_blocks = not exists_more_falling_blocks
 end
 
 function PressureBlocks:falling(): {PressureBlock: PressureBlock}
     if self:no_updates() then
         return {}
     end
-    return {
-        [self.left_falling] = self.left_falling,
-        [self.right_falling] = self.right_falling,
-    }
+    local blocks: {PressureBlock: PressureBlock} = {}
+    for _, side in ipairs(self.falling_sides) do
+        blocks[side.falling] = side.falling
+    end
+    return blocks
 end
 
 function PressureBlocks:update(dt: number)
@@ -152,21 +177,12 @@ function PressureBlocks:update(dt: number)
         return
     end
 
-    self.left_falling:update(dt)
-    self.right_falling:update(dt)
-
-    if self.right_falling:is_on_ground() and not self.right_fall_finished then
-        self.right_fall_finished = true
-        self.on_ground:add(self.right_falling)
-    end
-    if self.left_falling:is_on_ground() and not self.left_fall_finished then
-        self.left_fall_finished = true
-        self.on_ground:add(self.left_falling)
+    for _, side in ipairs(self.falling_sides) do
+        side:update(dt)
     end
 
-    if self.left_fall_finished and self.right_fall_finished then
-        self:set_next_right_falling_block()
-        self:set_next_left_falling_block()
+    if itertools.count(self.falling_sides, side_is_finished) == #self.falling_sides then
+        self:_advance_all_sides()
     end
 end
 
