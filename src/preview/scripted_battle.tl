@@ -176,7 +176,10 @@ function ScriptedBattle:_stand_up_map()
     -- puts it back.
     settings.set_map(map)
     self.ice_sliding = maps.get_layout():has_ice()
-    self.hard_blocks = hard_blocks.new(map_entities.get_block_configs({}).hard)
+    -- Map preview always show default layout so user can see typical setup for it
+    self.hard_blocks = hard_blocks.new(
+        map_entities.get_block_configs({}, settings.default_block_pattern(map)).hard
+    )
     -- Hard blocks only, unlike Battle:load, so drones and kicked bombs pass
     -- through scenery: a piece may stand blocks anywhere off a blast path.
     self.blocks_bombs = collision.new_combined_group(self.hard_blocks.on_ground.set)

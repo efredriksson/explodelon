@@ -6,8 +6,7 @@ local itertools = require("itertools")
 local level_graphics = require("level_graphics.maps.init")
 local arrows = require("menus.arrows")
 local items = require("menus.items")
-local options_selection = require("options_selection")
-local player_selection = require("player_selection")
+local map_pattern_settings_screen = require("menus.map_pattern_settings_screen")
 local preview_maps = require("preview.maps.init")
 local scripted_battle = require("preview.scripted_battle")
 local screen = require("screen")
@@ -72,18 +71,11 @@ function MapSelection:load()
     )
 end
 
-function MapSelection:_next_screen(): Scene
-    if settings.skip_options_screen then
-        return player_selection.setup()
-    end
-    return options_selection.new(self)
-end
-
 function MapSelection:update(dt: number)
     if joysticks.is_pressed_any(joysticks.BUTTONS.B) then
         self:_leave_preview()
         settings.set_map(self.selection:get_value())
-        scenes.set(self:_next_screen())
+        scenes.set(map_pattern_settings_screen.new(self))
         return
     end
 

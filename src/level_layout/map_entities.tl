@@ -12,6 +12,7 @@ local type Goal = entities.Goal
 local type ConveyorBelt = entities.ConveyorBelt
 local type Trampoline = entities.Trampoline
 local type ItemType = settings.ItemType
+local type BlockPattern = settings.BlockPattern
 local type BlockType = entities.BlockType
 local type FallPattern = settings.FallPattern
 
@@ -90,11 +91,13 @@ local function get_pos(k: Kinematic): Point
     return k:get_position()
 end
 
-function map_entities.get_block_configs(occupied: {Kinematic}): BlockConfigs
+function map_entities.get_block_configs(
+    occupied: {Kinematic}, block_pattern?: BlockPattern
+): BlockConfigs
     local occupied_positions = itertools.map(occupied, get_pos)
     local map_layout = maps.get_layout()
-    local block_pattern = settings.map_patterns[settings.map].block_pattern
-    local layout = block_layouts.build(block_pattern, occupied_positions, map_layout)
+    local pattern = block_pattern or settings.map_patterns[settings.map].block_pattern
+    local layout = block_layouts.build(pattern, occupied_positions, map_layout)
     local dim = grid.dimensions()
     local hard: {HardBlockConfig} = {}
     local soft_positions: {Point} = {}
