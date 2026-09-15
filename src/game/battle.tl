@@ -137,7 +137,7 @@ function Battle:load()
     self.win_condition:reset()
     self.state = "starting"
     self.countdown = countdown.new()
-    self.pressure_blocks = pressure_blocks.new()
+    self.pressure_blocks = pressure_blocks.new(settings.get_fall_pattern())
     self.hard_blocks = hard_blocks.new(block_configs.hard)
     self.non_hard_block_positions = block_configs.non_hard
     self.tic_counter = 0
