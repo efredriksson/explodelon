@@ -470,121 +470,132 @@ function Settings.set_ice_friction_factor(value: number)
     settings.game_rules.ice.friction_factor = value
 end
 
-local function set_game_rules_default()
-    settings.game_rules = GameRules.new()
+local function new_default_rules(): GameRules
+    return GameRules.new()
 end
 
-local function set_game_rules_insanity()
-    settings.game_rules = GameRules.new()
-    settings.game_rules.items.nbr_soft_blocks = 30
-    settings.game_rules.timings.battle = 120
-    settings.game_rules.timings.sudden_death = 100
-    settings.game_rules.items.spawn_rates.speed = 0.3
-    settings.game_rules.items.spawn_rates.bomb = 0.3
-    settings.game_rules.items.spawn_rates.fire = 0.5
-    settings.game_rules.items.spawn_rates.kick = 0.07
-    settings.game_rules.players.mad_bombers.enabled = true
-    settings.game_rules.players.mad_bombers.after_sudden_death = true
+local function new_insanity_rules(): GameRules
+    local rules = GameRules.new()
+    rules.items.nbr_soft_blocks = 30
+    rules.timings.battle = 120
+    rules.timings.sudden_death = 100
+    rules.items.spawn_rates.speed = 0.3
+    rules.items.spawn_rates.bomb = 0.3
+    rules.items.spawn_rates.fire = 0.5
+    rules.items.spawn_rates.kick = 0.07
+    rules.players.mad_bombers.enabled = true
+    rules.players.mad_bombers.after_sudden_death = true
+    return rules
 end
 
-local function set_game_rules_bomb_stack()
-    settings.game_rules = GameRules.new()
-    settings.game_rules.items.nbr_soft_blocks = 65
-    settings.game_rules.items.nbr_of_items.bomb = 12
-    settings.game_rules.items.nbr_of_items.fire = 6
-    settings.game_rules.items.nbr_of_items.speed = 0
-    settings.game_rules.items.nbr_of_items.kick = 0
-    settings.game_rules.items.nbr_of_items.lightning_bomb = 2
-    settings.game_rules.items.spawn_rates.bomb = 0.1
-    settings.game_rules.items.spawn_rates.speed = 0.1
-    settings.game_rules.dinos.nbr_of_eggs = 6
-    settings.game_rules.dinos.enabled.pink = false
-    settings.game_rules.dinos.enabled.green = false
-    settings.game_rules.dinos.enabled.purple = false
-    settings.game_rules.timings.battle = 150
-    settings.game_rules.timings.sudden_death = 70
-    settings.game_rules.players.mad_bombers.enabled = true
-    settings.game_rules.players.mad_bombers.after_sudden_death = false
+local function new_bomb_stack_rules(): GameRules
+    local rules = GameRules.new()
+    rules.items.nbr_soft_blocks = 65
+    rules.items.nbr_of_items.bomb = 12
+    rules.items.nbr_of_items.fire = 6
+    rules.items.nbr_of_items.speed = 0
+    rules.items.nbr_of_items.kick = 0
+    rules.items.nbr_of_items.lightning_bomb = 2
+    rules.items.spawn_rates.bomb = 0.1
+    rules.items.spawn_rates.speed = 0.1
+    rules.dinos.nbr_of_eggs = 6
+    rules.dinos.enabled.pink = false
+    rules.dinos.enabled.green = false
+    rules.dinos.enabled.purple = false
+    rules.timings.battle = 150
+    rules.timings.sudden_death = 70
+    rules.players.mad_bombers.enabled = true
+    rules.players.mad_bombers.after_sudden_death = false
+    return rules
 end
 
-local function set_game_rules_dino_madness()
-    settings.game_rules = GameRules.new()
-    settings.game_rules.items.nbr_soft_blocks = 60
-    settings.game_rules.timings.battle = 150
-    settings.game_rules.timings.sudden_death = 90
-    settings.game_rules.dinos.nbr_of_eggs = 15
-    settings.game_rules.items.spawn_rates.lightning_bomb = 0.08
-    settings.game_rules.items.spawn_rates.bomb = 0.16
-    settings.game_rules.items.spawn_rates.speed = 0.1
+local function new_dino_madness_rules(): GameRules
+    local rules = GameRules.new()
+    rules.items.nbr_soft_blocks = 60
+    rules.timings.battle = 150
+    rules.timings.sudden_death = 90
+    rules.dinos.nbr_of_eggs = 15
+    rules.items.spawn_rates.lightning_bomb = 0.08
+    rules.items.spawn_rates.bomb = 0.16
+    rules.items.spawn_rates.speed = 0.1
+    return rules
 end
 
-local RULESET_LOADERS <total>: {RulesetName: function()} = {
-    default = set_game_rules_default,
-    insanity = set_game_rules_insanity,
-    bomb_stack = set_game_rules_bomb_stack,
-    dino_madness = set_game_rules_dino_madness,
+local RULESET_BUILDERS <total>: {RulesetName: function(): GameRules} = {
+    default = new_default_rules,
+    insanity = new_insanity_rules,
+    bomb_stack = new_bomb_stack_rules,
+    dino_madness = new_dino_madness_rules,
 }
 
+function Settings.build_ruleset(name: RulesetName): GameRules
+    return RULESET_BUILDERS[name]()
+end
+
 function Settings.set_ruleset(name: RulesetName)
-    RULESET_LOADERS[name]()
+    settings.game_rules = RULESET_BUILDERS[name]()
     settings.ruleset = name
 end
 
-local function set_debug_kick()
-    settings.game_rules = GameRules.new()
-    settings.game_rules.players.start_with_kick = true
-    settings.game_rules.players.start_with_bombs = 10
-    settings.game_rules.items.nbr_soft_blocks = 0
+local function new_debug_kick_rules(): GameRules
+    local rules = GameRules.new()
+    rules.players.start_with_kick = true
+    rules.players.start_with_bombs = 10
+    rules.items.nbr_soft_blocks = 0
+    return rules
 end
 
-local function set_debug_lightning_bomb()
-    settings.game_rules = GameRules.new()
-    settings.game_rules.players.start_with_kick = true
-    settings.game_rules.players.start_with_lightning_bombs = 1
-    settings.game_rules.timings.sudden_death = 150
-    settings.game_rules.items.nbr_soft_blocks = 5
-    settings.game_rules.items.spawn_rates.lightning_bomb = 0.1
-    settings.game_rules.items.nbr_of_items.lightning_bomb = 3
-    settings.game_rules.items.nbr_of_items.bomb = 2
-    settings.game_rules.items.nbr_of_items.fire = 0
-    settings.game_rules.items.nbr_of_items.kick = 0
-    settings.game_rules.items.nbr_of_items.speed = 0
-    settings.game_rules.dinos.nbr_of_eggs = 0
+local function new_debug_lightning_bomb_rules(): GameRules
+    local rules = GameRules.new()
+    rules.players.start_with_kick = true
+    rules.players.start_with_lightning_bombs = 1
+    rules.timings.sudden_death = 150
+    rules.items.nbr_soft_blocks = 5
+    rules.items.spawn_rates.lightning_bomb = 0.1
+    rules.items.nbr_of_items.lightning_bomb = 3
+    rules.items.nbr_of_items.bomb = 2
+    rules.items.nbr_of_items.fire = 0
+    rules.items.nbr_of_items.kick = 0
+    rules.items.nbr_of_items.speed = 0
+    rules.dinos.nbr_of_eggs = 0
+    return rules
 end
 
-local function set_debug_performance()
-    settings.game_rules = GameRules.new()
-    settings.game_rules.players.start_with_kick = true
-    settings.game_rules.players.start_with_bombs = 10
-    settings.game_rules.timings.sudden_death = 120
-    engine_settings.set_log_scene_perf(true)
+local function new_debug_performance_rules(): GameRules
+    local rules = GameRules.new()
+    rules.players.start_with_kick = true
+    rules.players.start_with_bombs = 10
+    rules.timings.sudden_death = 120
+    return rules
 end
 
-local function set_debug_dinos()
-    settings.game_rules = GameRules.new()
-    settings.game_rules.items.nbr_of_items.fire = 0
-    settings.game_rules.items.nbr_of_items.kick = 0
-    settings.game_rules.items.nbr_of_items.bomb = 0
-    settings.game_rules.items.nbr_of_items.speed = 0
-    settings.game_rules.items.nbr_soft_blocks = 20
-    settings.game_rules.dinos.nbr_of_eggs = 20
-    settings.game_rules.dinos.enabled.blue = false
-    settings.game_rules.dinos.enabled.pink = false
-    settings.game_rules.dinos.enabled.purple = true
-    settings.game_rules.dinos.enabled.green = false
-    settings.game_rules.dinos.enabled.yellow = false
+local function new_debug_dinos_rules(): GameRules
+    local rules = GameRules.new()
+    rules.items.nbr_of_items.fire = 0
+    rules.items.nbr_of_items.kick = 0
+    rules.items.nbr_of_items.bomb = 0
+    rules.items.nbr_of_items.speed = 0
+    rules.items.nbr_soft_blocks = 20
+    rules.dinos.nbr_of_eggs = 20
+    rules.dinos.enabled.blue = false
+    rules.dinos.enabled.pink = false
+    rules.dinos.enabled.purple = true
+    rules.dinos.enabled.green = false
+    rules.dinos.enabled.yellow = false
+    return rules
 end
 
-local DEBUG_RULESET_LOADERS <total>: {DebugRulesetName: function()} = {
-    kick = set_debug_kick,
-    lightning_bomb = set_debug_lightning_bomb,
-    performance = set_debug_performance,
-    dinos = set_debug_dinos,
+local DEBUG_RULESET_BUILDERS <total>: {DebugRulesetName: function(): GameRules} = {
+    kick = new_debug_kick_rules,
+    lightning_bomb = new_debug_lightning_bomb_rules,
+    performance = new_debug_performance_rules,
+    dinos = new_debug_dinos_rules,
 }
 
 function Settings.set_debug_ruleset(name: DebugRulesetName)
     Settings.set_ruleset("default")
-    DEBUG_RULESET_LOADERS[name]()
+    settings.game_rules = DEBUG_RULESET_BUILDERS[name]()
+    engine_settings.set_log_scene_perf(true)
     settings.auto_select_characters = true
     settings.skip_options_screen = true
 end
