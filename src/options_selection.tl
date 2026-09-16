@@ -24,6 +24,7 @@ local settings = require("settings")
 
 local type Color = images.Color
 local type DinoColor = settings.DinoColor
+local type GameRules = settings.GameRules
 local type ItemType = settings.ItemType
 local type Map = settings.Map
 local type MenuFont = fonts.MenuFont
@@ -220,20 +221,20 @@ local MATERIEL_ROWS: {Row} = {
     ),
 }
 
-local function dino_sprite_for(color: DinoColor): Image
-    if settings.game_rules.dinos.enabled[color] then
+local function dino_sprite_for(rules: GameRules, color: DinoColor): Image
+    if rules.dinos.enabled[color] then
         return bright_dino_sprites[color]
     end
     return faded_dino_sprites[color]
 end
 
-local function materiel_count(materiel: Materiel): integer
+local function materiel_count(rules: GameRules, materiel: Materiel): integer
     if materiel.kind == "soft_block" then
-        return settings.game_rules.items.nbr_soft_blocks
+        return rules.items.nbr_soft_blocks
     elseif materiel.kind == "item" then
-        return settings.game_rules.items.nbr_of_items[materiel.item]
+        return rules.items.nbr_of_items[materiel.item]
     elseif materiel.kind == "egg" then
-        return settings.game_rules.dinos.nbr_of_eggs
+        return rules.dinos.nbr_of_eggs
     end
     return 0
 end
@@ -246,15 +247,17 @@ local function font_for_count(count: integer): MenuFont
 end
 
 -- What a blown-open soft block also drops mid-battle.
-local function drop_rate(materiel: Materiel): number
+local function drop_rate(rules: GameRules, materiel: Materiel): number
     if not may_show_drop_percent(materiel) then
         return 0
     end
-    return settings.game_rules.items.spawn_rates[materiel.item]
+    return rules.items.spawn_rates[materiel.item]
 end
 
-local function draw_drop_percent(materiel: Materiel, slot_x: number, count_y: number)
-    local rate = drop_rate(materiel)
+local function draw_drop_percent(
+    rules: GameRules, materiel: Materiel, slot_x: number, count_y: number
+)
+    local rate = drop_rate(rules, materiel)
     if rate <= 0 then
         return
     end
@@ -293,7 +296,9 @@ local function draw_item(item: ItemType, center_x: number, baseline: number)
     draw_sprite(item_sprites[item], center_x, baseline)
 end
 
-local function draw_materiel(materiel: Materiel, center_x: number, baseline: number)
+local function draw_materiel(
+    rules: GameRules, materiel: Materiel, center_x: number, baseline: number
+)
     if materiel.kind == "item" then
         draw_item(materiel.item, center_x, baseline)
     elseif materiel.kind == "soft_block" then
@@ -301,21 +306,23 @@ local function draw_materiel(materiel: Materiel, center_x: number, baseline: num
     elseif materiel.kind == "egg" then
         draw_sprite(egg_sprite, center_x, baseline)
     else
-        draw_sprite(dino_sprite_for(materiel.color), center_x, baseline)
+        draw_sprite(dino_sprite_for(rules, materiel.color), center_x, baseline)
     end
 end
 
 -- A dino is in or out of the ruleset, and the faded sprite already says so.
-local function draw_count(materiel: Materiel, slot_x: number, count_y: number)
+local function draw_count(
+    rules: GameRules, materiel: Materiel, slot_x: number, count_y: number
+)
     if materiel.kind == "dino" then
         return
     end
 
-    local count = materiel_count(materiel)
+    local count = materiel_count(rules, materiel)
     font_for_count(count):print_centered(
         tostring(count), SLOT_WIDTH, points.new(slot_x, count_y)
     )
-    draw_drop_percent(materiel, slot_x, count_y)
+    draw_drop_percent(rules, materiel, slot_x, count_y)
 end
 
 local PREVIEW_TINTS: {PreviewSubject: Color} = {
@@ -351,7 +358,7 @@ local function draw_marker(slot_x: number, top: number, height: number, tint: Co
     )
 end
 
-local function draw_row(row: Row, subject: PreviewSubject)
+local function draw_row(rules: GameRules, row: Row, subject: PreviewSubject)
     local count_y = row:count_y()
     for position, materiel in ipairs(row.materiel) do
         local slot_x = row:slot_x(position)
@@ -364,14 +371,15 @@ local function draw_row(row: Row, subject: PreviewSubject)
                 PREVIEW_TINTS[subject]
             )
         end
-        draw_materiel(materiel, slot_x + SLOT_WIDTH / 2, row.baseline)
-        draw_count(materiel, slot_x, count_y)
+        draw_materiel(rules, materiel, slot_x + SLOT_WIDTH / 2, row.baseline)
+        draw_count(rules, materiel, slot_x, count_y)
     end
 end
 
 local record OptionsSelection is Scene
     previous_screen: Scene
     selection: MenuSelection<RulesetName>
+    candidate_rules: GameRules
     lesson: ScriptedBattle
     rotation_index: integer
 end
@@ -438,8 +446,26 @@ function OptionsSelection:_advance_preview()
     )
 end
 
+local function rules_for(name: RulesetName): GameRules
+    if name == settings.ruleset then
+        -- Active choosen rule-set, show it with any tweaks
+        return settings.game_rules
+    end
+    return settings.build_ruleset(name)
+end
+
+function OptionsSelection:_apply()
+    local name = self.selection:get_value()
+    if name == settings.ruleset then
+        -- Active choosen rule-set, do not overwrite any tweaks done to it
+        return
+    end
+    settings.set_ruleset(name)
+end
+
 function OptionsSelection:load()
     self.selection.value = itertools.find(settings.ruleset, RULESETS)
+    self.candidate_rules = rules_for(self.selection:get_value())
     ensure_soft_block_sprite()
     self:_start_lesson()
 end
@@ -451,6 +477,7 @@ end
 
 function OptionsSelection:update(dt: number)
     if joysticks.is_pressed_any(joysticks.BUTTONS.B) then
+        self:_apply()
         self:_leave_for(player_selection.setup())
         return
     end
@@ -461,6 +488,7 @@ function OptionsSelection:update(dt: number)
     end
 
     if joysticks.is_pressed_any(joysticks.BUTTONS.START) then
+        self:_apply()
         self:_leave_for(game_rule_screen.new(self))
         return
     end
@@ -474,7 +502,7 @@ function OptionsSelection:update(dt: number)
 
     if moved then
         ok_sound:play()
-        settings.set_ruleset(self.selection:get_value())
+        self.candidate_rules = rules_for(self.selection:get_value())
     end
 
     self.lesson:update(dt)
@@ -492,7 +520,7 @@ end
 function OptionsSelection:_draw_readout()
     local subject = self:_previewed_subject()
     for _, row in ipairs(MATERIEL_ROWS) do
-        draw_row(row, subject)
+        draw_row(self.candidate_rules, row, subject)
     end
 end
 

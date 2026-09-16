@@ -265,6 +265,7 @@ local record Settings
     -- Type export
     ItemType: ItemType
     DinoColor: DinoColor
+    GameRules: GameRules
     Map: Map
     RulesetName: RulesetName
     DebugRulesetName: DebugRulesetName
@@ -286,6 +287,7 @@ function Settings.new(): Settings
     -- Type export
     self.ItemType = ItemType
     self.DinoColor = DinoColor
+    self.GameRules = GameRules
     self.Map = Map
     self.RulesetName = RulesetName
     self.DebugRulesetName = DebugRulesetName
