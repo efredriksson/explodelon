@@ -1,4 +1,5 @@
 local engine_settings = require("engine.settings")
+local itertools = require("itertools")
 
 local enum ItemType
     "speed"
@@ -20,6 +21,12 @@ function TimingRules.new(): TimingRules
     self.battle = 180
     self.sudden_death = 60
     return self
+end
+
+function TimingRules:equals(other: TimingRules): boolean
+    return self.nbr_battles == other.nbr_battles
+        and self.battle == other.battle
+        and self.sudden_death == other.sudden_death
 end
 
 local record ItemRules
@@ -48,6 +55,12 @@ function ItemRules.new(): ItemRules
     return self
 end
 
+function ItemRules:equals(other: ItemRules): boolean
+    return self.nbr_soft_blocks == other.nbr_soft_blocks
+        and itertools.maps_equal(self.nbr_of_items, other.nbr_of_items)
+        and itertools.maps_equal(self.spawn_rates, other.spawn_rates)
+end
+
 local record MadBombers
     enabled: boolean
     after_sudden_death: boolean
@@ -58,6 +71,11 @@ function MadBombers.new(): MadBombers
     self.enabled = true
     self.after_sudden_death = false
     return self
+end
+
+function MadBombers:equals(other: MadBombers): boolean
+    return self.enabled == other.enabled
+        and self.after_sudden_death == other.after_sudden_death
 end
 
 local record PlayerRules
@@ -88,6 +106,19 @@ function PlayerRules.new(): PlayerRules
     return self
 end
 
+function PlayerRules:equals(other: PlayerRules): boolean
+    return self.start_position_shuffle == other.start_position_shuffle
+        and self.mad_bombers:equals(other.mad_bombers)
+        and self.start_speed == other.start_speed
+        and self.start_with_kick == other.start_with_kick
+        and self.start_with_bombs == other.start_with_bombs
+        and self.start_with_lightning_bombs == other.start_with_lightning_bombs
+        and self.start_with_fire == other.start_with_fire
+        and self.max_hp == other.max_hp
+        and self.petrify_grace_seconds == other.petrify_grace_seconds
+        and self.petrify_stone_seconds == other.petrify_stone_seconds
+end
+
 local type DinoColor = enum
     "blue"
     "pink"
@@ -116,6 +147,11 @@ function DinoRules.new(): DinoRules
     return self
 end
 
+function DinoRules:equals(other: DinoRules): boolean
+    return self.nbr_of_eggs == other.nbr_of_eggs
+        and itertools.maps_equal(self.enabled, other.enabled)
+end
+
 local record IceRules
     acceleration_factor: number
     friction_factor: number
@@ -126,6 +162,11 @@ function IceRules.new(): IceRules
     self.acceleration_factor = 4
     self.friction_factor = 1
     return self
+end
+
+function IceRules:equals(other: IceRules): boolean
+    return self.acceleration_factor == other.acceleration_factor
+        and self.friction_factor == other.friction_factor
 end
 
 local record GameRules
@@ -144,6 +185,14 @@ function GameRules.new(): GameRules
     self.dinos = DinoRules.new()
     self.ice = IceRules.new()
     return self
+end
+
+function GameRules:equals(other: GameRules): boolean
+    return self.players:equals(other.players)
+        and self.items:equals(other.items)
+        and self.timings:equals(other.timings)
+        and self.dinos:equals(other.dinos)
+        and self.ice:equals(other.ice)
 end
 
 local type Map = enum

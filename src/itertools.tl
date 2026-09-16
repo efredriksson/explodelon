@@ -90,6 +90,22 @@ function itertools.in_position_order<T>(positions: {T: integer}): {T}
     return ordered
 end
 
+function itertools.maps_equal<K, V>(first: {K: V}, second: {K: V}): boolean
+    for key, value in pairs(first) do
+        if second[key] ~= value then
+            return false
+        end
+    end
+
+    for key, value in pairs(second) do
+        if first[key] ~= value then
+            return false
+        end
+    end
+
+    return true
+end
+
 function itertools.find<T>(value: T, list: {T}): integer
     for index, elem in ipairs(list) do
         if elem == value then
