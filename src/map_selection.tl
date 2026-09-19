@@ -64,7 +64,7 @@ function MapSelection:_leave_preview()
 end
 
 function MapSelection:load()
-    self.selection.value = itertools.find(settings.map, MAPS)
+    self.selection = items.new_enum_for_value(settings.map, MAPS)
     local map = self.selection:get_value()
     self.preview = scripted_battle.new(
         preview_maps.scenery_for(map), preview_maps.choreography_for(map)
