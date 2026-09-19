@@ -1,32 +1,22 @@
-local collision = require("engine.collision")
 local points = require("engine.geometry.points")
 local joysticks = require("engine.joysticks")
 local scenes = require("engine.scenes")
 local fonts = require("fonts")
-local hard_blocks = require("hard_blocks")
-local itertools = require("itertools")
 local level_graphics = require("level_graphics.maps.init")
-local map_entities = require("level_layout.map_entities")
 local arrows = require("menus.arrows")
 local items = require("menus.items")
 local options_selection = require("options_selection")
 local player_selection = require("player_selection")
-local pressure_blocks = require("pressure_block")
+local block_layout = require("preview.block_layout")
 local screen = require("screen")
 local settings = require("settings")
-local soft_blocks = require("soft_blocks")
-local z_index = require("z_index")
 
+local type BlockLayoutPreview = block_layout.BlockLayoutPreview
 local type BlockPattern = settings.BlockPattern
-local type Entity = require("engine.entity")
 local type FallPattern = settings.FallPattern
-local type Group = collision.Group
-local type HardBlocks = hard_blocks.HardBlocks
 local type MenuFont = fonts.MenuFont
 local type MenuSelection = items.MenuSelection
-local type PressureBlocks = pressure_blocks.PressureBlocks
 local type Scene = scenes.Scene
-local type SoftBlocks = soft_blocks.SoftBlocks
 
 local BLOCK_PATTERNS: {BlockPattern} = {"grid", "empty", "quadrant"}
 local FALL_PATTERNS: {FallPattern} = {"left_right", "top_bottom"}
@@ -44,9 +34,6 @@ local FALL_PATTERN_LABEL_Y = 13
 -- screen, so they do not ride up into it.
 local ARROW_AREA_TOP = 10
 
--- Speed up fall pattern animation to show user the pattern faster.
-local PREVIEW_FALL_SPEED_MULTIPLIER = 8
-
 local white_font: MenuFont
 local gray_font: MenuFont
 local ok_sound: Source
@@ -56,12 +43,7 @@ local record MapPatternSettingsScreen is Scene
     focus: MenuSelection<integer>
     block_selection: MenuSelection<BlockPattern>
     fall_selection: MenuSelection<FallPattern>
-    preview_block_pattern: BlockPattern
-    preview_fall_pattern: FallPattern
-    preview_hard_blocks: HardBlocks
-    preview_soft_blocks: SoftBlocks
-    preview_pressure_blocks: PressureBlocks
-    preview_pressure_blocks_group: Group<Entity>
+    preview: BlockLayoutPreview
 end
 
 local map_pattern_settings_screen = {}
@@ -102,26 +84,15 @@ function MapPatternSettingsScreen:_is_fall_pattern_focused(): boolean
     return self.focus:get_value() == FALL_PATTERN_FOCUS
 end
 
-function MapPatternSettingsScreen:_rebuild_preview()
-    self.preview_block_pattern = settings.get_block_pattern()
-    self.preview_fall_pattern = settings.get_fall_pattern()
-    local block_configs = map_entities.get_block_configs({})
-    self.preview_hard_blocks = hard_blocks.new(block_configs.hard)
-    self.preview_soft_blocks = soft_blocks.new(block_configs.soft)
-    self.preview_pressure_blocks = pressure_blocks.new(settings.get_fall_pattern())
-    self.preview_pressure_blocks.sudden_death = true
-    self.preview_pressure_blocks_group = collision.new_group_from_set(
-        self.preview_pressure_blocks.on_ground.set
-    )
-end
-
-function MapPatternSettingsScreen:_preview_is_stale(): boolean
-    return settings.get_block_pattern() ~= self.preview_block_pattern
-        or settings.get_fall_pattern() ~= self.preview_fall_pattern
+function MapPatternSettingsScreen:_refresh_preview()
+    local falling = self:_is_fall_pattern_focused()
+    if not self.preview or self.preview:is_stale(falling) then
+        self.preview = block_layout.new(falling)
+    end
 end
 
 function MapPatternSettingsScreen:load()
-    self:_rebuild_preview()
+    self:_refresh_preview()
 end
 
 local function move_selection<T>(selection: MenuSelection<T>): boolean
@@ -160,8 +131,6 @@ function MapPatternSettingsScreen:update(dt: number)
         return
     end
 
-    local was_fall_pattern_focused = self:_is_fall_pattern_focused()
-
     local ok_action = false
     if joysticks.is_pressed_any(joysticks.BUTTONS.DOWN) then
         ok_action = self.focus:increment()
@@ -177,65 +146,13 @@ function MapPatternSettingsScreen:update(dt: number)
         ok_sound:play()
     end
 
-    local is_fall_pattern_focused = self:_is_fall_pattern_focused()
-    if
-        is_fall_pattern_focused ~= was_fall_pattern_focused or self:_preview_is_stale()
-    then
-        self:_rebuild_preview()
-    end
-
-    if is_fall_pattern_focused then
-        self.preview_pressure_blocks:update(dt * PREVIEW_FALL_SPEED_MULTIPLIER)
-
-        local lookup = collision.new_lookup(
-            self.preview_soft_blocks.on_ground.set,
-            self.preview_hard_blocks.on_ground.set,
-            self.preview_pressure_blocks.on_ground.set
-        )
-        self.preview_soft_blocks.on_ground:cull_if_hit_by(
-            lookup, self.preview_pressure_blocks_group
-        )
-        self.preview_hard_blocks.on_ground:cull_if_hit_by(
-            lookup, self.preview_pressure_blocks_group
-        )
-    end
-
-    self.preview_soft_blocks:update(dt)
-end
-
-function MapPatternSettingsScreen:_preview_entities(): {Entity}
-    if self:_is_fall_pattern_focused() then
-        return itertools.sets_as_list(
-            self.preview_pressure_blocks.on_ground.set,
-            self.preview_pressure_blocks:falling(),
-            self.preview_hard_blocks.on_ground.set,
-            self.preview_soft_blocks.on_ground.set
-        )
-    end
-    return itertools.sets_as_list(
-        self.preview_hard_blocks.on_ground.set, self.preview_soft_blocks.on_ground.set
-    )
+    self:_refresh_preview()
+    self.preview:update(dt)
 end
 
 function MapPatternSettingsScreen:_draw_preview()
     level_graphics.get_graphics():draw_background()
-
-    if self:_is_fall_pattern_focused() then
-        local pressure_blocks_with_shadows = itertools.sets_as_list(
-            self.preview_pressure_blocks.on_ground.set,
-            self.preview_pressure_blocks:falling()
-        )
-        for _, block in ipairs(pressure_blocks_with_shadows) do
-            block:draw_shadow()
-        end
-    end
-
-    local preview_entities = self:_preview_entities()
-    table.sort(preview_entities, z_index.back_to_front)
-
-    for _, entity in ipairs(preview_entities) do
-        entity:draw()
-    end
+    self.preview:draw()
 end
 
 local function font_for_focus(focus_value: integer, current_focus: integer): MenuFont
