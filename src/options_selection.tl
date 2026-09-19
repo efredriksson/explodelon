@@ -78,7 +78,7 @@ local function new_ruleset_entries(): {RulesetEntry}
     local function built_in_entry(name: RulesetName): RulesetEntry
         return RulesetEntry.new(name, false, NO_NOTE)
     end
-    local function house_rules_entry_or_none(): {RulesetEntry}
+    local function house_rules_entry_if_any(): {RulesetEntry}
         if settings.has_house_rules() then
             local built_from = settings.house_ruleset()
             return {RulesetEntry.new(built_from, true, built_from_note(built_from))}
@@ -87,7 +87,7 @@ local function new_ruleset_entries(): {RulesetEntry}
     end
 
     return itertools.combine(
-        itertools.map(RULESETS, built_in_entry), house_rules_entry_or_none()
+        itertools.map(RULESETS, built_in_entry), house_rules_entry_if_any()
     )
 end
 
