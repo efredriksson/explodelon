@@ -1,5 +1,6 @@
 local clock_text = require("clock_text")
 local audio = require("engine.audio")
+local itertools = require("itertools")
 
 local record MenuLineColumn
     text: string
@@ -120,6 +121,12 @@ end
 
 function menu_items.new_enum<T>(choices: {T}): MenuSelection<T>
     return menu_items.new_labelled_enum(choices, menu_items.spaced_enum_name)
+end
+
+function menu_items.new_enum_for_value<T>(value: T, choices: {T}): MenuSelection<T>
+    local self = menu_items.new_enum(choices)
+    self.value = itertools.find(value, choices)
+    return self
 end
 
 function menu_items.new_time_selection(

@@ -83,12 +83,10 @@ function map_pattern_settings_screen.new(
     self.focus = items.new_integer_selection(
         BLOCK_LAYOUT_FOCUS, BLOCK_LAYOUT_FOCUS, FALL_PATTERN_FOCUS
     )
-    self.block_selection = items.new_enum(BLOCK_PATTERNS)
-    self.block_selection.value = itertools.find(
+    self.block_selection = items.new_enum_for_value(
         settings.get_block_pattern(), BLOCK_PATTERNS
     )
-    self.fall_selection = items.new_enum(FALL_PATTERNS)
-    self.fall_selection.value = itertools.find(
+    self.fall_selection = items.new_enum_for_value(
         settings.get_fall_pattern(), FALL_PATTERNS
     )
     return self
