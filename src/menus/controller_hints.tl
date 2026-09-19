@@ -143,7 +143,7 @@ local function draw_dot(x: number, y: number, tint: Color)
 end
 
 local function draw_dot_centered(x: number, y: number, tint: Color)
-    draw_dot(x - DOT_CENTER_OFFSET, y - DOT_CENTER_OFFSET, tint)
+    painting.fill_square_centered(x, y, DOT_SIZE, tint)
 end
 
 local function draw_label(text: string, position: Point, font: MenuFont)

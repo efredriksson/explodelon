@@ -41,6 +41,13 @@ function painting.fill_rect(
     lutro.graphics.rectangle("fill", x, y, width, height)
 end
 
+function painting.fill_square_centered(
+    center_x: number, center_y: number, size: number, tint: Color
+)
+    local half = math.floor(size / 2)
+    painting.fill_rect(center_x - half, center_y - half, size, size, tint)
+end
+
 function painting.draw_hline(x0: number, x1: number, y: number, tint: Color)
     painting.fill_rect(math.min(x0, x1), y, math.abs(x1 - x0) + 1, 1, tint)
 end
