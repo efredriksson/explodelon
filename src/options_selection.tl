@@ -91,13 +91,12 @@ local function new_ruleset_entries(): {RulesetEntry}
     )
 end
 
--- The cursor answers "which of these am I playing", so it rests on the house
--- rules only while they are in play, not while they sit set aside.
+-- Rules you tweaked yourself outrank what the map remembers.
 local function opening_index(entries: {RulesetEntry}): integer
     if settings.playing_house_rules() and entries[#entries].house_rules then
         return #entries
     end
-    return itertools.find(settings.ruleset, RULESETS)
+    return itertools.find(settings.last_played_ruleset() or settings.ruleset, RULESETS)
 end
 
 local ITEM_ORDER: {ItemType} = {"bomb", "fire", "speed", "kick", "lightning_bomb"}
@@ -515,11 +514,12 @@ function OptionsSelection:_apply()
     local entry = self.selection:get_value()
     if entry.house_rules then
         settings.play_house_rules()
-        return
+    else
+        -- Rebuilding is how the plain rule-set comes back, so it has to happen
+        -- even when the player picks the one their house rules were built from.
+        settings.set_ruleset(entry.built_from)
     end
-    -- Rebuilding is how the plain rule-set comes back, so it has to happen even
-    -- when the player picks the one their house rules were built from.
-    settings.set_ruleset(entry.built_from)
+    settings.remember_ruleset_for_map()
 end
 
 function OptionsSelection:load()
