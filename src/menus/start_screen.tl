@@ -1,4 +1,5 @@
 local scenes = require("engine.scenes")
+local itertools = require("itertools")
 local map_selection = require("map_selection")
 local choices = require("menus.choices")
 local debug_screen = require("menus.debug_screen")
@@ -28,17 +29,21 @@ function start_screen.new(): MenuScreen
         scenes.set(update_sceen.new(ctx))
     end
 
-    local menu_choices: {MenuChoice} = {
-        choices.new_boolean("teams", 50, settings.teams, settings.set_teams),
-        choices.new_done("debug settings", 95, enter_debug_screen),
-    }
-    if update_sceen.is_recalbox() then
-        table.insert(
-            menu_choices,
-            choices.new_done("check for updates", 110, enter_update_screen)
-        )
+    local function update_row_if_recalbox(): {MenuChoice}
+        if update_sceen.is_recalbox() then
+            return {choices.new_done("check for updates", 110, enter_update_screen)}
+        end
+        return {}
     end
-    table.insert(menu_choices, choices.new_done("set up battle", 180, done))
+
+    local menu_choices: {MenuChoice} = itertools.combine(
+        {
+            choices.new_boolean("teams", 50, settings.teams, settings.set_teams),
+            choices.new_done("debug settings", 95, enter_debug_screen),
+        },
+        update_row_if_recalbox(),
+        {choices.new_done("set up battle", 180, done)}
+    )
 
     return screens.new(menu_choices, go_back, #menu_choices)
 end
