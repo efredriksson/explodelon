@@ -1,6 +1,6 @@
 local scenes = require("engine.scenes")
 local itertools = require("itertools")
-local map_selection = require("map_selection")
+local map_setup = require("map_setup")
 local choices = require("menus.choices")
 local debug_screen = require("menus.debug_screen")
 local screens = require("menus.screens")
@@ -17,7 +17,7 @@ function start_screen.new(): MenuScreen
     -- The menu music is left running so it carries over into the picker screens;
     -- player selection stops it when it starts its own.
     local function done(ctx: Scene)
-        scenes.set(map_selection.new(ctx))
+        scenes.set(map_setup.new(ctx))
     end
     -- Root of the menus, there is nowhere to go back to.
     local function go_back(_: Scene)
