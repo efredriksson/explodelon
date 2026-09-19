@@ -252,6 +252,13 @@ local type DebugRulesetName = enum
     "dinos"
 end
 
+local RECOMMENDED_RULESETS <total>: {Map: RulesetName} = {
+    football = "insanity",
+    factory = "dino_madness",
+    ice_rink = "bomb_stack",
+    bouncing = "default",
+}
+
 local record Settings
     MINIMUM_PLAYERS: integer
     number_of_auto_selected_characters: integer
@@ -348,6 +355,10 @@ end
 
 function Settings.last_played_ruleset(): RulesetName
     return settings.last_played_rulesets[settings.map]
+end
+
+function Settings.recommended_ruleset(): RulesetName
+    return RECOMMENDED_RULESETS[settings.map]
 end
 
 function Settings.set_number_of_auto_selected_characters(value: integer)

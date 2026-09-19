@@ -74,9 +74,18 @@ local function built_from_note(built_from: RulesetName): string
     return "from " .. menu_items.spaced_enum_name(built_from)
 end
 
+local function built_in_note(name: RulesetName): string
+    if name == settings.last_played_ruleset() then
+        return "played here last"
+    elseif name == settings.recommended_ruleset() then
+        return "suits " .. menu_items.spaced_enum_name(settings.map)
+    end
+    return NO_NOTE
+end
+
 local function new_ruleset_entries(): {RulesetEntry}
     local function built_in_entry(name: RulesetName): RulesetEntry
-        return RulesetEntry.new(name, false, NO_NOTE)
+        return RulesetEntry.new(name, false, built_in_note(name))
     end
     local function house_rules_entry_if_any(): {RulesetEntry}
         if settings.has_house_rules() then
@@ -91,12 +100,14 @@ local function new_ruleset_entries(): {RulesetEntry}
     )
 end
 
--- Rules you tweaked yourself outrank what the map remembers.
+-- An explicit tweak outranks anything the map has to say about itself.
 local function opening_index(entries: {RulesetEntry}): integer
     if settings.playing_house_rules() and entries[#entries].house_rules then
         return #entries
     end
-    return itertools.find(settings.last_played_ruleset() or settings.ruleset, RULESETS)
+    return itertools.find(
+        settings.last_played_ruleset() or settings.recommended_ruleset(), RULESETS
+    )
 end
 
 local ITEM_ORDER: {ItemType} = {"bomb", "fire", "speed", "kick", "lightning_bomb"}
