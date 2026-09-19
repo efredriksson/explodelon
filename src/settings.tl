@@ -265,6 +265,7 @@ local record Settings
     kept_rules: GameRules
     kept_ruleset: RulesetName
     map_patterns: {Map: MapPatternSettings}
+    last_played_rulesets: {Map: RulesetName}
     -- Type export
     ItemType: ItemType
     DinoColor: DinoColor
@@ -294,6 +295,7 @@ function Settings.new(): Settings
     self.kept_rules = nil
     self.kept_ruleset = nil
     self.map_patterns = get_default_map_patterns()
+    self.last_played_rulesets = {}
     -- Type export
     self.ItemType = ItemType
     self.DinoColor = DinoColor
@@ -338,6 +340,14 @@ end
 
 function Settings.default_block_pattern(map: Map): BlockPattern
     return get_default_map_patterns()[map].block_pattern
+end
+
+function Settings.remember_ruleset_for_map()
+    settings.last_played_rulesets[settings.map] = settings.ruleset
+end
+
+function Settings.last_played_ruleset(): RulesetName
+    return settings.last_played_rulesets[settings.map]
 end
 
 function Settings.set_number_of_auto_selected_characters(value: integer)
