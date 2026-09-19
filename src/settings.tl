@@ -549,6 +549,11 @@ local function set_rules_aside()
     settings.kept_ruleset = settings.ruleset
 end
 
+local function forget_rules_set_aside()
+    settings.kept_rules = nil
+    settings.kept_ruleset = nil
+end
+
 function Settings.set_ruleset(name: RulesetName)
     if Settings.has_tweaked_rules() then
         set_rules_aside()
@@ -560,8 +565,8 @@ function Settings.set_ruleset(name: RulesetName)
 end
 
 -- The players' own rules are either the ones being played or the ones set
--- aside, so the three questions below are the only way to ask about them. Where
--- they are being kept is nobody else's business.
+-- aside, so the questions below are the only way to ask about them. Where they
+-- are being kept is nobody else's business.
 function Settings.has_house_rules(): boolean
     return settings.kept_rules ~= nil or Settings.has_tweaked_rules()
 end
@@ -578,6 +583,10 @@ function Settings.house_ruleset(): RulesetName
     return settings.kept_ruleset or settings.ruleset
 end
 
+function Settings.tweaking_replaces_house_rules(): boolean
+    return settings.kept_rules ~= nil and not Settings.has_tweaked_rules()
+end
+
 -- Nothing to bring back when they are already being played, and the store
 -- empties as they return, so they are never in both places at once.
 function Settings.play_house_rules()
@@ -587,8 +596,15 @@ function Settings.play_house_rules()
     settings.untweaked_rules = Settings.build_ruleset(settings.kept_ruleset)
     settings.game_rules = settings.kept_rules
     settings.ruleset = settings.kept_ruleset
-    settings.kept_rules = nil
-    settings.kept_ruleset = nil
+    forget_rules_set_aside()
+end
+
+-- There is only room for one set of house rules, so editing the rules in play
+-- is what throws away the ones set aside.
+function Settings.finish_tweaking()
+    if Settings.has_tweaked_rules() then
+        forget_rules_set_aside()
+    end
 end
 
 local function new_debug_kick_rules(): GameRules
