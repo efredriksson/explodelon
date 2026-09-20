@@ -261,6 +261,9 @@ local record Settings
     map: Map
     ruleset: RulesetName
     game_rules: GameRules
+    untweaked_rules: GameRules
+    kept_rules: GameRules
+    kept_ruleset: RulesetName
     map_patterns: {Map: MapPatternSettings}
     -- Type export
     ItemType: ItemType
@@ -273,6 +276,10 @@ local record Settings
     FallPattern: FallPattern
 end
 
+local function new_default_rules(): GameRules
+    return GameRules.new()
+end
+
 function Settings.new(): Settings
     local self: Settings = setmetatable({}, {__index = Settings})
     self.MINIMUM_PLAYERS = 2
@@ -283,6 +290,9 @@ function Settings.new(): Settings
     self.ruleset = "default"
     self.skip_options_screen = false
     self.game_rules = GameRules.new()
+    self.untweaked_rules = new_default_rules()
+    self.kept_rules = nil
+    self.kept_ruleset = nil
     self.map_patterns = get_default_map_patterns()
     -- Type export
     self.ItemType = ItemType
@@ -472,10 +482,6 @@ function Settings.set_ice_friction_factor(value: number)
     settings.game_rules.ice.friction_factor = value
 end
 
-local function new_default_rules(): GameRules
-    return GameRules.new()
-end
-
 local function new_insanity_rules(): GameRules
     local rules = GameRules.new()
     rules.items.nbr_soft_blocks = 30
@@ -534,9 +540,55 @@ function Settings.build_ruleset(name: RulesetName): GameRules
     return RULESET_BUILDERS[name]()
 end
 
+function Settings.has_tweaked_rules(): boolean
+    return not settings.game_rules:equals(settings.untweaked_rules)
+end
+
+local function set_rules_aside()
+    settings.kept_rules = settings.game_rules
+    settings.kept_ruleset = settings.ruleset
+end
+
 function Settings.set_ruleset(name: RulesetName)
-    settings.game_rules = RULESET_BUILDERS[name]()
+    if Settings.has_tweaked_rules() then
+        set_rules_aside()
+    end
+
+    settings.game_rules = Settings.build_ruleset(name)
+    settings.untweaked_rules = Settings.build_ruleset(name)
     settings.ruleset = name
+end
+
+-- The players' own rules are either the ones being played or the ones set
+-- aside, so the three questions below are the only way to ask about them. Where
+-- they are being kept is nobody else's business.
+function Settings.has_house_rules(): boolean
+    return settings.kept_rules ~= nil or Settings.has_tweaked_rules()
+end
+
+function Settings.playing_house_rules(): boolean
+    return settings.kept_rules == nil
+end
+
+function Settings.house_rules(): GameRules
+    return settings.kept_rules or settings.game_rules
+end
+
+function Settings.house_ruleset(): RulesetName
+    return settings.kept_ruleset or settings.ruleset
+end
+
+-- Nothing to bring back when they are already being played, and the store
+-- empties as they return, so they are never in both places at once.
+function Settings.play_house_rules()
+    if settings.kept_rules == nil then
+        return
+    end
+    settings.untweaked_rules = Settings.build_ruleset(settings.kept_ruleset)
+    settings.game_rules = settings.kept_rules
+    settings.ruleset = settings.kept_ruleset
+    settings.kept_rules = nil
+    settings.kept_ruleset = nil
 end
 
 local function new_debug_kick_rules(): GameRules
@@ -597,6 +649,7 @@ local DEBUG_RULESET_BUILDERS <total>: {DebugRulesetName: function(): GameRules} 
 function Settings.set_debug_ruleset(name: DebugRulesetName)
     Settings.set_ruleset("default")
     settings.game_rules = DEBUG_RULESET_BUILDERS[name]()
+    settings.untweaked_rules = DEBUG_RULESET_BUILDERS[name]()
     engine_settings.set_log_scene_perf(true)
     settings.auto_select_characters = true
     settings.skip_options_screen = true

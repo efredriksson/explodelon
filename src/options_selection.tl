@@ -43,6 +43,51 @@ local RULESET_ORDER <total>: {RulesetName: integer} = {
 }
 
 local RULESETS = itertools.in_position_order(RULESET_ORDER)
+local HOUSE_RULES_LABEL = "house rules"
+
+local record RulesetEntry
+    built_from: RulesetName
+    house_rules: boolean
+end
+
+function RulesetEntry.new(built_from: RulesetName, house_rules: boolean): RulesetEntry
+    local self: RulesetEntry = setmetatable({}, {__index = RulesetEntry})
+    self.built_from = built_from
+    self.house_rules = house_rules
+    return self
+end
+
+local function entry_label(entry: RulesetEntry): string
+    if entry.house_rules then
+        return HOUSE_RULES_LABEL
+    end
+    return menu_items.spaced_enum_name(entry.built_from)
+end
+
+local function new_ruleset_entries(): {RulesetEntry}
+    local function built_in_entry(name: RulesetName): RulesetEntry
+        return RulesetEntry.new(name, false)
+    end
+    local function house_rules_entry_or_none(): {RulesetEntry}
+        if settings.has_house_rules() then
+            return {RulesetEntry.new(settings.house_ruleset(), true)}
+        end
+        return {}
+    end
+
+    return itertools.combine(
+        itertools.map(RULESETS, built_in_entry), house_rules_entry_or_none()
+    )
+end
+
+-- The cursor answers "which of these am I playing", so it rests on the house
+-- rules only while they are in play, not while they sit set aside.
+local function opening_index(entries: {RulesetEntry}): integer
+    if settings.playing_house_rules() and entries[#entries].house_rules then
+        return #entries
+    end
+    return itertools.find(settings.ruleset, RULESETS)
+end
 
 local ITEM_ORDER: {ItemType} = {"bomb", "fire", "speed", "kick", "lightning_bomb"}
 local DINO_ORDER: {DinoColor} = {"blue", "pink", "green", "yellow", "purple"}
@@ -378,7 +423,7 @@ end
 
 local record OptionsSelection is Scene
     previous_screen: Scene
-    selection: MenuSelection<RulesetName>
+    selection: MenuSelection<RulesetEntry>
     candidate_rules: GameRules
     lesson: ScriptedBattle
     rotation_index: integer
@@ -389,7 +434,6 @@ local options_selection = {}
 function options_selection.new(previous_screen: Scene): OptionsSelection
     local self: OptionsSelection = setmetatable({}, {__index = OptionsSelection})
     self.previous_screen = previous_screen
-    self.selection = menu_items.new_enum(RULESETS)
     self.rotation_index = lutro.math.random(#preview_options.rotation)
     return self
 end
@@ -446,25 +490,28 @@ function OptionsSelection:_advance_preview()
     )
 end
 
-local function rules_for(name: RulesetName): GameRules
-    if name == settings.ruleset then
-        -- Active choosen rule-set, show it with any tweaks
-        return settings.game_rules
+local function rules_for(entry: RulesetEntry): GameRules
+    if entry.house_rules then
+        return settings.house_rules()
     end
-    return settings.build_ruleset(name)
+    return settings.build_ruleset(entry.built_from)
 end
 
 function OptionsSelection:_apply()
-    local name = self.selection:get_value()
-    if name == settings.ruleset then
-        -- Active choosen rule-set, do not overwrite any tweaks done to it
+    local entry = self.selection:get_value()
+    if entry.house_rules then
+        settings.play_house_rules()
         return
     end
-    settings.set_ruleset(name)
+    -- Rebuilding is how the plain rule-set comes back, so it has to happen even
+    -- when the player picks the one their house rules were built from.
+    settings.set_ruleset(entry.built_from)
 end
 
 function OptionsSelection:load()
-    self.selection.value = itertools.find(settings.ruleset, RULESETS)
+    local entries = new_ruleset_entries()
+    self.selection = menu_items.new_labelled_enum(entries, entry_label)
+    self.selection.value = opening_index(entries)
     self.candidate_rules = rules_for(self.selection:get_value())
     ensure_soft_block_sprite()
     self:_start_lesson()
