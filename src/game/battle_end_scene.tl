@@ -3,6 +3,7 @@ local audio = require("engine.audio")
 local scenes = require("engine.scenes")
 local score_board = require("game.score_board")
 local winner_scene = require("game.winner_scene")
+local settings = require("settings")
 
 local type CharacterName = characters.CharacterName
 local type Scene = scenes.Scene
@@ -40,6 +41,7 @@ function battle_end_scene.new_for_winners(
 ): BattleEndScene
     local function get_next_scene(): Scene
         if score_board_:game_finished() then
+            settings.remember_game_finished()
             return winner_scene.new(names)
         else
             return game_scene

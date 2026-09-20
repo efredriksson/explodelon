@@ -273,6 +273,7 @@ local record Settings
     kept_ruleset: RulesetName
     map_patterns: {Map: MapPatternSettings}
     last_played_rulesets: {Map: RulesetName}
+    finished_a_game: boolean
     -- Type export
     ItemType: ItemType
     DinoColor: DinoColor
@@ -303,6 +304,7 @@ function Settings.new(): Settings
     self.kept_ruleset = nil
     self.map_patterns = get_default_map_patterns()
     self.last_played_rulesets = {}
+    self.finished_a_game = false
     -- Type export
     self.ItemType = ItemType
     self.DinoColor = DinoColor
@@ -359,6 +361,14 @@ end
 
 function Settings.recommended_ruleset(): RulesetName
     return RECOMMENDED_RULESETS[settings.map]
+end
+
+function Settings.remember_game_finished()
+    settings.finished_a_game = true
+end
+
+function Settings.has_finished_a_game(): boolean
+    return settings.finished_a_game
 end
 
 function Settings.set_number_of_auto_selected_characters(value: integer)
