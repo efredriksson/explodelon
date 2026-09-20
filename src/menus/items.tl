@@ -98,18 +98,28 @@ function menu_items.new_boolean_selection(
     return self
 end
 
-function menu_items.new_enum<T>(choices: {T}): MenuSelection<T>
-    local function value_as_enum(value: integer): string
-        return (tostring(choices[value]):gsub("_", " "))
+function menu_items.spaced_enum_name<T>(value: T): string
+    return (tostring(value):gsub("_", " "))
+end
+
+function menu_items.new_labelled_enum<T>(
+    choices: {T}, label: function(T): string
+): MenuSelection<T>
+    local function value_as_label(value: integer): string
+        return label(choices[value])
     end
     local self: MenuSelection<T> = setmetatable({}, {__index = MenuSelection})
     self.value = 1
     self.min = 1
     self.max = #choices
     self.wrap = true
-    self.tostring = value_as_enum
+    self.tostring = value_as_label
     self.convert = function(v: integer): T return choices[v] end
     return self
+end
+
+function menu_items.new_enum<T>(choices: {T}): MenuSelection<T>
+    return menu_items.new_labelled_enum(choices, menu_items.spaced_enum_name)
 end
 
 function menu_items.new_time_selection(
