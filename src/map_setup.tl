@@ -75,7 +75,6 @@ local white_font: MenuFont
 local ok_sound: Source
 
 local record MapSetup is Scene
-    previous_screen: Scene
     focus: MenuSelection<Row>
     map_choice: MenuSelection<Map>
     block_choice: MenuSelection<BlockPattern>
@@ -94,9 +93,8 @@ local function new_fall_choice(): MenuSelection<FallPattern>
     return items.new_enum_for_value(settings.get_fall_pattern(), FALL_PATTERNS)
 end
 
-function map_setup.new(previous_screen: Scene): MapSetup
+function map_setup.new(): MapSetup
     local self: MapSetup = setmetatable({}, {__index = MapSetup})
-    self.previous_screen = previous_screen
     self.focus = items.new_enum(ROWS)
     return self
 end
@@ -211,11 +209,11 @@ function MapSetup:_move_focus(): boolean
     return false
 end
 
-local function next_screen_after(previous_screen: Scene): Scene
+local function next_screen_after(map_screen: Scene): Scene
     if settings.skip_options_screen then
         return player_selection.setup()
     end
-    return options_selection.new(previous_screen)
+    return options_selection.new(map_screen)
 end
 
 function MapSetup:update(dt: number)
@@ -225,7 +223,7 @@ function MapSetup:update(dt: number)
     end
 
     if joysticks.is_pressed_any(joysticks.BUTTONS.A) then
-        scenes.set(self.previous_screen)
+        scenes.return_to_start()
         return
     end
 

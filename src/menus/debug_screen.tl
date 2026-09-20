@@ -12,7 +12,7 @@ local type DebugRulesetName = settings.DebugRulesetName
 
 local debug_screen = {}
 
-function debug_screen.new(previous_screen: Scene): MenuScreen
+function debug_screen.new(): MenuScreen
     local nbr_auto_selected_characters = items.new_integer_selection(
         settings.number_of_auto_selected_characters,
         settings.MINIMUM_PLAYERS,
@@ -20,12 +20,12 @@ function debug_screen.new(previous_screen: Scene): MenuScreen
     )
 
     local function done(_: Scene)
-        scenes.set(previous_screen)
+        scenes.return_to_start()
     end
     local function load_debug_ruleset(name: DebugRulesetName): function(ctx: Scene)
         return function(_: Scene)
             settings.set_debug_ruleset(name)
-            scenes.set(previous_screen)
+            scenes.return_to_start()
         end
     end
 

@@ -199,7 +199,7 @@ function CheckPerformanceOfScene:draw()
 end
 
 local current_scene: Scene
-local start_scene: Scene
+local new_start_scene: function(): Scene
 
 function scenes.get(): Scene
     return current_scene
@@ -222,14 +222,14 @@ function scenes.set(scene: Scene, skip_loading?: boolean)
     end
 end
 
-function scenes.set_start(scene: Scene)
-    start_scene = scene
-    scenes.set(scene)
+function scenes.return_to_start()
+    assert(new_start_scene, "implementation error")
+    scenes.set(new_start_scene())
 end
 
-function scenes.return_to_start()
-    assert(start_scene, "implementation error")
-    scenes.set(start_scene)
+function scenes.set_start(new_scene: function(): Scene)
+    new_start_scene = new_scene
+    scenes.return_to_start()
 end
 
 return scenes
