@@ -45,15 +45,21 @@ local RULESET_ORDER <total>: {RulesetName: integer} = {
 local RULESETS = itertools.in_position_order(RULESET_ORDER)
 local HOUSE_RULES_LABEL = "house rules"
 
+local NO_NOTE = ""
+
 local record RulesetEntry
     built_from: RulesetName
     house_rules: boolean
+    note: string
 end
 
-function RulesetEntry.new(built_from: RulesetName, house_rules: boolean): RulesetEntry
+function RulesetEntry.new(
+    built_from: RulesetName, house_rules: boolean, note: string
+): RulesetEntry
     local self: RulesetEntry = setmetatable({}, {__index = RulesetEntry})
     self.built_from = built_from
     self.house_rules = house_rules
+    self.note = note
     return self
 end
 
@@ -64,13 +70,18 @@ local function entry_label(entry: RulesetEntry): string
     return menu_items.spaced_enum_name(entry.built_from)
 end
 
+local function built_from_note(built_from: RulesetName): string
+    return "from " .. menu_items.spaced_enum_name(built_from)
+end
+
 local function new_ruleset_entries(): {RulesetEntry}
     local function built_in_entry(name: RulesetName): RulesetEntry
-        return RulesetEntry.new(name, false)
+        return RulesetEntry.new(name, false, NO_NOTE)
     end
     local function house_rules_entry_or_none(): {RulesetEntry}
         if settings.has_house_rules() then
-            return {RulesetEntry.new(settings.house_ruleset(), true)}
+            local built_from = settings.house_ruleset()
+            return {RulesetEntry.new(built_from, true, built_from_note(built_from))}
         end
         return {}
     end
@@ -117,6 +128,9 @@ local ARROW_SCALE = 0.5
 -- Clear of the border and the screen edge.
 local ARROW_INSET = 4
 local NAME_POSITION = points.new(0, 144)
+
+-- Clear of the name's descenders above and the accent rule below.
+local NOTE_POSITION = points.new(0, 158)
 
 local ACCENT_RULE_INSET = 12
 local ACCENT_RULE_Y = 172
@@ -582,8 +596,14 @@ function OptionsSelection:_draw_arrows()
     draw_arrow(right_image, FLANK_WIDTH - scaled_width - ARROW_INSET)
 end
 
+function OptionsSelection:_draw_note()
+    local note = self.selection:get_value().note
+    gray_font:print_centered(note, FLANK_WIDTH, NOTE_POSITION)
+end
+
 function OptionsSelection:_draw_flank()
     big_font:print_centered(self.selection:as_menu_string(), FLANK_WIDTH, NAME_POSITION)
+    self:_draw_note()
     hint_font:print_centered(HINTS, FLANK_WIDTH, HINTS_POSITION)
 end
 
