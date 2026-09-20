@@ -9,6 +9,7 @@ local type Scene = scenes.Scene
 local ROM_DIR = "/recalbox/share/roms/lutro"
 local RELEASE_URL = "https://api.github.com/repos/efredriksson/explodelon/releases/latest"
 local white_font: MenuFont
+local on_recalbox: boolean
 local update_screen = {}
 
 local function capture(cmd: string): string
@@ -168,10 +169,11 @@ end
 
 function update_screen.load_assets()
     white_font = fonts.new_menu_white()
+    on_recalbox = file_exists(ROM_DIR)
 end
 
 function update_screen.is_recalbox(): boolean
-    return file_exists(ROM_DIR)
+    return on_recalbox
 end
 
 return update_screen
