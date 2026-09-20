@@ -455,6 +455,12 @@ end
 
 local options_selection = {}
 
+function options_selection.ruleset_last_chosen(): string
+    return entry_label(
+        RulesetEntry.new(settings.ruleset, settings.house_rules_in_play(), NO_NOTE)
+    )
+end
+
 function options_selection.new(previous_screen: Scene): OptionsSelection
     local self: OptionsSelection = setmetatable({}, {__index = OptionsSelection})
     self.previous_screen = previous_screen

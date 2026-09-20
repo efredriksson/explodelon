@@ -606,6 +606,10 @@ function Settings.playing_house_rules(): boolean
     return settings.kept_rules == nil
 end
 
+function Settings.house_rules_in_play(): boolean
+    return Settings.has_house_rules() and Settings.playing_house_rules()
+end
+
 function Settings.house_rules(): GameRules
     return settings.kept_rules or settings.game_rules
 end
