@@ -36,7 +36,7 @@ function lutro.load()
     update_screen.load_assets()
     local load_time = lutro.timer.getTime() - load_start
     logger.info("Loading assets at start took " .. load_time .. "s")
-    scenes.set_start(start_screen.new())
+    scenes.set_start(start_screen.new)
 end
 
 function lutro.update(dt: number)

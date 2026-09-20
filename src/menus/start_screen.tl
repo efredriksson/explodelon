@@ -16,17 +16,17 @@ local start_screen = {}
 function start_screen.new(): MenuScreen
     -- The menu music is left running so it carries over into the picker screens;
     -- player selection stops it when it starts its own.
-    local function done(ctx: Scene)
-        scenes.set(map_setup.new(ctx))
+    local function done(_: Scene)
+        scenes.set(map_setup.new())
     end
     -- Root of the menus, there is nowhere to go back to.
     local function go_back(_: Scene)
     end
-    local function enter_debug_screen(ctx: Scene)
-        scenes.set(debug_screen.new(ctx))
+    local function enter_debug_screen(_: Scene)
+        scenes.set(debug_screen.new())
     end
-    local function enter_update_screen(ctx: Scene)
-        scenes.set(update_sceen.new(ctx))
+    local function enter_update_screen(_: Scene)
+        scenes.set(update_sceen.new())
     end
 
     local function update_row_if_recalbox(): {MenuChoice}

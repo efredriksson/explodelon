@@ -47,7 +47,6 @@ local function file_size(name: string): integer
 end
 
 local record UpdateCheckScene is Scene
-    ctx: Scene
     since_last_connection_check: number
     have_connection: boolean
     download_url: string
@@ -57,9 +56,8 @@ local record UpdateCheckScene is Scene
     since_last_download_check: number
 end
 
-function update_screen.new(ctx: Scene): UpdateCheckScene
+function update_screen.new(): UpdateCheckScene
     local self: UpdateCheckScene = setmetatable({}, {__index = UpdateCheckScene})
-    self.ctx = ctx
     self.since_last_connection_check = 0
     self.have_connection = false
     self.download_url = ""
@@ -92,7 +90,7 @@ function UpdateCheckScene:update(dt: number)
         joysticks.is_pressed_any(joysticks.BUTTONS.L)
         or joysticks.is_pressed_any(joysticks.BUTTONS.A)
     then
-        scenes.set(self.ctx)
+        scenes.return_to_start()
         return
     end
 
