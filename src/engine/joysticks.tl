@@ -61,6 +61,16 @@ function joysticks.is_released(player_id: integer, button: integer): boolean
     return not is_currently_down and was_previously_down
 end
 
+function joysticks.is_down_any(button: integer): boolean
+    for player_id = 1, joysticks.maxplayers() do
+        if lutro.joystick.isDown(player_id, button) then
+            return true
+        end
+    end
+
+    return false
+end
+
 -- Used to check if a button has been pressed down
 function joysticks.is_down_for(
     player_id: integer, button: integer, time: number
