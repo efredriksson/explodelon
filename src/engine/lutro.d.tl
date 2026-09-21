@@ -159,6 +159,11 @@ global record lutro
         getJoystickCount: function(): integer
     end
 
+    record filesystem
+        exists: function(path: string): boolean
+        read: function(path: string): string, number
+    end
+
     record audio
         newSource: function(filename: string, type: SourceType): Source
         play: function(source: Source)

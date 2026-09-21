@@ -109,4 +109,9 @@ function audio.stop()
     end
 end
 
+function audio.purge()
+    audio.stop()
+    loaded_audio_sources = {}
+end
+
 return audio

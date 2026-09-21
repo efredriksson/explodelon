@@ -1,3 +1,4 @@
+local hot_reload = require("engine.hot_reload")
 local joysticks = require("engine.joysticks")
 local logger = require("engine.logger")
 local scenes = require("engine.scenes")
@@ -36,12 +37,14 @@ function lutro.load()
     update_screen.load_assets()
     local load_time = lutro.timer.getTime() - load_start
     logger.info("Loading assets at start took " .. load_time .. "s")
+    hot_reload.setup()
     scenes.set_start(start_screen.new)
 end
 
 function lutro.update(dt: number)
     tracing.reset()
     scenes.get():update(dt)
+    hot_reload.poll(dt)
     joysticks.update(dt)
 end
 
