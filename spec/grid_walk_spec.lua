@@ -3,16 +3,10 @@ require("tl").loader()
 
 local grid_walk = require("grid_walk")
 local points = require("engine.geometry.points")
+local tile_map = require("spec.support.tile_map")
 
-local TILE = 16
-
---- A map drawn as rows of '.' (open) and '#' (blocked); outside the drawing is blocked.
-local function tiles(rows)
-    return function(i, j)
-        local row = rows[j + 1]
-        return row ~= nil and row:sub(i + 1, i + 1) == "."
-    end
-end
+local TILE = tile_map.TILE
+local tiles = tile_map.tiles
 
 --- Walk one pixel per frame like a speed 60 player at 60 fps.
 local function walk_frames(rows, start, held, frames, last_axis, facing)
@@ -22,7 +16,7 @@ local function walk_frames(rows, start, held, frames, last_axis, facing)
         facing = facing or "right",
     }
     for _ = 1, frames do
-        walk = grid_walk.walk(walk.position, held, walk.last_axis, walk.facing, 1, tiles(rows))
+        walk = grid_walk.walk(walk.position, held, walk.last_axis, walk.facing, 1, tiles(rows), "walk")
     end
     return walk
 end

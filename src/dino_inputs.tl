@@ -1,4 +1,5 @@
 local bombs = require("bombs.bombs")
+local closed_tiles = require("closed_tiles")
 local collision = require("engine.collision")
 local points = require("engine.geometry.points")
 local vectors = require("engine.geometry.vectors")
@@ -101,8 +102,26 @@ local function handle_jump_input(
     end
 end
 
-local function handle_dash_input(player: Player)
-    if lutro.joystick.isDown(player.id, joysticks.BUTTONS.B) then
+--- A dash only starts toward an open tile; facing a block or bomb the button
+-- does nothing instead of crashing on the spot. It asks the same closed
+-- tiles the walk does, so a dash never starts only to be blocked at once.
+local function is_open_ahead(
+    player: Player, blocks_jump: ReadableGroup<Kinematic>, lookup: Lookup
+): boolean
+    local ahead = grid.tile_ahead_of(player.position, player.direction)
+    local close_obstacles = lookup:in_box_and_group(
+        hitboxes.new_block(ahead), blocks_jump
+    )
+    return closed_tiles.new(close_obstacles):is_open(grid.tile_indices(ahead))
+end
+
+local function handle_dash_input(
+    player: Player, blocks_jump: ReadableGroup<Kinematic>, lookup: Lookup
+)
+    if
+        joysticks.is_pressed(player.id, joysticks.BUTTONS.B)
+        and is_open_ahead(player, blocks_jump, lookup)
+    then
         player:dash_with_dino()
     end
 end
@@ -191,7 +210,7 @@ function dino_inputs.handle(
         if player.dino.color == "pink" then
             handle_jump_input(dt, player, blocks_jump, lookup)
         elseif player.dino.color == "green" then
-            handle_dash_input(player)
+            handle_dash_input(player, blocks_jump, lookup)
         elseif player.dino.color == "blue" then
             handle_throw_input(dt, player, bombs_, bombs_group, lookup)
         elseif player.dino.color == "yellow" then

@@ -12,6 +12,14 @@ local type Axis = enum
     "vertical"
 end
 
+--- A dash keeps to the tile lanes even on open ground: it turns square and
+-- snaps onto the lane it turns into, where walking would go diagonally or stay
+-- off the lane.
+local type Gait = enum
+    "walk"
+    "dash"
+end
+
 --- Whether the tile at column i, row j can be walked into.
 local type IsOpen = function(i: integer, j: integer): boolean
 
@@ -25,13 +33,6 @@ local AXIS_OF: {Direction: Axis} = {
     left = "horizontal",
     down = "vertical",
     up = "vertical",
-}
-
-local REVERSE_OF: {Direction: Direction} = {
-    right = "left",
-    left = "right",
-    down = "up",
-    up = "down",
 }
 
 --- Offset from the position to the player's leading edge. The tile under it is
@@ -60,7 +61,7 @@ local record GridWalk
     blocked: boolean
 end
 
-local grid_walk = {GridWalk = GridWalk, Axis = Axis, IsOpen = IsOpen}
+local grid_walk = {GridWalk = GridWalk, Axis = Axis, Gait = Gait, IsOpen = IsOpen}
 
 local function includes(directions: {Direction}, direction: Direction): boolean
     for _, candidate in ipairs(directions) do
@@ -101,7 +102,7 @@ end
 
 local function reversed(directions: {Direction}): {Direction}
     local function reverse_held(direction: Direction): boolean
-        return includes(directions, REVERSE_OF[direction])
+        return includes(directions, vectors.opposite(direction))
     end
     return itertools.filter(PRIORITY, reverse_held)
 end
@@ -299,6 +300,16 @@ local function step_straight_in_open(
     return Step.new({direction}, direction)
 end
 
+local function step_in_open(
+    position: Point, held: {Direction}, facing: Direction, is_open: IsOpen, gait: Gait
+): Step
+    if gait == "dash" then
+        return nil
+    end
+    return step_diagonally_in_open(position, held, facing, is_open)
+        or step_straight_in_open(position, held, is_open)
+end
+
 --- Last resort before stopping: any held direction the box fits in, so a player
 -- off-centre on both axes and holding away from both centres still moves.
 local function step_where_box_fits(
@@ -356,13 +367,13 @@ local function next_step(
     held: {Direction},
     last_axis: Axis,
     facing: Direction,
-    is_open: IsOpen
+    is_open: IsOpen,
+    gait: Gait
 ): Step
     local snap_allowed = without(snap_toward_centre(position), reversed(held))
     local wanted = intersection(held, Tile.nearest(position):open_neighbours(is_open))
     local in_place = open_in_place(position, is_open)
-    return step_diagonally_in_open(position, held, facing, is_open)
-        or step_straight_in_open(position, held, is_open)
+    return step_in_open(position, held, facing, is_open, gait)
         or move_with_snap(
             across_axis(wanted, last_axis), on_axis(snap_allowed, last_axis)
         ) or move_with_snap(
@@ -391,7 +402,8 @@ function grid_walk.walk(
     last_axis: Axis,
     facing: Direction,
     pixels: integer,
-    is_open: IsOpen
+    is_open: IsOpen,
+    gait: Gait
 ): GridWalk
     local ordered_held = in_priority_order(held)
     local function blocked_facing(): Direction
@@ -401,7 +413,12 @@ function grid_walk.walk(
     local current = GridWalk.new(position, facing, last_axis, false)
     for _ = 1, pixels do
         local step = next_step(
-            current.position, ordered_held, current.last_axis, current.facing, is_open
+            current.position,
+            ordered_held,
+            current.last_axis,
+            current.facing,
+            is_open,
+            gait
         )
         if step == nil then
             return GridWalk.new(

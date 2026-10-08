@@ -684,8 +684,8 @@ local function new_debug_dinos_rules(): GameRules
     rules.dinos.nbr_of_eggs = 20
     rules.dinos.enabled.blue = false
     rules.dinos.enabled.pink = false
-    rules.dinos.enabled.purple = true
-    rules.dinos.enabled.green = false
+    rules.dinos.enabled.purple = false
+    rules.dinos.enabled.green = true
     rules.dinos.enabled.yellow = false
     return rules
 end

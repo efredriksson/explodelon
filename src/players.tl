@@ -1,4 +1,5 @@
 local characters = require("characters")
+local dino_dash = require("dino_dash")
 local dinos = require("dinos")
 local audio = require("engine.audio")
 local points = require("engine.geometry.points")
@@ -27,18 +28,12 @@ local stun_cry_sound: {integer: Source} = {}
 local sonic_blast_sound: Source
 local STUN_CRY_ROAR_FOR = 1.8
 local SONIC_BLAST_ROAR_FOR = 1.4
-local SLIDE_FOR_TIME = 0.4
 local HURT_SHAKE_FOR = 0.2
 local DAMAGE_SCALING = 12
 local SUDDEN_DEATH_DAMAGE_FRACTION = 0.05
 local CHARACTER_HEIGHT_ON_DINO = 8 -- How high up from ground player is when on dino
 local SPEED_UP = 7.5
 local MAX_SPEED = 240
-local DASH_WITH_DINO_SPEED_BONUS = {
-    [1] = 50,
-    [2] = 70,
-    [3] = 90,
-}
 
 local type Action = enum
     "walk"
@@ -221,7 +216,7 @@ function Player:is_petrified(): boolean
 end
 
 function Player:can_slide(): boolean
-    return self.action == "dash" and self.dino and self.dino.level >= 2
+    return self.action == "dash" and self.dino and dino_dash.can_brake(self.dino.level)
 end
 
 function Player:is_sliding(): boolean
@@ -259,14 +254,6 @@ function Player:set_action(action: Action)
         return
     end
 
-    if
-        (self.action == "dash" or action == "roar")
-        and (action == "walk" or action == "idle")
-    then
-        -- Not possible to exit dash action into walk or idle
-        return
-    end
-
     self.action = action
     if self.dino then
         if action == "walk" then
@@ -293,15 +280,6 @@ function Player:set_action(action: Action)
 end
 
 function Player:set_movement(position: Point, direction: Direction)
-    if self.action == "dash" and self.position:equal(position) then
-        self:set_action("crashed")
-        if self.dino and self.dino.level == 1 then
-            self.stunned_for = 1.2
-        end
-
-        return
-    end
-
     self.position = position
     self.direction = direction
     if self.dino then
@@ -310,9 +288,21 @@ function Player:set_movement(position: Point, direction: Direction)
     end
 end
 
+--- Something in the way stops a dash or the brake after it. Only a dino too
+-- young to brake crashes; the others just stop.
+function Player:end_dash()
+    if self.action == "dash" and dino_dash.crashes(self.dino.level) then
+        self:set_action("crashed")
+        self.stunned_for = dino_dash.CRASH_STUN_TIME
+        return
+    end
+    self.slide_for = 0
+    self:set_action("idle")
+end
+
 function Player:slide_with_dino()
     self:set_action("slide")
-    self.slide_for = SLIDE_FOR_TIME
+    self.slide_for = dino_dash.BRAKE_TIME
 end
 
 function Player:stun_for(duration: number)
@@ -602,14 +592,27 @@ function Player:speed_up()
     self.speed = math.min(self.speed + SPEED_UP, MAX_SPEED)
 end
 
+function Player:_braked_for(): number
+    return dino_dash.BRAKE_TIME - self.slide_for
+end
+
 function Player:get_speed(): number
     if self.action == "dash" and self.dino then
-        return self.speed + DASH_WITH_DINO_SPEED_BONUS[self.dino.level]
+        return dino_dash.speed(self.dino.level)
     elseif self.action == "slide" then
-        return self.speed * (self.slide_for / SLIDE_FOR_TIME)
+        return dino_dash.brake_speed(self.dino.level, self:_braked_for())
     else
         return self.speed
     end
+end
+
+--- Mean speed over the next `dt` seconds, which for a brake is not the speed it
+-- has now.
+function Player:get_speed_over(dt: number): number
+    if self.action ~= "slide" then
+        return self:get_speed()
+    end
+    return dino_dash.brake_speed_over(self.dino.level, self:_braked_for(), dt)
 end
 
 function Player:_should_petrify(): boolean
