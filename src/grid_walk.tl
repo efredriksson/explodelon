@@ -132,6 +132,31 @@ function Tile.nearest(position: Point): Tile
     )
 end
 
+--- Tiles the player's box overlaps; up to four when off-centre on both axes.
+function Tile.covered_by(position: Point): {Tile}
+    local left = math.floor(position.x / grid.TILE_SIZE)
+    local right = math.floor((position.x + grid.TILE_SIZE - 1) / grid.TILE_SIZE)
+    local top = math.floor(position.y / grid.TILE_SIZE)
+    local bottom = math.floor((position.y + grid.TILE_SIZE - 1) / grid.TILE_SIZE)
+    return {
+        Tile.new(left, top),
+        Tile.new(right, top),
+        Tile.new(left, bottom),
+        Tile.new(right, bottom),
+    }
+end
+
+function Tile:is_covered_by(position: Point): boolean
+    return math.abs(self.i * grid.TILE_SIZE - position.x) < grid.TILE_SIZE
+        and math.abs(self.j * grid.TILE_SIZE - position.y) < grid.TILE_SIZE
+end
+
+function Tile:distance_to(position: Point): number
+    return math.abs(self.i * grid.TILE_SIZE - position.x) + math.abs(
+        self.j * grid.TILE_SIZE - position.y
+    )
+end
+
 function Tile:neighbour(direction: Direction): Tile
     local offset = vectors.from_direction(direction)
     return Tile.new(self.i + math.floor(offset.x), self.j + math.floor(offset.y))
@@ -207,6 +232,88 @@ local function open_in_place(position: Point, is_open: IsOpen): {Direction}
     return union(without(neighbours, blocked_crossings), snap)
 end
 
+--- Explodelon's rectangle rule: a move is clear unless the player's box enters a
+-- closed tile, or goes further into one it already overlaps, such as a bomb
+-- that was just placed under the player.
+local function is_clear_move(from: Point, to: Point, is_open: IsOpen): boolean
+    local function blocks_move(tile: Tile): boolean
+        if is_open(tile.i, tile.j) then
+            return false
+        end
+        return not tile:is_covered_by(from)
+            or tile:distance_to(to) < tile:distance_to(from)
+    end
+    return #itertools.filter(Tile.covered_by(to), blocks_move) == 0
+end
+
+local function is_clear_step(
+    position: Point, direction: Direction, is_open: IsOpen
+): boolean
+    return is_clear_move(
+        position, position:move(vectors.from_direction(direction)), is_open
+    )
+end
+
+--- Explodelon walks diagonally over open ground. The lane rules below are made
+-- for an arena with a pillar on every other tile; on open ground they lock
+-- players to lanes or, off-centre on both axes, freeze them.
+local function step_diagonally_in_open(
+    position: Point, held: {Direction}, facing: Direction, is_open: IsOpen
+): Step
+    local horizontal = on_axis(held, "horizontal")[1]
+    local vertical = on_axis(held, "vertical")[1]
+    if horizontal == nil or vertical == nil then
+        return nil
+    end
+    local across = position:move(vectors.from_direction(horizontal)):move(
+        vectors.from_direction(vertical)
+    )
+    local clear = is_clear_step(position, horizontal, is_open)
+        and is_clear_step(position, vertical, is_open)
+        and is_clear_move(position, across, is_open)
+    if not clear then
+        return nil
+    end
+    local function keep_facing(): Direction
+        if includes(held, facing) then
+            return facing
+        end
+        return horizontal
+    end
+    return Step.new({horizontal, vertical}, keep_facing())
+end
+
+--- Holding one way across open ground goes straight. The lane rules would pull
+-- the player onto the nearest tile's lane even with no block around; here they
+-- only step in once the box would run into a block.
+local function step_straight_in_open(
+    position: Point, held: {Direction}, is_open: IsOpen
+): Step
+    local direction = held[1]
+    if direction == nil or #across_axis(held, AXIS_OF[direction]) > 0 then
+        return nil
+    end
+    if not is_clear_step(position, direction, is_open) then
+        return nil
+    end
+    return Step.new({direction}, direction)
+end
+
+--- Last resort before stopping: any held direction the box fits in, so a player
+-- off-centre on both axes and holding away from both centres still moves.
+local function step_where_box_fits(
+    position: Point, held: {Direction}, is_open: IsOpen
+): Step
+    local function fits(direction: Direction): boolean
+        return is_clear_step(position, direction, is_open)
+    end
+    local possible = itertools.filter(held, fits)
+    if #possible == 0 then
+        return nil
+    end
+    return Step.new({possible[1]}, possible[1])
+end
+
 --- One pixel in a wanted direction plus one pixel of snap, which is what makes
 -- corners round off diagonally and re-centres a player walking straight.
 local function move_with_snap(wanted: {Direction}, snap: {Direction}): Step
@@ -254,12 +361,15 @@ local function next_step(
     local snap_allowed = without(snap_toward_centre(position), reversed(held))
     local wanted = intersection(held, Tile.nearest(position):open_neighbours(is_open))
     local in_place = open_in_place(position, is_open)
-    return move_with_snap(
-        across_axis(wanted, last_axis), on_axis(snap_allowed, last_axis)
-    ) or move_with_snap(
+    return step_diagonally_in_open(position, held, facing, is_open)
+        or step_straight_in_open(position, held, is_open)
+        or move_with_snap(
+            across_axis(wanted, last_axis), on_axis(snap_allowed, last_axis)
+        ) or move_with_snap(
         on_axis(wanted, last_axis), across_axis(snap_allowed, last_axis)
     ) or step_in_place(held, in_place)
         or step_toward_opening_ahead(position, held, facing, in_place, is_open)
+        or step_where_box_fits(position, held, is_open)
 end
 
 --- Whole pixels to walk this frame and the fraction carried over to the next,
