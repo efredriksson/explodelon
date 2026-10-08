@@ -60,6 +60,24 @@ function grid.get_local_tile_position(global_position: Point): Point
     )
 end
 
+--- Position measured from the top-left corner of the play area.
+function grid.position_in_area(position: Point): Point
+    return points.new(position.x - PLAYER_AREA.x, position.y - PLAYER_AREA.y)
+end
+
+function grid.position_from_area(position_in_area: Point): Point
+    return points.new(
+        position_in_area.x + PLAYER_AREA.x, position_in_area.y + PLAYER_AREA.y
+    )
+end
+
+--- Column and row of the tile nearest to a position.
+function grid.tile_indices(position: Point): integer, integer
+    local in_area = grid.position_in_area(position)
+    return math.floor(in_area.x / grid.TILE_SIZE + 0.5),
+        math.floor(in_area.y / grid.TILE_SIZE + 0.5)
+end
+
 function grid.get_random_tile(): Point
     local dim = grid.dimensions()
     return grid.get_tile_position(

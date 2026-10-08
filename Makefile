@@ -1,5 +1,5 @@
 include $(wildcard .env)
-.PHONY: package clean lint format dev
+.PHONY: package clean lint format dev test
 
 DIST_DIR ?= dist
 ALL_SRCS := $(shell find src -type f -name "*.tl")
@@ -30,6 +30,9 @@ package: ${LUTRO_DIST_PATH}
 lint:
 	tl check ${SRCS_LINT}
 	ceru --check src
+
+test:
+	busted spec
 
 format:
 	ceru src
