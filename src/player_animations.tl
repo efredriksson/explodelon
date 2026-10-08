@@ -29,6 +29,9 @@ local type Vector = vectors.Vector
 local type SpriteImages = {PlayerState: {Action: {Direction: Image}}}
 local type SonicWaveColor = players.SonicWaveColor
 
+-- The walk cycle steps by distance rather than time, so faster players kick
+-- their legs faster and pushing into a wall still walks in place.
+local PIXELS_PER_WALK_FRAME = 8
 local HP_BAR_WIDTH = 12
 local HP_BAR_MIN_FILL_WIDTH = 1
 local HP_BAR_HEIGHT = 2
@@ -270,14 +273,23 @@ function PlayerEntity:hitbox(): Rectangle
     return self.player:hitbox()
 end
 
+function PlayerEntity:_animation_time(dt: number): number
+    if self.player.action ~= "walk" then
+        return dt
+    end
+    local frames_walked = dt * self.player:get_speed() / PIXELS_PER_WALK_FRAME
+    return frames_walked * get_animation_frame_duration("walk")
+end
+
 function PlayerEntity:update(dt: number)
     -- Bounce arcs above its tile row; sort it over nearer-row blocks.
     self.z_index = self.player:is_bouncing() and z_index.ABOVE or z_index.LEVEL
+    local animation_time = self:_animation_time(dt)
     self.regular[self.player.state][self.player.action][self.player.direction]:update(
-        dt
+        animation_time
     )
     self.invulnerable[self.player.state][self.player.action][self.player.direction]:update(
-        dt
+        animation_time
     )
 end
 

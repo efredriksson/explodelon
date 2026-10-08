@@ -6,12 +6,14 @@ local rectangles = require("engine.geometry.rectangles")
 local vectors = require("engine.geometry.vectors")
 local hitboxes = require("engine.hitboxes")
 local physics = require("engine.physics")
+local grid_walk = require("grid_walk")
 local grid = require("level_layout.grid")
 local settings = require("settings")
 local z_index = require("z_index")
 
 local type CharacterName = characters.CharacterName
 local type Dino = dinos.Dino
+local type Axis = grid_walk.Axis
 local type Explodable = require("bombs.explodable")
 local type Entity = require("engine.entity")
 local type Kinematic = require("kinematic")
@@ -30,6 +32,8 @@ local HURT_SHAKE_FOR = 0.2
 local DAMAGE_SCALING = 12
 local SUDDEN_DEATH_DAMAGE_FRACTION = 0.05
 local CHARACTER_HEIGHT_ON_DINO = 8 -- How high up from ground player is when on dino
+local SPEED_UP = 7.5
+local MAX_SPEED = 240
 local DASH_WITH_DINO_SPEED_BONUS = {
     [1] = 50,
     [2] = 70,
@@ -105,7 +109,9 @@ local record Player is Explodable, Kinematic, Entity
     action: Action
     state: PlayerState
     is_removed: boolean
-    speed: integer
+    speed: number
+    walk_carry: number
+    last_step_axis: Axis
     bombs: integer
     lightning_bomb: integer
     fire: integer
@@ -152,6 +158,8 @@ function players.new(id: integer, sprite: CharacterName, position: Point): Playe
     self.is_removed = false
     local player_settings = settings.game_rules.players
     self.speed = player_settings.start_speed
+    self.walk_carry = 0
+    self.last_step_axis = "horizontal"
     self.has_kick = player_settings.start_with_kick
     self.bombs = player_settings.start_with_bombs
     self.lightning_bomb = player_settings.start_with_lightning_bombs
@@ -588,6 +596,10 @@ function Player:get_sonic_blast_hitbox(): Rectangle
     local sound_traveled = self:have_roared_since_buildup_for() * 200
     local reach = math.min(sound_traveled, max_reach)
     return self:_get_hitbox_in_dir(grid.snap_to(self.position), reach)
+end
+
+function Player:speed_up()
+    self.speed = math.min(self.speed + SPEED_UP, MAX_SPEED)
 end
 
 function Player:get_speed(): number

@@ -5,6 +5,7 @@ local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
 local vectors = require("engine.geometry.vectors")
 local joysticks = require("engine.joysticks")
+local grid_walk = require("grid_walk")
 local itertools = require("itertools")
 local grid = require("level_layout.grid")
 local players = require("players")
@@ -63,6 +64,32 @@ function CheckedMovement.new(
     self.constrained = not spent or cuts_corner
     self.bombs_kicked = bombs_kicked or {}
     return self
+end
+
+--- Tiles a walking player cannot step into: blocks, bombs and everything
+-- outside the play area.
+local record ClosedTiles
+    closed: {integer: {integer: boolean}}
+end
+
+function ClosedTiles.new(obstacles: {Kinematic}): ClosedTiles
+    local self: ClosedTiles = setmetatable({}, {__index = ClosedTiles})
+    self.closed = {}
+    for _, obstacle in ipairs(obstacles) do
+        local i, j = grid.tile_indices(obstacle:get_position())
+        self.closed[i] = self.closed[i] or {}
+        self.closed[i][j] = true
+    end
+    return self
+end
+
+function ClosedTiles:is_open(i: integer, j: integer): boolean
+    local dimensions = grid.dimensions()
+    local inside = i >= dimensions.x_min
+        and i <= dimensions.x_max
+        and j >= dimensions.y_min
+        and j <= dimensions.y_max
+    return inside and not (self.closed[i] and self.closed[i][j])
 end
 
 local record MovementWithCheck
@@ -584,7 +611,81 @@ local function moves_from_directions(
     return itertools.map(held, as_movement)
 end
 
-local function apply_moves(
+local function kick_bomb_ahead(
+    player: Player,
+    close_bombs: {Bomb},
+    blocks_bombs: ReadableGroup<Kinematic>,
+    players_: ReadableGroup<Player>,
+    bombs_: ReadableGroup<Bomb>,
+    lookup: Lookup
+)
+    local ahead = grid.tile_ahead_of(player.position, player.direction)
+    local function lies_ahead(bomb: Bomb): boolean
+        return grid.snap_to(bomb.position):equal(ahead)
+    end
+    for _, bomb in ipairs(itertools.filter(close_bombs, lies_ahead)) do
+        local can_move = bomb:can_move(
+            vectors.from_direction(player.direction):scale(grid.TILE_SIZE),
+            blocks_bombs,
+            players_,
+            bombs_,
+            lookup
+        )
+        if can_move.yes then
+            bomb:kick(can_move.in_direction)
+        end
+    end
+end
+
+--- Walks in whole pixels on the tile grid, see grid_walk.
+local function walk_on_grid(
+    player: Player,
+    dt: number,
+    held: {Direction},
+    lightning_bombs_: LightningBombs,
+    blocks_bombs: ReadableGroup<Kinematic>,
+    players_: ReadableGroup<Player>,
+    bombs_: ReadableGroup<Bomb>,
+    lookup: Lookup
+)
+    -- Looking for an opening ahead reaches the neighbours of the next tile.
+    local surroundings = player:movementbox():expand(grid.TILE_SIZE * 3)
+    local close_bombs = lookup:in_box_and_group(surroundings, bombs_)
+    local close_lightning_bombs = lookup:in_box_and_group(
+        surroundings, lightning_bombs_.on_ground
+    )
+    local closed_tiles = ClosedTiles.new(
+        itertools.combine(
+            lookup:in_box_and_group(surroundings, blocks_bombs),
+            close_lightning_bombs,
+            close_bombs
+        )
+    )
+    local function is_open(i: integer, j: integer): boolean
+        return closed_tiles:is_open(i, j)
+    end
+
+    local pixels, carry = grid_walk.pixels_this_frame(
+        player:get_speed(), dt, player.walk_carry
+    )
+    local walk = grid_walk.walk(
+        grid.position_in_area(player.position:rounded()),
+        held,
+        player.last_step_axis,
+        player.direction,
+        pixels,
+        is_open
+    )
+    player.walk_carry = carry
+    player.last_step_axis = walk.last_axis
+    player:set_movement(grid.position_from_area(walk.position), walk.facing)
+    if walk.blocked and player.has_kick then
+        kick_bomb_ahead(player, close_bombs, blocks_bombs, players_, bombs_, lookup)
+    end
+    player:set_action(#held ~= 0 and "walk" or "idle")
+end
+
+local function move_freely(
     player: Player,
     dt: number,
     held: {Direction},
@@ -629,6 +730,44 @@ local function apply_moves(
 
     player:set_movement(new_pos, updated_dir)
     player:set_action(player_action)
+end
+
+--- Ice and dino dashes and slides carry momentum that the tile grid walk has
+-- no notion of, so those keep moving freely.
+local function walks_on_grid(player: Player, ice_sliding: boolean): boolean
+    return not ice_sliding and player.action ~= "slide" and player.action ~= "dash"
+end
+
+local function apply_moves(
+    player: Player,
+    dt: number,
+    held: {Direction},
+    blocks: {Kinematic},
+    lightning_bombs_: LightningBombs,
+    blocks_bombs: ReadableGroup<Kinematic>,
+    players_: ReadableGroup<Player>,
+    bombs_: ReadableGroup<Bomb>,
+    lookup: Lookup,
+    ice_sliding: boolean
+)
+    if walks_on_grid(player, ice_sliding) then
+        walk_on_grid(
+            player, dt, held, lightning_bombs_, blocks_bombs, players_, bombs_, lookup
+        )
+    else
+        move_freely(
+            player,
+            dt,
+            held,
+            blocks,
+            lightning_bombs_,
+            blocks_bombs,
+            players_,
+            bombs_,
+            lookup,
+            ice_sliding
+        )
+    end
 end
 
 function movement.set_position_and_dir_from_input(

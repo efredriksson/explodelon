@@ -158,7 +158,7 @@ function Items:_consume_by(player: Player, item: Item)
     end
     table.insert(self.by_players[player.id], item.type)
     if item.type == "speed" then
-        player.speed = player.speed + 5
+        player:speed_up()
     elseif item.type == "bomb" then
         player.bombs = player.bombs + 1
     elseif item.type == "lightning_bomb" then

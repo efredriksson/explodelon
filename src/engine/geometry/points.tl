@@ -39,6 +39,11 @@ function Point:in_radius_of(other: Point, radius: number): boolean
     return self:distance_to(other) < radius
 end
 
+--- The nearest whole-pixel point, halves rounding up.
+function Point:rounded(): Point
+    return points.new(math.floor(self.x + 0.5), math.floor(self.y + 0.5))
+end
+
 function Point:equal(other: Point): boolean
     return self.x == other.x and self.y == other.y
 end
