@@ -73,14 +73,14 @@ describe("turning a corner", function()
 end)
 
 describe("walking straight", function()
-    local OPEN = {
+    local PILLARS_BELOW = {
         "....",
         "....",
-        "....",
+        "#.#.",
     }
 
-    it("re-centres one pixel on the other axis per pixel walked",
-        ends_at(OPEN, {TILE, TILE + 3}, {"right"}, 5, {TILE + 5, TILE}))
+    it("re-centres one pixel on the other axis per pixel walked when a block is in the way",
+        ends_at(PILLARS_BELOW, {TILE, TILE + 3}, {"right"}, 5, {TILE + 5, TILE}))
 
     it("stops against a closed tile and faces the held direction", function()
         local walk = walk_frames({"..#"}, {TILE, 0}, {"right"}, 4, "vertical", "down")
@@ -116,4 +116,34 @@ describe("looking ahead for an opening", function()
 
     it("walks on toward an opening under the leading edge and turns into it",
         ends_at(GAP_BELOW_NEXT_TILE, {TILE + 1, TILE}, {"down"}, 30, {2 * TILE, 2 * TILE}))
+end)
+
+describe("open ground", function()
+    local FIELD = {
+        ".......",
+        ".......",
+        ".......",
+        ".......",
+        ".......",
+    }
+    local PILLARED_CORRIDOR = {
+        "#.#.#",
+        ".....",
+        "#.#.#",
+    }
+
+    it("walks straight off the lanes when no block is in the way",
+        ends_at(FIELD, {3 * TILE, 3 * TILE + 5}, {"right"}, 20, {3 * TILE + 20, 3 * TILE + 5}))
+
+    it("walks diagonally while both held directions are clear",
+        ends_at(FIELD, {3 * TILE, 3 * TILE}, {"right", "up"}, 5, {3 * TILE + 5, 3 * TILE - 5}))
+
+    it("keeps moving when off-centre on both axes and holding away from both centres",
+        ends_at(FIELD, {3 * TILE + 2, 3 * TILE - 1}, {"right", "up"}, 3, {3 * TILE + 5, 3 * TILE - 4}))
+
+    it("follows the lanes between pillars instead of walking diagonally",
+        ends_at(PILLARED_CORRIDOR, {TILE, TILE}, {"right", "up"}, 20, {TILE + 20, TILE}))
+
+    it("cuts into the next gap when holding a diagonal along pillars",
+        ends_at(PILLARED_CORRIDOR, {TILE, TILE}, {"right", "up"}, 40, {3 * TILE, 0}))
 end)
