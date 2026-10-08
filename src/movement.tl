@@ -1,5 +1,7 @@
 local bombs = require("bombs.bombs")
 local lightning_bombs = require("bombs.lightning_bombs")
+local closed_tiles = require("closed_tiles")
+local dino_dash = require("dino_dash")
 local collision = require("engine.collision")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
@@ -20,6 +22,7 @@ local type Player = players.Player
 local type ReadableGroup = collision.ReadableGroup
 local type Lookup = collision.Lookup
 local type Direction = vectors.Direction
+local type Gait = grid_walk.Gait
 local type Vector = vectors.Vector
 local type Point = points.Point
 local type Rectangle = rectangles.Rectangle
@@ -64,32 +67,6 @@ function CheckedMovement.new(
     self.constrained = not spent or cuts_corner
     self.bombs_kicked = bombs_kicked or {}
     return self
-end
-
---- Tiles a walking player cannot step into: blocks, bombs and everything
--- outside the play area.
-local record ClosedTiles
-    closed: {integer: {integer: boolean}}
-end
-
-function ClosedTiles.new(obstacles: {Kinematic}): ClosedTiles
-    local self: ClosedTiles = setmetatable({}, {__index = ClosedTiles})
-    self.closed = {}
-    for _, obstacle in ipairs(obstacles) do
-        local i, j = grid.tile_indices(obstacle:get_position())
-        self.closed[i] = self.closed[i] or {}
-        self.closed[i][j] = true
-    end
-    return self
-end
-
-function ClosedTiles:is_open(i: integer, j: integer): boolean
-    local dimensions = grid.dimensions()
-    local inside = i >= dimensions.x_min
-        and i <= dimensions.x_max
-        and j >= dimensions.y_min
-        and j <= dimensions.y_max
-    return inside and not (self.closed[i] and self.closed[i][j])
 end
 
 local record MovementWithCheck
@@ -455,19 +432,6 @@ local function get_new_player_orientation(
 end
 
 local movement = {}
-local INVERTED_DIRECTIONS: {Direction: Direction} = {
-    up = "down", down = "up", left = "right", right = "left"
-}
-
-local function inputs_for_sliding(player: Player, move_inputs: {Movement}): boolean
-    for _, move in ipairs(move_inputs) do
-        if move.dir == INVERTED_DIRECTIONS[player.direction] then
-            return true
-        end
-    end
-
-    return false
-end
 
 local function get_moves(
     player: Player, move_inputs: {Movement}, momentum: Movement
@@ -475,9 +439,7 @@ local function get_moves(
     if player.action == "slide" then
         return {momentum}
     elseif player.action == "dash" then
-        if player.dino and player.dino.level >= 3 then
-            -- For level 3 dinos then check if direction is changed which is
-            -- allowed for highest level dino
+        if player.dino and dino_dash.can_steer(player.dino.level) then
             for _, move in ipairs(move_inputs) do
                 if move.dir ~= player.direction then
                     -- Also return move to continue with dash which will be used
@@ -637,6 +599,27 @@ local function kick_bomb_ahead(
     end
 end
 
+--- The "slide" action is a dash's brake, and it keeps to the dash's line.
+local function is_dashing(player: Player): boolean
+    return player.action == "dash" or player.action == "slide"
+end
+
+local function gait_of(player: Player): Gait
+    if is_dashing(player) then
+        return "dash"
+    end
+    return "walk"
+end
+
+local function walking_directions(player: Player, held: {Direction}): {Direction}
+    if is_dashing(player) then
+        return dino_dash.directions(
+            player.direction, player.dino.level, held, player.action == "slide"
+        )
+    end
+    return held
+end
+
 --- Walks in whole pixels on the tile grid, see grid_walk.
 local function walk_on_grid(
     player: Player,
@@ -654,7 +637,7 @@ local function walk_on_grid(
     local close_lightning_bombs = lookup:in_box_and_group(
         surroundings, lightning_bombs_.on_ground
     )
-    local closed_tiles = ClosedTiles.new(
+    local closed = closed_tiles.new(
         itertools.combine(
             lookup:in_box_and_group(surroundings, blocks_bombs),
             close_lightning_bombs,
@@ -662,19 +645,20 @@ local function walk_on_grid(
         )
     )
     local function is_open(i: integer, j: integer): boolean
-        return closed_tiles:is_open(i, j)
+        return closed:is_open(i, j)
     end
 
     local pixels, carry = grid_walk.pixels_this_frame(
-        player:get_speed(), dt, player.walk_carry
+        player:get_speed_over(dt), dt, player.walk_carry
     )
     local walk = grid_walk.walk(
         grid.position_in_area(player.position:rounded()),
-        held,
+        walking_directions(player, held),
         player.last_step_axis,
         player.direction,
         pixels,
-        is_open
+        is_open,
+        gait_of(player)
     )
     player.walk_carry = carry
     player.last_step_axis = walk.last_axis
@@ -682,7 +666,13 @@ local function walk_on_grid(
     if walk.blocked and player.has_kick then
         kick_bomb_ahead(player, close_bombs, blocks_bombs, players_, bombs_, lookup)
     end
-    player:set_action(#held ~= 0 and "walk" or "idle")
+    if is_dashing(player) then
+        if walk.blocked then
+            player:end_dash()
+        end
+    else
+        player:set_action(#held ~= 0 and "walk" or "idle")
+    end
 end
 
 local function move_freely(
@@ -706,12 +696,7 @@ local function move_freely(
         moves = get_ice_moves(player, dt, moves)
     end
 
-    if player:can_slide() and inputs_for_sliding(player, move_inputs) then
-        player:slide_with_dino()
-    end
-
-    local max_directions = (player.action == "slide" or player.action == "dash") and 1
-        or 2
+    local max_directions = is_dashing(player) and 1 or 2
     local new_dir, new_pos, constrained = get_new_player_orientation(
         player.direction,
         moves,
@@ -728,14 +713,20 @@ local function move_freely(
         move_inputs, moves, player.direction, new_dir, constrained, ice_sliding
     )
 
-    player:set_movement(new_pos, updated_dir)
-    player:set_action(player_action)
+    if player.action == "dash" and new_pos:equal(player.position) then
+        player:end_dash()
+    else
+        player:set_movement(new_pos, updated_dir)
+    end
+    if not is_dashing(player) then
+        player:set_action(player_action)
+    end
 end
 
---- Ice and dino dashes and slides carry momentum that the tile grid walk has
--- no notion of, so those keep moving freely.
-local function walks_on_grid(player: Player, ice_sliding: boolean): boolean
-    return not ice_sliding and player.action ~= "slide" and player.action ~= "dash"
+local function start_brake_on_reverse(player: Player, held: {Direction})
+    if player:can_slide() and dino_dash.is_reversing(player.direction, held) then
+        player:slide_with_dino()
+    end
 end
 
 local function apply_moves(
@@ -750,11 +741,9 @@ local function apply_moves(
     lookup: Lookup,
     ice_sliding: boolean
 )
-    if walks_on_grid(player, ice_sliding) then
-        walk_on_grid(
-            player, dt, held, lightning_bombs_, blocks_bombs, players_, bombs_, lookup
-        )
-    else
+    start_brake_on_reverse(player, held)
+    -- Sliding on ice carries momentum that the tile grid walk has no notion of.
+    if ice_sliding then
         move_freely(
             player,
             dt,
@@ -766,6 +755,10 @@ local function apply_moves(
             bombs_,
             lookup,
             ice_sliding
+        )
+    else
+        walk_on_grid(
+            player, dt, held, lightning_bombs_, blocks_bombs, players_, bombs_, lookup
         )
     end
 end

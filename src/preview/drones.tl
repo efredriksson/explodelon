@@ -13,13 +13,6 @@ local type Player = players.Player
 local type Point = points.Point
 local type Stage = choreography.Stage
 
-local OPPOSITE: {Direction: Direction} = {
-    up = "down",
-    down = "up",
-    left = "right",
-    right = "left",
-}
-
 local record Pacer
     walker: Player
     origin: Point
@@ -29,7 +22,7 @@ end
 
 -- Walking back into a bomb it just laid is what kicks it.
 local KICK_DIRECTION: Direction = "left"
-local STEP_OFF_DIRECTION = OPPOSITE[KICK_DIRECTION]
+local STEP_OFF_DIRECTION = vectors.opposite(KICK_DIRECTION)
 local STEP_OFF_DISTANCE = 20
 local RETURN_MARGIN = 1.75
 
@@ -122,7 +115,7 @@ function Pacer.new(walker: Player, reach: number, facing: Direction): Pacer
 end
 
 function Pacer:_turn()
-    self.facing = OPPOSITE[self.facing]
+    self.facing = vectors.opposite(self.facing)
 end
 
 function Pacer:_direction(): Direction

@@ -33,6 +33,17 @@ function vectors.from_direction(direction: Direction): Vector
     end
 end
 
+local OPPOSITE: {Direction: Direction} = {
+    up = "down",
+    down = "up",
+    left = "right",
+    right = "left",
+}
+
+function vectors.opposite(direction: Direction): Direction
+    return OPPOSITE[direction]
+end
+
 function Vector:permutate_if(condition: boolean): Vector
     if condition then
         return vectors.new(self.y, self.x)
