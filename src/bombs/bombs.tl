@@ -41,7 +41,6 @@ local record Bomb is Entity, Kinematic, Explodable
     timer: number
     range: number
     hand_back: function()
-    has_been_kicked: boolean
     stopping: boolean
     animation: Animation
 end
@@ -54,7 +53,6 @@ function Bomb.new(position: Point, range: integer, hand_back: function()): Bomb
     self.range = range
     self.timer = BOMB_TIMER_START
     self.hand_back = hand_back
-    self.has_been_kicked = false
     self.stopping = false
     self.animation = animations.new(bomb_image, 16, 0.25)
     return self
@@ -165,7 +163,6 @@ end
 function Bomb:kick(direction: Vector)
     local slide_speed = 120
     self.velocity = direction:scale(slide_speed)
-    self.has_been_kicked = true
 end
 
 local record CanMoveBomb

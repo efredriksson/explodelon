@@ -278,6 +278,7 @@ local record Settings
     ItemType: ItemType
     DinoColor: DinoColor
     GameRules: GameRules
+    IceRules: IceRules
     Map: Map
     RulesetName: RulesetName
     DebugRulesetName: DebugRulesetName

@@ -44,14 +44,6 @@ function vectors.opposite(direction: Direction): Direction
     return OPPOSITE[direction]
 end
 
-function Vector:permutate_if(condition: boolean): Vector
-    if condition then
-        return vectors.new(self.y, self.x)
-    end
-
-    return self
-end
-
 function Vector:scale(val: number): Vector
     return vectors.new(self.x * val, self.y * val)
 end

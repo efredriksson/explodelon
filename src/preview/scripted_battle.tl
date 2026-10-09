@@ -313,14 +313,10 @@ function ScriptedBattle:_step_systems(dt: number)
     for _, player in ipairs(alive_players) do
         player:update(dt)
         if player:accepts_input() then
-            local close_blocks = lookup:in_box_and_group(
-                player:movementbox():expand(grid.TILE_SIZE / 2), self.blocks_bombs
-            )
             movement.set_position_and_dir_scripted(
                 player,
                 dt,
                 self.player_inputs[player] or {},
-                close_blocks,
                 self.lightning_bombs,
                 self.blocks_bombs,
                 self.alive_players_group,

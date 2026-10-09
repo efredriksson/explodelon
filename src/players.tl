@@ -131,6 +131,7 @@ local record Player is Explodable, Kinematic, Entity
     jump_trajectory: ProjectileTrajectory
     jump_target: Point
     ice_velocity: Vector
+    ice_carry: Vector
 end
 
 local players = {
@@ -176,6 +177,7 @@ function players.new(id: integer, sprite: CharacterName, position: Point): Playe
     self.last_time_adding_sonic_wave = 0
     self.sonic_wave_color_index = 1
     self.ice_velocity = vectors.new(0, 0)
+    self.ice_carry = vectors.new(0, 0)
     return self
 end
 
@@ -291,6 +293,8 @@ end
 --- Something in the way stops a dash or the brake after it. Only a dino too
 -- young to brake crashes; the others just stop.
 function Player:end_dash()
+    -- A stopped dash has no speed left to glide on across ice.
+    self.ice_velocity = vectors.new(0, 0)
     if self.action == "dash" and dino_dash.crashes(self.dino.level) then
         self:set_action("crashed")
         self.stunned_for = dino_dash.CRASH_STUN_TIME
