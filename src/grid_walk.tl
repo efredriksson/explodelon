@@ -127,31 +127,6 @@ function Tile.nearest(position: Point): Tile
     )
 end
 
---- Tiles the player's box overlaps; up to four when off-centre on both axes.
-function Tile.covered_by(position: Point): {Tile}
-    local left = math.floor(position.x / grid.TILE_SIZE)
-    local right = math.floor((position.x + grid.TILE_SIZE - 1) / grid.TILE_SIZE)
-    local top = math.floor(position.y / grid.TILE_SIZE)
-    local bottom = math.floor((position.y + grid.TILE_SIZE - 1) / grid.TILE_SIZE)
-    return {
-        Tile.new(left, top),
-        Tile.new(right, top),
-        Tile.new(left, bottom),
-        Tile.new(right, bottom),
-    }
-end
-
-function Tile:is_covered_by(position: Point): boolean
-    return math.abs(self.i * grid.TILE_SIZE - position.x) < grid.TILE_SIZE
-        and math.abs(self.j * grid.TILE_SIZE - position.y) < grid.TILE_SIZE
-end
-
-function Tile:distance_to(position: Point): number
-    return math.abs(self.i * grid.TILE_SIZE - position.x) + math.abs(
-        self.j * grid.TILE_SIZE - position.y
-    )
-end
-
 function Tile:neighbour(direction: Direction): Tile
     local offset = vectors.from_direction(direction)
     return Tile.new(self.i + math.floor(offset.x), self.j + math.floor(offset.y))
@@ -227,18 +202,46 @@ local function open_in_place(position: Point, is_open: IsOpen): {Direction}
     return union(without(neighbours, blocked_crossings), snap)
 end
 
+--- Whether a player's box at `position` overlaps the tile in column i, row j.
+-- The clearance check works on a column and row instead of a Tile because it
+-- runs for every pixel every player walks, where a record per tile adds up.
+local function covers_tile(position: Point, i: integer, j: integer): boolean
+    return math.abs(i * grid.TILE_SIZE - position.x) < grid.TILE_SIZE
+        and math.abs(j * grid.TILE_SIZE - position.y) < grid.TILE_SIZE
+end
+
+local function distance_to_tile(position: Point, i: integer, j: integer): number
+    return math.abs(i * grid.TILE_SIZE - position.x) + math.abs(
+        j * grid.TILE_SIZE - position.y
+    )
+end
+
+local function blocks_move(
+    from: Point, to: Point, is_open: IsOpen, i: integer, j: integer
+): boolean
+    if is_open(i, j) then
+        return false
+    end
+    return not covers_tile(from, i, j)
+        or distance_to_tile(to, i, j) < distance_to_tile(from, i, j)
+end
+
 --- Explodelon's rectangle rule: a move is clear unless the player's box enters a
 -- closed tile, or goes further into one it already overlaps, such as a bomb
 -- that was just placed under the player.
 local function is_clear_move(from: Point, to: Point, is_open: IsOpen): boolean
-    local function blocks_move(tile: Tile): boolean
-        if is_open(tile.i, tile.j) then
-            return false
+    local left = math.floor(to.x / grid.TILE_SIZE)
+    local right = math.floor((to.x + grid.TILE_SIZE - 1) / grid.TILE_SIZE)
+    local top = math.floor(to.y / grid.TILE_SIZE)
+    local bottom = math.floor((to.y + grid.TILE_SIZE - 1) / grid.TILE_SIZE)
+    for i = left, right do
+        for j = top, bottom do
+            if blocks_move(from, to, is_open, i, j) then
+                return false
+            end
         end
-        return not tile:is_covered_by(from)
-            or tile:distance_to(to) < tile:distance_to(from)
     end
-    return #itertools.filter(Tile.covered_by(to), blocks_move) == 0
+    return true
 end
 
 function grid_walk.is_clear_step(
@@ -255,6 +258,9 @@ end
 local function step_diagonally_in_open(
     position: Point, held: {Direction}, facing: Direction, is_open: IsOpen
 ): Step
+    if #held < 2 then
+        return nil
+    end
     local horizontal = on_axis(held, "horizontal")[1]
     local vertical = on_axis(held, "vertical")[1]
     if horizontal == nil or vertical == nil then
@@ -356,6 +362,25 @@ local function step_toward_opening_ahead(
     return Step.new({facing}, facing)
 end
 
+local function step_by_lane_rules(
+    position: Point,
+    held: {Direction},
+    last_axis: Axis,
+    facing: Direction,
+    is_open: IsOpen
+): Step
+    local snap_allowed = without(snap_toward_centre(position), reversed(held))
+    local wanted = intersection(held, Tile.nearest(position):open_neighbours(is_open))
+    local in_place = open_in_place(position, is_open)
+    return move_with_snap(
+        across_axis(wanted, last_axis), on_axis(snap_allowed, last_axis)
+    ) or move_with_snap(
+        on_axis(wanted, last_axis), across_axis(snap_allowed, last_axis)
+    ) or step_in_place(held, in_place)
+        or step_toward_opening_ahead(position, held, facing, in_place, is_open)
+        or step_where_box_fits(position, held, is_open)
+end
+
 local function next_step(
     position: Point,
     held: {Direction},
@@ -364,17 +389,8 @@ local function next_step(
     is_open: IsOpen,
     gait: Gait
 ): Step
-    local snap_allowed = without(snap_toward_centre(position), reversed(held))
-    local wanted = intersection(held, Tile.nearest(position):open_neighbours(is_open))
-    local in_place = open_in_place(position, is_open)
     return step_in_open(position, held, facing, is_open, gait)
-        or move_with_snap(
-            across_axis(wanted, last_axis), on_axis(snap_allowed, last_axis)
-        ) or move_with_snap(
-        on_axis(wanted, last_axis), across_axis(snap_allowed, last_axis)
-    ) or step_in_place(held, in_place)
-        or step_toward_opening_ahead(position, held, facing, in_place, is_open)
-        or step_where_box_fits(position, held, is_open)
+        or step_by_lane_rules(position, held, last_axis, facing, is_open)
 end
 
 --- Whole pixels to walk this frame and the fraction carried over to the next,
@@ -399,11 +415,10 @@ function grid_walk.walk(
     is_open: IsOpen,
     gait: Gait
 ): GridWalk
-    local ordered_held = in_priority_order(held)
-    local function blocked_facing(): Direction
-        return ordered_held[1] or facing
+    if #held == 0 then
+        return GridWalk.new(position, facing, last_axis, false)
     end
-
+    local ordered_held = in_priority_order(held)
     local current = GridWalk.new(position, facing, last_axis, false)
     for _ = 1, pixels do
         local step = next_step(
@@ -416,7 +431,7 @@ function grid_walk.walk(
         )
         if step == nil then
             return GridWalk.new(
-                current.position, blocked_facing(), current.last_axis, #ordered_held > 0
+                current.position, ordered_held[1], current.last_axis, true
             )
         end
         current = GridWalk.new(
