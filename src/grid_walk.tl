@@ -63,53 +63,47 @@ end
 
 local grid_walk = {GridWalk = GridWalk, Axis = Axis, Gait = Gait, IsOpen = IsOpen}
 
-local function includes(directions: {Direction}, direction: Direction): boolean
-    for _, candidate in ipairs(directions) do
-        if candidate == direction then
-            return true
-        end
-    end
-    return false
-end
-
 local function intersection(first: {Direction}, second: {Direction}): {Direction}
     local function in_both(direction: Direction): boolean
-        return includes(first, direction) and includes(second, direction)
+        return itertools.contains(first, direction)
+            and itertools.contains(second, direction)
     end
     return itertools.filter(PRIORITY, in_both)
 end
 
 local function union(first: {Direction}, second: {Direction}): {Direction}
     local function in_either(direction: Direction): boolean
-        return includes(first, direction) or includes(second, direction)
+        return itertools.contains(first, direction)
+            or itertools.contains(second, direction)
     end
     return itertools.filter(PRIORITY, in_either)
 end
 
 local function on_axis(directions: {Direction}, axis: Axis): {Direction}
     local function along(direction: Direction): boolean
-        return AXIS_OF[direction] == axis and includes(directions, direction)
+        return AXIS_OF[direction] == axis and itertools.contains(directions, direction)
     end
     return itertools.filter(PRIORITY, along)
 end
 
 local function across_axis(directions: {Direction}, axis: Axis): {Direction}
     local function across(direction: Direction): boolean
-        return AXIS_OF[direction] ~= axis and includes(directions, direction)
+        return AXIS_OF[direction] ~= axis and itertools.contains(directions, direction)
     end
     return itertools.filter(PRIORITY, across)
 end
 
 local function reversed(directions: {Direction}): {Direction}
     local function reverse_held(direction: Direction): boolean
-        return includes(directions, vectors.opposite(direction))
+        return itertools.contains(directions, vectors.opposite(direction))
     end
     return itertools.filter(PRIORITY, reverse_held)
 end
 
 local function without(directions: {Direction}, removed: {Direction}): {Direction}
     local function kept(direction: Direction): boolean
-        return includes(directions, direction) and not includes(removed, direction)
+        return itertools.contains(directions, direction)
+            and not itertools.contains(removed, direction)
     end
     return itertools.filter(PRIORITY, kept)
 end
@@ -247,7 +241,7 @@ local function is_clear_move(from: Point, to: Point, is_open: IsOpen): boolean
     return #itertools.filter(Tile.covered_by(to), blocks_move) == 0
 end
 
-local function is_clear_step(
+function grid_walk.is_clear_step(
     position: Point, direction: Direction, is_open: IsOpen
 ): boolean
     return is_clear_move(
@@ -269,14 +263,14 @@ local function step_diagonally_in_open(
     local across = position:move(vectors.from_direction(horizontal)):move(
         vectors.from_direction(vertical)
     )
-    local clear = is_clear_step(position, horizontal, is_open)
-        and is_clear_step(position, vertical, is_open)
+    local clear = grid_walk.is_clear_step(position, horizontal, is_open)
+        and grid_walk.is_clear_step(position, vertical, is_open)
         and is_clear_move(position, across, is_open)
     if not clear then
         return nil
     end
     local function keep_facing(): Direction
-        if includes(held, facing) then
+        if itertools.contains(held, facing) then
             return facing
         end
         return horizontal
@@ -294,7 +288,7 @@ local function step_straight_in_open(
     if direction == nil or #across_axis(held, AXIS_OF[direction]) > 0 then
         return nil
     end
-    if not is_clear_step(position, direction, is_open) then
+    if not grid_walk.is_clear_step(position, direction, is_open) then
         return nil
     end
     return Step.new({direction}, direction)
@@ -316,7 +310,7 @@ local function step_where_box_fits(
     position: Point, held: {Direction}, is_open: IsOpen
 ): Step
     local function fits(direction: Direction): boolean
-        return is_clear_step(position, direction, is_open)
+        return grid_walk.is_clear_step(position, direction, is_open)
     end
     local possible = itertools.filter(held, fits)
     if #possible == 0 then
@@ -351,7 +345,7 @@ local function step_toward_opening_ahead(
     in_place: {Direction},
     is_open: IsOpen
 ): Step
-    if not includes(in_place, facing) then
+    if not itertools.contains(in_place, facing) then
         return nil
     end
     local ahead = Tile.nearest(position:move(LEADING_EDGE[facing]))

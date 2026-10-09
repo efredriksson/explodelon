@@ -116,6 +116,15 @@ function itertools.find<T>(value: T, list: {T}): integer
     assert(false, "Missing in list!")
 end
 
+function itertools.contains<T>(list: {T}, value: T): boolean
+    for _, element in ipairs(list) do
+        if element == value then
+            return true
+        end
+    end
+    return false
+end
+
 function itertools.map<T, V>(iterator: {T}, f: function(T): V): {V}
     local result = {}
     for _, args in ipairs(iterator) do

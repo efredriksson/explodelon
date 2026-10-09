@@ -83,11 +83,6 @@ function Rectangle:center(): Point
     return points.new(self.x + self.width / 2, self.y + self.height / 2)
 end
 
---- Distance between rectangles from their centers
-function Rectangle:center_distance(other: Rectangle): number
-    return self:center():distance_to(other:center())
-end
-
 function Rectangle:top_left(): Point
     return points.new(self.x, self.y)
 end

@@ -105,7 +105,6 @@ local record Battle is PausedGame
     trampolines: Trampolines
     blockers: CombinedGroup<Explodable>
     lightning_blockers: CombinedGroup<Explodable>
-    blocking_blocks_group: CombinedGroup<Kinematic>
     dino_roars: DinoRoars
 end
 
@@ -184,11 +183,6 @@ function Battle:load()
     )
     self.lightning_blockers = collision.new_combined_group(
         self.pressure_blocks.on_ground.set, self.hard_blocks.on_ground.set
-    )
-    self.blocking_blocks_group = collision.new_combined_group(
-        self.soft_blocks.on_ground.set,
-        self.pressure_blocks.on_ground.set,
-        self.hard_blocks.on_ground.set
     )
     self.trampolines = trampolines.new(self.blocks_jump, self.pressure_blocks_group)
     self.dino_roars = dino_roars.new(
@@ -446,14 +440,9 @@ function Battle:update(dt: number)
         local trace_player_movement = tracing.start("movement")
         if player:accepts_input() then
             self:handle_bomb_drop_input(player)
-            local area_close_to_player = player:movementbox():expand(grid.TILE_SIZE / 2)
-            local close_blocks = lookup:in_box_and_group(
-                area_close_to_player, self.blocking_blocks_group
-            )
             movement.set_position_and_dir_from_input(
                 player,
                 dt,
-                close_blocks,
                 self.lightning_bombs,
                 self.blocks_bombs,
                 self.alive_players_group,

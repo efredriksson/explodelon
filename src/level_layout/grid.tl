@@ -51,15 +51,6 @@ function grid.block_sprite_position(animation: Animation, block: Point): Point
     )
 end
 
---- Get local position for point in block, so {x, y} ∈ [0, TILE_SIZE).
-function grid.get_local_tile_position(global_position: Point): Point
-    local player_area = grid.area()
-    return points.new(
-        math.fmod(global_position.x - player_area.x, grid.TILE_SIZE),
-        math.fmod(global_position.y - player_area.y, grid.TILE_SIZE)
-    )
-end
-
 --- Position measured from the top-left corner of the play area.
 function grid.position_in_area(position: Point): Point
     return points.new(position.x - PLAYER_AREA.x, position.y - PLAYER_AREA.y)
