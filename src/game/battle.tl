@@ -3,6 +3,7 @@ local explosions = require("bombs.explosions")
 local lightning_bombs = require("bombs.lightning_bombs")
 local lightnings = require("bombs.lightnings")
 local characters = require("characters")
+local closed_tiles = require("closed_tiles")
 local dino_animations = require("dino_animations")
 local dino_inputs = require("dino_inputs")
 local dino_roars = require("dino_roars")
@@ -433,6 +434,13 @@ function Battle:update(dt: number)
     trace_bombs:stop()
 
     local trace_players = tracing.start("players")
+    local closed_to_walking = closed_tiles.new(
+        self.soft_blocks.on_ground.set,
+        self.hard_blocks.on_ground.set,
+        self.lightning_bombs.on_ground.set,
+        self.pressure_blocks.on_ground.set,
+        self.bombs.on_ground.set
+    )
     for _, player in ipairs(alive_players) do
         local trace_player_update = tracing.start("update")
         player:update(dt, self.timer:sudden_death())
@@ -443,7 +451,7 @@ function Battle:update(dt: number)
             movement.set_position_and_dir_from_input(
                 player,
                 dt,
-                self.lightning_bombs,
+                closed_to_walking,
                 self.blocks_bombs,
                 self.alive_players_group,
                 self.bombs.on_ground,

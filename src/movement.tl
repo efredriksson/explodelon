@@ -1,5 +1,4 @@
 local bombs = require("bombs.bombs")
-local lightning_bombs = require("bombs.lightning_bombs")
 local closed_tiles = require("closed_tiles")
 local dino_dash = require("dino_dash")
 local collision = require("engine.collision")
@@ -14,7 +13,7 @@ local settings = require("settings")
 
 local type Bomb = bombs.Bomb
 local type Kinematic = require("kinematic")
-local type LightningBombs = lightning_bombs.LightningBombs
+local type ClosedTiles = closed_tiles.ClosedTiles
 local type Player = players.Player
 local type ReadableGroup = collision.ReadableGroup
 local type Lookup = collision.Lookup
@@ -47,13 +46,15 @@ local movement = {}
 local function kick_bomb_ahead(
     player: Player,
     direction: Direction,
-    close_bombs: {Bomb},
     blocks_bombs: ReadableGroup<Kinematic>,
     players_: ReadableGroup<Player>,
     bombs_: ReadableGroup<Bomb>,
     lookup: Lookup
 )
     local ahead = grid.tile_ahead_of(player.position, direction)
+    local close_bombs = lookup:in_box_and_group(
+        player:movementbox():expand(grid.TILE_SIZE), bombs_
+    )
     local function lies_ahead(bomb: Bomb): boolean
         return grid.snap_to(bomb.position):equal(ahead)
     end
@@ -92,39 +93,11 @@ local function walking_directions(player: Player, held: {Direction}): {Direction
     return held
 end
 
---- Which tiles a step may enter, and the bombs close enough to be kicked.
-local function surroundings(
-    player: Player,
-    lightning_bombs_: LightningBombs,
-    blocks_bombs: ReadableGroup<Kinematic>,
-    bombs_: ReadableGroup<Bomb>,
-    lookup: Lookup
-): IsOpen, {Bomb}
-    -- Looking for an opening ahead reaches the neighbours of the next tile.
-    local area = player:movementbox():expand(grid.TILE_SIZE * 3)
-    local close_bombs = lookup:in_box_and_group(area, bombs_)
-    local close_lightning_bombs = lookup:in_box_and_group(
-        area, lightning_bombs_.on_ground
-    )
-    local closed = closed_tiles.new(
-        itertools.combine(
-            lookup:in_box_and_group(area, blocks_bombs),
-            close_lightning_bombs,
-            close_bombs
-        )
-    )
-    local function is_open(i: integer, j: integer): boolean
-        return closed:is_open(i, j)
-    end
-    return is_open, close_bombs
-end
-
 local function finish_move(
     player: Player,
     walk: GridWalk,
     facing: Direction,
     held: {Direction},
-    close_bombs: {Bomb},
     blocks_bombs: ReadableGroup<Kinematic>,
     players_: ReadableGroup<Player>,
     bombs_: ReadableGroup<Bomb>,
@@ -133,9 +106,7 @@ local function finish_move(
     player.last_step_axis = walk.last_axis
     player:set_movement(grid.position_from_area(walk.position), facing)
     if walk.blocked and player.has_kick then
-        kick_bomb_ahead(
-            player, walk.facing, close_bombs, blocks_bombs, players_, bombs_, lookup
-        )
+        kick_bomb_ahead(player, walk.facing, blocks_bombs, players_, bombs_, lookup)
     end
     if is_dashing(player) then
         if walk.blocked then
@@ -151,15 +122,12 @@ local function walk_on_grid(
     dt: number,
     speed: number,
     held: {Direction},
-    lightning_bombs_: LightningBombs,
+    is_open: IsOpen,
     blocks_bombs: ReadableGroup<Kinematic>,
     players_: ReadableGroup<Player>,
     bombs_: ReadableGroup<Bomb>,
     lookup: Lookup
 )
-    local is_open, close_bombs = surroundings(
-        player, lightning_bombs_, blocks_bombs, bombs_, lookup
-    )
     local pixels, carry = grid_walk.pixels_this_frame(speed, dt, player.walk_carry)
     local walk = grid_walk.walk(
         grid.position_in_area(player.position:rounded()),
@@ -171,17 +139,7 @@ local function walk_on_grid(
         gait_of(player)
     )
     player.walk_carry = carry
-    finish_move(
-        player,
-        walk,
-        walk.facing,
-        held,
-        close_bombs,
-        blocks_bombs,
-        players_,
-        bombs_,
-        lookup
-    )
+    finish_move(player, walk, walk.facing, held, blocks_bombs, players_, bombs_, lookup)
 end
 
 --- Facing follows what the player taps rather than the way they glide, so dino
@@ -197,15 +155,12 @@ local function glide_on_ice(
     player: Player,
     dt: number,
     held: {Direction},
-    lightning_bombs_: LightningBombs,
+    is_open: IsOpen,
     blocks_bombs: ReadableGroup<Kinematic>,
     players_: ReadableGroup<Player>,
     bombs_: ReadableGroup<Bomb>,
     lookup: Lookup
 )
-    local is_open, close_bombs = surroundings(
-        player, lightning_bombs_, blocks_bombs, bombs_, lookup
-    )
     local glide = ice.glide(
         grid.position_in_area(player.position:rounded()),
         ice.velocity(
@@ -225,7 +180,6 @@ local function glide_on_ice(
         glide.walk,
         facing_on_ice(player.direction, held),
         held,
-        close_bombs,
         blocks_bombs,
         players_,
         bombs_,
@@ -260,18 +214,19 @@ local function apply_moves(
     player: Player,
     dt: number,
     held: {Direction},
-    lightning_bombs_: LightningBombs,
+    closed: ClosedTiles,
     blocks_bombs: ReadableGroup<Kinematic>,
     players_: ReadableGroup<Player>,
     bombs_: ReadableGroup<Bomb>,
     lookup: Lookup,
     ice_sliding: boolean
 )
+    local function is_open(i: integer, j: integer): boolean
+        return closed:is_open(i, j)
+    end
     start_brake_on_reverse(player, held)
     if ice_sliding and not is_dashing(player) then
-        glide_on_ice(
-            player, dt, held, lightning_bombs_, blocks_bombs, players_, bombs_, lookup
-        )
+        glide_on_ice(player, dt, held, is_open, blocks_bombs, players_, bombs_, lookup)
         return
     end
     local function walking_speed(): number
@@ -285,7 +240,7 @@ local function apply_moves(
         dt,
         walking_speed(),
         held,
-        lightning_bombs_,
+        is_open,
         blocks_bombs,
         players_,
         bombs_,
@@ -296,7 +251,7 @@ end
 function movement.set_position_and_dir_from_input(
     player: Player,
     dt: number,
-    lightning_bombs_: LightningBombs,
+    closed: ClosedTiles,
     blocks_bombs: ReadableGroup<Kinematic>,
     players_: ReadableGroup<Player>,
     bombs_: ReadableGroup<Bomb>,
@@ -307,7 +262,7 @@ function movement.set_position_and_dir_from_input(
         player,
         dt,
         get_moves_from_input(player),
-        lightning_bombs_,
+        closed,
         blocks_bombs,
         players_,
         bombs_,
@@ -322,7 +277,7 @@ function movement.set_position_and_dir_scripted(
     player: Player,
     dt: number,
     held: {Direction},
-    lightning_bombs_: LightningBombs,
+    closed: ClosedTiles,
     blocks_bombs: ReadableGroup<Kinematic>,
     players_: ReadableGroup<Player>,
     bombs_: ReadableGroup<Bomb>,
@@ -330,15 +285,7 @@ function movement.set_position_and_dir_scripted(
     ice_sliding: boolean
 )
     apply_moves(
-        player,
-        dt,
-        held,
-        lightning_bombs_,
-        blocks_bombs,
-        players_,
-        bombs_,
-        lookup,
-        ice_sliding
+        player, dt, held, closed, blocks_bombs, players_, bombs_, lookup, ice_sliding
     )
 end
 

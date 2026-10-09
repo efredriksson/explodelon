@@ -10,13 +10,15 @@ end
 
 local closed_tiles = {ClosedTiles = ClosedTiles}
 
-function closed_tiles.new(obstacles: {Kinematic}): ClosedTiles
+function closed_tiles.new(...: {any: Kinematic}): ClosedTiles
     local self: ClosedTiles = setmetatable({}, {__index = ClosedTiles})
     self.closed = {}
-    for _, obstacle in ipairs(obstacles) do
-        local i, j = grid.tile_indices(obstacle:get_position())
-        self.closed[i] = self.closed[i] or {}
-        self.closed[i][j] = true
+    for _, obstacles in ipairs({...}) do
+        for _, obstacle in pairs(obstacles) do
+            local i, j = grid.tile_indices(obstacle:get_position())
+            self.closed[i] = self.closed[i] or {}
+            self.closed[i][j] = true
+        end
     end
     return self
 end
