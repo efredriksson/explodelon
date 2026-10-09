@@ -2,6 +2,7 @@
 
 local bombs = require("bombs.bombs")
 local lightning_bombs = require("bombs.lightning_bombs")
+local closed_tiles = require("closed_tiles")
 local dino_roars = require("dino_roars")
 local dinos = require("dinos")
 local eggs = require("eggs")
@@ -310,6 +311,11 @@ function ScriptedBattle:_step_systems(dt: number)
         dt, self.lightning_blockers, self.alive_players_group, lookup
     )
 
+    local closed_to_walking = closed_tiles.new(
+        self.hard_blocks.on_ground.set,
+        self.lightning_bombs.on_ground.set,
+        self.bombs.on_ground.set
+    )
     for _, player in ipairs(alive_players) do
         player:update(dt)
         if player:accepts_input() then
@@ -317,7 +323,7 @@ function ScriptedBattle:_step_systems(dt: number)
                 player,
                 dt,
                 self.player_inputs[player] or {},
-                self.lightning_bombs,
+                closed_to_walking,
                 self.blocks_bombs,
                 self.alive_players_group,
                 self.bombs.on_ground,
