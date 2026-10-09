@@ -9,11 +9,6 @@ local type Direction = vectors.Direction
 local type Point = points.Point
 local type Rectangle = rectangles.Rectangle
 
-local PLAYER_AREA = rectangles.new(24, 32, 272, 176)
-local grid = {
-    TILE_SIZE = 16,
-}
-
 local record GridDimensions
     x_min: integer
     x_max: integer
@@ -21,12 +16,18 @@ local record GridDimensions
     y_max: integer
 end
 
+local PLAYER_AREA = rectangles.new(24, 32, 272, 176)
+local DIMENSIONS: GridDimensions = {x_min = 0, x_max = 16, y_min = 0, y_max = 10}
+local grid = {
+    TILE_SIZE = 16,
+}
+
 function grid.area(): Rectangle
     return PLAYER_AREA
 end
 
 function grid.dimensions(): GridDimensions
-    return {x_min = 0, x_max = 16, y_min = 0, y_max = 10}
+    return DIMENSIONS
 end
 
 function grid.get_tile(i: integer, j: integer): Rectangle
@@ -62,11 +63,17 @@ function grid.position_from_area(position_in_area: Point): Point
     )
 end
 
+local function nearest_column(x: number): integer
+    return math.floor((x - PLAYER_AREA.x) / grid.TILE_SIZE + 0.5)
+end
+
+local function nearest_row(y: number): integer
+    return math.floor((y - PLAYER_AREA.y) / grid.TILE_SIZE + 0.5)
+end
+
 --- Column and row of the tile nearest to a position.
 function grid.tile_indices(position: Point): integer, integer
-    local in_area = grid.position_in_area(position)
-    return math.floor(in_area.x / grid.TILE_SIZE + 0.5),
-        math.floor(in_area.y / grid.TILE_SIZE + 0.5)
+    return nearest_column(position.x), nearest_row(position.y)
 end
 
 function grid.get_random_tile(): Point
@@ -77,15 +84,11 @@ function grid.get_random_tile(): Point
 end
 
 function grid.snap_to_x(x: number): number
-    return math.floor(
-        (x - PLAYER_AREA.x) / grid.TILE_SIZE + 0.5
-    ) * grid.TILE_SIZE + PLAYER_AREA.x
+    return nearest_column(x) * grid.TILE_SIZE + PLAYER_AREA.x
 end
 
 function grid.snap_to_y(y: number): number
-    return math.floor(
-        (y - PLAYER_AREA.y) / grid.TILE_SIZE + 0.5
-    ) * grid.TILE_SIZE + PLAYER_AREA.y
+    return nearest_row(y) * grid.TILE_SIZE + PLAYER_AREA.y
 end
 
 function grid.snap_to(pos: Point): Point
