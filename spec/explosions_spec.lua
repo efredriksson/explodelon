@@ -5,6 +5,7 @@ require("spec.support.headless_lutro")(1)
 require("engine.settings").set_block_size(16)
 require("game.battle").load_assets()
 local bombs = require("bombs.bombs")
+local closed_tiles = require("closed_tiles")
 local collision = require("engine.collision")
 local grid = require("level_layout.grid")
 
@@ -28,9 +29,7 @@ local function new_field()
             seconds or FRAME,
             self.blockers,
             self.explodables,
-            self.nothing,
-            self.nothing,
-            self.bombs.on_ground,
+            closed_tiles.new(),
             self.nothing,
             collision.new_lookup(self.bombs.on_ground.set)
         )

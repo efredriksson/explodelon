@@ -2,8 +2,8 @@ local grid = require("level_layout.grid")
 
 local type Kinematic = require("kinematic")
 
---- Tiles a walking player cannot step into: blocks, bombs and everything
--- outside the play area.
+--- Tiles that something moving on the grid cannot enter: the tile each of the
+-- given obstacles is nearest to, and everything outside the play area.
 local record ClosedTiles
     closed: {integer: {integer: boolean}}
 end

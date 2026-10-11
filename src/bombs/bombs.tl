@@ -1,13 +1,14 @@
 local explosions = require("bombs.explosions")
 local flames = require("bombs.flames")
+local closed_tiles = require("closed_tiles")
 local animations = require("engine.animations")
 local collision = require("engine.collision")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
 local vectors = require("engine.geometry.vectors")
 local hitboxes = require("engine.hitboxes")
-local logger = require("engine.logger")
 local physics = require("engine.physics")
+local grid_walk = require("grid_walk")
 local itertools = require("itertools")
 local grid = require("level_layout.grid")
 local map_entities = require("level_layout.map_entities")
@@ -16,6 +17,7 @@ local players = require("players")
 local z_index = require("z_index")
 
 local type Animation = animations.Animation
+local type ClosedTiles = closed_tiles.ClosedTiles
 local type Explodable = require("bombs.explodable")
 local type Explosions = explosions.Explosions
 local type Entity = require("engine.entity")
@@ -33,6 +35,9 @@ local type ConveyorBelt = maps_entities.ConveyorBelt
 
 -- Bomb --
 local BOMB_TIMER_START = 2.5
+local SLIDE_SPEED = 120
+-- From a bomb's middle to the pixel just past its leading edge.
+local PAST_LEADING_EDGE = grid.TILE_SIZE / 2 + 0.5
 local GOAL_FIRE = 16
 local GOAL_PAIR_FIRE = 14
 local bomb_shadow: Image
@@ -40,11 +45,13 @@ local bomb_image: Image
 
 local record Bomb is Entity, Kinematic, Explodable
     position: Point
-    velocity: Vector
+    sliding: boolean
+    heading: Vector
+    slide_carry: number
+    kicker: Player
     timer: number
     range: integer
     hand_back: function()
-    stopping: boolean
     animation: Animation
 end
 
@@ -52,12 +59,14 @@ function Bomb.new(position: Point, range: integer, hand_back: function()): Bomb
     local self: Bomb = setmetatable({}, {__index = Bomb})
     self.position = position
     self.z_index = z_index.BELOW
-    self.velocity = vectors.new(0, 0)
+    self.sliding = false
+    self.heading = vectors.new(0, 0)
+    self.slide_carry = 0
+    self.kicker = nil
     self.range = range
     self.timer = BOMB_TIMER_START
     self.meets_flame = "ignites"
     self.hand_back = hand_back
-    self.stopping = false
     self.animation = animations.new(bomb_image, 16, 0.25)
     return self
 end
@@ -96,281 +105,78 @@ function Bomb:get_goal(): Goal
     return nil
 end
 
+--- A bomb whose fuse runs out as it slides does not finish its tile first. It
+-- goes off where it is, and its explosion takes the tile it is nearest to.
 function Bomb:is_complete(): boolean
     if self:get_goal() then
         return true
     end
 
-    return self.timer <= 0 and self.position:equal(grid.snap_to(self.position))
+    return self.timer <= 0
 end
 
 function Bomb:draw()
     self.animation:draw(self.position.x, self.position.y)
 end
 
-function Bomb:_trigger_belt(direction?: Vector): ConveyorBelt | nil
-    local bomb_move_dir = direction or self.velocity
-
-    local function bomb_on(belt: ConveyorBelt): boolean
-        return belt:get_hitbox():overlap(self:movementbox())
+--- A bomb kicked across the line it slides along first jumps to the middle of
+-- the tile it is nearest to. One kicked back along its line turns where it is.
+function Bomb:kick(heading: Vector, kicker: Player)
+    local along_its_line = self.sliding and not self.heading:orthogonal(heading)
+    if not along_its_line then
+        self.position = grid.snap_to(self.position)
     end
-    local belts = itertools.filter(map_entities.get_conveyor_belts(), bomb_on)
+    self.sliding = true
+    self.heading = heading
+    self.kicker = kicker
+end
+
+--- Comes to rest in the middle of the tile it is nearest to, which can lie up to
+-- half a tile behind it.
+function Bomb:stop()
+    self.sliding = false
+    self.slide_carry = 0
+    self.position = grid.snap_to(self.position)
+end
+
+--- A sliding bomb takes the direction of a conveyor belt on the pixel where it
+-- is in the middle of the belt's tile, whichever way it came from.
+function Bomb:turn_on_belt()
+    local function under_bomb(belt: ConveyorBelt): boolean
+        return belt.position:equal(self.position)
+    end
+    local belts = itertools.filter(map_entities.get_conveyor_belts(), under_bomb)
     for _, belt in ipairs(belts) do
-        if self.position:distance_to(grid.snap_to(self.position)) <= 3 then
-            local snap_pos = grid.snap_to(self.position)
-            if
-                snap_pos:equal(belt.position)
-                and not belt.direction:same_direction(bomb_move_dir)
-            then
-                return belt
-            end
-        end
+        self.heading = belt.direction
     end
 end
 
-local function moving_outside_of_map(test_hitbox: Rectangle): boolean
-    local bomb_in_goal = false
-    for _, goal in ipairs(map_entities.get_goals()) do
-        if test_hitbox:overlap(goal:get_hitbox()) then
-            bomb_in_goal = true
-        end
-    end
-
-    return not grid.area():contains(test_hitbox) and not bomb_in_goal
+--- The tile the bomb is sliding into, or the next one when it is in the middle
+-- of a tile.
+function Bomb:tile_ahead(): integer, integer
+    return grid.tile_indices(self.position:move(self.heading:scale(PAST_LEADING_EDGE)))
 end
 
-local function moving_into_new_block(
-    movementbox: Rectangle, direction: Vector
-): Rectangle | nil
-    local snaps_to = grid.snap_to(movementbox:top_left())
-    local new_movementbox = movementbox:shift(direction)
-
-    for i = -1, 1 do
-        for j = -1, 1 do
-            local close_block = hitboxes.new_block(
-                points.new(
-                    snaps_to.x + i * grid.TILE_SIZE, snaps_to.y + j * grid.TILE_SIZE
-                )
-            )
-            if
-                new_movementbox:overlap(close_block)
-                and not movementbox:overlap(close_block)
-            then
-                return close_block
-            end
-        end
-    end
-
-    return nil
+--- The tile next to the one the bomb is nearest to, on the side `heading`
+-- points to.
+function Bomb:tile_next_to(heading: Vector): integer, integer
+    return grid.tile_indices(self.position:move(heading:scale(grid.TILE_SIZE)))
 end
 
-function Bomb:kick(direction: Vector)
-    local slide_speed = 120
-    self.velocity = direction:scale(slide_speed)
+--- Whole pixels to slide in a frame of `dt` seconds. What is left of a pixel
+-- carries over to the next frame.
+function Bomb:pixels_to_slide(dt: number): integer
+    local pixels, carry = grid_walk.pixels_this_frame(SLIDE_SPEED, dt, self.slide_carry)
+    self.slide_carry = carry
+    return pixels
 end
 
-local record CanMoveBomb
-    yes: boolean
-    new_position: Point
-    in_direction: Vector
-    will_hit: Bomb | nil
-    should_stop: boolean
+function Bomb:slide_a_pixel()
+    self.position = self.position:move(self.heading)
 end
 
-function CanMoveBomb.new(new_position: Point, in_direction: Vector): CanMoveBomb
-    local self: CanMoveBomb = setmetatable({}, {__index = CanMoveBomb})
-    self.yes = true
-    self.new_position = new_position
-    self.in_direction = in_direction
-    self.will_hit = nil
-    self.should_stop = false
-    return self
-end
-
-function CanMoveBomb:no(): CanMoveBomb
-    self.yes = false
-    return self
-end
-
-function Bomb:can_move(
-    direction: Vector,
-    occupies: ReadableGroup<Kinematic>,
-    players_: ReadableGroup<Player>,
-    bombs: ReadableGroup<Bomb>,
-    lookup: Lookup,
-    call_level?: integer
-): CanMoveBomb
-    local function not_this_bomb(occupied: Kinematic): boolean
-        return occupied ~= self
-    end
-
-    local test_hitbox = self:movementbox():shift(direction)
-    local old_hitbox = self:movementbox()
-    local can_move_bomb = CanMoveBomb.new(test_hitbox:top_left(), direction:normalize())
-    local close_occupies = lookup:in_box_and_group(
-        old_hitbox:expand(grid.TILE_SIZE), occupies
-    )
-    local close_players = lookup:in_box_and_group(
-        old_hitbox:expand(grid.TILE_SIZE), players_
-    )
-    local close_bombs = lookup:in_box_and_group(
-        old_hitbox:expand(grid.TILE_SIZE), bombs
-    )
-    close_bombs = itertools.filter(close_bombs, not_this_bomb)
-    local close_interacts: {Kinematic} = itertools.combine(close_bombs, close_players)
-
-    local next_call_level = (call_level or 1) + 1
-    if next_call_level > 3 then
-        -- Stop when called recursive 3 times, no more chain reactions should be possible.
-        logger.info("Recursive bomb can move calls, aborting")
-        return can_move_bomb:no()
-    end
-
-    local belt_trigger = self:_trigger_belt(direction)
-    if not (belt_trigger is nil) then
-        direction = belt_trigger.direction:scale(direction:length())
-        can_move_bomb.in_direction = direction:normalize()
-    end
-
-    if moving_outside_of_map(test_hitbox) then
-        return can_move_bomb:no()
-    end
-
-    local function overlaps_significantly(entity: Kinematic, hitbox: Rectangle): boolean
-        return entity:hitbox():overlap(hitbox:shrink(3))
-    end
-
-    local function overlaps_entity_significantly(
-        hitbox: Rectangle, entities: {Kinematic}
-    ): boolean
-        for _, occupied in ipairs(entities) do
-            if overlaps_significantly(occupied, hitbox) then
-                return true
-            end
-        end
-        return false
-    end
-
-    local will_go_into_entity = overlaps_entity_significantly(
-        test_hitbox, itertools.combine(close_occupies, close_interacts)
-    )
-
-    if self.velocity:length() > 0 and not self.velocity:same_direction(direction) then
-        -- Bomb is getting kicked from the side while moving. If this happen and
-        -- the bomb would otherwise have moved inot new block tile, then we help the
-        -- side kick by snapping the projected position/hitbox to corridor. This means
-        -- a side kick can be done without things aligning exactly!
-        local mock_dt = 1 / 60 -- TODO: Need to pass in 'dt' in here to properly calculate this
-        local passing = moving_into_new_block(
-            self:movementbox(), self.velocity:scale(mock_dt)
-        )
-        if self.velocity:orthogonal(direction) and passing then
-            if direction.x == 0 then
-                test_hitbox.x = grid.snap_to_x(test_hitbox.x)
-            elseif direction.y == 0 then
-                test_hitbox.y = grid.snap_to_y(test_hitbox.y)
-            end
-
-            can_move_bomb.new_position = test_hitbox:top_left()
-        end
-
-        -- The bomb is moving and is getting kicked in other direction. In this case
-        -- we want to make sure it is not moving into something. Regardless if it is
-        -- not technically moving into a new block. Consider for example two players
-        -- that are both kicking the bomb from opposite sides.
-        if will_go_into_entity then
-            return can_move_bomb:no()
-        end
-    end
-
-    for _, bomb in ipairs(close_bombs) do
-        if overlaps_significantly(bomb, test_hitbox) then
-            if bomb:can_move(
-                direction, occupies, players_, bombs, lookup, next_call_level
-            ).yes then
-                can_move_bomb.will_hit = bomb
-            end
-        end
-    end
-
-    if self.velocity:length() > 0 and will_go_into_entity then
-        -- If the bomb is already going into a new block we let it.
-        -- But, if there is some collision this will be the last block
-        -- it enters before stopping.
-        can_move_bomb.should_stop = true
-    end
-
-    local new_block = moving_into_new_block(self:movementbox(), direction)
-    if not (new_block is nil) then
-        if self.stopping then
-            return can_move_bomb:no()
-        end
-
-        for _, occupied in ipairs(close_occupies) do
-            if occupied:movementbox():overlap(test_hitbox) then
-                return can_move_bomb:no()
-            end
-        end
-
-        for _, bomb in ipairs(close_bombs) do
-            if overlaps_significantly(bomb, new_block) then
-                if bomb:can_move(
-                    direction, occupies, players_, bombs, lookup, next_call_level
-                ).yes then
-                    can_move_bomb.will_hit = bomb
-                end
-            end
-        end
-
-        if overlaps_entity_significantly(new_block, close_interacts) then
-            return can_move_bomb:no()
-        end
-    end
-
-    return can_move_bomb
-end
-
-function Bomb:update(
-    dt: number,
-    occupies: ReadableGroup<Kinematic>,
-    players_: ReadableGroup<Player>,
-    bombs: ReadableGroup<Bomb>,
-    lookup: Lookup
-)
+function Bomb:update(dt: number)
     self.timer = self.timer - dt
-
-    if self.velocity:length() > 0 then
-        local belt_trigger = self:_trigger_belt()
-        if not (belt_trigger is nil) then
-            self.position = belt_trigger.position
-            self.velocity = belt_trigger.direction:scale(self.velocity:length())
-        end
-
-        local dx = self.velocity:scale(dt)
-        local new_block = moving_into_new_block(self:movementbox(), dx)
-        local can_move = self:can_move(dx, occupies, players_, bombs, lookup)
-        if self.timer <= 0 and new_block then
-            -- If bomb timer is up and if trying to enter a new block snap to grid instead.
-            -- This is to explode bomb on the grid. Bomb can slide to next intersection!
-            self.position = grid.snap_to(self.position)
-        elseif can_move.yes then
-            self.position = can_move.new_position
-        else
-            -- If bomb can't move stop it and snap to grid
-            self.velocity = vectors.new(0, 0)
-            self.position = grid.snap_to(self.position)
-            self.stopping = false
-        end
-
-        local bomb_hit = can_move.will_hit
-        if not (bomb_hit is nil) then
-            bomb_hit:kick(dx:normalize())
-        end
-        if can_move.should_stop then
-            self.stopping = true
-        end
-    end
-
     self.animation:update(dt)
 end
 
@@ -513,13 +319,88 @@ function Bombs:throw_existing(bomb: Bomb, to: Point)
     self.in_air:add(thrown)
 end
 
+local function is_goal_tile(i: integer, j: integer): boolean
+    local function on_tile(goal: Goal): boolean
+        local goal_i, goal_j = grid.tile_indices(goal.position)
+        return goal_i == i and goal_j == j
+    end
+    return itertools.count(map_entities.get_goals(), on_tile) > 0
+end
+
+--- The bomb that has this tile as its nearest, sliding or not.
+function Bombs:_bomb_on(i: integer, j: integer, except?: Bomb): Bomb
+    local function is_on_tile(bomb: Bomb): boolean
+        local bomb_i, bomb_j = grid.tile_indices(bomb.position)
+        return bomb ~= except and bomb_i == i and bomb_j == j
+    end
+    return itertools.filter(itertools.sets_as_list(self.on_ground.set), is_on_tile)[1]
+end
+
+--- A football goal lies outside the play area, which is closed, and a bomb may
+-- slide into it all the same.
+function Bombs:_is_open_to(
+    bomb: Bomb, i: integer, j: integer, closed: ClosedTiles
+): boolean
+    local clear_of_bombs = self:_bomb_on(i, j, bomb) == nil
+    return clear_of_bombs and (closed:is_open(i, j) or is_goal_tile(i, j))
+end
+
+function Bombs:_kick(bomb: Bomb, heading: Vector, kicker: Player, closed: ClosedTiles)
+    local i, j = bomb:tile_next_to(heading)
+    if self:_is_open_to(bomb, i, j, closed) then
+        bomb:kick(heading, kicker)
+    end
+end
+
+--- Kicks the bomb on a tile, if there is one and the tile behind it is free.
+-- `closed` holds the tiles of everything but bombs that stops a bomb.
+function Bombs:kick_bomb_on(
+    i: integer, j: integer, heading: Vector, kicker: Player, closed: ClosedTiles
+)
+    local bomb = self:_bomb_on(i, j)
+    if bomb then
+        self:_kick(bomb, heading, kicker, closed)
+    end
+end
+
+function Bombs:stop_kicked_by(player: Player)
+    local function kicked_by_player(bomb: Bomb): boolean
+        return bomb.sliding and bomb.kicker == player
+    end
+    local kicked = itertools.filter(
+        itertools.sets_as_list(self.on_ground.set), kicked_by_player
+    )
+    for _, bomb in ipairs(kicked) do
+        bomb:stop()
+    end
+end
+
+--- Slides a kicked bomb a pixel at a time, with the tile ahead tested before
+-- each one. A player who steps into that tile while the bomb is between two
+-- tiles therefore still stops it.
+function Bombs:_slide(bomb: Bomb, dt: number, closed: ClosedTiles)
+    for _ = 1, bomb:pixels_to_slide(dt) do
+        bomb:turn_on_belt()
+        local i, j = bomb:tile_ahead()
+        if not self:_is_open_to(bomb, i, j, closed) then
+            bomb:stop()
+            -- A bomb in the way is kicked on, however many kick items the
+            -- kicker has picked up.
+            local in_the_way = self:_bomb_on(i, j, bomb)
+            if in_the_way then
+                self:_kick(in_the_way, bomb.heading, bomb.kicker, closed)
+            end
+            return
+        end
+        bomb:slide_a_pixel()
+    end
+end
+
 function Bombs:update(
     dt: number,
     blockers: ReadableGroup<Explodable>,
     explodables: ReadableGroup<Explodable>,
-    occupies: ReadableGroup<Kinematic>,
-    players_: ReadableGroup<Player>,
-    bombs_: ReadableGroup<Bomb>,
+    closed_to_bombs: ClosedTiles,
     bombs_bounce_on: ReadableGroup<Kinematic>,
     lookup: Lookup
 )
@@ -527,7 +408,10 @@ function Bombs:update(
     self.explosions:update(dt, blockers, explodables, lookup)
 
     for _, bomb in pairs(self.on_ground.set) do
-        bomb:update(dt, occupies, players_, bombs_, lookup)
+        bomb:update(dt)
+        if bomb.sliding then
+            self:_slide(bomb, dt, closed_to_bombs)
+        end
 
         if bomb:is_complete() then
             self.on_ground:remove(bomb)

@@ -1,0 +1,209 @@
+package.path = "src/?.lua;src/?/init.lua;" .. package.path
+require("tl").loader()
+require("spec.support.headless_lutro")(1)
+
+require("engine.settings").set_block_size(16)
+require("game.battle").load_assets()
+local bombs = require("bombs.bombs")
+local closed_tiles = require("closed_tiles")
+local collision = require("engine.collision")
+local vectors = require("engine.geometry.vectors")
+local grid = require("level_layout.grid")
+local settings = require("settings")
+
+-- A kicked bomb slides exactly 2 px at this step.
+local STEP = 1 / 60
+local FUSE = 2.5
+-- A row of the factory floor without conveyor belts.
+local ROW = 3
+local KICKER = {}
+
+-- The factory floor has the conveyor belts, and no football goal that would let a bomb slide on past the edge
+-- of the arena.
+local map_before
+setup(function()
+    map_before = settings.map
+    settings.set_map("factory")
+end)
+teardown(function()
+    settings.set_map(map_before)
+end)
+
+local function obstacle_on(tile)
+    local position = grid.get_tile_position(tile[1], tile[2])
+    return {get_position = function() return position end}
+end
+
+--- An open arena with one bomb on (column, ROW) that goes off after FUSE seconds.
+local function new_field(column)
+    local field = {
+        bombs = bombs.new(true),
+        nothing = collision.new_group(),
+        closed = closed_tiles.new(),
+    }
+    field.bombs:place_static_bomb(grid.get_tile_position(column, ROW), 2)
+    for _, bomb in pairs(field.bombs.on_ground.set) do
+        field.bomb = bomb
+    end
+
+    function field:close(...)
+        local obstacles = {}
+        for _, tile in ipairs({...}) do
+            table.insert(obstacles, obstacle_on(tile))
+        end
+        self.closed = closed_tiles.new(obstacles)
+    end
+
+    function field:run(seconds)
+        for _ = 1, math.floor(seconds / STEP + 0.5) do
+            self.bombs:update(
+                STEP,
+                self.nothing,
+                self.nothing,
+                self.closed,
+                self.nothing,
+                collision.new_lookup(self.bombs.on_ground.set)
+            )
+        end
+    end
+
+    function field:kick(direction)
+        local i, j = grid.tile_indices(self.bomb.position)
+        self.bombs:kick_bomb_on(i, j, vectors.from_direction(direction), KICKER, self.closed)
+    end
+
+    --- Where a bomb is, in tiles from the arena's top-left corner.
+    function field:tiles_to(bomb)
+        local in_area = grid.position_in_area(bomb.position)
+        return {in_area.x / grid.TILE_SIZE, in_area.y / grid.TILE_SIZE}
+    end
+
+    return field
+end
+
+--- The field after its bomb has been kicked right and has slid for `seconds`.
+local function kicked_right(column, seconds, ...)
+    local field = new_field(column)
+    field:close(...)
+    field:kick("right")
+    field:run(seconds)
+    return field
+end
+
+describe("a kicked bomb", function()
+    it("slides 120 px a second", function()
+        local field = kicked_right(2, 0.4)
+        assert.are.same({5, ROW}, field:tiles_to(field.bomb))
+    end)
+
+    it("stops in the middle of the tile before a closed one", function()
+        local field = kicked_right(2, 1, {8, ROW})
+        assert.are.same({7, ROW}, field:tiles_to(field.bomb))
+        assert.is_false(field.bomb.sliding)
+    end)
+
+    it("stops at the edge of the arena", function()
+        local field = kicked_right(12, 1)
+        assert.are.same({16, ROW}, field:tiles_to(field.bomb))
+    end)
+
+    it("stays where it is when the tile behind it is closed", function()
+        local field = kicked_right(2, 0.2, {3, ROW})
+        assert.are.same({2, ROW}, field:tiles_to(field.bomb))
+    end)
+
+    it("jumps back to its tile when the tile it is entering closes", function()
+        local field = kicked_right(2, 0.05)
+        field:close({3, ROW})
+        field:run(STEP)
+        assert.are.same({2, ROW}, field:tiles_to(field.bomb))
+    end)
+
+    it("turns where it is when kicked back along its line", function()
+        local field = kicked_right(2, 0.05)
+        field:kick("left")
+        field:run(STEP)
+        assert.are.same({2.25, ROW}, field:tiles_to(field.bomb))
+    end)
+
+    it("jumps to the middle of its tile when kicked across its line", function()
+        local field = kicked_right(2, 0.05)
+        field:kick("down")
+        assert.are.same({2, ROW}, field:tiles_to(field.bomb))
+        field:run(0.133)
+        assert.are.same({2, ROW + 1}, field:tiles_to(field.bomb))
+    end)
+
+    it("stops on its nearest tile when the player who kicked it stops it", function()
+        local field = kicked_right(2, 0.167)
+        field.bombs:stop_kicked_by(KICKER)
+        field:run(0.2)
+        assert.are.same({3, ROW}, field:tiles_to(field.bomb))
+    end)
+end)
+
+describe("a kicked bomb whose fuse runs out as it slides", function()
+    --- The column of the explosion of a bomb kicked right from column 2 with `left` seconds on its fuse.
+    local function explodes_on(left)
+        local field = new_field(2)
+        field:run(FUSE - left)
+        field:kick("right")
+        field:run(left + 0.1)
+        return field.bombs.explosions.on_ground[1].i
+    end
+
+    it("goes off on the tile behind it when that is the nearest", function()
+        assert.are.equal(3, explodes_on(0.17))
+    end)
+
+    it("goes off on the tile ahead of it when that is the nearest", function()
+        assert.are.equal(4, explodes_on(0.22))
+    end)
+end)
+
+describe("a kicked bomb that meets another bomb", function()
+    --- A bomb on column 2 that is kicked right, with another bomb in its row.
+    local function two_bombs(other_column, seconds)
+        local field = new_field(2)
+        field.bombs:place_static_bomb(grid.get_tile_position(other_column, ROW), 2)
+        for _, bomb in pairs(field.bombs.on_ground.set) do
+            if bomb ~= field.bomb then
+                field.other = bomb
+            end
+        end
+        field:kick("right")
+        field:run(seconds)
+        return field
+    end
+
+    it("stops next to it and passes the kick on", function()
+        local field = two_bombs(5, 1.83)
+        assert.are.same({{4, ROW}, {16, ROW}}, {field:tiles_to(field.bomb), field:tiles_to(field.other)})
+    end)
+
+    it("is not kicked while the other bomb is right behind it, and kicks nothing on", function()
+        local field = two_bombs(3, 0.2)
+        assert.are.same({{2, ROW}, {3, ROW}}, {field:tiles_to(field.bomb), field:tiles_to(field.other)})
+    end)
+end)
+
+describe("a conveyor belt on the factory floor", function()
+    --- A bomb on (column, 2), on the row of the belt at (12, 2), which points down.
+    local function on_belt_row(column, direction, seconds)
+        local field = new_field(column)
+        field.bomb.position = grid.get_tile_position(column, 2)
+        field:kick(direction)
+        field:run(seconds)
+        return field
+    end
+
+    it("turns a bomb that slides over it, without slowing it", function()
+        local field = on_belt_row(10, "right", 0.533)
+        assert.are.same({12, 4}, field:tiles_to(field.bomb))
+    end)
+
+    it("lets a bomb resting on it leave only the way the belt points", function()
+        local field = on_belt_row(12, "left", 0.133)
+        assert.are.same({12, 3}, field:tiles_to(field.bomb))
+    end)
+end)
