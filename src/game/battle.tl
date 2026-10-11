@@ -365,6 +365,11 @@ function Battle:check_if_finished(dt: number)
     end
 end
 
+--- From here on no more pressure blocks start to fall.
+function Battle:_is_decided(): boolean
+    return self.state == "finished" or self.win_condition.is_standing_count
+end
+
 function Battle:update(dt: number)
     if self.state == "restarting" then
         self:load()
@@ -389,7 +394,7 @@ function Battle:update(dt: number)
     end
 
     self.timer:update(dt)
-    self.pressure_blocks.sudden_death = self.timer:sudden_death()
+    self.pressure_blocks.dropping = self.timer:sudden_death() and not self:_is_decided()
 
     self.pressure_blocks:update(dt)
     local alive_players = itertools.filter(self.players, is_alive)

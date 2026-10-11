@@ -22,6 +22,13 @@ local record PressureBlock is Entity, Explodable, Kinematic
     position: Point
 end
 
+-- Each side drops its next block after DROP_INTERVAL, whether or not its last
+-- one is down yet, and a block falls from where it comes into view above the
+-- arena.
+local DROP_INTERVAL = 38 / 60
+local FALL_SPEED = 240
+local FALL_STARTS_ABOVE_TOP_ROW = 40
+
 local pressure_block_image: Image
 local block_fall_shadow: Image
 local first_fall_sound: Source
@@ -29,7 +36,8 @@ local land_sound: Source
 
 function PressureBlock.new(target: Point): PressureBlock
     local self: PressureBlock = setmetatable({}, {__index = PressureBlock})
-    self.falling_position = points.new(target.x, -grid.TILE_SIZE)
+    local top_row = grid.get_tile_position(0, 0)
+    self.falling_position = points.new(target.x, top_row.y - FALL_STARTS_ABOVE_TOP_ROW)
     self.position = target
     self.z_index = z_index.LEVEL
     self.meets_flame = "blocks"
@@ -70,9 +78,8 @@ function PressureBlock:is_on_ground(): boolean
 end
 
 function PressureBlock:update(dt: number)
-    local block_fall_speed = 285
     self.falling_position.y = math.min(
-        self.position.y, self.falling_position.y + dt * block_fall_speed
+        self.position.y, self.falling_position.y + dt * FALL_SPEED
     )
     if self:is_on_ground() then
         self.z_index = z_index.BELOW
@@ -82,49 +89,38 @@ end
 local record PressureBlockSide
     positions: {Point}
     next_index: integer
-    falling: PressureBlock
-    fall_finished: boolean
-    on_ground: Group<PressureBlock>
+    next_drop_in: number
 end
 
-function PressureBlockSide.new(
-    positions: {Point}, on_ground: Group<PressureBlock>
-): PressureBlockSide
+function PressureBlockSide.new(positions: {Point}): PressureBlockSide
     local self: PressureBlockSide = setmetatable({}, {__index = PressureBlockSide})
     self.positions = positions
-    self.on_ground = on_ground
-    self.falling = PressureBlock.new(positions[1])
-    self.next_index = 2
-    self.fall_finished = false
+    self.next_index = 1
+    self.next_drop_in = 0
     return self
 end
 
-function PressureBlockSide:set_next_falling_block(): boolean
-    if self.next_index > #self.positions then
-        return false
-    end
-    self.fall_finished = false
-    self.falling = PressureBlock.new(self.positions[self.next_index])
-    self.next_index = self.next_index + 1
-    return true
+function PressureBlockSide:has_dropped_all(): boolean
+    return self.next_index > #self.positions
 end
 
---- Whether its block came down in this step.
-function PressureBlockSide:update(dt: number): boolean
-    self.falling:update(dt)
-    if self.falling:is_on_ground() and not self.fall_finished then
-        self.fall_finished = true
-        self.on_ground:add(self.falling)
-        return true
+--- The blocks whose turn has come, with `dt` then counted off the wait for the next.
+function PressureBlockSide:drop(dt: number): {PressureBlock}
+    local dropped: {PressureBlock} = {}
+    while self.next_drop_in <= 0 and not self:has_dropped_all() do
+        table.insert(dropped, PressureBlock.new(self.positions[self.next_index]))
+        self.next_index = self.next_index + 1
+        self.next_drop_in = self.next_drop_in + DROP_INTERVAL
     end
-    return false
+    self.next_drop_in = self.next_drop_in - dt
+    return dropped
 end
 
 local record PressureBlocks
-    falling_sides: {PressureBlockSide}
+    sides: {PressureBlockSide}
+    in_air: {PressureBlock}
     on_ground: Group<PressureBlock>
-    no_more_falling_blocks: boolean
-    sudden_death: boolean
+    dropping: boolean
     silent: boolean
     has_started: boolean
 end
@@ -136,14 +132,11 @@ function pressure_blocks.new(
 ): PressureBlocks
     local self: PressureBlocks = setmetatable({}, {__index = PressureBlocks})
     self.on_ground = collision.new_group()
-    local function new_side(positions: {Point}): PressureBlockSide
-        return PressureBlockSide.new(positions, self.on_ground)
-    end
-    self.falling_sides = itertools.map(
-        map_entities.get_fall_pattern_positions(fall_pattern), new_side
+    self.in_air = {}
+    self.sides = itertools.map(
+        map_entities.get_fall_pattern_positions(fall_pattern), PressureBlockSide.new
     )
-    self.no_more_falling_blocks = false
-    self.sudden_death = false
+    self.dropping = false
     self.silent = silent or false
     self.has_started = false
     return self
@@ -155,58 +148,51 @@ function PressureBlocks:_play(sound: Source)
     end
 end
 
-function PressureBlocks:no_updates(): boolean
-    return self.no_more_falling_blocks or not self.sudden_death
-end
-
-local function side_is_finished(side: PressureBlockSide): boolean
-    return side.fall_finished
-end
-
-function PressureBlocks:_advance_all_sides()
-    local exists_more_falling_blocks = false
-    for _, side in ipairs(self.falling_sides) do
-        if side:set_next_falling_block() then
-            exists_more_falling_blocks = true
-        end
-    end
-
-    self.no_more_falling_blocks = not exists_more_falling_blocks
-end
-
 function PressureBlocks:falling(): {PressureBlock: PressureBlock}
-    if self:no_updates() then
-        return {}
-    end
     local blocks: {PressureBlock: PressureBlock} = {}
-    for _, side in ipairs(self.falling_sides) do
-        blocks[side.falling] = side.falling
+    for _, block in ipairs(self.in_air) do
+        blocks[block] = block
     end
     return blocks
 end
 
-function PressureBlocks:update(dt: number)
-    if self:no_updates() then
-        return
-    end
-
+function PressureBlocks:_drop_more(dt: number)
     if not self.has_started then
         self.has_started = true
         self:_play(first_fall_sound)
     end
+    for _, side in ipairs(self.sides) do
+        for _, block in ipairs(side:drop(dt)) do
+            table.insert(self.in_air, block)
+        end
+    end
+end
 
+--- Whether a block came down.
+function PressureBlocks:_land_those_that_are_down(): boolean
     local landed = false
-    for _, side in ipairs(self.falling_sides) do
-        landed = side:update(dt) or landed
+    for i = #self.in_air, 1, -1 do
+        if self.in_air[i]:is_on_ground() then
+            self.on_ground:add(table.remove(self.in_air, i))
+            landed = true
+        end
+    end
+    return landed
+end
+
+--- No block starts to fall while `dropping` is off, but one that is in the air
+-- comes down all the same.
+function PressureBlocks:update(dt: number)
+    if self.dropping then
+        self:_drop_more(dt)
+    end
+    for _, block in ipairs(self.in_air) do
+        block:update(dt)
     end
     -- A block that lands cuts off the sound of the one before it. Left to ring
-    -- before it. Left to ring out, three landings a second pile up on each other.
-    if landed and not self.silent then
+    -- out, the landings pile up on each other.
+    if self:_land_those_that_are_down() and not self.silent then
         audio.restart(land_sound)
-    end
-
-    if itertools.count(self.falling_sides, side_is_finished) == #self.falling_sides then
-        self:_advance_all_sides()
     end
 end
 
