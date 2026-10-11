@@ -182,16 +182,15 @@ end
 
 --- Members of a group standing on a tile. Something between two tiles, such as
 -- a walking player or a sliding bomb, stands on the tile it is nearest to.
-local function standing_on(
-    i: integer, j: integer, group: ReadableGroup<Explodable>, lookup: Lookup
-): {Explodable}
+function explosions.standing_on<T is Explodable>(
+    i: integer, j: integer, group: ReadableGroup<T>, lookup: Lookup
+): {T}
     local overlapping = lookup:in_box_and_group(grid.get_tile(i, j), group)
     if #overlapping == 0 then
         return overlapping
     end
-    local function is_nearest_to_tile(explodable: Explodable): boolean
-        local nearest_i, nearest_j = grid.tile_indices(explodable:get_position())
-        return nearest_i == i and nearest_j == j
+    local function is_nearest_to_tile(explodable: T): boolean
+        return grid.is_on_tile(explodable:get_position(), i, j)
     end
     -- The lookup lists something once for every lookup cell it overlaps.
     return itertools.filter(itertools.unique(overlapping), is_nearest_to_tile)
@@ -232,7 +231,7 @@ function Explosions:_meets_for(
         if not grid.has_tile(i, j) then
             return "capped_before"
         end
-        local on_tile = standing_on(i, j, blockers, lookup)
+        local on_tile = explosions.standing_on(i, j, blockers, lookup)
         if itertools.count(on_tile, blocks_flame) > 0 then
             return "capped_before"
         end
@@ -286,7 +285,7 @@ function Explosions:_blow_up_standing_in_flames(
         return flame.deadly
     end
     for _, flame in ipairs(itertools.filter(self.burning, is_deadly)) do
-        local standing = standing_on(flame.i, flame.j, explodables, lookup)
+        local standing = explosions.standing_on(flame.i, flame.j, explodables, lookup)
         for _, explodable in ipairs(standing) do
             blow_up(explodable)
         end

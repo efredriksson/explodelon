@@ -29,6 +29,14 @@ local THROW_BOMB_DIRECTION_BY_SIDE: {Direction: Vector} = {
     down = vectors.new(0, -1),
     left = vectors.new(1, 0),
 }
+-- A cart on the 'up' or 'down' side is placed by its middle, and on the 'down'
+-- and 'right' sides the rail lies past the last tile.
+local RAIL_TO_EDGE_TILE_BY_SIDE: {Direction: Vector} = {
+    up = vectors.new(-grid.TILE_SIZE / 2, 0),
+    right = vectors.new(-grid.TILE_SIZE, 0),
+    down = vectors.new(-grid.TILE_SIZE / 2, -grid.TILE_SIZE),
+    left = vectors.new(0, 0),
+}
 local HEAD_DIR_BY_SIDE: {Direction: Direction} = {
     up = "down",
     down = "up",
@@ -52,8 +60,13 @@ end
 local type CartAnimations = {Direction: {CartState: Animation}}
 local SIDES: {Direction} = {"up", "down", "left", "right"}
 local CART_STATES: {CartState} = {"forward", "backward", "idle"}
-local CANNON_RELOAD_TIME = 6.5
+-- Counted from when the cart's bomb goes off.
+local CANNON_RELOAD_TIME = 2.6
 local CANNON_PRE_FIRE_TIME = 0.3
+-- In tiles from the cart's own tile, which lies one outside the arena.
+local SHORTEST_SHOT = 3
+local LONGEST_SHOT = 7
+local CANNON_CHARGE_TIME_PER_TILE = 8 / 60
 local cart_images: {Direction: {CartState: Image}} = {}
 local cart_loading_images: {Direction: {CartState: Image}} = {}
 local cart_firing_images: {Direction: Image} = {}
@@ -106,6 +119,8 @@ local record PlayerCart is Entity
     cannon_powerup_for: number
     head: CharacterName
     turbo: boolean
+    since_fired: number
+    bomb_in_play: boolean
     reload_countdown: number
     animations: CartAnimations
     loading_animations: CartAnimations
@@ -123,6 +138,8 @@ function PlayerCart.new(id: integer, position: number, head: CharacterName): Pla
     self.cannon = "ready"
     self.cannon_powerup_for = 0.0
     self.turbo = false
+    self.since_fired = 0.0
+    self.bomb_in_play = false
     self.reload_countdown = 0.0
     self.animations, self.loading_animations, self.firing_animations = get_cart_animations(
     )
@@ -153,9 +170,11 @@ function PlayerCart:update(dt: number)
     local animation = self:_get_animation()
     animation:update(dt)
 
-    self.reload_countdown = self.reload_countdown - dt
-    local time_to_fire = CANNON_RELOAD_TIME - CANNON_PRE_FIRE_TIME
-    if self.cannon == "pre-fire" and self.reload_countdown < time_to_fire then
+    self.since_fired = self.since_fired + dt
+    if not self.bomb_in_play then
+        self.reload_countdown = self.reload_countdown - dt
+    end
+    if self.cannon == "pre-fire" and self.since_fired > CANNON_PRE_FIRE_TIME then
         self.cannon = "firing"
     elseif self.cannon == "firing" and animation.loops > 0 then
         self.cannon = "loading"
@@ -218,7 +237,7 @@ function PlayerCart:draw()
     local animation = self:_get_animation()
     animation:draw(cart_pos.x, cart_pos.y)
 
-    if self.cannon ~= "ready" and self.reload_countdown % 0.05 < 0.025 then
+    if self.cannon ~= "ready" and self.since_fired % 0.05 < 0.025 then
         -- If not ready, head is blinking by only sometimes not rendering it below
         return
     end
@@ -273,33 +292,46 @@ function PlayerCart:set_state(state: CartState)
     end
 end
 
+function PlayerCart:_shot_length(): integer
+    local charged = math.floor(self.cannon_powerup_for / CANNON_CHARGE_TIME_PER_TILE)
+    return math.min(SHORTEST_SHOT + charged, LONGEST_SHOT)
+end
+
+function PlayerCart:is_fully_charged(): boolean
+    return self:_shot_length() == LONGEST_SHOT
+end
+
+--- The tile of the arena that the cannon points at.
+function PlayerCart:_edge_tile_ahead(): Point
+    local on_rail = rail.get_x_y_position(self.position)
+    local to_edge_tile = RAIL_TO_EDGE_TILE_BY_SIDE[rail.get_side(self.position)]
+    return grid.snap_to(on_rail:move(to_edge_tile))
+end
+
+--- Where the shot starts and how many tiles it goes, or nothing when the
+-- cannon cannot fire.
 function PlayerCart:fire_cannon(): Point, integer
-    local fire_lenght = 2 + math.floor(self.cannon_powerup_for * 5)
+    local fire_length = self:_shot_length()
     self.cannon_powerup_for = 0.0 -- Reset regardless if actually fire or not
 
     local side = rail.get_side(self.position)
-    local shoot_from = rail.get_x_y_position(self.position)
-    -- Adjust so we shoot from inside player area if 'down' or 'right'
-    -- Also adjust for the cart position being its center for 'up' and 'down'
-    if side == "down" then
-        shoot_from = shoot_from:move(vectors.new(-grid.TILE_SIZE / 2, -grid.TILE_SIZE))
-    elseif side == "up" then
-        shoot_from = shoot_from:move(vectors.new(-grid.TILE_SIZE / 2, 0))
-    elseif side == "right" then
-        shoot_from = shoot_from:move(vectors.new(-grid.TILE_SIZE, 0))
-    end
-    shoot_from = grid.snap_to(shoot_from)
-
-    local fired_bomb = hitboxes.new_block(shoot_from)
-    if self.cannon ~= "ready" or not grid.area():contains(fired_bomb) then
+    local edge_tile = self:_edge_tile_ahead()
+    local cannon_points_into_arena = grid.area():contains(hitboxes.new_block(edge_tile))
+    if self.cannon ~= "ready" or not cannon_points_into_arena then
         return nil, nil
     end
 
     self:set_state("idle")
     self.cannon = "pre-fire"
-    -- TODO: countdown is from when bomb as landed, can bounce for a while
+    self.since_fired = 0
+    self.bomb_in_play = true
     self.reload_countdown = CANNON_RELOAD_TIME
-    return shoot_from, fire_lenght
+    local out_of_arena = THROW_BOMB_DIRECTION_BY_SIDE[side]:scale(-grid.TILE_SIZE)
+    return edge_tile:move(out_of_arena), fire_length
+end
+
+function PlayerCart:bomb_went_off()
+    self.bomb_in_play = false
 end
 
 function PlayerCart:firing_cannon(): boolean
@@ -367,15 +399,17 @@ function MadBombers:handle_cart_move_input(dt: number, cart: PlayerCart)
         cart.cannon_powerup_for = cart.cannon_powerup_for + dt
     end
 
-    if
-        joysticks.is_released(cart.id, joysticks.BUTTONS.R)
-        or cart.cannon_powerup_for > 0.8
-    then
+    local released_charged = cart.cannon_powerup_for > 0
+        and joysticks.is_released(cart.id, joysticks.BUTTONS.R)
+    if released_charged or cart:is_fully_charged() then
         local fire_from, fire_len = cart:fire_cannon()
         if fire_from then
             local fire_dir = THROW_BOMB_DIRECTION_BY_SIDE[side]
             local target = fire_from:move(fire_dir:scale(fire_len * grid.TILE_SIZE))
-            self.bombs:throw_bomb(fire_from, target)
+            local function start_reloading()
+                cart:bomb_went_off()
+            end
+            self.bombs:throw_bomb(fire_from, target, start_reloading)
         end
     end
     cart.turbo = lutro.joystick.isDown(cart.id, joysticks.BUTTONS.A)

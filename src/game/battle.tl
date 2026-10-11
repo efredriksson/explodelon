@@ -99,7 +99,6 @@ local record Battle is PausedGame
     pressure_blocks_group: Group<Entity>
     bomb_entities_group: Group<Entity>
     alive_players_group: Group<Player>
-    bombs_bounce_on: CombinedGroup<Kinematic>
     explodables: CombinedGroup<Explodable>
     blocks_jump: CombinedGroup<Kinematic>
     trampolines: Trampolines
@@ -147,14 +146,6 @@ function Battle:load()
     )
     self.bomb_entities_group = collision.new_group_from_set(self.bombs.on_ground.set)
     self.alive_players_group = collision.new_group(self.players)
-    self.bombs_bounce_on = collision.new_combined_group(
-        self.soft_blocks.on_ground.set,
-        self.hard_blocks.on_ground.set,
-        self.lightning_bombs.on_ground.set,
-        self.pressure_blocks.on_ground.set,
-        self.bombs.on_ground.set,
-        self.alive_players_group.set
-    )
     self.explodables = collision.new_combined_group(
         self.alive_players_group.set,
         self.bombs.on_ground.set,
@@ -430,7 +421,7 @@ function Battle:update(dt: number)
         self.blockers,
         self.explodables,
         closed_to_bombs,
-        self.bombs_bounce_on,
+        self.alive_players_group,
         lookup
     )
     self.lightning_bombs:update(

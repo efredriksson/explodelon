@@ -23,10 +23,6 @@ function ProjectileTrajectory:get_direction(): Vector
     return self.lateral_velocity:normalize()
 end
 
-function ProjectileTrajectory:reverse()
-    self.lateral_velocity:flip()
-end
-
 function ProjectileTrajectory:finished(): boolean
     return self.duration <= 0
 end
@@ -34,7 +30,7 @@ end
 function ProjectileTrajectory:update(dt: number, ground_pos: Point): Point
     self.duration = self.duration - dt
     local new_position = ground_pos:move(self.lateral_velocity:scale(dt))
-    self.height = self.height + self.velocity * dt
+    self.height = self.height + self.velocity * dt - self.gravity * dt * dt / 2
     self.velocity = self.velocity - self.gravity * dt
 
     return new_position
