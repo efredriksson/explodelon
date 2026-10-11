@@ -89,7 +89,7 @@ describe("the sound of pressure blocks", function()
     --- Blocks falling from both sides, stepped until the first one is down.
     local function first_blocks_down()
         local blocks = pressure_blocks.new("left_right")
-        blocks.sudden_death = true
+        blocks.dropping = true
         while blocks.on_ground:is_empty() do
             blocks:update(STEP)
         end
