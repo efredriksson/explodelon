@@ -22,7 +22,6 @@ local type ItemType = settings.ItemType
 local record SoftBlock is Entity, Explodable, Kinematic
     position: Point
     is_exploding: boolean
-    in_explosion: boolean
     base_animation: Animation
     revealed_animation: Animation
     breaking_animation: Animation
@@ -45,7 +44,7 @@ function SoftBlock.new(
     self.revealed_animation = revealed_animation
     self.breaking_animation = soft_block_animations.get_exploding()
     self.is_exploding = false
-    self.in_explosion = false
+    self.meets_flame = "ignites"
     self.item = item
     self.egg = egg
     self.is_revealed = false

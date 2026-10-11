@@ -19,7 +19,6 @@ local type Rectangle = rectangles.Rectangle
 local record PressureBlock is Entity, Explodable, Kinematic
     falling_position: Point
     position: Point
-    in_explosion: boolean
 end
 
 local pressure_block_image: Image
@@ -30,7 +29,7 @@ function PressureBlock.new(target: Point): PressureBlock
     self.falling_position = points.new(target.x, -grid.TILE_SIZE)
     self.position = target
     self.z_index = z_index.LEVEL
-    self.in_explosion = false
+    self.meets_flame = "blocks"
     return self
 end
 

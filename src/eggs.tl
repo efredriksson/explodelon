@@ -25,7 +25,6 @@ local record Egg is Entity, Explodable
     breaking: boolean
     hatched: boolean
     is_exploding: boolean
-    in_explosion: boolean
     animation: Animation
 end
 
@@ -36,7 +35,7 @@ function Egg.new(position: Point): Egg
     self.breaking = false
     self.hatched = false
     self.is_exploding = false
-    self.in_explosion = true
+    self.meets_flame = "engulfed"
     self.animation = animations.new(egg_shake_image, 20, 1 / 6, 2)
     return self
 end

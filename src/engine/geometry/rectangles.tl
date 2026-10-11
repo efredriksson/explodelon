@@ -57,6 +57,10 @@ local function interval_contained(
     return xmin1 >= xmin2 and xmax1 <= xmax2
 end
 
+function Rectangle:area(): number
+    return self.width * self.height
+end
+
 function Rectangle:contains(other: Rectangle): boolean
     return interval_contained(
         other.x, other.x + other.width, self.x, self.x + self.width

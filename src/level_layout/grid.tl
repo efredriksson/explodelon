@@ -30,6 +30,13 @@ function grid.dimensions(): GridDimensions
     return DIMENSIONS
 end
 
+function grid.has_tile(i: integer, j: integer): boolean
+    return i >= DIMENSIONS.x_min
+        and i <= DIMENSIONS.x_max
+        and j >= DIMENSIONS.y_min
+        and j <= DIMENSIONS.y_max
+end
+
 function grid.get_tile(i: integer, j: integer): Rectangle
     return rectangles.new(
         PLAYER_AREA.x + i * grid.TILE_SIZE,

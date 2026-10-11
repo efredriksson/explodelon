@@ -18,8 +18,8 @@ end
 local record FootballGraphics is MapGraphics
 end
 
-function FootballGraphics:get_soft_block_exploding(): Animation
-    return animations.new(soft_block_breaking_image, 24, 1 / 6)
+function FootballGraphics:get_soft_block_breaking_image(): Image
+    return soft_block_breaking_image
 end
 
 function FootballGraphics:get_soft_block_rigid(): Animation

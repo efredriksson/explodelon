@@ -18,8 +18,8 @@ end
 local record BouncingGraphics is MapGraphics
 end
 
-function BouncingGraphics:get_soft_block_exploding(): Animation
-    return animations.new(soft_block_breaking_image, 24, 1 / 6)
+function BouncingGraphics:get_soft_block_breaking_image(): Image
+    return soft_block_breaking_image
 end
 
 function BouncingGraphics:get_soft_block_rigid(): Animation

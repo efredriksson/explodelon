@@ -143,6 +143,19 @@ function itertools.filter<T>(iterator: {T}, predicate: function(T): boolean): {T
     return result
 end
 
+--- The list without repeats, each element where it first appeared.
+function itertools.unique<T>(list: {T}): {T}
+    local seen: {T: boolean} = {}
+    local result: {T} = {}
+    for _, element in ipairs(list) do
+        if not seen[element] then
+            seen[element] = true
+            table.insert(result, element)
+        end
+    end
+    return result
+end
+
 function itertools.count<T>(iterator: {T}, predicate: function(T): boolean): integer
     local matches = 0
     for _, element in ipairs(iterator) do

@@ -121,6 +121,7 @@ function ScriptedBattle:_rebuild_groups()
     self.blockers = collision.new_combined_group(
         self.eggs.on_ground.set,
         self.items.on_ground.set,
+        self.bombs.on_ground.set,
         self.hard_blocks.on_ground.set,
         self.soft_blocks.on_ground.set
     )

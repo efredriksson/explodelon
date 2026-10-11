@@ -19,7 +19,6 @@ local type HardBlockConfig = map_entities.HardBlockConfig
 
 local record HardBlock is Explodable, Kinematic, Entity
     position: Point
-    in_explosion: boolean
     animation: Animation
 end
 
@@ -27,7 +26,7 @@ function HardBlock.new(position: Point, is_tall: boolean): HardBlock
     local self: HardBlock = setmetatable({}, {__index = HardBlock})
     self.position = position
     self.z_index = z_index.LEVEL
-    self.in_explosion = false
+    self.meets_flame = "blocks"
     self.animation = hard_block_animations.get(is_tall)
     return self
 end

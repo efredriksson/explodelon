@@ -30,7 +30,6 @@ local record Item is Entity, Explodable
     type: ItemType
     position: Point
     is_exploding: boolean
-    in_explosion: boolean
 end
 
 function Item.new(item_type: ItemType, position: Point): Item
@@ -39,7 +38,7 @@ function Item.new(item_type: ItemType, position: Point): Item
     self.position = position
     self.z_index = z_index.LEVEL
     self.is_exploding = false
-    self.in_explosion = true
+    self.meets_flame = "engulfed"
     return self
 end
 
