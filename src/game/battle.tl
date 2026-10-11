@@ -101,7 +101,6 @@ local record Battle is PausedGame
     alive_players_group: Group<Player>
     bombs_bounce_on: CombinedGroup<Kinematic>
     explodables: CombinedGroup<Explodable>
-    blocks_bombs: CombinedGroup<Kinematic>
     blocks_jump: CombinedGroup<Kinematic>
     trampolines: Trampolines
     blockers: CombinedGroup<Explodable>
@@ -161,12 +160,6 @@ function Battle:load()
         self.bombs.on_ground.set,
         self.eggs.on_ground.set,
         self.items.on_ground.set
-    )
-    self.blocks_bombs = collision.new_combined_group(
-        self.soft_blocks.on_ground.set,
-        self.hard_blocks.on_ground.set,
-        self.lightning_bombs.on_ground.set,
-        self.pressure_blocks.on_ground.set
     )
     self.blocks_jump = collision.new_combined_group(
         self.soft_blocks.on_ground.set,
@@ -250,6 +243,12 @@ function Battle:handle_bomb_drop_input(player: Player)
 
     if joysticks.is_pressed(player.id, joysticks.BUTTONS.Y) then
         self.lightning_bombs:place_lightning_bomb(player, placed_bombs)
+    end
+end
+
+function Battle:handle_bomb_stop_input(player: Player)
+    if joysticks.is_pressed(player.id, joysticks.BUTTONS.L) then
+        self.bombs:stop_kicked_by(player)
     end
 end
 
@@ -419,13 +418,18 @@ function Battle:update(dt: number)
     trace_collision:stop()
 
     local trace_bombs = tracing.start("bombs")
+    local closed_to_bombs = closed_tiles.new(
+        self.soft_blocks.on_ground.set,
+        self.hard_blocks.on_ground.set,
+        self.lightning_bombs.on_ground.set,
+        self.pressure_blocks.on_ground.set,
+        self.alive_players_group.set
+    )
     self.bombs:update(
         dt,
         self.blockers,
         self.explodables,
-        self.blocks_bombs,
-        self.alive_players_group,
-        self.bombs.on_ground,
+        closed_to_bombs,
         self.bombs_bounce_on,
         lookup
     )
@@ -449,14 +453,13 @@ function Battle:update(dt: number)
         local trace_player_movement = tracing.start("movement")
         if player:accepts_input() then
             self:handle_bomb_drop_input(player)
+            self:handle_bomb_stop_input(player)
             movement.set_position_and_dir_from_input(
                 player,
                 dt,
                 closed_to_walking,
-                self.blocks_bombs,
-                self.alive_players_group,
-                self.bombs.on_ground,
-                lookup,
+                self.bombs,
+                closed_to_bombs,
                 maps.get_layout():has_ice()
             )
             dino_inputs.handle(

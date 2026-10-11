@@ -151,7 +151,7 @@ local function handle_throw_input(
         local area_bomb_can_be_in = hitboxes.new_block(throw_bomb_from)
         local bombs_to_throw = lookup:in_box_and_group(area_bomb_can_be_in, bombs_group)
         for _, bomb_to_throw in ipairs(bombs_to_throw) do
-            if bomb_to_throw.velocity:length() == 0 then
+            if not bomb_to_throw.sliding then
                 return bomb_to_throw
             end
         end

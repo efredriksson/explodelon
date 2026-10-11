@@ -99,7 +99,6 @@ local record ScriptedBattle is Stage
 
     alive_players_group: Group<Player>
     blockers: CombinedGroup<Explodable>
-    blocks_bombs: CombinedGroup<Kinematic>
     blocks_jump: CombinedGroup<Kinematic>
     bombs_bounce_on: CombinedGroup<Kinematic>
     dino_roars: DinoRoars
@@ -182,9 +181,6 @@ function ScriptedBattle:_stand_up_map()
     self.hard_blocks = hard_blocks.new(
         map_entities.get_block_configs({}, settings.default_block_pattern(map)).hard
     )
-    -- Hard blocks only, unlike Battle:load, so drones and kicked bombs pass
-    -- through scenery: a piece may stand blocks anywhere off a blast path.
-    self.blocks_bombs = collision.new_combined_group(self.hard_blocks.on_ground.set)
     -- Only hard blocks stop lightning.
     self.lightning_blockers = collision.new_combined_group(
         self.hard_blocks.on_ground.set
@@ -298,13 +294,16 @@ function ScriptedBattle:_step_systems(dt: number)
         self.alive_players_group.set
     )
 
+    -- Hard blocks only, unlike Battle:update, so kicked bombs pass through
+    -- scenery: a piece may stand soft blocks anywhere off a blast path.
+    local closed_to_bombs = closed_tiles.new(
+        self.hard_blocks.on_ground.set, self.alive_players_group.set
+    )
     self.bombs:update(
         dt,
         self.blockers,
         self.explodables,
-        self.blocks_bombs,
-        self.alive_players_group,
-        self.bombs.on_ground,
+        closed_to_bombs,
         self.bombs_bounce_on,
         lookup
     )
@@ -325,10 +324,8 @@ function ScriptedBattle:_step_systems(dt: number)
                 dt,
                 self.player_inputs[player] or {},
                 closed_to_walking,
-                self.blocks_bombs,
-                self.alive_players_group,
-                self.bombs.on_ground,
-                lookup,
+                self.bombs,
+                closed_to_bombs,
                 self.ice_sliding
             )
         end
