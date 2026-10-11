@@ -21,7 +21,8 @@ local type ItemType = settings.ItemType
 local FRAME_WIDTH = 18
 local FRAME_DURATION = 1 / 30
 
-local take_item_sound: Source
+local pickup_sound: Source
+local ability_pickup_sound: Source
 local frame_animation: Animation
 local item_shadow: Image
 local item_icons: {ItemType: Image}
@@ -69,6 +70,15 @@ end
 
 function Item:is_destroyed(): boolean
     return self.is_exploding
+end
+
+--- An item that gives a new ability sounds different from one that gives more
+-- of what every player starts with.
+local function pickup_sound_of(item_type: ItemType): Source
+    if item_type == "kick" or item_type == "lightning_bomb" then
+        return ability_pickup_sound
+    end
+    return pickup_sound
 end
 
 local record Items
@@ -149,7 +159,7 @@ end
 
 function Items:_consume_by(player: Player, item: Item)
     if not self.silent then
-        take_item_sound:play()
+        pickup_sound_of(item.type):play()
     end
     self.on_ground:remove(item)
     if self.by_players[player.id] == nil then
@@ -189,8 +199,10 @@ function items.get_frame_image(): Image
 end
 
 function items.load_assets()
-    take_item_sound = audio.new_source_pool("assets/take_item.wav", "static", 5)
-    take_item_sound:setVolume(0.75)
+    pickup_sound = audio.new_source_pool("assets/sfx/item_pickup.wav", "static", 4)
+    ability_pickup_sound = audio.new_source_pool(
+        "assets/sfx/item_pickup_ability.wav", "static", 2
+    )
     frame_animation = animations.new(
         lutro.graphics.newImage("assets/items/frame.png"), FRAME_WIDTH, FRAME_DURATION
     )

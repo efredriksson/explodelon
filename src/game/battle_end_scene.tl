@@ -9,28 +9,42 @@ local type CharacterName = characters.CharacterName
 local type Scene = scenes.Scene
 local type ScoreBoard = score_board.ScoreBoard
 
-local winner_sound: Source
-local draw_sound: Source
+-- From the battle being decided until the winner is heard. The last 0.4 s are
+-- silence that the cheer starts with and the sound file leaves out.
+local WINNER_CHEERS_AFTER = 91 / 60 + 0.4
+
+local decided_sound: Source
+local winner_cheer_sound: Source
 local time_up_sound: Source
 local battle_end_scene = {}
+
+local record Cue
+    sound: Source
+    at: number
+end
+
+function Cue.new(sound: Source, at: number): Cue
+    local self: Cue = setmetatable({}, {__index = Cue})
+    self.sound = sound
+    self.at = at
+    return self
+end
 
 local record BattleEndScene is Scene
     game_scene: Scene
     next_scene: Scene
-    played_sound: boolean
-    sound: Source
+    cues: {Cue}
     scene_lenght: number
     time: number
 end
 
 function BattleEndScene.new(
-    game_scene: Scene, next_scene: Scene, sound: Source, scene_lenght: number
+    game_scene: Scene, next_scene: Scene, cues: {Cue}, scene_lenght: number
 ): BattleEndScene
     local self: BattleEndScene = setmetatable({}, {__index = BattleEndScene})
     self.game_scene = game_scene
     self.next_scene = next_scene
-    self.played_sound = false
-    self.sound = sound
+    self.cues = cues
     self.time = 0
     self.scene_lenght = scene_lenght
     return self
@@ -47,21 +61,25 @@ function battle_end_scene.new_for_winners(
             return game_scene
         end
     end
-    return BattleEndScene.new(game_scene, get_next_scene(), winner_sound, 3)
+    local cues = {
+        Cue.new(decided_sound, 0),
+        Cue.new(winner_cheer_sound, WINNER_CHEERS_AFTER),
+    }
+    return BattleEndScene.new(game_scene, get_next_scene(), cues, 3)
 end
 
 function battle_end_scene.new_for_draw(game_scene: Scene): BattleEndScene
-    return BattleEndScene.new(game_scene, game_scene, draw_sound, 4)
+    return BattleEndScene.new(game_scene, game_scene, {Cue.new(decided_sound, 0)}, 4)
 end
 
 function battle_end_scene.new_for_timeout(game_scene: Scene): BattleEndScene
-    return BattleEndScene.new(game_scene, game_scene, time_up_sound, 2)
+    return BattleEndScene.new(game_scene, game_scene, {Cue.new(time_up_sound, 0)}, 2)
 end
 
 function battle_end_scene.load_assets()
-    winner_sound = audio.new_source("assets/battle-end.ogg", "static")
-    draw_sound = audio.new_source("assets/battle-draw.ogg", "static")
-    time_up_sound = audio.new_source("assets/battle-time-up.wav", "static")
+    decided_sound = audio.new_source("assets/sfx/battle_decided.wav", "static")
+    winner_cheer_sound = audio.new_source("assets/sfx/winner_cheer.wav", "static")
+    time_up_sound = audio.new_source("assets/sfx/time_up.wav", "static")
     winner_scene.load_assets()
 end
 
@@ -72,9 +90,11 @@ end
 function BattleEndScene:update(dt: number)
     self.game_scene:update(dt)
 
-    if not self.played_sound then
-        self.played_sound = true
-        self.sound:play()
+    for i = #self.cues, 1, -1 do
+        if self.time >= self.cues[i].at then
+            self.cues[i].sound:play()
+            table.remove(self.cues, i)
+        end
     end
 
     self.time = self.time + dt

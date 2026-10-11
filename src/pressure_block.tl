@@ -1,3 +1,4 @@
+local audio = require("engine.audio")
 local collision = require("engine.collision")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
@@ -23,6 +24,8 @@ end
 
 local pressure_block_image: Image
 local block_fall_shadow: Image
+local first_fall_sound: Source
+local land_sound: Source
 
 function PressureBlock.new(target: Point): PressureBlock
     local self: PressureBlock = setmetatable({}, {__index = PressureBlock})
@@ -106,12 +109,15 @@ function PressureBlockSide:set_next_falling_block(): boolean
     return true
 end
 
-function PressureBlockSide:update(dt: number)
+--- Whether its block came down in this step.
+function PressureBlockSide:update(dt: number): boolean
     self.falling:update(dt)
     if self.falling:is_on_ground() and not self.fall_finished then
         self.fall_finished = true
         self.on_ground:add(self.falling)
+        return true
     end
+    return false
 end
 
 local record PressureBlocks
@@ -119,11 +125,15 @@ local record PressureBlocks
     on_ground: Group<PressureBlock>
     no_more_falling_blocks: boolean
     sudden_death: boolean
+    silent: boolean
+    has_started: boolean
 end
 
 local pressure_blocks = {PressureBlocks = PressureBlocks, PressureBlock = PressureBlock}
 
-function pressure_blocks.new(fall_pattern: FallPattern): PressureBlocks
+function pressure_blocks.new(
+    fall_pattern: FallPattern, silent?: boolean
+): PressureBlocks
     local self: PressureBlocks = setmetatable({}, {__index = PressureBlocks})
     self.on_ground = collision.new_group()
     local function new_side(positions: {Point}): PressureBlockSide
@@ -134,7 +144,15 @@ function pressure_blocks.new(fall_pattern: FallPattern): PressureBlocks
     )
     self.no_more_falling_blocks = false
     self.sudden_death = false
+    self.silent = silent or false
+    self.has_started = false
     return self
+end
+
+function PressureBlocks:_play(sound: Source)
+    if not self.silent then
+        sound:play()
+    end
 end
 
 function PressureBlocks:no_updates(): boolean
@@ -172,8 +190,19 @@ function PressureBlocks:update(dt: number)
         return
     end
 
+    if not self.has_started then
+        self.has_started = true
+        self:_play(first_fall_sound)
+    end
+
+    local landed = false
     for _, side in ipairs(self.falling_sides) do
-        side:update(dt)
+        landed = side:update(dt) or landed
+    end
+    -- A block that lands cuts off the sound of the one before it. Left to ring
+    -- before it. Left to ring out, three landings a second pile up on each other.
+    if landed and not self.silent then
+        audio.restart(land_sound)
     end
 
     if itertools.count(self.falling_sides, side_is_finished) == #self.falling_sides then
@@ -184,6 +213,10 @@ end
 function pressure_blocks.load_assets()
     pressure_block_image = lutro.graphics.newImage("assets/1_ton.png")
     block_fall_shadow = lutro.graphics.newImage("assets/items/shadow.png")
+    first_fall_sound = audio.new_source_pool("assets/sfx/sudden_death.wav", "static", 1)
+    land_sound = audio.new_source("assets/sfx/pressure_block_land.wav", "static")
+    -- At full volume a landing is as loud as an explosion.
+    land_sound:setVolume(0.5)
 end
 
 return pressure_blocks

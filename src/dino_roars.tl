@@ -39,7 +39,7 @@ function DinoRoars:_resolve_stun_cry(lookup: Lookup, player: Player)
         if hit_player.action ~= "stunned" then
             -- Stun cry only stun someone not already stunned
             -- so not possible to perpetually stun in area
-            hit_player:stun_for(1.5)
+            hit_player:hit_with_roar()
         end
     end
 end

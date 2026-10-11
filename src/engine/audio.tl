@@ -61,6 +61,13 @@ function audio.new_source(filename: string, source_type: SourceType): Source
     return new_source
 end
 
+--- Plays a source from its start, cutting off what is left of it if it is still
+-- playing. A plain `play` on a source that is playing does nothing.
+function audio.restart(source: Source)
+    source:stop()
+    source:play()
+end
+
 function audio.clear(to_clear: Source)
     to_clear:stop()
     for i, source in ipairs(loaded_audio_sources) do
