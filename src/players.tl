@@ -27,6 +27,7 @@ local type Rectangle = rectangles.Rectangle
 local stun_cry_sound: {integer: Source} = {}
 local sonic_blast_sound: Source
 local STUN_CRY_ROAR_FOR = 1.8
+local THROW_RECOVERY_TIME = 0.3
 local SONIC_BLAST_ROAR_FOR = 1.4
 local HURT_SHAKE_FOR = 0.2
 local DAMAGE_SCALING = 12
@@ -121,6 +122,7 @@ local record Player is Explodable, Kinematic, Entity
     slide_for: number
     roar_for: number
     total_roar_time: number
+    recovering_from_throw_for: number
     after_image_shift: number
     sonic_waves: {SonicWave}
     last_time_adding_sonic_wave: number
@@ -171,6 +173,7 @@ function players.new(id: integer, sprite: CharacterName, position: Point): Playe
     self.slide_for = 0
     self.roar_for = 0
     self.total_roar_time = 0
+    self.recovering_from_throw_for = 0
     self.dino = nil
     self.play_dino_roar = false
     self.sonic_waves = {}
@@ -315,8 +318,14 @@ function Player:stun_for(duration: number)
     self.direction = "down"
 end
 
+--- The rider of a dino that has just thrown a bomb stands still for a moment.
+function Player:recover_from_throw()
+    self:set_action("idle")
+    self.recovering_from_throw_for = THROW_RECOVERY_TIME
+end
+
 function Player:hit_with_bomb()
-    self:stun_for(1)
+    self:stun_for(1.2)
 end
 
 function Player:hitbox(): Rectangle
@@ -358,10 +367,15 @@ function Player:is_invulnerable(): boolean
     return self.invulnerable_for > 0
 end
 
+function Player:is_recovering_from_throw(): boolean
+    return self.recovering_from_throw_for > 0
+end
+
 function Player:accepts_input(): boolean
     return not self:is_jumping()
         and not self:is_stunned()
         and not self:is_roaring()
+        and not self:is_recovering_from_throw()
         and not self:is_petrified()
 end
 
@@ -712,6 +726,7 @@ function Player:update(dt: number, sudden_death?: boolean)
     self.hurt_for = self.hurt_for - dt
     self.slide_for = self.slide_for - dt
     self.roar_for = self.roar_for - dt
+    self.recovering_from_throw_for = self.recovering_from_throw_for - dt
     self.last_time_adding_sonic_wave = self.last_time_adding_sonic_wave + dt
 
     self.after_image_shift = self.after_image_shift + self:get_speed(

@@ -91,10 +91,6 @@ function Bomb:blow_up(_: number)
     self.timer = 0
 end
 
-function Bomb:hit_with_bomb()
-    -- Does nothing
-end
-
 function Bomb:get_goal(): Goal
     for _, goal in ipairs(map_entities.get_goals()) do
         if self.position:distance_to(goal.position) < 3 then
@@ -180,36 +176,77 @@ function Bomb:update(dt: number)
     self.animation:update(dt)
 end
 
+-- Thrown bomb --
+local THROW_SPEED = 240
+local CANNON_SHOT_SPEED = 180
+--- How many pixels a throw rises, by its length in tiles. The arcs do not grow
+-- evenly with the length: 7 tiles rise no higher than 6, and 8 less.
+local THROW_HEIGHT_BY_TILES: {number} = {7, 19, 24, 31, 41, 47, 47, 41}
+local HOP_SPEED = 120
+local HOP_HEIGHT = 10
+local REST_BEFORE_HOP = 2 / 60
+-- A bomb that has hopped more often than this without finding an open tile is
+-- lost the next time it leaves the tiles around the arena. Without it a bomb
+-- thrown along a line with no open tile hops for ever.
+local MOST_HOPS = 64
+
+local function apex_of_throw(distance: number): number
+    local tiles = math.floor(distance / grid.TILE_SIZE + 0.5)
+    return THROW_HEIGHT_BY_TILES[math.max(1, math.min(tiles, #THROW_HEIGHT_BY_TILES))]
+end
+
 local record ThrownBomb is Entity
     delegate: Bomb
     target: Point
     trajectory: ProjectileTrajectory
+    rest_left: number
+    hops: integer
 end
 
-function ThrownBomb.new(
-    delegate: Bomb,
-    target: Point,
-    start_height: number,
-    throw_height: number,
-    throw_time: number
-): ThrownBomb
+function ThrownBomb.new(delegate: Bomb, target: Point, speed: number): ThrownBomb
     local self: ThrownBomb = setmetatable({}, {__index = ThrownBomb})
+    local distance = delegate.position:distance_to(target)
     self.delegate = delegate
     self.z_index = z_index.ABOVE
     self.target = target
     self.trajectory = physics.calc_trajectory(
-        start_height, 0, throw_height, throw_time, delegate.position, target
+        0, 0, apex_of_throw(distance), distance / speed, delegate.position, target
     )
+    self.rest_left = 0
+    self.hops = 0
     return self
 end
 
-function ThrownBomb:bounce()
+--- Lies where it came down for a moment, then hops one tile on, the way it was
+-- going.
+function ThrownBomb:hop()
     self.target = self:get_position():move(
         self.trajectory:get_direction():scale(grid.TILE_SIZE)
     )
     self.trajectory = physics.calc_trajectory(
-        0, 0, grid.TILE_SIZE * 0.8, 0.25, self.delegate.position, self.target
+        0,
+        0,
+        HOP_HEIGHT,
+        grid.TILE_SIZE / HOP_SPEED,
+        self.delegate.position,
+        self.target
     )
+    self.rest_left = REST_BEFORE_HOP
+    self.hops = self.hops + 1
+end
+
+function ThrownBomb:_has_left_the_tiles_around_the_arena(): boolean
+    return not grid.landing_tile_of_thrown(self.target):equal(self.target)
+end
+
+function ThrownBomb:is_lost(): boolean
+    return self.hops > MOST_HOPS and self:_has_left_the_tiles_around_the_arena()
+end
+
+--- Past the outermost tile around the arena it is on the outermost one on the
+-- opposite side.
+function ThrownBomb:come_back_in()
+    self.delegate.position = grid.landing_tile_of_thrown(self.target)
 end
 
 function ThrownBomb:hitbox(): Rectangle
@@ -235,9 +272,9 @@ end
 
 function ThrownBomb:update(dt: number)
     local bomb = self.delegate
-    if not self:has_landed() then
-        bomb.position = self.trajectory:update(dt, bomb.position)
-    end
+    local rested = math.min(dt, self.rest_left)
+    self.rest_left = self.rest_left - rested
+    bomb.position = self.trajectory:update(dt - rested, bomb.position)
 
     if self:has_landed() then
         bomb.position = self.target
@@ -302,27 +339,24 @@ function Bombs:place_static_bomb(position: Point, fire: integer)
     self.on_ground:add(Bomb.new(position, fire, no_refund))
 end
 
-function Bombs:throw_bomb(from: Point, to: Point): Bomb
-    local bomb = Bomb.new(from, 2, no_refund)
-    local thrown = ThrownBomb.new(bomb, to, grid.TILE_SIZE, grid.TILE_SIZE * 2, 0.4)
+--- A cannon shot. `hand_back` is called when the bomb goes off.
+function Bombs:throw_bomb(from: Point, to: Point, hand_back: function()): Bomb
+    local bomb = Bomb.new(from, 2, hand_back)
+    local thrown = ThrownBomb.new(bomb, to, CANNON_SHOT_SPEED)
     self.in_air:add(thrown)
     return bomb
 end
 
 function Bombs:throw_existing(bomb: Bomb, to: Point)
-    local throw_len = bomb.position:distance_to(to)
-    local throw_height = grid.TILE_SIZE + throw_len * 0.1
-    local throw_time = 0.20 + 0.025 * throw_len / grid.TILE_SIZE
     self.on_ground:remove(bomb)
     bomb.timer = BOMB_TIMER_START -- Reset when thrown
-    local thrown = ThrownBomb.new(bomb, to, 0, throw_height, throw_time)
+    local thrown = ThrownBomb.new(bomb, to, THROW_SPEED)
     self.in_air:add(thrown)
 end
 
 local function is_goal_tile(i: integer, j: integer): boolean
     local function on_tile(goal: Goal): boolean
-        local goal_i, goal_j = grid.tile_indices(goal.position)
-        return goal_i == i and goal_j == j
+        return grid.is_on_tile(goal.position, i, j)
     end
     return itertools.count(map_entities.get_goals(), on_tile) > 0
 end
@@ -330,8 +364,7 @@ end
 --- The bomb that has this tile as its nearest, sliding or not.
 function Bombs:_bomb_on(i: integer, j: integer, except?: Bomb): Bomb
     local function is_on_tile(bomb: Bomb): boolean
-        local bomb_i, bomb_j = grid.tile_indices(bomb.position)
-        return bomb ~= except and bomb_i == i and bomb_j == j
+        return bomb ~= except and grid.is_on_tile(bomb.position, i, j)
     end
     return itertools.filter(itertools.sets_as_list(self.on_ground.set), is_on_tile)[1]
 end
@@ -396,12 +429,41 @@ function Bombs:_slide(bomb: Bomb, dt: number, closed: ClosedTiles)
     end
 end
 
+--- The tile a thrown bomb comes down on decides what it does: on a tile that
+-- is open to bombs it stays, on any other it hops on. A player standing on the
+-- tile is hit.
+function Bombs:_land(
+    thrown: ThrownBomb,
+    closed: ClosedTiles,
+    players_in_play: ReadableGroup<Player>,
+    lookup: Lookup
+)
+    if thrown:is_lost() then
+        self.in_air:remove(thrown)
+        thrown.delegate.hand_back()
+        return
+    end
+    thrown:come_back_in()
+
+    local i, j = grid.tile_indices(thrown:get_position())
+    for _, player in ipairs(explosions.standing_on(i, j, players_in_play, lookup)) do
+        player:hit_with_bomb()
+    end
+
+    if self:_is_open_to(thrown.delegate, i, j, closed) then
+        self.in_air:remove(thrown)
+        self.on_ground:add(thrown.delegate)
+        return
+    end
+    thrown:hop()
+end
+
 function Bombs:update(
     dt: number,
     blockers: ReadableGroup<Explodable>,
     explodables: ReadableGroup<Explodable>,
     closed_to_bombs: ClosedTiles,
-    bombs_bounce_on: ReadableGroup<Kinematic>,
+    players_in_play: ReadableGroup<Player>,
     lookup: Lookup
 )
     -- Before the bombs, so one that a flame reaches goes off in the same frame.
@@ -432,38 +494,10 @@ function Bombs:update(
         end
     end
 
-    for _, bomb in pairs(self.in_air.set) do
-        bomb:update(dt)
-        if bomb:has_landed() then
-            local hitting_entities = lookup:collisions_between(
-                collision.new_group({bomb}), bombs_bounce_on
-            )
-            local bomb_bouncing = false
-            for _, hitting_entity in pairs(hitting_entities) do
-                hitting_entity:hit_with_bomb()
-                bomb_bouncing = true
-            end
-
-            if
-                not grid.area():contains(bomb:hitbox()) and not bomb.delegate:get_goal()
-            then
-                bomb_bouncing = true
-            end
-
-            if bomb_bouncing then
-                if grid.outside_visible_area(bomb:hitbox()) then
-                    -- Bomb outside seen map, loops around
-                    bomb.delegate.position = grid.outside_on_opposite_side(
-                        bomb:get_position()
-                    )
-                    bomb.trajectory:reverse()
-                end
-
-                bomb:bounce()
-            else
-                self.in_air:remove(bomb)
-                self.on_ground:add(bomb.delegate)
-            end
+    for _, thrown in pairs(self.in_air.set) do
+        thrown:update(dt)
+        if thrown:has_landed() then
+            self:_land(thrown, closed_to_bombs, players_in_play, lookup)
         end
     end
 end

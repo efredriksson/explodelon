@@ -83,6 +83,11 @@ function grid.tile_indices(position: Point): integer, integer
     return nearest_column(position.x), nearest_row(position.y)
 end
 
+--- Whether (i, j) is the tile nearest to a position.
+function grid.is_on_tile(position: Point, i: integer, j: integer): boolean
+    return nearest_column(position.x) == i and nearest_row(position.y) == j
+end
+
 function grid.get_random_tile(): Point
     local dim = grid.dimensions()
     return grid.get_tile_position(
@@ -105,6 +110,26 @@ end
 function grid.tile_ahead_of(pos: Point, direction: Direction): Point
     return grid.snap_to(pos):move(
         vectors.from_direction(direction):scale(grid.TILE_SIZE)
+    )
+end
+
+-- A thrown bomb that leaves the arena hops on over the tiles around it, and
+-- those go round: past the outermost column or row comes
+-- the outermost one on the opposite side. There are two columns left of the
+-- arena and one right of it, and two rows above it and two below.
+local FIRST_COLUMN_AROUND = DIMENSIONS.x_min - 2
+local LAST_COLUMN_AROUND = DIMENSIONS.x_max + 1
+local FIRST_ROW_AROUND = DIMENSIONS.y_min - 2
+local LAST_ROW_AROUND = DIMENSIONS.y_max + 2
+
+--- The tile a thrown bomb is on when it comes down at a position.
+function grid.landing_tile_of_thrown(position: Point): Point
+    local i, j = grid.tile_indices(position)
+    local columns = LAST_COLUMN_AROUND - FIRST_COLUMN_AROUND + 1
+    local rows = LAST_ROW_AROUND - FIRST_ROW_AROUND + 1
+    return grid.get_tile_position(
+        (i - FIRST_COLUMN_AROUND) % columns + FIRST_COLUMN_AROUND,
+        (j - FIRST_ROW_AROUND) % rows + FIRST_ROW_AROUND
     )
 end
 

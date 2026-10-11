@@ -77,10 +77,6 @@ function LightningBomb:blow_up(_: number)
     self.timer = 0
 end
 
-function LightningBomb:hit_with_bomb()
-    -- Does nothing
-end
-
 function LightningBomb:is_complete(): boolean
     return self.timer <= 0
 end

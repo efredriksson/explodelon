@@ -4,78 +4,26 @@ require("spec.support.headless_lutro")(1)
 
 require("engine.settings").set_block_size(16)
 require("game.battle").load_assets()
-local bombs = require("bombs.bombs")
-local closed_tiles = require("closed_tiles")
-local collision = require("engine.collision")
+local bomb_field = require("spec.support.bomb_field")
 local vectors = require("engine.geometry.vectors")
 local grid = require("level_layout.grid")
-local settings = require("settings")
 
 -- A kicked bomb slides exactly 2 px at this step.
-local STEP = 1 / 60
-local FUSE = 2.5
+local STEP = bomb_field.STEP
+local FUSE = bomb_field.FUSE
 -- A row of the factory floor without conveyor belts.
 local ROW = 3
 local KICKER = {}
 
--- The factory floor has the conveyor belts, and no football goal that would let a bomb slide on past the edge
--- of the arena.
-local map_before
-setup(function()
-    map_before = settings.map
-    settings.set_map("factory")
-end)
-teardown(function()
-    settings.set_map(map_before)
-end)
+bomb_field.on_the_factory_floor()
 
-local function obstacle_on(tile)
-    local position = grid.get_tile_position(tile[1], tile[2])
-    return {get_position = function() return position end}
-end
-
---- An open arena with one bomb on (column, ROW) that goes off after FUSE seconds.
+--- An open arena with one bomb on (column, ROW) that can be kicked.
 local function new_field(column)
-    local field = {
-        bombs = bombs.new(true),
-        nothing = collision.new_group(),
-        closed = closed_tiles.new(),
-    }
-    field.bombs:place_static_bomb(grid.get_tile_position(column, ROW), 2)
-    for _, bomb in pairs(field.bombs.on_ground.set) do
-        field.bomb = bomb
-    end
-
-    function field:close(...)
-        local obstacles = {}
-        for _, tile in ipairs({...}) do
-            table.insert(obstacles, obstacle_on(tile))
-        end
-        self.closed = closed_tiles.new(obstacles)
-    end
-
-    function field:run(seconds)
-        for _ = 1, math.floor(seconds / STEP + 0.5) do
-            self.bombs:update(
-                STEP,
-                self.nothing,
-                self.nothing,
-                self.closed,
-                self.nothing,
-                collision.new_lookup(self.bombs.on_ground.set)
-            )
-        end
-    end
+    local field = bomb_field.new(column, ROW)
 
     function field:kick(direction)
         local i, j = grid.tile_indices(self.bomb.position)
         self.bombs:kick_bomb_on(i, j, vectors.from_direction(direction), KICKER, self.closed)
-    end
-
-    --- Where a bomb is, in tiles from the arena's top-left corner.
-    function field:tiles_to(bomb)
-        local in_area = grid.position_in_area(bomb.position)
-        return {in_area.x / grid.TILE_SIZE, in_area.y / grid.TILE_SIZE}
     end
 
     return field

@@ -100,7 +100,6 @@ local record ScriptedBattle is Stage
     alive_players_group: Group<Player>
     blockers: CombinedGroup<Explodable>
     blocks_jump: CombinedGroup<Kinematic>
-    bombs_bounce_on: CombinedGroup<Kinematic>
     dino_roars: DinoRoars
     empty_pressure_blocks: Group<Entity>
     explodables: CombinedGroup<Explodable>
@@ -134,13 +133,6 @@ function ScriptedBattle:_rebuild_groups()
         self.hard_blocks.on_ground.set,
         self.soft_blocks.on_ground.set,
         self.bombs.on_ground.set
-    )
-    self.bombs_bounce_on = collision.new_combined_group(
-        self.soft_blocks.on_ground.set,
-        self.hard_blocks.on_ground.set,
-        self.lightning_bombs.on_ground.set,
-        self.bombs.on_ground.set,
-        self.alive_players_group.set
     )
     self.dino_roars = dino_roars.new(
         self.alive_players_group, self.bombs.on_ground, self.soft_blocks.on_ground
@@ -304,7 +296,7 @@ function ScriptedBattle:_step_systems(dt: number)
         self.blockers,
         self.explodables,
         closed_to_bombs,
-        self.bombs_bounce_on,
+        self.alive_players_group,
         lookup
     )
     self.lightning_bombs:update(

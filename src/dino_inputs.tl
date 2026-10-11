@@ -126,6 +126,9 @@ local function handle_dash_input(
     end
 end
 
+local SHORTEST_THROW = 2
+local THROW_CHARGE_TIME_PER_TILE = 4 / 60
+
 local function handle_throw_input(
     dt: number,
     player: Player,
@@ -134,20 +137,10 @@ local function handle_throw_input(
     lookup: Lookup
 )
     local dino = player.dino
-    local powerup_time_interval = 0.1
-    local block_from_player_dir = vectors.from_direction(player.direction):scale(
-        grid.TILE_SIZE
-    )
+    local longest_throw = dino.level * 2
 
-    local function get_position_throwing_from(): Point
-        return grid.tile_ahead_of(player.position, player.direction)
-    end
-
-    local function must_throw(): boolean
-        return dino.throw_powerup_for > (dino.level * 2 - 1) * powerup_time_interval
-    end
-
-    local function get_bomb_to_throw(throw_bomb_from: Point): Bomb | nil
+    local function get_bomb_to_throw(): Bomb | nil
+        local throw_bomb_from = grid.tile_ahead_of(player.position, player.direction)
         local area_bomb_can_be_in = hitboxes.new_block(throw_bomb_from)
         local bombs_to_throw = lookup:in_box_and_group(area_bomb_can_be_in, bombs_group)
         for _, bomb_to_throw in ipairs(bombs_to_throw) do
@@ -159,25 +152,28 @@ local function handle_throw_input(
         return nil
     end
 
-    if joysticks.is_released(player.id, joysticks.BUTTONS.B) or must_throw() then
-        local nbr_blocks_to_throw = math.floor(
-            dino.throw_powerup_for / powerup_time_interval
-        ) + 2
-        nbr_blocks_to_throw = math.min(
-            nbr_blocks_to_throw, dino.level * 2
-        ) -- clamp max throw dist
+    local function charged_tiles(): integer
+        local charged = math.floor(dino.throw_powerup_for / THROW_CHARGE_TIME_PER_TILE)
+        return math.min(SHORTEST_THROW + charged, longest_throw)
+    end
 
-        local throw_bomb_from = get_position_throwing_from()
-        local bomb_to_throw = get_bomb_to_throw(throw_bomb_from)
+    local function must_throw(): boolean
+        local is_charging = dino.throw_powerup_for > 0
+        return is_charging and charged_tiles() == longest_throw
+    end
+
+    if joysticks.is_released(player.id, joysticks.BUTTONS.B) or must_throw() then
+        local bomb_to_throw = get_bomb_to_throw()
         if not (bomb_to_throw is nil) then
-            local throw_to = throw_bomb_from:move(
-                block_from_player_dir:scale(nbr_blocks_to_throw)
+            local throw = vectors.from_direction(player.direction):scale(
+                charged_tiles() * grid.TILE_SIZE
             )
-            bombs_:throw_existing(bomb_to_throw, throw_to)
+            bombs_:throw_existing(bomb_to_throw, bomb_to_throw.position:move(throw))
+            player:recover_from_throw()
         end
         dino.throw_powerup_for = 0
     elseif lutro.joystick.isDown(player.id, joysticks.BUTTONS.B) then
-        local bomb_to_throw = get_bomb_to_throw(get_position_throwing_from())
+        local bomb_to_throw = get_bomb_to_throw()
         if not (bomb_to_throw is nil) then
             dino.throw_powerup_for = dino.throw_powerup_for + dt
         end

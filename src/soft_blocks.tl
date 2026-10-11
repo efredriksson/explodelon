@@ -55,10 +55,6 @@ function SoftBlock:get_position(): Point
     return self.position
 end
 
-function SoftBlock:hit_with_bomb()
-    -- Does nothing
-end
-
 function SoftBlock:reveal()
     if self.egg or self.item then
         self.is_revealed = true

@@ -40,10 +40,6 @@ function HardBlock:draw()
     self.animation:draw(self.position.x, y_pos)
 end
 
-function HardBlock:hit_with_bomb()
-    -- Does nothing
-end
-
 function HardBlock:blow_up(_: number)
     -- Does nothing
 end
