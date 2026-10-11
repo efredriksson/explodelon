@@ -23,7 +23,7 @@ end
 -- Walking back into a bomb it just laid is what kicks it.
 local KICK_DIRECTION: Direction = "left"
 local STEP_OFF_DIRECTION = vectors.opposite(KICK_DIRECTION)
-local STEP_OFF_DISTANCE = 20
+local STEP_OFF_DISTANCE = 16
 local RETURN_MARGIN = 1.75
 
 local type KickPhase = enum
