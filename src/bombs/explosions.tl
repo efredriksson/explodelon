@@ -36,9 +36,7 @@ local center_image: Image
 local tip_images: {Direction: Image}
 local middle_images: {Direction: Image}
 local burst_image: Image
-local explosion_small: Source
-local explosion_medium: Source
-local explosion_large: Source
+local explosion_sound: Source
 
 --- Every flame piece in each of its phases, thick to thin, and the cracking bomb.
 local record FlameArt
@@ -119,18 +117,7 @@ function explosions.load_assets()
     }
     burst_image = lutro.graphics.newImage("assets/bomb/explosion/burst.png")
 
-    local function get_explosion_audio(size: string): Source
-        local explosion_audio = audio.new_source_pool(
-            "assets/bomb/explosion/" .. size .. ".wav", "static", 5
-        )
-        explosion_audio:setVolume(0.4)
-        explosion_audio:setPitch(0.25)
-        return explosion_audio
-    end
-
-    explosion_small = get_explosion_audio("small")
-    explosion_medium = get_explosion_audio("medium")
-    explosion_large = get_explosion_audio("large")
+    explosion_sound = audio.new_source_pool("assets/sfx/explosion.wav", "static", 5)
 end
 
 function explosions.new(silent?: boolean): Explosions
@@ -142,16 +129,6 @@ function explosions.new(silent?: boolean): Explosions
     return self
 end
 
-local function play_sound(range: number)
-    if range <= 3 then
-        explosion_small:play()
-    elseif range <= 5 then
-        explosion_medium:play()
-    else
-        explosion_large:play()
-    end
-end
-
 function Explosions:_place(explosion: Explosion)
     local function sustains_it(other: Explosion): boolean
         return other.sustains and other:has_in_line_of_fire(explosion.i, explosion.j)
@@ -161,7 +138,7 @@ function Explosions:_place(explosion: Explosion)
     end
     table.insert(self.on_ground, explosion)
     if not self.silent then
-        play_sound(explosion.fire)
+        explosion_sound:play()
     end
 end
 

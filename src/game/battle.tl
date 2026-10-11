@@ -633,7 +633,8 @@ function battle.load_assets()
 
     music = audio.new_source("assets/music/battle.ogg", "static")
     music:setLooping(true)
-    music:setVolume(0.75)
+    -- Balanced against the sound effects, which play at full volume.
+    music:setVolume(0.86)
 end
 
 function battle.new(

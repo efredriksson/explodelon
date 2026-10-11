@@ -46,7 +46,7 @@ function block_layout.new(falling: boolean): BlockLayoutPreview
     local block_configs = map_entities.get_block_configs({})
     self.hard_blocks = hard_blocks.new(block_configs.hard)
     self.soft_blocks = soft_blocks.new(block_configs.soft)
-    self.pressure_blocks = pressure_blocks.new(self.fall_pattern)
+    self.pressure_blocks = pressure_blocks.new(self.fall_pattern, true)
     self.pressure_blocks.sudden_death = true
     self.pressure_blocks_group = collision.new_group_from_set(
         self.pressure_blocks.on_ground.set

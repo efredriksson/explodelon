@@ -11,7 +11,7 @@ local type ShadedFont = fonts.ShadedFont
 local type Point = points.Point
 
 local TIMER_POS = points.new(18, 8)
-local WARNING_MARGIN = 2
+local WARNING_MARGIN = 196 / 60
 local TEXT_X_SPEED = vectors.new(-200, 0)
 local TEXT_SIN_PERIOD = 9
 local TEXT_SIN_AMPLITUDE = 5
@@ -43,7 +43,7 @@ end
 
 function timer.load_assets()
     clock_font = fonts.new_shaded_numbers()
-    hurry_up_sound = audio.new_source("assets/hurry-up.wav", "static")
+    hurry_up_sound = audio.new_source("assets/sfx/hurry_up.wav", "static")
 
     local function img_letter(letter: string): Image
         return lutro.graphics.newImage("assets/imgfont/" .. letter .. ".png")

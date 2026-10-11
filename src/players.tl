@@ -26,6 +26,16 @@ local type Rectangle = rectangles.Rectangle
 
 local stun_cry_sound: {integer: Source} = {}
 local sonic_blast_sound: Source
+local dash_sound: {integer: Source} = {}
+local dash_brake_sound: Source
+local dash_crash_sound: Source
+local death_sound: Source
+local stun_sound: Source
+local mount_sound: Source
+local level_up_sound: Source
+local jump_sound: Source
+local trampoline_sound: Source
+local hop_sound: Source
 local STUN_CRY_ROAR_FOR = 1.8
 local THROW_RECOVERY_TIME = 0.3
 local SONIC_BLAST_ROAR_FOR = 1.4
@@ -128,6 +138,7 @@ local record Player is Explodable, Kinematic, Entity
     last_time_adding_sonic_wave: number
     sonic_wave_color_index: integer
     play_dino_roar: boolean
+    silent: boolean
     dino: Dino
 
     jump_trajectory: ProjectileTrajectory
@@ -143,9 +154,12 @@ local players = {
     SonicWaveColor = SonicWaveColor,
 }
 
-function players.new(id: integer, sprite: CharacterName, position: Point): Player
+function players.new(
+    id: integer, sprite: CharacterName, position: Point, silent?: boolean
+): Player
     local self: Player = setmetatable({}, {__index = Player})
     self.id = id
+    self.silent = silent or false
     self.team_id = nil
     self.sprite = sprite
     self.position = position
@@ -284,7 +298,25 @@ function Player:set_action(action: Action)
     end
 end
 
+function Player:_play(sound: Source)
+    if not self.silent then
+        sound:play()
+    end
+end
+
+--- Whether the player took up `action` just now. One who is stunned, sliding,
+-- petrified or dying does not.
+function Player:_starts(action: Action): boolean
+    local before = self.action
+    self:set_action(action)
+    return self.action == action and before ~= action
+end
+
 function Player:set_movement(position: Point, direction: Direction)
+    -- A dino cries again each time it turns in a dash.
+    if self.action == "dash" and direction ~= self.direction then
+        self:_play(dash_sound[self.dino.level])
+    end
     self.position = position
     self.direction = direction
     if self.dino then
@@ -300,6 +332,7 @@ function Player:end_dash()
     self.ice_velocity = vectors.new(0, 0)
     if self.action == "dash" and dino_dash.crashes(self.dino.level) then
         self:set_action("crashed")
+        self:_play(dash_crash_sound)
         self.stunned_for = dino_dash.CRASH_STUN_TIME
         return
     end
@@ -310,6 +343,7 @@ end
 function Player:slide_with_dino()
     self:set_action("slide")
     self.slide_for = dino_dash.BRAKE_TIME
+    self:_play(dash_brake_sound)
 end
 
 function Player:stun_for(duration: number)
@@ -324,8 +358,19 @@ function Player:recover_from_throw()
     self.recovering_from_throw_for = THROW_RECOVERY_TIME
 end
 
+--- A bomb and a roar that hit a player sound the same. The stun of a lightning
+-- bomb has the lightning's own sound.
+function Player:_stun_aloud_for(duration: number)
+    self:_play(stun_sound)
+    self:stun_for(duration)
+end
+
 function Player:hit_with_bomb()
-    self:stun_for(1.2)
+    self:_stun_aloud_for(1)
+end
+
+function Player:hit_with_roar()
+    self:_stun_aloud_for(1.5)
 end
 
 function Player:hitbox(): Rectangle
@@ -413,8 +458,10 @@ function Player:jumps_onto(dino: Dino)
             self.dino:level_up()
             dino.level = 0 -- Dino is consumed into existing dino
             character_distance_over_ground = CHARACTER_HEIGHT_ON_DINO
+            self:_play(level_up_sound)
         else
             self.dino = dino
+            self:_play(mount_sound)
         end
 
         local character_ground_pos = get_character_on_dino_ground_position(
@@ -477,7 +524,9 @@ end
 
 function Player:jump_with_dino(jump_to: Point | nil)
     if self.dino and self.dino.color == "pink" and not self:is_jumping() then
-        self:set_action("jump")
+        if self:_starts("jump") then
+            self:_play(jump_sound)
+        end
 
         self.jump_target = jump_to or self.position
         local dino_jump_time = {
@@ -518,6 +567,7 @@ end
 
 function Player:_launch_bounce(direction: Direction)
     self:set_action("bounce")
+    self:_play(trampoline_sound)
     local target = grid.snap_to(self.position):move(
         tiles_in_direction(direction, BOUNCE_LAUNCH_TILES)
     )
@@ -545,6 +595,7 @@ function Player:bounce_to_next_tile()
         hop_from:move(tiles_in_direction(self.direction, 1)),
         BOUNCE_HOP_HEIGHT
     )
+    self:_play(hop_sound)
 end
 
 function Player:wrap_bounce()
@@ -561,7 +612,9 @@ function Player:land_bounce()
 end
 
 function Player:dash_with_dino()
-    self:set_action("dash")
+    if self:_starts("dash") then
+        self:_play(dash_sound[self.dino.level])
+    end
 end
 
 function Player:stun_cry_with_dino()
@@ -652,6 +705,14 @@ function Player:_unpetrify()
     self.invulnerable_for = 2
 end
 
+--- A flame keeps hurting a player who is already dying, who cries out only once.
+function Player:_die()
+    if self.action ~= "dying" then
+        self:_play(death_sound)
+    end
+    self.action = "dying"
+end
+
 function Player:hurt(hit_fraction: number)
     if self:is_invulnerable() or self:is_jumping() or self:is_petrified() then
         return
@@ -678,7 +739,7 @@ function Player:hurt(hit_fraction: number)
 
     self.hurt_for = HURT_SHAKE_FOR
     if self.hp <= 0 then
-        self.action = "dying"
+        self:_die()
     end
 end
 
@@ -810,19 +871,23 @@ function Player:sprite_box(): Rectangle
 end
 
 function players.load_assets()
-    for level = 1, 3 do
-        local sound = audio.new_source_pool(
-            "assets/tirras/level_" .. level .. "/roar.ogg", "static", 2
-        )
-        sound:setPitch(0.1)
-        sound:setVolume(1.25)
-        stun_cry_sound[level] = sound
+    local function new_sound(name: string): Source
+        return audio.new_source_pool("assets/sfx/" .. name .. ".wav", "static", 2)
     end
-    sonic_blast_sound = audio.new_source_pool(
-        "assets/tirras/sonic-blast.ogg", "static", 2
-    )
-    sonic_blast_sound:setPitch(0.005)
-    sonic_blast_sound:setVolume(0.13)
+    for level = 1, 3 do
+        stun_cry_sound[level] = new_sound("dino_roar_level_" .. level)
+        dash_sound[level] = new_sound("dino_dash_level_" .. level)
+    end
+    dash_brake_sound = new_sound("dino_dash_brake")
+    dash_crash_sound = new_sound("dino_dash_crash")
+    death_sound = new_sound("player_death")
+    stun_sound = new_sound("player_stun")
+    mount_sound = new_sound("dino_mount")
+    level_up_sound = new_sound("dino_level_up")
+    jump_sound = new_sound("dino_jump")
+    trampoline_sound = new_sound("trampoline")
+    hop_sound = new_sound("player_hop")
+    sonic_blast_sound = new_sound("dino_sonic_blast")
 end
 
 return players

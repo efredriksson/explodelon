@@ -2,6 +2,7 @@ local explosions = require("bombs.explosions")
 local flames = require("bombs.flames")
 local closed_tiles = require("closed_tiles")
 local animations = require("engine.animations")
+local audio = require("engine.audio")
 local collision = require("engine.collision")
 local points = require("engine.geometry.points")
 local rectangles = require("engine.geometry.rectangles")
@@ -40,8 +41,14 @@ local SLIDE_SPEED = 120
 local PAST_LEADING_EDGE = grid.TILE_SIZE / 2 + 0.5
 local GOAL_FIRE = 16
 local GOAL_PAIR_FIRE = 14
+local GOAL_SOUND_DELAY = 10 / 60
 local bomb_shadow: Image
 local bomb_image: Image
+local place_sound: Source
+local kick_sound: Source
+local hop_sound: Source
+local dino_throw_sound: Source
+local goal_sound: Source
 
 local record Bomb is Entity, Kinematic, Explodable
     position: Point
@@ -270,6 +277,10 @@ function ThrownBomb:has_landed(): boolean
     return self.trajectory:finished()
 end
 
+function ThrownBomb:takes_off_within(dt: number): boolean
+    return self.rest_left > 0 and self.rest_left <= dt
+end
+
 function ThrownBomb:update(dt: number)
     local bomb = self.delegate
     local rested = math.min(dt, self.rest_left)
@@ -289,6 +300,8 @@ local record Bombs
     on_ground: Group<Bomb>
     in_air: Group<ThrownBomb>
     explosions: Explosions
+    silent: boolean
+    goal_sounds_in: number
 end
 
 local bombs = {Bomb = Bomb, Bombs = Bombs}
@@ -296,6 +309,11 @@ local bombs = {Bomb = Bomb, Bombs = Bombs}
 function bombs.load_assets()
     bomb_shadow = lutro.graphics.newImage("assets/items/shadow.png")
     bomb_image = lutro.graphics.newImage("assets/bomb/bomb.png")
+    place_sound = audio.new_source_pool("assets/sfx/bomb_place.wav", "static", 4)
+    kick_sound = audio.new_source_pool("assets/sfx/kick.wav", "static", 2)
+    hop_sound = audio.new_source_pool("assets/sfx/bomb_hop.wav", "static", 4)
+    dino_throw_sound = audio.new_source_pool("assets/sfx/dino_throw.wav", "static", 2)
+    goal_sound = audio.new_source_pool("assets/sfx/goal.wav", "static", 2)
 end
 
 function bombs.new(silent?: boolean): Bombs
@@ -303,7 +321,15 @@ function bombs.new(silent?: boolean): Bombs
     self.on_ground = collision.new_group()
     self.in_air = collision.new_group()
     self.explosions = explosions.new(silent)
+    self.silent = silent or false
+    self.goal_sounds_in = 0
     return self
+end
+
+function Bombs:_play(sound: Source)
+    if not self.silent then
+        sound:play()
+    end
 end
 
 local function no_refund()
@@ -332,6 +358,7 @@ function Bombs:place_bomb(player: Player, occupied: {Entity})
     local bomb = Bomb.new(position, player.fire, hand_back_bomb)
     self.on_ground:add(bomb)
     player.bombs = player.bombs - 1
+    self:_play(place_sound)
 end
 
 -- No owning player: nothing to refund, nothing to check a bomb count against.
@@ -339,11 +366,13 @@ function Bombs:place_static_bomb(position: Point, fire: integer)
     self.on_ground:add(Bomb.new(position, fire, no_refund))
 end
 
---- A cannon shot. `hand_back` is called when the bomb goes off.
+--- A cannon shot, which sounds like a bomb being placed.
+-- `hand_back` is called when the bomb goes off.
 function Bombs:throw_bomb(from: Point, to: Point, hand_back: function()): Bomb
     local bomb = Bomb.new(from, 2, hand_back)
     local thrown = ThrownBomb.new(bomb, to, CANNON_SHOT_SPEED)
     self.in_air:add(thrown)
+    self:_play(place_sound)
     return bomb
 end
 
@@ -352,6 +381,7 @@ function Bombs:throw_existing(bomb: Bomb, to: Point)
     bomb.timer = BOMB_TIMER_START -- Reset when thrown
     local thrown = ThrownBomb.new(bomb, to, THROW_SPEED)
     self.in_air:add(thrown)
+    self:_play(dino_throw_sound)
 end
 
 local function is_goal_tile(i: integer, j: integer): boolean
@@ -382,6 +412,7 @@ function Bombs:_kick(bomb: Bomb, heading: Vector, kicker: Player, closed: Closed
     local i, j = bomb:tile_next_to(heading)
     if self:_is_open_to(bomb, i, j, closed) then
         bomb:kick(heading, kicker)
+        self:_play(kick_sound)
     end
 end
 
@@ -458,6 +489,17 @@ function Bombs:_land(
     thrown:hop()
 end
 
+--- A goal is heard a moment after the bomb in it goes off.
+function Bombs:_sound_goals(dt: number)
+    if self.goal_sounds_in <= 0 then
+        return
+    end
+    self.goal_sounds_in = self.goal_sounds_in - dt
+    if self.goal_sounds_in <= 0 then
+        self:_play(goal_sound)
+    end
+end
+
 function Bombs:update(
     dt: number,
     blockers: ReadableGroup<Explodable>,
@@ -490,16 +532,21 @@ function Bombs:update(
                     GOAL_PAIR_FIRE,
                     flames.growth_time(GOAL_FIRE - GOAL_PAIR_FIRE)
                 )
+                self.goal_sounds_in = GOAL_SOUND_DELAY
             end
         end
     end
 
     for _, thrown in pairs(self.in_air.set) do
+        if thrown:takes_off_within(dt) then
+            self:_play(hop_sound)
+        end
         thrown:update(dt)
         if thrown:has_landed() then
             self:_land(thrown, closed_to_bombs, players_in_play, lookup)
         end
     end
+    self:_sound_goals(dt)
 end
 
 local function draw_bomb_shadow(bomb: Bomb)
