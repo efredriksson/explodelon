@@ -394,7 +394,8 @@ local function next_step(
 end
 
 --- Whole pixels to walk this frame and the fraction carried over to the next,
--- so a speed of 67.5 px/s at 60 fps walks one extra pixel every eighth frame.
+-- so a speed of 50 px/s stepped 60 times a second walks a pixel on five steps
+-- out of six.
 function grid_walk.pixels_this_frame(
     speed: number, dt: number, carry: number
 ): integer, number

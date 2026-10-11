@@ -1,4 +1,5 @@
 local explosions = require("bombs.explosions")
+local flames = require("bombs.flames")
 local animations = require("engine.animations")
 local collision = require("engine.collision")
 local points = require("engine.geometry.points")
@@ -32,6 +33,8 @@ local type ConveyorBelt = maps_entities.ConveyorBelt
 
 -- Bomb --
 local BOMB_TIMER_START = 2.5
+local GOAL_FIRE = 16
+local GOAL_PAIR_FIRE = 14
 local bomb_shadow: Image
 local bomb_image: Image
 
@@ -39,7 +42,7 @@ local record Bomb is Entity, Kinematic, Explodable
     position: Point
     velocity: Vector
     timer: number
-    range: number
+    range: integer
     hand_back: function()
     stopping: boolean
     animation: Animation
@@ -52,6 +55,7 @@ function Bomb.new(position: Point, range: integer, hand_back: function()): Bomb
     self.velocity = vectors.new(0, 0)
     self.range = range
     self.timer = BOMB_TIMER_START
+    self.meets_flame = "ignites"
     self.hand_back = hand_back
     self.stopping = false
     self.animation = animations.new(bomb_image, 16, 0.25)
@@ -519,6 +523,9 @@ function Bombs:update(
     bombs_bounce_on: ReadableGroup<Kinematic>,
     lookup: Lookup
 )
+    -- Before the bombs, so one that a flame reaches goes off in the same frame.
+    self.explosions:update(dt, blockers, explodables, lookup)
+
     for _, bomb in pairs(self.on_ground.set) do
         bomb:update(dt, occupies, players_, bombs_, lookup)
 
@@ -529,8 +536,14 @@ function Bombs:update(
             if not goal then
                 self.explosions:place_explosion(bomb.position, bomb.range)
             else
-                self.explosions:place_explosion(goal.position, 16)
-                self.explosions:place_explosion(goal.pair, 14, 0.072)
+                -- The shorter flame starts as much later as the longer one needs for
+                -- its extra tiles, so both are full length, and gone, together.
+                self.explosions:place_sustaining_explosion(goal.position, GOAL_FIRE)
+                self.explosions:place_sustaining_explosion(
+                    goal.pair,
+                    GOAL_PAIR_FIRE,
+                    flames.growth_time(GOAL_FIRE - GOAL_PAIR_FIRE)
+                )
             end
         end
     end
@@ -569,8 +582,6 @@ function Bombs:update(
             end
         end
     end
-
-    self.explosions:update(dt, blockers, explodables, lookup)
 end
 
 local function draw_bomb_shadow(bomb: Bomb)
