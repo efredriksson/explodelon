@@ -2,6 +2,8 @@
 
 local bombs = require("bombs.bombs")
 local collision = require("engine.collision")
+local itertools = require("itertools")
+local grid = require("level_layout.grid")
 local players = require("players")
 local soft_blocks = require("soft_blocks")
 
@@ -32,15 +34,15 @@ function dino_roars.new(
 end
 
 function DinoRoars:_resolve_stun_cry(lookup: Lookup, player: Player)
-    local hit_players = lookup:in_box_and_group(
-        player:get_stun_cry_hitbox(), self.alive_players
+    local cry = player:get_stun_cry_hitbox()
+    local function is_nearest_to_a_reached_tile(other: Player): boolean
+        return cry:contains(grid.nearest_tile(other.position))
+    end
+    local hit_players = itertools.filter(
+        lookup:in_box_and_group(cry, self.alive_players), is_nearest_to_a_reached_tile
     )
     for _, hit_player in ipairs(hit_players) do
-        if hit_player.action ~= "stunned" then
-            -- Stun cry only stun someone not already stunned
-            -- so not possible to perpetually stun in area
-            hit_player:hit_with_roar()
-        end
+        hit_player:hit_with_roar()
     end
 end
 

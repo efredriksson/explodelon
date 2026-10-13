@@ -139,11 +139,7 @@ local DINO_AFTERIMGE_SHIFT = {
     right = vectors.new(-1, 0),
     left = vectors.new(1, 0),
 }
-local STUN_CRY_SHAKE_PERIOD_BY_LEVEL = {
-    [1] = 0.05,
-    [2] = 0.10,
-    [3] = 0.20,
-}
+local STUN_CRY_SHAKE_STEPS_PER_SECOND = 60
 local STUN_CRY_SHAKE_AXIS = {
     up = vectors.new(0, 1),
     down = vectors.new(0, -1),
@@ -166,8 +162,12 @@ local function stun_cry_displacement(player: Player): Vector
         return vectors.new(0, 0)
     end
 
-    local shake_period = STUN_CRY_SHAKE_PERIOD_BY_LEVEL[player.dino.level]
-    if (player.roar_for % shake_period) > shake_period / 2 then
+    -- The time left of a roar lands a hair above or below each shake step, so it is rounded to the
+    -- nearest one before its parity is read.
+    local shake_step = math.floor(
+        player.roar_for * STUN_CRY_SHAKE_STEPS_PER_SECOND + 0.5
+    )
+    if shake_step % 2 == 1 then
         return STUN_CRY_SHAKE_AXIS[player.direction]
     else
         return vectors.new(0, 0)
@@ -226,7 +226,7 @@ local function draw_stun_cry_text(player: Player)
 
     local function get_text_x_y_scaling(): (number, number)
         local text_len_max_scale = STUN_CRY_REACH_BY_LEVEL[player.dino.level]
-        local text_length_scale = math.min(since_roar_buildup * 3, text_len_max_scale)
+        local text_length_scale = text_len_max_scale * player:stun_cry_spread()
         local text_height_scale = math.min(since_roar_buildup * 4, 1.0)
 
         if player.direction == "down" or player.direction == "up" then

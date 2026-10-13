@@ -183,7 +183,7 @@ local function handle_throw_input(
 end
 
 local function handle_stun_cry_input(player: Player)
-    if lutro.joystick.isDown(player.id, joysticks.BUTTONS.B) then
+    if joysticks.is_pressed(player.id, joysticks.BUTTONS.B) then
         player:stun_cry_with_dino()
     end
 end

@@ -149,7 +149,9 @@ local function new_dino_animations(color: DinoColor): DinoAnimations
         elseif action == "slide" then
             return animations.new_with_frames(image, {0.1, 10000})
         elseif action == "roar" then
-            return animations.new_with_frames(image, {dinos.ROAR_BUILDUP_TIME, 10000})
+            return animations.new_with_frames(
+                image, {dinos.roar_buildup_time(color), 10000}
+            )
         elseif action == "dash" then
             return animations.new_with_frames(image, get_dash_fames(level))
         else
