@@ -31,10 +31,17 @@ local record Dino
     throw_powerup_for: number
 end
 
-local ROAR_BUILDUP_TIME = 0.4
-local dinos = {
-    ROAR_BUILDUP_TIME = ROAR_BUILDUP_TIME, DinoAction = DinoAction, Dino = Dino
-}
+local STUN_CRY_BUILDUP_TIME = 34 / 60
+local SONIC_BLAST_BUILDUP_TIME = 0.4
+local dinos = {DinoAction = DinoAction, Dino = Dino}
+
+function dinos.roar_buildup_time(color: DinoColor): number
+    if color == "yellow" then
+        return STUN_CRY_BUILDUP_TIME
+    else
+        return SONIC_BLAST_BUILDUP_TIME
+    end
+end
 
 function dinos.new(position: Point, direction: Direction, color: DinoColor): Dino
     local self: Dino = setmetatable({}, {__index = Dino})

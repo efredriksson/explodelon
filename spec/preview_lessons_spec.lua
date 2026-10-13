@@ -28,17 +28,24 @@ local LAST_PHASE = {
     dino_purple = "watching",
 }
 
+--- Plays a lesson for one cycle, showing `watch` the battle before each step.
+local function play_lesson(subject, watch)
+    local battle = scripted_battle.new(options.scenery_for(subject), options.choreography_for(subject))
+    while not battle:taught_once() do
+        watch(battle)
+        battle:update(FRAME)
+    end
+    battle:leave()
+end
+
 local function reaches_last_phase(subject)
     return function()
-        local battle = scripted_battle.new(options.scenery_for(subject), options.choreography_for(subject))
         local reached = {}
-        while not battle:taught_once() do
+        play_lesson(subject, function(battle)
             -- Lessons with a second actor keep the rider's phase as `rider_phase`.
             local lesson = battle.choreography
             reached[lesson.phase or lesson.rider_phase] = true
-            battle:update(FRAME)
-        end
-        battle:leave()
+        end)
         assert.is_true(reached[LAST_PHASE[subject]] or false, subject .. " never reached " .. LAST_PHASE[subject])
     end
 end
@@ -47,4 +54,18 @@ describe("menu preview lessons", function()
     for _, subject in ipairs(options.rotation) do
         it(subject .. " plays through to its last phase in one cycle", reaches_last_phase(subject))
     end
+end)
+
+--- The yellow dino's lesson is that a stunned bomber cannot walk away from its own bombs.
+local function stunned_bomber_dies()
+    local died_stunned = false
+    play_lesson("dino_yellow", function(battle)
+        local victim = battle.choreography.victim
+        died_stunned = died_stunned or (victim.action == "dying" and victim:is_stunned())
+    end)
+    assert.is_true(died_stunned)
+end
+
+describe("yellow dino lesson", function()
+    it("has the bomber die of its own bombs while the stun cry holds it", stunned_bomber_dies)
 end)

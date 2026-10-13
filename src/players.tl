@@ -36,7 +36,10 @@ local level_up_sound: Source
 local jump_sound: Source
 local trampoline_sound: Source
 local hop_sound: Source
-local STUN_CRY_ROAR_FOR = 1.8
+local STUN_CRY_TILES_PER_LEVEL = 3
+local STUN_CRY_TILES_PER_SECOND = 15
+local STUN_CRY_HOLD_TIME = 40 / 60
+local STUN_CRY_STUN_TIME = 0.5
 local THROW_RECOVERY_TIME = 0.3
 local SONIC_BLAST_ROAR_FOR = 1.4
 local HURT_SHAKE_FOR = 0.2
@@ -243,7 +246,9 @@ function Player:is_sliding(): boolean
 end
 
 function Player:have_roared_since_buildup_for(): number
-    return self.total_roar_time - self.roar_for - dinos.ROAR_BUILDUP_TIME
+    return self.total_roar_time - self.roar_for - dinos.roar_buildup_time(
+        self.dino.color
+    )
 end
 
 function Player:is_roaring(): boolean
@@ -369,8 +374,13 @@ function Player:hit_with_bomb()
     self:_stun_aloud_for(1)
 end
 
+--- A stun cry holds its victim for as long as it reaches them: every step in reach starts the stun
+-- over, and only the first of those steps is heard.
 function Player:hit_with_roar()
-    self:_stun_aloud_for(1.5)
+    if not self:is_stunned() then
+        self:_play(stun_sound)
+    end
+    self:stun_for(STUN_CRY_STUN_TIME)
 end
 
 function Player:hitbox(): Rectangle
@@ -617,10 +627,17 @@ function Player:dash_with_dino()
     end
 end
 
+function Player:_stun_cry_longest_reach(): integer
+    return self.dino.level * STUN_CRY_TILES_PER_LEVEL
+end
+
 function Player:stun_cry_with_dino()
+    local spreads_for = self:_stun_cry_longest_reach() / STUN_CRY_TILES_PER_SECOND
     self:set_action("roar")
-    self.roar_for = STUN_CRY_ROAR_FOR
-    self.total_roar_time = STUN_CRY_ROAR_FOR
+    self.total_roar_time = dinos.roar_buildup_time(
+        self.dino.color
+    ) + spreads_for + STUN_CRY_HOLD_TIME
+    self.roar_for = self.total_roar_time
     self.play_dino_roar = true
 end
 
@@ -648,8 +665,21 @@ function Player:_get_hitbox_in_dir(from_position: Point, grid_reach: number): Re
     end
 end
 
+function Player:_stun_cry_tiles_spread(): number
+    local spread = self:have_roared_since_buildup_for() * STUN_CRY_TILES_PER_SECOND
+    return math.min(spread, self:_stun_cry_longest_reach())
+end
+
+--- How far the stun cry has spread, from 0 when it comes out to 1 at its longest reach.
+function Player:stun_cry_spread(): number
+    return self:_stun_cry_tiles_spread() / self:_stun_cry_longest_reach()
+end
+
 function Player:get_stun_cry_hitbox(): Rectangle
-    return self:_get_hitbox_in_dir(self.position, self.dino.level * 3 * grid.TILE_SIZE)
+    local tiles_reached = math.floor(self:_stun_cry_tiles_spread())
+    return self:_get_hitbox_in_dir(
+        grid.snap_to(self.position), tiles_reached * grid.TILE_SIZE
+    )
 end
 
 function Player:get_sonic_blast_hitbox(): Rectangle

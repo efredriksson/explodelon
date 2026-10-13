@@ -83,6 +83,10 @@ function grid.tile_indices(position: Point): integer, integer
     return nearest_column(position.x), nearest_row(position.y)
 end
 
+function grid.nearest_tile(position: Point): Rectangle
+    return grid.get_tile(grid.tile_indices(position))
+end
+
 --- Whether (i, j) is the tile nearest to a position.
 function grid.is_on_tile(position: Point, i: integer, j: integer): boolean
     return nearest_column(position.x) == i and nearest_row(position.y) == j
